@@ -1,0 +1,66 @@
+#summary su2rad.rb Radiance exporter script for Sketchup.
+#labels Featured
+
+== Introduction ==
+
+Add your content here.
+
+== Features ==
+
+== Known Issues ==
+
+If you think you have found a problem with the script please use
+the issue tracker to report it ('Issues' tab above). Check first
+that the same issue has not already been reported.
+
+Additionally here is a number of bugs which I am aware of but for
+the time being have no idea how to solve:
+
+  * *Elements (ie. cars from the library) are only exported half.* - I assume this is related to the missing detection of mirrored ('flipped') entities.
+  * *There are no textures!* - Right. There are no textures (yet).
+  * *Colours look all wrong.* - A lot of 'colours' in Sketchup rely on textures, so see above. The conversion from Sketchup to Radiance colours is not correct because you should  use a library of materials instead. A conversion should only be used as a last resort and only for small elements. The library and the conversion do need more work.
+  
+== History ==
+
+_su2rad.rb_ is still under heavy development.
+
+  * *v00c - 31/10/07* - fixed bug in export of multiple views
+  * *v00b - 29/10/07* - bugfixes for Windows, new orientation export and error handling
+  * *v00 - 28/10/07* - initial release
+
+== Installation ==
+
+Copy the _su2rad.rb_ file into the Plugins directory of your SketchUp installation.
+This should be
+
+  * _/Library/Application Support/Google Sketchup 6/Sketchup/Plugins_ on a Mac
+  * _C:/Program Files/Google/Google Sketchup 6/Plugins_ on Windows
+
+Restart Sketchup. The script creates an entry in the _Plugins_ menu called _Radiance_. There you will find options to export the whole scene or just the selected objects.
+
+Read the section on Configuration below.
+
+
+==Configuration==
+
+At the top of the su2rad.rb script you can find a block of configuration options. If you know the how to use a text editor and what’s the difference between a bool and a string variable it should be no problem to adjust these to reflect the environment on your computer and you preferences. Here are the options you can change:
+
+  * *$replmarks* This is the full path to the replmarks binary on your system. su2rad relies on replmarks to create the correct xform transformation of groups and component instances. Without replmarks (or if the path is wrong) all entities will be exported to one global 
+co-ordinate system. Works on OS X, not tested on Windows.
+
+  * *$MAKEGLOBAL* This is the default value for the “global coords” prompt of the import dialog. You can always change the value in the dialog but with the right setting this variable saves you a click. Use global coords if the !xform transformation does not work correctly. With global coords a reuse of instances is not possible.
+
+  * *$TRIANGULATE* This options sets the default for export to triangles instead of n-polygons. This might be necessary in some cases where the script would create non planar polygons (due to tolerances) or simple gets confused with the holes. The option is global: either all elements are triangulated or none.
+
+  * *$UNIT* Sets the unit to convert from Sketchup native units (=inches) to Radiance scene units. Most Radiance scenes use meters and some scripts assume this as default. Please note that the native unit in Sketchup is always inches and is not related to the units you set in your preferences.
+
+  * *$showRadOptions* Set to true if you always want to see the dialog to change rad options. The options file (*.rif file) and the dialog are incomplete. You can force or suppress the dialog at runtime.
+
+  * *$exportAllViews* With this set to true the script will export all Sketchup pages with view information to view files in the views subdirectory and view= lines in the scene *.rif file. The active page will always be the first view in the list. Can be changed in the dialog.
+
+  * *$rad and $preview* These options exist for a future preview feature. Doesn’t work yet.
+
+Add your content here.  Format your content with:
+  * Text in *bold* or _italic_
+  * Headings, paragraphs, and lists
+  * Automatic links to other wiki pages
