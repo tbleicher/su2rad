@@ -33,8 +33,6 @@
 #                       added exception error display to export function
 # v 0.0  - 28/10/07  :  initial release
 
-
-
 require "su2radlib/exportbase.rb"
 require "su2radlib/interface.rb"
 require "su2radlib/numeric.rb"
@@ -42,7 +40,6 @@ require "su2radlib/material.rb"
 require "su2radlib/radiance_entities.rb"
 require "su2radlib/radiancescene.rb"
 
-$SCALETRANS = Geom::Transformation.new(1/$UNIT)
 $RADPRIMITIVES = {  "plastic"    => 1,
                     "glass"      => 1,
                     "trans"      => 1, "trans2" => 1,
@@ -82,7 +79,9 @@ else
     $EXPORTALLVIEWS = false 
     $RAD = ''   
     $PREVIEW = false        
+    $ZOFFSET = nil     
 end
+$SCALETRANS = Geom::Transformation.new(1/$UNIT)
 
 
 
@@ -117,10 +116,17 @@ end
 
 
 
-def startImport
+def startImport(f='')
     ni = NumericImport.new()
-    ni.loadFile
-    ni.confirmDialog
+    if $debug == 1
+        ni.loadFile(f)
+        ni.createMesh
+        ni.addContourLines
+        ni.addLabels
+    else
+        ni.loadFile
+        ni.confirmDialog
+    end
 end
 
 
@@ -148,7 +154,7 @@ if $debug == 0
     end
     file_loaded("su2rad.rb")
 else
-    startExport(0)
+    startImport('/Users/ble/Desktop/ADF_medium.lux')
 end
 
 

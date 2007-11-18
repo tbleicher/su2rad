@@ -26,6 +26,14 @@ $EXPORTALLVIEWS = false ## true|false - no quotes!
 $RAD = ''   
 $PREVIEW = false        ## true|false - no quotes!
 
+
+
+## NUMERIC IMPORT
+
+## z-offset for values - use nil to use z-coord average
+$ZOFFSET = nil          ## nil or float eg. 0.0, 0.75 
+
+
 ###   end of config options   ###
 
 
