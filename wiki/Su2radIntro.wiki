@@ -8,11 +8,11 @@
   * _su2rad.rb_ can help you to create Radiance scene descriptions from SketchUp models.
   * exports faces as polygons not just triangles and quads (even with holes) 
   * exports saved view points/perspectives
-  * exports components and groups as separate files
+  * exports by group, by layer or by material
   * creates Radiance project file structure
   * creates sky description
   * creates field description for numeric evaluations (rtrace input files)
-  * imports rtrace results as 3D surface (just for the fun of it …)
+  * imports rtrace results as 3D surface (just for the fun of it)
   * resolves conflicts in material assignments (see below)
 
 ===What it does not===
@@ -20,17 +20,16 @@
   * no backface materials
   * no proper material conversion
   * no textures
-  * no mirroring (‘flipping’) of instances
+  * no mirroring ('flipping') of instances
   * no support for artificial lighting
   * no animation
 
 ===What it might do (planned features)===
-  * export per layer or per material
   * textures
   * replacement of component instances with pre-canned Radiance files
   * lookup of material definitions from library file
   * update feature for already exported scenes
-  * support for '-mx’ etc of xform ('flipping')
+  * support for '-mx' etc of xform ('flipping')
 
 
 
@@ -46,26 +45,28 @@ the time being have no idea how to solve:
   * *Entities are only exported half.* - (example: cars from the library) I assume this is related to the missing detection of mirrored ('flipped') entities.
   * *There are no textures!* - Right. There are no textures (yet).
   * *Colours look all wrong.* - A lot of 'colours' in Sketchup rely on textures, so see above. The conversion from Sketchup to Radiance colours is not correct because you should  use a library of materials instead. A conversion should only be used as a last resort and only for small elements. The library and the conversion do need more work.
-
+  * *Transparency is not converted.* - Apparently there is a bug in Sketchup 6 which represents the alpha value of the colour wrongly in the API. If that get's fixed in Sketchup it should work. 
 
   
 == History ==
 
 _su2rad.rb_ is still under heavy development.
 
+  * *v00d -    tbc    - new 'by layer' and 'by color' modes, split in multiple files, added contour lines to numeric import feature
   * *v00c - 31/10/07* - fixed bug in export of multiple views
   * *v00b - 29/10/07* - bugfixes for Windows, new orientation export and error handling
   * *v00 - 28/10/07* - initial release
 
+
 == Installation ==
 
-Copy the _su2rad.rb_ file into the Plugins directory of your SketchUp installation.
+Copy the _su2rad.rb_ file and the _su2radlib_ directory into the Plugins directory of your SketchUp installation.
 This should be
 
   * _/Library/Application Support/Google Sketchup 6/Sketchup/Plugins_ on a Mac
   * _C:/Program Files/Google/Google Sketchup 6/Plugins_ on Windows
 
-Restart Sketchup. The script creates an entry in the _Plugins_ menu called _Radiance_. There you will find options to export the whole scene or just the selected objects.
+Restart Sketchup. The script creates an entry in the _Plugin_ menu called _Radiance_. There you will find options to export the whole scene or just the selected objects.
 
 Read the section on config options below.
 
@@ -74,7 +75,7 @@ Read the section on config options below.
 
 At the top of the su2rad.rb script you can find a block of configuration options. If you know the how to use a text editor and what’s the difference between a bool and a string variable it should be no problem to adjust these to reflect the environment on your computer and you preferences. Here are the options you can change:
 
-  * *$replmarks* This is the full path to the replmarks binary on your system. su2rad relies on replmarks to create the correct xform transformation of groups and component instances. Without replmarks (or if the path is wrong) all entities will be exported to one global co-ordinate system. Works on OS X, not tested on Windows.
+  * *$REPLMARKS* This is the full path to the replmarks binary on your system. su2rad relies on replmarks to create the correct xform transformation of groups and component instances. Without replmarks (or if the path is wrong) all entities will be exported to one global co-ordinate system. Works on OS X, not tested on Windows.
 
   * *$MAKEGLOBAL* This is the default value for the “global coords” prompt of the import dialog. You can always change the value in the dialog but with the right setting this variable saves you a click. Use global coords if the !xform transformation does not work correctly. With global coords a reuse of instances is not possible.
 
@@ -82,8 +83,8 @@ At the top of the su2rad.rb script you can find a block of configuration options
 
   * *$UNIT* Sets the unit to convert from Sketchup native units (=inches) to Radiance scene units. Most Radiance scenes use meters and some scripts assume this as default. Please note that the native unit in Sketchup is always inches and is not related to the units you set in your preferences.
 
-  * *$showRadOptions* Set to true if you always want to see the dialog to change rad options. The options file (_.rif_ file) and the dialog are incomplete. You can force or suppress the dialog at runtime.
+  * *$SHOWRADOPTIONS* Set to true if you always want to see the dialog to change rad options. The options file (_.rif_ file) and the dialog are incomplete. You can force or suppress the dialog at runtime.
 
-  * *$exportAllViews* With this set to true the script will export all Sketchup pages with view information to view files in the views subdirectory and view= lines in the scene _.rif_ file. The active page will always be the first view in the list. Can be changed in the dialog.
+  * *$EXPORTALLVIEWS* With this set to true the script will export all Sketchup pages with view information to view files in the views subdirectory and view= lines in the scene _.rif_ file. The active page will always be the first view in the list. Can be changed in the dialog.
 
-  * *$rad and $preview* These options exist for a future preview feature. Doesn’t work yet.
+  * *$RAD and $PREVIEW* These options exist for a future preview feature. Doesn’t work yet.
