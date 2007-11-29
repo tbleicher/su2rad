@@ -198,6 +198,7 @@ class RadianceScene < ExportBase
             if lines.length == 0
                 next
             end
+            name = remove_spaces(name)
             filename = getFilename("objects/#{name}.rad")
             if not createFile(filename, lines.join("\n"))
                 uimessage("Error: could not create file '#{filename}'")

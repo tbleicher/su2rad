@@ -121,11 +121,11 @@ class MaterialContext < ExportBase
         else
             name = mat.display_name
         end
-        remove_spaces(mat.display_name)
         if (name =~ /\d/) == 0
             ## names starting with numbers can't be used in Radiance
             name = 'sketchup_' + name
         end
+        name = remove_spaces(name)
         @materialHash[mat] = name
         return name
     end

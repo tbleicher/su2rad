@@ -275,7 +275,7 @@ class ExportBase
 
     def getFilename(name=nil)
         if name == nil
-            name = "objects/%s.rad" %  remove_spaces($nameContext[-1])
+            name = "objects/%s.rad" % remove_spaces($nameContext[-1])
         end
         return "#{$export_dir}/#{$scene_name}/#{name}"
     end
