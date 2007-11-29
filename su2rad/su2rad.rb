@@ -21,7 +21,9 @@
 
 
 # revisions:
-# v 0.0d - tbc       :  fixed export of hidden layers in components
+# v 0.0d - tbc       :  fixed bug in cleaning of colour names
+#                         (thanks to Rob Guglielmetti for reporting)
+#                       fixed export of hidden layers in components
 #                       new 'by layer' and 'by color' options
 #                       more options for .rif file
 #                       split in separate file in su2radlib
@@ -51,7 +53,7 @@ $RADPRIMITIVES = {  "plastic"    => 1,
                     "dielectric" => 1, "dielectric2" => 1,
                     "void"       => 1}
 
-$debug = 1
+$debug = 0
 $verbose = true
 $testdir = ""
 
