@@ -79,12 +79,14 @@ else
     $UNIT = 0.0254          ## use meters for Radiance scene
     $SHOWRADOPTS = false
     $EXPORTALLVIEWS = false 
-    $RAD = ''   
+    $RAD = ''
+    $BUILD_MATERIAL_LIB = false
+    $SUPPORTDIR = "/Library/Application Support/Google Sketchup 6/Sketchup"
     $PREVIEW = false        
     $ZOFFSET = nil     
 end
-$SCALETRANS = Geom::Transformation.new(1/$UNIT)
 
+$SCALETRANS = Geom::Transformation.new(1/$UNIT)
 
 
 def startExport(selected_only=0)
@@ -156,7 +158,9 @@ if $debug == 0
     end
     file_loaded("su2rad.rb")
 else
-    startImport('/Users/ble/Desktop/ADF_medium.lux')
+    printf "debug mode\n"
+    startExport()
+    #startImport('/Users/ble/Desktop/ADF_medium.lux')
 end
 
 
