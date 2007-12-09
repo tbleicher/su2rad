@@ -10,7 +10,32 @@ class ExportBase
         end
         return s.gsub(/\W/, '')
     end
-
+    
+    def find_support_files(filename, subdir="")
+        ## replacement for Sketchup.find_support_files
+        if subdir == ""
+            subdir = $SUPPORTDIR
+        elsif subdir[0] != '/'[0]
+            subdir = File.join($SUPPORTDIR, subdir)
+        end
+        if FileTest.directory?(subdir) == false
+            return []
+        end
+        paths = []
+        Dir.foreach(subdir) { |p|
+            path = File.join(subdir, p)
+            if p[0,1] == '.'[0,1]
+                next
+            elsif FileTest.directory?(path) == true
+                lst = find_support_files(filename, path)
+                lst.each { |f| paths.push(f) }
+            elsif p.downcase == filename.downcase
+                paths.push(path)
+            end
+        }
+        return paths
+    end
+        
     def append_paths(p,f)
         if p[-1,1] == "\\" or p[-1,1] == "/"
             p+f

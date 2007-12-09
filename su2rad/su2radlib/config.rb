@@ -22,6 +22,12 @@ $SHOWRADOPTS = true     ## true|false - no quotes!
 ## export all saved viewsg
 $EXPORTALLVIEWS = false ## true|false - no quotes!
 
+## create material library in file system
+$BUILD_MATERIAL_LIB = false ## true|false - no quotes!
+
+## sketchup directory that contains support files (materials etc.)
+#TODO $SUPPORTDIR for Windows
+
 ## preview doesn't work yet
 $RAD = ''   
 $PREVIEW = false        ## true|false - no quotes!

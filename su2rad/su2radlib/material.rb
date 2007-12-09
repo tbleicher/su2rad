@@ -111,7 +111,9 @@ class MaterialContext < ExportBase
         ## generate a name that's save to use in Radiance
         if @materialHash.has_key?(mat)
             return @materialHash[mat]
-        elsif mat.display_name == ''
+        end
+        ## if there is no display name, set it
+        if mat.display_name == ''
             name = mat.name
             if name == ''
                 name = "material_id%s" % mat.id
@@ -142,6 +144,60 @@ class MaterialContext < ExportBase
         if text != nil
             return text
         end
+        text = getMaterialFromLibrary(material, name)
+        if text == nil
+            text = convertRGBColor(material, name)
+            if $BUILD_MATERIAL_LIB == true
+                addMaterialToLibrary(material, text)
+            end
+        end
+        $materialDescriptions[name] = text
+        return text
+    end
+   
+    def addMaterialToLibrary(material, text)
+        ## store material description in file
+        name = remove_spaces(material.display_name)
+        paths = find_support_files(name+".skm")
+        paths.each { |p|
+            filename = p.sub('.skm', '.rad')
+            if not File.exists?(filename)
+                begin
+                    f = File.new(filename, 'w')
+                    f.write(text)
+                    f.close()
+                rescue
+                    uimessage("Error creating material description '#{filename}'!")
+                end
+            end
+        }
+    end
+    
+    def getMaterialFromLibrary(material, name)
+        name = remove_spaces(material.display_name)
+        paths = find_support_files(name+".skm")
+        paths.each { |p|
+            filename = p.sub('.skm', '.rad')
+            if File.exists?(filename)
+                if $verbose == true
+                    uimessage("material file '%s' found\n" % filename)
+                end
+                begin
+                    f = File.new(filename, 'r')
+                    text = f.read()
+                    f.close()
+                    text = text.strip()
+                    text = "\n## material def from file: '%s'\n%s\n" % [filename, text]
+                    return text
+                rescue
+                    uimessage("Error reading material description for '#{name}'")
+                end
+            end
+        }
+        return nil
+    end
+
+    def convertRGBColor(material, name) 
         text = "\n## material conversion from Sketchup rgb color"
         c = material.color
         r = c.red/300.0         #XXX
@@ -149,8 +205,13 @@ class MaterialContext < ExportBase
         b = c.blue/300.0        #XXX
         spec = 0.0
         rough = 0.0
-        #XXX color.alpha does not work in SketchUp
-        if c.alpha >= 250
+        ## XXX color.alpha does not work in SketchUp
+        ## hack: search for 'glass' in the name
+        if (name.downcase() =~ /glass/) != nil
+            text += "\nvoid glass #{name}"
+            text += "\n0\n0\n3"
+            text += "  %.4f %.4f %.4f\n" % [r,g,b]
+        elsif c.alpha >= 250
             text += "\nvoid plastic #{name}"
             text += "\n0\n0\n5"
             text += "  %.4f %.4f %.4f %.3f %.3f\n" % [r,g,b,spec,rough]
@@ -168,8 +229,6 @@ class MaterialContext < ExportBase
         return text
     end
 end
-
-
 
 
 

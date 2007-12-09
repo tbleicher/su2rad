@@ -35,7 +35,7 @@
                         annotating, coloring and mounting of individual images
                             if ImageMagick and Ghostscript are installed
 
-    Issues:             cancelling the script is messy
+    Issues:             stopping the script is messy
 
     TODO:               testing
                         add title to layout
@@ -548,7 +548,7 @@ class ShadowSequence
     
     def doLayout()
         if $imconvert == ''
-            printf "ImageMagick is not configured!\n"
+            uimessage("ImageMagick is not configured!")
             return
         end
         uimessage("\nnew layout:")
@@ -577,41 +577,6 @@ class ShadowSequence
         @_layoutImages = []
     end ## end doLayout
 
-    
-    def imagesFromTimeList()
-        #XXX old - now part of animation loop
-        ## create images from list of shadow times in sec
-        @timelist.each { |sec|
-            @date_tmp = Time.at(sec)
-            @model.shadow_info['ShadowTime'] = @date_tmp
-            #TODO: update view to show changes. How?
-            saveImage
-            if $imconvert
-                imagePostProcess
-            end
-            @_layoutImages.push(getFilename())
-        }             
-        #TODO layout
-        if $imconvert != ''
-            layout = Layout.new(@imgDir)
-            layout.setImages(@_layoutImages)
-            layout.gridlayout(@layoutSize[0], @layoutSize[1])
-            layout.addTitleLine(@imgPrefix.gsub("_", ""))
-            if @mode == 'time of day'
-                layout.addTitleLine("time of day sequence")
-                layout.addTitleLine("date: %s"    % @date_tmp.strftime("%b %d"))
-                layout.addTitleLine("sunrise: %s" % @model.shadow_info['SunRise'].strftime("%H:%M"))
-                layout.addTitleLine("sunset: %s"  % @model.shadow_info['SunSet'].strftime("%H:%M"))
-                filename = "%s_tod_%s.%s"    % [@imgPrefix, @date_tmp.strftime("%b_%d"), @imgFormat]
-            else
-                layout.addTitleLine("day of year sequence")
-                filename = "%s_doy_%02d_%02d.%s" % [@imgPrefix, @todHour, @todMinute, @imgFormat]
-            end
-            layout.createLayout(File.join(@imgDir, filename))
-        end
-        uimessage("\ncreated %d images" % timelist.length)
-    end ## end def imagesFromTimeList
-       
     
     def imagePostProcess()
         ## create image without shadows for diff process
@@ -659,10 +624,10 @@ class ShadowSequence
             subdirpath = File.join(@imgDir, subdir)
             if FileTest.exist?(subdirpath) == false
                 ## make new subdirectory
-                printf "new subdir: '%s'\n" % subdirpath
                 begin
                     Dir.mkdir(subdirpath)
                     filepath = File.join(@imgDir, subdir, filename)
+                    uimessage("created new subdir: '%s'" % subdirpath)
                 rescue => e 
                     msg = "%s\n\n%s" % [$!.message,e.backtrace.join("\n")]
                     uimessage("Error creating directory '%s':\n\n%s" % [subdir, msg])
@@ -713,7 +678,6 @@ class ShadowSequence
             dlg.execute_script("window.location.reload()");
         }
         dlg.add_action_callback("on_selection_changed") {|d,p|
-            puts "on_selection_changed", d,p
             parts = p.split(',')
             key = parts[0]
             value = parts.slice(1..100).join(',')
@@ -749,7 +713,6 @@ class ShadowSequence
             end
         }
         dlg.add_action_callback("on_number_changed") {|d,p|
-            puts "on_number_changed", d,p
             key, value = p.split(',')
             value = value.to_i
             eval "@%s = %d" % [key, value]
@@ -809,9 +772,7 @@ class ShadowSequence
         else
             imgDir = @imgDir
         end
-        printf "savepanel imgDir, @imgDir='%s' '%s'\n" % [imgDir, @imgDir] #XXX
         filepath = UI.savepanel "save images to ... ", imgDir, File.basename(getFilename)
-        printf "result of UI.savepanel: '%s'\n" % filepath #XXX
         if (filepath)
             imgDir,newname = File.split(filepath)
             if ($OS == "Win")
@@ -1064,8 +1025,8 @@ else
     ## create menu entry
     begin 
         if (not file_loaded?("shadowsequence.rb"))
-            cmenu = UI.menu("Camera")
-            smenu = cmenu.add_submenu("Shadow Sequence")
+            pmenu = UI.menu("Plugin")
+            smenu = pmenu.add_submenu("Shadow Sequence")
             smenu.add_item("time of day") { doToD }
             smenu.add_item("day of year") { doDoY }
         end
