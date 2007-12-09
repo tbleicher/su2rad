@@ -87,4 +87,6 @@ At the top of the su2rad.rb script you can find a block of configuration options
 
   * *$EXPORTALLVIEWS* With this set to true the script will export all Sketchup pages with view information to view files in the views subdirectory and view= lines in the scene _.rif_ file. The active page will always be the first view in the list. Can be changed in the dialog.
 
+  * *$BUILD_MATERIAL_LIB* With this option set to true su2rad will write all material description that are not taken from the library to files in the file system next to the Sketchup material file (.skm). Next time the definition will be read from this file. This is an easy way to find out the 'radiance safe' material name of a material. 
+
   * *$RAD and $PREVIEW* These options exist for a future preview feature. Doesn’t work yet.
