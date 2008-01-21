@@ -1,14 +1,35 @@
 
 class ExportBase
     
-    def remove_spaces(s)
-        ## remove spaces and other funny chars from names
-        for i in (0..s.length)
-            if s[i,1] == " " 
-                s[i] = "_" 
-            end 
+    def append_paths(p,f)
+        if p[-1,1] == "\\" or p[-1,1] == "/"
+            p+f
+        else
+            p+"\\"+f
         end
-        return s.gsub(/\W/, '')
+    end
+   
+    def clearDirectory(scene_dir)
+        uimessage("clearing directory '#{scene_dir}'")
+        Dir.foreach(scene_dir) { |f|
+            fpath = File.join(scene_dir, f)
+	    if f == '.' or f == '..'
+		next
+            elsif f[0,1] == '.'
+                next
+            elsif FileTest.directory?(fpath) == true
+                clearDirectory(fpath)
+                begin
+                    Dir.delete(fpath)
+                rescue
+                    uimessage("directory '#{fpath}' not empty")
+                end
+            elsif FileTest.file?(fpath) == true
+		File.delete(fpath)
+            else
+                uimessage("unexpected entry in fs: '#{fpath}'")
+            end
+        }
     end
     
     def find_support_files(filename, subdir="")
@@ -36,14 +57,40 @@ class ExportBase
         return paths
     end
         
-    def append_paths(p,f)
-        if p[-1,1] == "\\" or p[-1,1] == "/"
-            p+f
+    def getSaveMaterialName(mat)
+        ## generate a name that's save to use in Radiance
+        if $materialContext.has_key?(mat)
+            return $materialContext.get(mat)
+        end
+        ## if there is no display name, set it
+        if mat.display_name == ''
+            name = mat.name
+            if name == ''
+                name = "material_id%s" % mat.id
+                mat.name = name
+            end
+            mat.display_name = name
         else
-            p+"\\"+f
+            name = mat.display_name
+        end
+        if (name =~ /\d/) == 0
+            ## names starting with numbers can't be used in Radiance
+            name = 'sketchup_' + name
+        end
+        name = remove_spaces(name)
+        $materialContext.set(mat, name)
+        return name
+    end
+
+    def initLog
+        if $nameContext == nil
+            $nameContext = []
+        end
+        if $log == nil
+            $log = []
         end
     end
-   
+    
     def isVisible(e)
         if $inComponent == true and e.layer.name == 'Layer0'
             return true
@@ -53,6 +100,16 @@ class ExportBase
             return false
         end
         return true
+    end
+    
+    def remove_spaces(s)
+        ## remove spaces and other funny chars from names
+        for i in (0..s.length)
+            if s[i,1] == " " 
+                s[i] = "_" 
+            end 
+        end
+        return s.gsub(/\W/, '')
     end
     
     def exportByCL(entity_list, mat, globaltrans)
@@ -170,29 +227,6 @@ class ExportBase
         true
     end
     
-    def clearDirectory(scene_dir)
-        uimessage("clearing directory '#{scene_dir}'")
-        Dir.foreach(scene_dir) { |f|
-            fpath = File.join(scene_dir, f)
-	    if f == '.' or f == '..'
-		next
-            elsif f[0,1] == '.'
-                next
-            elsif FileTest.directory?(fpath) == true
-                clearDirectory(fpath)
-                begin
-                    Dir.delete(fpath)
-                rescue
-                    uimessage("directory '#{fpath}' not empty")
-                end
-            elsif FileTest.file?(fpath) == true
-		File.delete(fpath)
-            else
-                uimessage("unexpected entry in fs: '#{fpath}'")
-            end
-        }
-    end
-    
     def removeExisting(scene_dir)
         if FileTest.exists?(scene_dir)
             scene_name = File.basename(scene_dir)
@@ -306,11 +340,37 @@ class ExportBase
     end
     
     def getMaterial(entity)
-        return $materialContext.getEntityMaterial(entity)
+        return getEntityMaterial(entity)
+    end
+    
+    def getEntityMaterial(entity)
+        begin
+            material = entity.material
+        rescue
+            material = nil
+        end
+        if entity.class == Sketchup::Face
+            if material == nil
+                material = entity.back_material
+            elsif entity.back_material != nil
+                front = getMaterialName(entity.material)
+                back = getMaterialName(entity.back_material)
+                if front != back
+                    uimessage("WARNING: front vs. back material: '%s' - '%s'" % [front, back])
+                end 
+            end
+        end
+        return material
     end
     
     def getMaterialName(mat)
-        return $materialContext.getMaterialName(mat)
+        if mat == nil
+            return $materialContext.getCurrentMaterialName()
+        end
+        if mat.class != Sketchup::Material
+            mat = getEntityMaterial(mat)
+        end
+        return getSaveMaterialName(mat)
     end
     
     def point_to_vector(p)
@@ -318,15 +378,19 @@ class ExportBase
     end
         
     def getXform(filename, trans)
-        if $nameContext.length <= 2
+        printf "getXform %s\n" % filename
+        showTransformation(trans)
+        if $nameContext.length <= 2     #XXX ugly hack
             ## for main scene file
             path = "%s/%s/" % [$export_dir, $scene_name]
         else
             path = "%s/%s/objects/" % [$export_dir, $scene_name]
         end 
         filename.sub!(path, '')
+        suffix = filename[filename.length-4,4].downcase()
         objname = $nameContext[-1]
         if $MAKEGLOBAL
+            printf "$MAKEGLOBAL==true\n"
             xform = "!xform -n #{objname} #{filename}"
         else
             #TODO: mirror 
@@ -352,7 +416,13 @@ class ExportBase
             marker += "%.6f %.6f %.6f\n" % vx 
             marker += "%.6f %.6f %.6f\n" % vy
             
-            cmd = "echo '#{marker}' | replmarks -s 1.0 -x #{filename} replaceme"
+            if suffix == '.oct'
+                cmd = "echo '#{marker}' | replmarks -s 1.0 -i #{filename} replaceme"
+            elsif suffix == '.msh'
+                cmd = "echo '#{marker}' | replmarks -s 1.0 -I #{filename} replaceme"
+            else
+                cmd = "echo '#{marker}' | replmarks -s 1.0 -x #{filename} replaceme"
+            end
             f = IO.popen(cmd)
             lines = f.readlines
             f.close()
@@ -417,11 +487,11 @@ class ExportBase
         printf "  %5.2f  %5.2f  %5.2f  %5.2f\n" % a[12..15]
     end
 
-    def uimessage(msg)
+    def uimessage(msg, level=0)
         n = $nameContext.length
-        prefix = "    " * n
+        prefix = "    " * (n+level)
         line = "%s [%d] %s" % [prefix, n, msg]
-        Sketchup.set_status_text(line)
+        Sketchup.set_status_text(line.strip())
         printf "%s\n" % line
         $log.push(line)
     end

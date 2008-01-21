@@ -1,8 +1,24 @@
 ### config options for su2rad -- change as required ###
 
+## system (not model!) time zone offset to UTC
+## examples are given - add your timezone if missing
+$UTC_OFFSET =  nil
+#$UTC_OFFSET =   10  # Brisbane, Canberra, Sydney
+#$UTC_OFFSET =    9  # Kyoto, Osaka, Tokyo
+#$UTC_OFFSET =    8  # Beijing, Guangzhou, Shanghai, Hong Kong
+#$UTC_OFFSET =  5.5  # Ahmadabad, Bangalore, Calcutta, New Delhi
+#$UTC_OFFSET =    3  # Moscow
+#$UTC_OFFSET =    1  # Paris, Berlin, Madrid, Amsterdam, Rome
+#$UTC_OFFSET =    0  # London
+#$UTC_OFFSET =   -3  # Buenos Aires
+#$UTC_OFFSET =   -5  # New York
+#$UTC_OFFSET =   -7  # Denver (CO), Boulder (CO)
+#$UTC_OFFSET =   -9  # Anchorage (AK)
+
+
 ## path to replmarks binary
-#$REPLMARKS = '/usr/local/bin/replmarks'
-$REPLMARKS = '' 
+$REPLMARKS = '/usr/local/bin/replmarks'
+#$REPLMARKS = '' 
 
 ## default mode for export: by group
 $MODE = "by color"      ## "by group"|"by layer"|"by color"
@@ -19,13 +35,14 @@ $UNIT = 0.0254          ## use meters for Radiance scene
 ## show Radiance option dialog
 $SHOWRADOPTS = true     ## true|false - no quotes!
 
-## export all saved viewsg
+## export all saved views
 $EXPORTALLVIEWS = false ## true|false - no quotes!
 
 ## create material library in file system
 $BUILD_MATERIAL_LIB = false ## true|false - no quotes!
 
 ## sketchup directory that contains support files (materials etc.)
+$SUPPORTDIR = '/Library/Application Support/Google Sketchup 6/Sketchup'
 #TODO $SUPPORTDIR for Windows
 
 ## preview doesn't work yet

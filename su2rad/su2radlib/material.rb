@@ -1,6 +1,109 @@
 require "su2radlib/exportbase.rb"
 
 
+class MaterialLibrary < ExportBase
+
+    def initialize
+        @sketchup_materials = {}        ## map name to path
+        @radiance_descriptions = {}     ## map name to description
+        
+        initLibrary()
+    end
+
+    def initLibrary
+        initLog()
+        if $verbose == true
+            uimessage("init material library ...")
+        end
+        if $SUPPORTDIR == '' or $SUPPORTDIR == nil
+            uimessage("Warning: '$SUPPORTDIR' is not set. No materials available.")
+            return
+        end
+        mdir = File.join($SUPPORTDIR, 'Materials')
+        if not FileTest.directory?(mdir)
+            uimessage("Warning: directory 'Materials' not found. No materials available.")
+            return
+        end
+        lst = getSKMFiles(mdir)
+        if $verbose == true
+            uimessage("=> %d materials found" % lst.length)
+        end
+        lst.each { |path|
+            filename = File.split(path)[1]
+            matname = filename[0,filename.length-4]
+            @sketchup_materials[matname] = path
+            radname = path.sub('.skm', '.rad')
+            if File.exists?(radname)
+                if $verbose == true
+                    uimessage("  material file '%s' found" % radname)
+                end
+                begin
+                    f = File.new(radname, 'r')
+                    text = f.read()
+                    f.close()
+                    text = text.strip()
+                    text = "## material def from file: '%s'\n%s" % [radname, text]
+                    @radiance_descriptions[matname] = text
+                rescue
+                    uimessage("Error reading Radiance material description from '#{radname}'")
+                end
+            end
+        }
+        if $verbose == true
+            uimessage("=> %d material descriptions found" % @radiance_descriptions.length)
+        end
+    end
+    
+    def getSKMFiles(mdir)
+        if $verbose == true
+            uimessage("searching for materials in '#{mdir}'")
+        end
+        paths = []
+        Dir.foreach(mdir) { |p|
+            path = File.join(mdir, p)
+            if p[0,1] == '.'[0,1]
+                next
+            elsif FileTest.directory?(path) == true
+                lst = getSKMFiles(path)
+                lst.each { |f| paths.push(f) }
+            elsif p.downcase[-4,4] == '.skm'
+                paths.push(path)
+            end
+        }
+        return paths
+    end
+    
+    def addMaterial(material, text)
+        ## store material description in file if it doesn't exist
+        matname = remove_spaces(material.display_name)
+        @radiance_descriptions[matname] = text
+        if $BUILD_MATERIAL_LIB == false
+            return
+        end
+        skmfile = @sketchup_materials[matname]
+        if skmfile == nil
+            return
+        end
+        filename = skmfile.sub('.skm', '.rad')
+        if not File.exists?(filename)
+            begin
+                f = File.new(filename, 'w')
+                f.write(text)
+                f.close()
+            rescue
+                uimessage("Error creating material description '#{filename}'!")
+            end
+        end
+    end
+    
+    def getMaterialDescription(material)
+        name = remove_spaces(material.display_name)
+        return @radiance_descriptions[name]
+    end
+end
+
+
+
 
 class MaterialContext < ExportBase
 
@@ -43,12 +146,12 @@ class MaterialContext < ExportBase
         if @aliasHash.has_key?(alias_name)
             m = @aliasHash[alias_name]
             if m != material
-                old = _getName(m)
-                new = _getName(material)
+                old = getSaveMaterialName(m)
+                new = getSaveMaterialName(material)
                 uimessage("WARNING: changing alias '#{alias_name}' from '#{old}' to '#{new}'")
             end
         else
-            uimessage("new alias name '#{alias_name}' for material '#{_getName(material)}'")
+            uimessage("new alias name '#{alias_name}' for material '#{getSaveMaterialName(material)}'")
         end
         @aliasHash[alias_name] = material
     end
@@ -60,76 +163,30 @@ class MaterialContext < ExportBase
             return 'sketchup_default_material'  #XXX
         end
     end
-
+    
+    def get(mat)
+        return @materialHash[mat]
+    end
+    
+    def has_key?(mat)
+        return @materialHash.has_key?(mat)
+    end
+    
     def pop
         return @nameStack.pop()
     end
 
     def push(mat)
         if mat != nil
-            name = _getName(mat)
+            name = getSaveMaterialName(mat)
             @nameStack.push(name)
         else
             @nameStack.push(@nameStack[-1])
         end
     end
-
-    def getEntityMaterial(entity)
-        begin
-            material = entity.material
-        rescue
-            material = nil
-        end
-        if entity.class == Sketchup::Face
-            if material == nil
-                material = entity.back_material
-            elsif entity.back_material != nil
-                front = getMaterialName(entity.material)
-                back = getMaterialName(entity.back_material)
-                if front != back
-                    uimessage("WARNING: front vs. back material: '%s' - '%s'" % [front, back])
-                end 
-            end
-        end
-        if material != nil
-            @materialHash[material] = _getName(material)
-        end
-        return material
-    end
     
-    def getMaterialName(mat)
-        if mat == nil
-            return getCurrentMaterialName()
-        end
-        if mat.class != Sketchup::Material
-            mat = getEntityMaterial(mat)
-        end
-        return _getName(mat)
-    end
-    
-    def _getName(mat)
-        ## generate a name that's save to use in Radiance
-        if @materialHash.has_key?(mat)
-            return @materialHash[mat]
-        end
-        ## if there is no display name, set it
-        if mat.display_name == ''
-            name = mat.name
-            if name == ''
-                name = "material_id%s" % mat.id
-                mat.name = name
-            end
-            mat.display_name = name
-        else
-            name = mat.display_name
-        end
-        if (name =~ /\d/) == 0
-            ## names starting with numbers can't be used in Radiance
-            name = 'sketchup_' + name
-        end
-        name = remove_spaces(name)
-        @materialHash[mat] = name
-        return name
+    def set(material, name)
+        @materialHash[material] = name
     end
     
     def getMaterialDescription(material)
@@ -139,64 +196,20 @@ class MaterialContext < ExportBase
             s += "\n0\n0\n5 0.4 0.4 0.4 0 0\n"
             return s
         end
-        name = _getName(material)
+        name = getSaveMaterialName(material)
         text = $materialDescriptions[name]
         if text != nil
             return text
         end
-        text = getMaterialFromLibrary(material, name)
+        text = $MatLib.getMaterialDescription(material)
         if text == nil
             text = convertRGBColor(material, name)
-            if $BUILD_MATERIAL_LIB == true
-                addMaterialToLibrary(material, text)
-            end
+            $MatLib.addMaterial(material, text)
         end
         $materialDescriptions[name] = text
         return text
     end
-   
-    def addMaterialToLibrary(material, text)
-        ## store material description in file
-        name = remove_spaces(material.display_name)
-        paths = find_support_files(name+".skm")
-        paths.each { |p|
-            filename = p.sub('.skm', '.rad')
-            if not File.exists?(filename)
-                begin
-                    f = File.new(filename, 'w')
-                    f.write(text)
-                    f.close()
-                rescue
-                    uimessage("Error creating material description '#{filename}'!")
-                end
-            end
-        }
-    end
     
-    def getMaterialFromLibrary(material, name)
-        name = remove_spaces(material.display_name)
-        paths = find_support_files(name+".skm")
-        paths.each { |p|
-            filename = p.sub('.skm', '.rad')
-            if File.exists?(filename)
-                if $verbose == true
-                    uimessage("material file '%s' found\n" % filename)
-                end
-                begin
-                    f = File.new(filename, 'r')
-                    text = f.read()
-                    f.close()
-                    text = text.strip()
-                    text = "\n## material def from file: '%s'\n%s\n" % [filename, text]
-                    return text
-                rescue
-                    uimessage("Error reading material description for '#{name}'")
-                end
-            end
-        }
-        return nil
-    end
-
     def convertRGBColor(material, name) 
         text = "\n## material conversion from Sketchup rgb color"
         c = material.color

@@ -1,21 +1,23 @@
 # Sketchup To Radiance Exporter
 #
-# su2rad.rb - version 0.0b
+# su2rad.rb - version 0.0d
 #
 # Written by Thomas Bleicher
 # based on ogre_export by Kojack
 #
-# This program is free software; you can redistribute it and/or modify it under
-# the terms of the GNU Lesser General Public License as published by the Free Software
-# Foundation; either version 2 of the License, or (at your option) any later
-# version.
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU Lesser General Public License
+# as published by the Free Software Foundation; either version 2 of
+# the License, or (at your option) any later version.
 # 
-# This program is distributed in the hope that it will be useful, but WITHOUT
-# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
-# FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more details.
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+# See the GNU Lesser General Public License for more details.
 # 
-# You should have received a copy of the GNU Lesser General Public License along with
-# this program; if not, write to the Free Software Foundation, Inc., 59 Temple
+# You should have received a copy of the GNU Lesser General Public
+# License along with this program; if not, write to the
+# Free Software Foundation, Inc., 59 Temple
 # Place - Suite 330, Boston, MA 02111-1307, USA, or go to
 # http://www.gnu.org/copyleft/lesser.txt.
 
@@ -35,6 +37,12 @@
 #                       added exception error display to export function
 # v 0.0  - 28/10/07  :  initial release
 
+if PLATFORM =~ /darwin/
+    $OS = 'MAC'
+else
+    $OS = 'WIN'
+end
+
 require "su2radlib/exportbase.rb"
 require "su2radlib/interface.rb"
 require "su2radlib/numeric.rb"
@@ -53,10 +61,11 @@ $RADPRIMITIVES = {  "plastic"    => 1,
                     "dielectric" => 1, "dielectric2" => 1,
                     "void"       => 1}
 
-$debug = 0
+$debug = 1
 $verbose = true
 $testdir = ""
 
+## reload all script files for debugging
 if $debug > 0
     load "su2radlib/exportbase.rb"
     load "su2radlib/interface.rb"
@@ -67,27 +76,29 @@ if $debug > 0
 end
 
 
-
+## define defaults if config file is messed up
 if (load "su2radlib/config.rb") == true
     printf "config loaded successfully\n"    
 else
     printf "ERROR loading config => builtin defaults used\n"    
-    $REPLMARKS = '' 
-    $MODE = "by group"      ## "by group"|"by layer"|"by color"
-    $MAKEGLOBAL = false     
-    $TRIANGULATE = false    
-    $UNIT = 0.0254          ## use meters for Radiance scene
-    $SHOWRADOPTS = false
-    $EXPORTALLVIEWS = false 
-    $RAD = ''
     $BUILD_MATERIAL_LIB = false
-    $SUPPORTDIR = "/Library/Application Support/Google Sketchup 6/Sketchup"
-    $PREVIEW = false        
-    $ZOFFSET = nil     
+    $EXPORTALLVIEWS = false 
+    $MAKEGLOBAL  = false     
+    $MODE        = "by group"      ## "by group"|"by layer"|"by color"
+    $RAD         = ''
+    $REPLMARKS   = '' 
+    $PREVIEW     = false        
+    $SHOWRADOPTS = false
+    $SUPPORTDIR  = "/Library/Application Support/Google Sketchup 6/Sketchup"
+    $TRIANGULATE = false    
+    $UNIT        = 0.0254          ## use meters for Radiance scene
+    $UTC_OFFSET  = nil
+    $ZOFFSET     = nil     
 end
 
-$SCALETRANS = Geom::Transformation.new(1/$UNIT)
 
+$SCALETRANS = Geom::Transformation.new(1/$UNIT)
+$MatLib = MaterialLibrary.new()
 
 def startExport(selected_only=0)
     begin
@@ -95,7 +106,6 @@ def startExport(selected_only=0)
         rs.export(selected_only)
     rescue => e 
         msg = "%s\n\n%s" % [$!.message,e.backtrace.join("\n")]
-        #printf "script failed:\n %s \n" % msg
         UI.messagebox msg            
     end 
 end
@@ -134,6 +144,10 @@ def startImport(f='')
 end
 
 
+def runTest
+    sky = RadianceSky.new()
+    sky.test()
+end
 
 
 
@@ -154,12 +168,12 @@ if $debug == 0
     rescue => e
         msg = "%s\n\n%s" % [$!.message,e.backtrace.join("\n")]
         UI.messagebox msg
-        printf "RadianceScene: entry to menu 'Export' failed:\n\n%s\n" % msg
+        printf "su2rad: entry to menu 'Plugin' failed:\n\n%s\n" % msg
     end
     file_loaded("su2rad.rb")
 else
     printf "debug mode\n"
-    startExport()
+    runTest()
     #startImport('/Users/ble/Desktop/ADF_medium.lux')
 end
 
