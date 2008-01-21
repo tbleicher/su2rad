@@ -23,6 +23,7 @@ class RadianceScene < ExportBase
         $usedMaterials = {}
         $materialContext = MaterialContext.new()
         $nameContext = []
+        $components = []
         $componentNames = {}
         $uniqueFileNames = {}
         $skyfile = ''
@@ -46,7 +47,8 @@ class RadianceScene < ExportBase
     end
     
     def initLog
-        line1 = "###  RadianceScene (#{$scene_name})  ###"
+        super
+        line1 = "###  RadianceScene (#{$scene_name})  ###" #XXX $scene_name undefined
         line2 = "###  %s  ###" % Time.now.asctime
         $log = [line1,line2]
         printf "%s\n" % line1
@@ -114,8 +116,15 @@ class RadianceScene < ExportBase
     end
     
     def createMainScene(references, faces_text, parenttrans=nil)
-        ## top level scene file split in '*.rad' and 'objects/*_faces.rad'
-        ## add 'objects/' to references in scene file
+        ## top level scene split in references (*.rad) and faces ('objects/*_faces.rad')
+        if $MODE != 'by group'
+            ## start with replacement files for components
+            ref_text = $components.join("\n")
+            ref_text += "\n"
+        else
+            ref_text = ""
+        end
+        ## create 'objects/*_faces.rad' file
         if faces_text != ''
             faces_filename = getFilename("objects/#{$scene_name}_faces.rad")
             if createFile(faces_filename, faces_text)
@@ -127,7 +136,7 @@ class RadianceScene < ExportBase
             end
             references.push(xform)
         end
-        ref_text = references.join("\n")
+        ref_text += references.join("\n")
         ## add materials and sky at top of file
         ref_text = "!xform ./materials.rad\n" + ref_text
         if $skyfile != ''
