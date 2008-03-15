@@ -31,7 +31,7 @@ class RadianceScene < ExportBase
         $facecount = 0
         $filecount = 0
         $createdFiles = Hash.new()
-        $inComponent = false
+        $inComponent = [false]
     end
     
     def initGlobalHashes
@@ -48,7 +48,7 @@ class RadianceScene < ExportBase
     
     def initLog
         super
-        line1 = "###  RadianceScene (#{$scene_name})  ###" #XXX $scene_name undefined
+        line1 = "###  su2rad.rb export ###" 
         line2 = "###  %s  ###" % Time.now.asctime
         $log = [line1,line2]
         printf "%s\n" % line1
@@ -88,7 +88,6 @@ class RadianceScene < ExportBase
             $SHOWRADOPTS = ud.results[2] 
             $EXPORTALLVIEWS = ud.results[3] 
             $MODE = ud.results[4]
-            printf "$MODE= #{$MODE}\n"
             $TRIANGULATE = ud.results[5]
             if $REPLMARKS != '' and File.exists?($REPLMARKS)
                 $MAKEGLOBAL = ud.results[6]
@@ -102,7 +101,7 @@ class RadianceScene < ExportBase
         end
         
         ## use test directory in debug mode
-        if $debug != 0 and  $testdir != ''
+        if $DEBUG and  $testdir != ''
             $export_dir = $testdir
             scene_dir = "#{$export_dir}/#{$scene_name}"
             if FileTest.exists?(scene_dir)
@@ -226,7 +225,6 @@ class RadianceScene < ExportBase
         dir, riffile = File.split(getFilename("%s.rif" % $scene_name))
         #Dir.chdir("#{$export_dir}/#{$scene_name}")
         #cmd = "%s -o x11 %s" % [$RAD, riffile]
-        #printf "cmd = %s\n" % cmd
     end
     
     def writeLogFile
@@ -284,7 +282,8 @@ class RadianceScene < ExportBase
         text =  "# scene input file for rad\n"
         text += @radOpts.getRadOptions
         text += "\n"
-        text += "PICTURE=      images/\n"
+        project = remove_spaces(File.basename($export_dir))
+        text += "PICTURE=      images/#{project}\n" 
         text += "OCTREE=       octrees/#{$scene_name}.oct\n"
         text += "AMBFILE=      ambfiles/#{$scene_name}.amb\n"
         text += "REPORT=       3 logfiles/#{$scene_name}.log\n"
@@ -314,7 +313,7 @@ class RadianceScene < ExportBase
                 end
             }
         end
-        return views.join('\n')
+        return views.join("\n")
     end
 
     def createViewFile(c, viewname)

@@ -68,7 +68,7 @@ class RadianceOptions
         @zonetype = "Exterior"
         @zonesize = getBBox
         @skytype  = getSkyType
-        @imgsize  = "512"
+        @imgsize  = "768"
         @render   = ""
         
     end
