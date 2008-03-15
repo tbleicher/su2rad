@@ -16,12 +16,15 @@ $UTC_OFFSET =  nil
 #$UTC_OFFSET =   -9  # Anchorage (AK)
 
 
+## level of report messages
+$LOGLEVEL = 3
+
 ## path to replmarks binary
 $REPLMARKS = '/usr/local/bin/replmarks'
 #$REPLMARKS = '' 
 
 ## default mode for export: by group
-$MODE = "by color"      ## "by group"|"by layer"|"by color"
+$MODE = "by group"      ## "by group"|"by layer"|"by color"
 
 ## keep local coordinates of groups and instances
 $MAKEGLOBAL = false     ## true|false - no quotes!
@@ -33,7 +36,7 @@ $TRIANGULATE = false    ## true|false - no quotes!
 $UNIT = 0.0254          ## use meters for Radiance scene
 
 ## show Radiance option dialog
-$SHOWRADOPTS = true     ## true|false - no quotes!
+$SHOWRADOPTS = false     ## true|false - no quotes!
 
 ## export all saved views
 $EXPORTALLVIEWS = false ## true|false - no quotes!

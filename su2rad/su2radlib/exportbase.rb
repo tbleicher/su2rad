@@ -21,13 +21,15 @@ class ExportBase
                 clearDirectory(fpath)
                 begin
                     Dir.delete(fpath)
+                    uimessage("deleted directory '#{fpath}'", 2)
                 rescue
                     uimessage("directory '#{fpath}' not empty")
                 end
             elsif FileTest.file?(fpath) == true
 		File.delete(fpath)
+                uimessage("deleted file '#{fpath}'", 3)
             else
-                uimessage("unexpected entry in fs: '#{fpath}'")
+                uimessage("unexpected entry in file system: '#{fpath}'")
             end
         }
     end
@@ -37,6 +39,7 @@ class ExportBase
         if subdir == ""
             subdir = $SUPPORTDIR
         elsif subdir[0] != '/'[0]
+            #XXX: platform! 
             subdir = File.join($SUPPORTDIR, subdir)
         end
         if FileTest.directory?(subdir) == false
@@ -58,30 +61,9 @@ class ExportBase
     end
         
     def getSaveMaterialName(mat)
-        ## generate a name that's save to use in Radiance
-        if $materialContext.has_key?(mat)
-            return $materialContext.get(mat)
-        end
-        ## if there is no display name, set it
-        if mat.display_name == ''
-            name = mat.name
-            if name == ''
-                name = "material_id%s" % mat.id
-                mat.name = name
-            end
-            mat.display_name = name
-        else
-            name = mat.display_name
-        end
-        if (name =~ /\d/) == 0
-            ## names starting with numbers can't be used in Radiance
-            name = 'sketchup_' + name
-        end
-        name = remove_spaces(name)
-        $materialContext.set(mat, name)
-        return name
+        return $materialContext.getSaveMaterialName(mat)
     end
-
+    
     def initLog
         if $nameContext == nil
             $nameContext = []
@@ -92,7 +74,7 @@ class ExportBase
     end
     
     def isVisible(e)
-        if $inComponent == true and e.layer.name == 'Layer0'
+        if $inComponent[-1] == true and e.layer.name == 'Layer0'
             return true
         elsif e.hidden?
             return false
@@ -113,27 +95,21 @@ class ExportBase
     end
     
     def exportByCL(entity_list, mat, globaltrans)
+        ## unused?
         $materialContext.push(mat)
         lines = []
         entity_list.each { |e|
-            if e.class == Sketchup::Group
-                if not isVisible(e)
-                    next
-                end
+            if not isVisible(e)
+                next
+            elsif e.class == Sketchup::Group
                 gtrans = globaltrans * e.transformation
                 lines += exportByCL(e.entities, e.material, gtrans)
             elsif e.class == Sketchup::ComponentInstance
-                if not isVisible(e)
-                    next
-                end
                 gtrans = globaltrans * e.transformation
-                $inComponent = true
+                $inComponent.push(true)
                 lines += exportByCL(e.definition.entities, e.material, gtrans)
-                $inComponent = false
+                $inComponent.pop()
             elsif e.class == Sketchup::Face
-                if not isVisible(e)
-                    next
-                end
                 $facecount += 1
                 rp = RadiancePolygon.new(e, $facecount)
                 if rp.material == nil or rp.material.texture == nil
@@ -177,6 +153,8 @@ class ExportBase
                 end
                 faces.push(e)
                 #@texturewriter.load(e,true)
+            else
+                uimessage("WARNING: Can't export entity of type '%s'!\n" % e.class)
             end
         }
         faces_text = ''
@@ -198,9 +176,8 @@ class ExportBase
             createNumericFile(numpoints)
         end
         
-        if $verbose == true
-            uimessage("exported entities [refs=%d, faces=%d]" % [references.length, faces.length])
-        end
+        ## stats message  
+        uimessage("exported entities [refs=%d, faces=%d]" % [references.length, faces.length], 1)
 
         ## create 'by group' files or stop here
         if $MODE == 'by layer' or $MODE == 'by color'
@@ -227,6 +204,12 @@ class ExportBase
         true
     end
     
+    def prepareSceneDir(scene_dir)
+        ["octrees", "images", "logfiles", "ambfiles"].each { |subdir|
+            createDirectory("#{scene_dir}/#{subdir}")
+        }
+    end 
+    
     def removeExisting(scene_dir)
         if FileTest.exists?(scene_dir)
             scene_name = File.basename(scene_dir)
@@ -234,14 +217,14 @@ class ExportBase
             if ui_result == 1
                 uimessage('removing directories')
                 clearDirectory(scene_dir)
-                ["octrees", "images", "logfiles", "ambfiles"].each { |subdir|
-                    createDirectory("#{scene_dir}/#{subdir}")
-                }
+                prepareSceneDir(scene_dir)
                 return true
             else
                 uimessage('export canceled')
                 return false
             end
+        else
+            prepareSceneDir(scene_dir)
         end
         return true
     end
@@ -290,6 +273,7 @@ class ExportBase
     end
    
     def createFile(filename, text)
+        ## write 'text' to 'filename' in a save way
         path = File.dirname(filename)
         createDirectory(path)
         if not FileTest.directory?(path)
@@ -299,11 +283,8 @@ class ExportBase
         f.write(text)
         f.close()
         $createdFiles[filename] = 1
-        #$createdFiles.each_pair { |k,v| print "#{k} -> #{v}\n" }
         
-        if $verbose == true
-            uimessage("created file '%s'" % filename)
-        end
+        uimessage("created file '%s'" % filename, 1)
         $filecount += 1
         Sketchup.set_status_text "files:", SB_VCB_LABEL
         Sketchup.set_status_text "%d" % $filecount, SB_VCB_VALUE
@@ -311,7 +292,7 @@ class ExportBase
     end 
     
     def createNumericFile(points)
-        ## save to file
+        ## write points to file in a save way; if file exists merge points
         name = $nameContext[-1]
         filename = getFilename("numeric/#{name}.fld")
         if FileTest.exists?(filename)
@@ -357,7 +338,7 @@ class ExportBase
                 back = getMaterialName(entity.back_material)
                 if front != back
                     uimessage("WARNING: front vs. back material: '%s' - '%s'" % [front, back])
-                end 
+                end
             end
         end
         return material
@@ -378,8 +359,6 @@ class ExportBase
     end
         
     def getXform(filename, trans)
-        printf "getXform %s\n" % filename
-        showTransformation(trans)
         if $nameContext.length <= 2     #XXX ugly hack
             ## for main scene file
             path = "%s/%s/" % [$export_dir, $scene_name]
@@ -390,7 +369,6 @@ class ExportBase
         suffix = filename[filename.length-4,4].downcase()
         objname = $nameContext[-1]
         if $MAKEGLOBAL
-            printf "$MAKEGLOBAL==true\n"
             xform = "!xform -n #{objname} #{filename}"
         else
             #TODO: mirror 
@@ -403,7 +381,6 @@ class ExportBase
             if scale.length > 10000 or scale.length < 0.0001
                 uimessage("Warning unusual scale (%.3f) for object '%s'" % [scale.length, objname]) 
             end
-            #scale = "-s %.3f" % scale.length
             
             ## transformation
             trans = trans * $SCALETRANS
@@ -484,15 +461,17 @@ class ExportBase
         printf "  %5.2f  %5.2f  %5.2f  %5.2f\n" % a[0..3]
         printf "  %5.2f  %5.2f  %5.2f  %5.2f\n" % a[4..7]
         printf "  %5.2f  %5.2f  %5.2f  %5.2f\n" % a[8..11]
-        printf "  %5.2f  %5.2f  %5.2f  %5.2f\n" % a[12..15]
+        printf "  %5.2f  %5.2f  %5.2f  %5.2f\n" % [a[12]*$UNIT, a[13]*$UNIT, a[14]*$UNIT, a[15]]
     end
 
-    def uimessage(msg, level=0)
+    def uimessage(msg, loglevel=0)
         n = $nameContext.length
-        prefix = "    " * (n+level)
+        prefix = "    " * (n+loglevel)
         line = "%s [%d] %s" % [prefix, n, msg]
         Sketchup.set_status_text(line.strip())
-        printf "%s\n" % line
-        $log.push(line)
+        if loglevel <= $LOGLEVEL
+            printf "%s\n" % line
+            $log.push(line)
+        end
     end
 end 

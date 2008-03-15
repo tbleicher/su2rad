@@ -28,7 +28,7 @@
 #                       fixed export of hidden layers in components
 #                       new 'by layer' and 'by color' options
 #                       more options for .rif file
-#                       split in separate file in su2radlib
+#                       split in separate files in su2radlib
 # 
 # v 0.0c - 31/10/07  :  fixed bug in export of multiple views
 # v 0.0b - 29/10/07  :  fixed bug in replmarks warning
@@ -61,12 +61,10 @@ $RADPRIMITIVES = {  "plastic"    => 1,
                     "dielectric" => 1, "dielectric2" => 1,
                     "void"       => 1}
 
-$debug = 1
-$verbose = true
 $testdir = ""
 
 ## reload all script files for debugging
-if $debug > 0
+if $DEBUG
     load "su2radlib/exportbase.rb"
     load "su2radlib/interface.rb"
     load "su2radlib/numeric.rb"
@@ -77,31 +75,32 @@ end
 
 
 ## define defaults if config file is messed up
+$BUILD_MATERIAL_LIB = false
+$EXPORTALLVIEWS = false 
+$MAKEGLOBAL  = false     
+$LOGLEVEL    = 0                ## don't report details
+$MODE        = "by group"       ## "by group"|"by layer"|"by color"
+$RAD         = ''
+$REPLMARKS   = '' 
+$PREVIEW     = false        
+$SHOWRADOPTS = false
+$SUPPORTDIR  = "/Library/Application Support/Google Sketchup 6/Sketchup"
+$TRIANGULATE = false    
+$UNIT        = 0.0254           ## use meters for Radiance scene
+$UTC_OFFSET  = nil
+$ZOFFSET     = nil     
 if (load "su2radlib/config.rb") == true
     printf "config loaded successfully\n"    
 else
     printf "ERROR loading config => builtin defaults used\n"    
-    $BUILD_MATERIAL_LIB = false
-    $EXPORTALLVIEWS = false 
-    $MAKEGLOBAL  = false     
-    $MODE        = "by group"      ## "by group"|"by layer"|"by color"
-    $RAD         = ''
-    $REPLMARKS   = '' 
-    $PREVIEW     = false        
-    $SHOWRADOPTS = false
-    $SUPPORTDIR  = "/Library/Application Support/Google Sketchup 6/Sketchup"
-    $TRIANGULATE = false    
-    $UNIT        = 0.0254          ## use meters for Radiance scene
-    $UTC_OFFSET  = nil
-    $ZOFFSET     = nil     
 end
 
 
 $SCALETRANS = Geom::Transformation.new(1/$UNIT)
-$MatLib = MaterialLibrary.new()
 
 def startExport(selected_only=0)
     begin
+        $MatLib = MaterialLibrary.new()
         rs = RadianceScene.new()
         rs.export(selected_only)
     rescue => e 
@@ -132,7 +131,7 @@ end
 
 def startImport(f='')
     ni = NumericImport.new()
-    if $debug == 1
+    if $DEBUG
         ni.loadFile(f)
         ni.createMesh
         ni.addContourLines
@@ -151,7 +150,12 @@ end
 
 
 
-if $debug == 0
+if $DEBUG
+    printf "debug mode\n"
+    #runTest()
+    #startImport('/Users/ble/Desktop/ADF_medium.lux')
+    startExport()
+else
     ## create menu entry
     begin
         if (not file_loaded?("su2rad.rb"))
@@ -171,10 +175,6 @@ if $debug == 0
         printf "su2rad: entry to menu 'Plugin' failed:\n\n%s\n" % msg
     end
     file_loaded("su2rad.rb")
-else
-    printf "debug mode\n"
-    runTest()
-    #startImport('/Users/ble/Desktop/ADF_medium.lux')
 end
 
 

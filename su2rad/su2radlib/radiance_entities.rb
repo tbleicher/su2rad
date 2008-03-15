@@ -168,7 +168,6 @@ class RadianceComponent < ExportBase
     def copyReplFile(filename, transformation)
         #XXX
         suffix = @replacement[@replacement.length-4,4]
-        printf "SUFFIX: #{suffix}\n"
         defname = getComponentName(@entity)
         filename = getFilename("objects/#{defname}#{suffix}")
         
@@ -211,7 +210,7 @@ class RadianceComponent < ExportBase
         end
     end
     
-    def export(parenttrans) 
+    def export(parenttrans)
         entities = @entity.definition.entities
         defname = getComponentName(@entity)
         iname = getUniqueName(@entity.name)
@@ -220,7 +219,7 @@ class RadianceComponent < ExportBase
         matname = getMaterialName(mat)
         alias_name = "%s_material" % defname
         $materialContext.setAlias(mat, alias_name)
-        $materialContext.push(mat)
+        $materialContext.push(alias_name)
         
         ## force export to global coords if transformation
         ## can't be reproduced with xform
@@ -247,15 +246,18 @@ class RadianceComponent < ExportBase
             $nameContext.push(iname)    ## use instance name for file
         end
         
-        if $MAKEGLOBAL == true
+        if $MAKEGLOBAL == true and not resetglobal == true
+            showTransformation(parenttrans)
+            showTransformation(@entity.transformation)
             parenttrans *= @entity.transformation
+            showTransformation(parenttrans)
         else
             parenttrans = @entity.transformation
         end
         
         if @iesdata != ''
             ## luminaire from IES data
-            ref = copyIESLuminaire(parenttrans) ## empty text string as arg1
+            ref = copyIESLuminaire(parenttrans)
         elsif @replacement != ''
             ## any other replacement file
             ref = copyReplFile(filename, parenttrans)
@@ -264,9 +266,9 @@ class RadianceComponent < ExportBase
         else
             oldglobal = $globaltrans
             $globaltrans *= @entity.transformation
-            $inComponent = true
+            $inComponent.push(true)
             ref = exportByGroup(entities, parenttrans, false)
-            $inComponent = false
+            $inComponent.pop()
             $globaltrans = oldglobal
         end
         
@@ -578,7 +580,8 @@ class RadianceSky < ExportBase
     def getGenSkyOptions(sinfo)
         ## Time zone of ShadowTime is UTC. When strftime is used
         ## local tz is applied which shifts the time string for gensky.
-        ## $UTC_OFFSET has to be defined to compensate this.
+        ## $UTC_OFFSET has to be defined to compensate this. Without
+        ## it sky can only by definded by '-ang alti azi' syntax.
         if $UTC_OFFSET != nil
             ## if offset is defined change time before strftime
             skytime = sinfo['ShadowTime']
@@ -586,9 +589,9 @@ class RadianceSky < ExportBase
             if skytime.isdst == true
                 skytime -= 3600
             end
-            lat = sinfo['Latitude']
+            lat  = sinfo['Latitude']
             long = sinfo['Longitude']
-            mer = getTimeZone(sinfo['Country'], sinfo['City'], long)
+            mer  = "%.1f" % (sinfo['TZOffset']*-15.0)
             text = "!gensky %s " % skytime.strftime("%m %d %H:%M")
             text += " -a %.2f -o %.2f -m %1.f" % [lat, -1*long, mer]
         else
@@ -611,6 +614,7 @@ class RadianceSky < ExportBase
     end
     
     def getTimeZone(country, city, long)
+        ## unused
         meridian = ''
         ## location data file depends on platform
         if $OS == 'MAC'
