@@ -1,17 +1,16 @@
 #summary su2rad.rb Radiance exporter script for Sketchup.
 #labels Featured
 
-
 == Features ==
 
 ===What it does===
-  * _su2rad.rb_ can help you to create Radiance scene descriptions from SketchUp models.
+  * _su2rad.rb_ can help you create Radiance scene descriptions from SketchUp models.
   * exports faces as polygons not just triangles and quads (even with holes) 
   * exports saved view points/perspectives
   * exports by group, by layer or by material
-  * creates Radiance project file structure
-  * creates sky description
-  * creates field description for numeric evaluations (rtrace input files)
+  * creates a nice Radiance project file structure
+  * creates a sky description
+  * creates field descriptions for numeric evaluations (rtrace input files)
   * imports rtrace results as 3D surface (just for the fun of it)
   * resolves conflicts in material assignments (see below)
 
@@ -42,17 +41,17 @@ that the same issue has not already been reported.
 Additionally here is a number of bugs which I am aware of but for
 the time being have no idea how to solve:
 
-  * *Entities are only exported half.* - (example: cars from the library) I assume this is related to the missing detection of mirrored ('flipped') entities.
+  * *Nested transformations are still a problem*. - It's getting better, though. Always do a visual check (rvu or picture) of the resulting scene description before you start rtrace calculations. If you actually have a problem in a scene try exporting with global coordinates.
   * *There are no textures!* - Right. There are no textures (yet).
-  * *Colours look all wrong.* - A lot of 'colours' in Sketchup rely on textures, so see above. The conversion from Sketchup to Radiance colours is not correct because you should  use a library of materials instead. A conversion should only be used as a last resort and only for small elements. The library and the conversion do need more work.
-  * *Transparency is not converted.* - Apparently there is a bug in Sketchup 6 which represents the alpha value of the colour wrongly in the API. If that get's fixed in Sketchup it should work. 
+  * *Colors look all wrong.* - A lot of 'colors' in Sketchup rely on textures, so see above. The conversion from Sketchup to Radiance rgb colors is not correct because of my feeble understanding of the principles involved (if anyone could share a few simple scripts I'd be delighted). Anyway you should  use a library of materials. A conversion should only be used as a last resort and then only for small elements. The library and the conversion do need more work but you can use standard material identifiers and simply swap the materials file with one that contains validated definitions.
+  * *Transparency is not converted.* - Apparently there is a bug in Sketchup 6 which reports the alpha value of colors wrongly in the API. Once that is fixed in Sketchup it should work.
 
   
 == History ==
 
-_su2rad.rb_ is still under heavy development.
+_su2rad.rb_ is still under development.
 
-  * *v00d -    tbc    - new 'by layer' and 'by color' modes, split in multiple files, added contour lines to numeric import feature
+  * *v00d - 16/03/08* - new 'by layer' and 'by color' modes, new preferences dialog, new material library feature, split in multiple files, added contour lines to numeric import feature, bug fixes and improvements
   * *v00c - 31/10/07* - fixed bug in export of multiple views
   * *v00b - 29/10/07* - bugfixes for Windows, new orientation export and error handling
   * *v00 - 28/10/07* - initial release
@@ -60,7 +59,7 @@ _su2rad.rb_ is still under heavy development.
 
 == Installation ==
 
-Copy the _su2rad.rb_ file and the _su2radlib_ directory into the Plugins directory of your SketchUp installation.
+Copy the _su2rad.rb_ file and the _su2radlib_ directory into the Plugins directory of your SketchUp installation (also the _locations.rb_ file if you like).
 This should be
 
   * _/Library/Application Support/Google Sketchup 6/Sketchup/Plugins_ on a Mac
@@ -73,20 +72,24 @@ Read the section on config options below.
 
 ==Configuration==
 
-At the top of the su2rad.rb script you can find a block of configuration options. If you know the how to use a text editor and what’s the difference between a bool and a string variable it should be no problem to adjust these to reflect the environment on your computer and you preferences. Here are the options you can change:
+As of version *00d* there is a preferences dialog in the 'Plugins - Radiance' menu. This dialog allows you to change the defaults for the export options and other global settings. You should know about the following options:
 
-  * *$REPLMARKS* This is the full path to the replmarks binary on your system. su2rad relies on replmarks to create the correct xform transformation of groups and component instances. Without replmarks (or if the path is wrong) all entities will be exported to one global co-ordinate system. Works on OS X, not tested on Windows.
+  * *log level* Defines the amount of information in the log file.
 
-  * *$MAKEGLOBAL* This is the default value for the “global coords” prompt of the import dialog. You can always change the value in the dialog but with the right setting this variable saves you a click. Use global coords if the !xform transformation does not work correctly. With global coords a reuse of instances is not possible.
+  * *replmarks path* This is the full path to the replmarks binary on your system. su2rad relies on replmarks to create the correct xform transformation of groups and component instances. Without replmarks (or if the path is wrong) all entities will be exported to one global co-ordinate system. Works on OS X, not tested on Windows.
 
-  * *$TRIANGULATE* This options sets the default for export to triangles instead of n-polygons. This might be necessary in some cases where the script would create non planar polygons (due to tolerances) or simple gets confused with the holes. The option is global: either all elements are triangulated or none.
+  * *global coords* This sets the default value for the “global coords” prompt of the import dialog. You can always change the value in the dialog but with the right setting this variable saves you a click. Use global coords if the !xform transformation does not work correctly. With global coords a reuse of instances is not possible.
 
-  * *$UNIT* Sets the unit to convert from Sketchup native units (=inches) to Radiance scene units. Most Radiance scenes use meters and some scripts assume this as default. Please note that the native unit in Sketchup is always inches and is not related to the units you set in your preferences.
+  * *triangulate* This options sets the default for export to triangles instead of n-polygons. This might be necessary in some cases where the script would create non planar polygons (due to tolerances) or simple gets confused with the holes. The option is global: either all elements are triangulated or none.
 
-  * *$SHOWRADOPTIONS* Set to true if you always want to see the dialog to change rad options. The options file (_.rif_ file) and the dialog are incomplete. You can force or suppress the dialog at runtime.
+  * *unit* Sets the unit to convert from Sketchup native units (inches) to Radiance scene units. Most Radiance scenes use meters and some scripts assume this as default. To use meters in Radiance *0.0254* is the right _unit_ value. Please note that the native unit in Sketchup is always inches and is not related to the units you set in your preferences when you first open Sketchup.
 
-  * *$EXPORTALLVIEWS* With this set to true the script will export all Sketchup pages with view information to view files in the views subdirectory and view= lines in the scene _.rif_ file. The active page will always be the first view in the list. Can be changed in the dialog.
+  * *show options* Set to _true_ if you always want to see the dialog showing the _rad_ options. You can force or suppress the dialog at runtime.
 
-  * *$BUILD_MATERIAL_LIB* With this option set to true su2rad will write all material description that are not taken from the library to files in the file system next to the Sketchup material file (.skm). Next time the definition will be read from this file. This is an easy way to find out the 'radiance safe' material name of a material. 
+  * *export all views* With this set to true the script will export all Sketchup pages with camera information to view files in the views subdirectory and view= lines in the scene _.rif_ file. The active page will always be the first view in the list. Note that it will not create a new export for each scene. Only the camera settings are used. If you want to export the complete scene you have to do this manually. Can also be changed at run time.
 
-  * *$RAD and $PREVIEW* These options exist for a future preview feature. Doesn’t work yet.
+  * *update library* With this option set to _true_ su2rad.rb will write all material descriptions that are not taken from the library to files in the file system next to the Sketchup material file (.skm). Next time the definition will be read from this file. This is an easy way to find out the 'radiance safe' material name of a material and to create templates for existing Sketchup materials. This feature is still very experimental.
+
+  * *supportdir* This ties in with the library setting above. The support directory is the base directory of the Sketchup/Radiance materials and components library. If this is empty no library is created.
+
+  * *system clock* Sketchup has a funny way of setting parameters for the shadow calculations. Although the location sets the longitude and time zone the shadow time is still calculated in UTC. Therefore it's necessary for su2rad.rb to know the time offset of _your computer's system clock_ (not the model location) to UTC. If this is set to nil the gensky command for the sky description will be crated with '-ang alti azi' instead of the more understandable date and time syntax.
