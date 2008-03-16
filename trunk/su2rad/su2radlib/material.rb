@@ -132,18 +132,20 @@ class MaterialContext < ExportBase
         marray.each { |a|
             text += a[1]
         }
-        ## check against list of files in 'objects' directory
-        reg_obj = Regexp.new('objects')
-        $createdFiles.each_pair { |fpath, value|
-            m = reg_obj.match(fpath)
-            if m
-                ofilename = File.basename(fpath, '.rad')
-                if not defined.has_key?(ofilename)
-                    uimessage("WARNING: material #{ofilename} undefined; adding alias")
-                    text += getMaterialDescription(ofilename)
+        if $MODE != 'by group'
+            ## check against list of files in 'objects' directory
+            reg_obj = Regexp.new('objects')
+            $createdFiles.each_pair { |fpath, value|
+                m = reg_obj.match(fpath)
+                if m
+                    ofilename = File.basename(fpath, '.rad')
+                    if not defined.has_key?(ofilename)
+                        uimessage("WARNING: material #{ofilename} undefined; adding alias")
+                        text += getMaterialDescription(ofilename)
+                    end
                 end
-            end
-        }
+            }
+        end
         if not createFile(filename, text)
             uimessage("ERROR creating material file '#{filename}'")
         end
@@ -232,6 +234,9 @@ class MaterialContext < ExportBase
     
     def getSaveMaterialName(mat)
         ## generate a name that's save to use in Radiance
+        if @aliasHash.has_key?(mat)
+            return mat
+        end
         if @materialHash.has_key?(mat)
             return @materialHash[mat]
         end
@@ -256,15 +261,13 @@ class MaterialContext < ExportBase
     end
 
     def convertRGBColor(material, name)
-        ## TODO: proper conversion from grafics RGB to Radiance
+        ## TODO: proper conversion between color spaces
         text = "\n## material conversion from Sketchup rgb color"
         c = material.color
-        r = c.red/300.0         #XXX
-        g = c.green/300.0       #XXX
-        b = c.blue/300.0        #XXX
+        r,g,b = rgb2rgb(c)
         spec = 0.0
         rough = 0.0
-        ## XXX color.alpha does not work in SketchUp
+        ## XXX color.alpha does not work in SketchUp 6
         ## hack: search for 'glass' in the name
         if (name.downcase() =~ /glass/) != nil
             text += "\nvoid glass #{name}"
@@ -287,10 +290,14 @@ class MaterialContext < ExportBase
         end
         return text
     end
+    
+    def rgb2rgb(color)
+        var_R = 0.8 * color.red/255.0
+        var_G = 0.8 * color.green/255.0
+        var_B = 0.8 * color.blue/255.0
+        return [var_R,var_G,var_B]
+    end
 end
-
-
-
 
 class MaterialConflicts < ExportBase
 

@@ -43,6 +43,7 @@ else
     $OS = 'WIN'
 end
 
+require "su2radlib/preferences.rb"
 require "su2radlib/exportbase.rb"
 require "su2radlib/interface.rb"
 require "su2radlib/numeric.rb"
@@ -65,6 +66,7 @@ $testdir = ""
 
 ## reload all script files for debugging
 if $DEBUG
+    load "su2radlib/preferences.rb"
     load "su2radlib/exportbase.rb"
     load "su2radlib/interface.rb"
     load "su2radlib/numeric.rb"
@@ -76,27 +78,26 @@ end
 
 ## define defaults if config file is messed up
 $BUILD_MATERIAL_LIB = false
-$EXPORTALLVIEWS = false 
-$MAKEGLOBAL  = false     
-$LOGLEVEL    = 0                ## don't report details
-$MODE        = "by group"       ## "by group"|"by layer"|"by color"
-$RAD         = ''
-$REPLMARKS   = '' 
-$PREVIEW     = false        
-$SHOWRADOPTS = false
-$SUPPORTDIR  = "/Library/Application Support/Google Sketchup 6/Sketchup"
-$TRIANGULATE = false    
-$UNIT        = 0.0254           ## use meters for Radiance scene
-$UTC_OFFSET  = nil
-$ZOFFSET     = nil     
-if (load "su2radlib/config.rb") == true
-    printf "config loaded successfully\n"    
-else
-    printf "ERROR loading config => builtin defaults used\n"    
-end
+$EXPORTALLVIEWS     = false 
+$MAKEGLOBAL         = false     
+$LOGLEVEL           = 0                ## don't report details
+$MODE               = 'by group'       ## "by group"|"by layer"|"by color"
+$RAD                = ''
+$REPLMARKS          = '/usr/local/bin/replmarks' 
+$PREVIEW            = false        
+$SHOWRADOPTS        = true
+$SUPPORTDIR         = '/Library/Application Support/Google Sketchup 6/Sketchup'
+$TRIANGULATE        = false    
+$UNIT               = 0.0254           ## inch (SU native unit) to meters (Radiance)
+$UTC_OFFSET         = nil
+$ZOFFSET            = nil     
 
+## try to load configuration from file
+loadPreferences()
 
+## define scale matrix for unit conversion
 $SCALETRANS = Geom::Transformation.new(1/$UNIT)
+
 
 def startExport(selected_only=0)
     begin
@@ -143,6 +144,14 @@ def startImport(f='')
 end
 
 
+
+def preferencesDialog
+    pd = PreferencesDialog.new()
+    pd.showDialog()
+end
+
+
+
 def runTest
     sky = RadianceSky.new()
     sky.test()
@@ -152,9 +161,6 @@ end
 
 if $DEBUG
     printf "debug mode\n"
-    #runTest()
-    #startImport('/Users/ble/Desktop/ADF_medium.lux')
-    startExport()
 else
     ## create menu entry
     begin
@@ -168,6 +174,7 @@ else
             matmenu.add_item("resolve conflicts") { resolveConflicts }
             importmenu = radmenu.add_submenu("Import")
             importmenu.add_item("numeric results") { startImport }
+            radmenu.add_item("Preferences") { preferencesDialog() }
         end
     rescue => e
         msg = "%s\n\n%s" % [$!.message,e.backtrace.join("\n")]

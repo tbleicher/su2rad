@@ -153,6 +153,8 @@ class ExportBase
                 end
                 faces.push(e)
                 #@texturewriter.load(e,true)
+            elsif e.class == Sketchup::Edge
+                next
             else
                 uimessage("WARNING: Can't export entity of type '%s'!\n" % e.class)
             end
