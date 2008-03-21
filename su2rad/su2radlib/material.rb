@@ -101,6 +101,13 @@ class MaterialContext < ExportBase
         @nameStack = ['sketchup_default_material']
         @materialHash = Hash[nil => 'sketchup_default_material']
         @aliasHash = {}
+
+        ## matrix for sRGB color space transformation
+        ## TODO: Apple RGB?
+        red     = [0.412424, 0.212656, 0.0193324]
+        green   = [0.357579, 0.715158,  0.119193]
+        blue    = [0.180464, 0.0721856, 0.950444]
+        @matrix = [red,green,blue]
     end
     
     def export(filename='')
@@ -308,6 +315,85 @@ class MaterialContext < ExportBase
         var_G = 0.8 * color.green/255.0
         var_B = 0.8 * color.blue/255.0
         return [var_R,var_G,var_B]
+    end
+    
+    def rgb2rgb_TEST(color)
+        printf "rgb2rgb: #{color}\n"
+        xyz = sRGB2XYZ(color)
+        printTriple(xyz, "sRGB2XYZ")
+        xyy = _XYZ2xyY(xyz)
+        printTriple(xyy, "_XYZ2xyY")
+        rgb = xyY2rgb(xyy)
+        printTriple(rgb,  "xyY2rgb")
+        return rgb
+    end
+
+    def printTriple(rgb, comment='')
+        r,g,b = rgb
+        printf "%-10s= %.5f  %.5f  %.5f\n" % [comment, r,g,b]
+    end
+    
+    def sRGB2XYZ(color)
+        ## convert sketchup color to XYZ color triple
+        r = sRGBcomp2XYZcomp(color.red/255.0)
+        g = sRGBcomp2XYZcomp(color.green/255.0)
+        b = sRGBcomp2XYZcomp(color.blue/255.0)
+        x,y,z = applyMatrix(r,g,b)
+        return [x,y,z]
+    end
+
+    def applyMatrix(r,g,b)
+        ## apply colorspace conversion matrix 
+        _a,_b,_c = @matrix[0]
+        _d,_e,_f = @matrix[1]
+        _h,_i,_j = @matrix[2]
+        x = _a*r + _b*g + _c*b
+        y = _d*r + _e*g + _f*b
+        z = _h*r + _i*g + _j*b
+        return [x,y,z]
+    end
+
+    def _XYZ2xyY(xyz)
+        x,y,z = xyz
+        if x + y + z == 0.0:
+            return [0.0, 0.0, 0.0]
+        else
+            x = x / (x + y + z)
+            y = y / (x + y + z)
+            _y = y
+            return [x,y,_y]
+        end
+    end
+
+    def xyY2rgb(xyy)
+        x,y,myY = xyy
+        myX = x / y*myY
+        myZ = (1-x-y) / y*myY
+        r = noneg( 2.565*myX - 1.167*myY - 0.398*myZ)
+        g = noneg(-1.022*myX + 1.978*myY + 0.044*myZ)
+        b = noneg( 0.075*myX - 0.252*myY + 1.177*myZ)
+        return [r,g,b]
+    end
+
+    def noneg(val)
+        if val > 0.0
+            return val
+        else
+            return 0.0
+        end
+    end
+
+    def sRGBcomp2XYZcomp(comp)
+        ## convert sRGB component to XYZ component
+        if comp < 1.0
+            comp /= 255.0
+        end
+        if comp > 0.04045
+            comp = ((comp + 0.055) / 1.055 )**2.4
+        else
+            comp = comp / 12.92
+        end
+        return comp
     end
 end
 
