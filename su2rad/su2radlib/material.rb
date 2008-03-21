@@ -141,7 +141,7 @@ class MaterialContext < ExportBase
                     ofilename = File.basename(fpath, '.rad')
                     if not defined.has_key?(ofilename)
                         uimessage("WARNING: material #{ofilename} undefined; adding alias")
-                        text += getMaterialDescription(ofilename)
+                        text += getAliasDescription(ofilename)
                     end
                 end
             }
@@ -200,6 +200,18 @@ class MaterialContext < ExportBase
     def set(material, name)
         @materialHash[material] = name
     end
+   
+    def getAliasDescription(material)
+        if @aliasHash.has_key?(material)
+            name = @materialHash[material]
+            return "\nvoid alias #{material} #{name}\n"
+        else
+            uimessage("WARNING: material '#{material} undefined; adding alias\n")
+            s  = "\n## undefined material #{material}"
+            s += "\nvoid alias #{material} sketchup_default_material\n"
+            return s
+        end
+    end 
     
     def getMaterialDescription(material)
         if material == nil

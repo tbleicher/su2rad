@@ -83,14 +83,16 @@ class PreferencesDialog
     end
 
     def updateFromFile(filepath)
-        begin
-            load filepath
-            @filepath = filepath
-            printf "settings updated from file '#{filepath}\n"
-        rescue => e
-            printf "ERROR reading preferences file '#{filepath}'!\n"
-            msg = "%s\n\n%s" % [$!.message,e.backtrace.join("\n")]
-            return
+        if File.exists?(filepath)
+            begin
+                load filepath
+                @filepath = filepath
+                printf "settings updated from file '#{filepath}\n"
+            rescue => e
+                printf "ERROR reading preferences file '#{filepath}'!\n"
+                msg = "%s\n\n%s" % [$!.message,e.backtrace.join("\n")]
+                return
+            end
         end
         ## now all values are in global vars
         @loglevel   = $LOGLEVEL
