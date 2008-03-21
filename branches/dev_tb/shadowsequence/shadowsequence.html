@@ -1,0 +1,664 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html>
+<head>
+  <meta name="generator" content="HTML Tidy for Mac OS X (vers 1st December 2004), see www.w3.org">
+  <meta http-equiv="Content-Type" content="text/html">
+  <link href="wdialog.css" rel="stylesheet" type="text/css">
+
+  <title>ShadowSequence options</title>
+<style type="text/css">
+.body               {   font-size:83%; font-family: Arial, sans-serif; margin-right:0; margin-left:0; color:#333333; line-height:1.2; }
+.blue               {   background: lightskyblue; } 
+.optlabel           {   width:80px; }
+.optfield           {   width:150px; }
+.optfield2          {   width:85px; }
+.header             {   font-size:83%; font-family: Arial, sans-serif; font-weight: bold;
+                        margin-top:0;
+                        color: navy; background: lightskyblue;
+                        width: 150px; line-height:normal; padding:5 }
+.showhelp           {   font-family: Arial, sans-serif; font-weight: bold;
+                        margin-top:0; color: navy;
+                        width:100px; line-height:normal; padding:5 }
+
+.helplink           {   font-size:100%; font-family: Arial, sans-serif; font-weight: bold; CURSOR: hand; COLOR: blue; }
+.titlecell          {   font-size:100%; font-family: Arial, sans-serif; font-weight: bold;
+                        background: lightskyblue; color: navy;
+                        line-height:1.0; padding:0 }
+.options            {   width:100%; border:1px; padding:5; }
+
+table               {   border:1px; }
+td                  {   font-size:83%; font-family: Arial, sans-serif; }
+dt                  {   font-weight: bold; padding: 5px; }
+dd                  {   margin-left: 20px; }
+ol                  {   list-style-type: disk; padding: 0; margin: 0; margin-left: 0; }
+ul                  {   list-style-type: disk; padding: 0; margin: 0; margin-left: 20px; }
+a:link              {   color: #0000FF; text-decoration: none; }
+a:visited           {   color: #CC0000; text-decoration: none; }
+a:hover             {   color: #CC0000; text-decoration: none; }
+.link               {   font-size:83%; font-family: Arial, sans-serif; text-decoration:none; CURSOR: hand; COLOR: navy; }
+</style>
+<script language="javascript" type="text/javascript">
+<!--
+
+function dohelp() {
+    var os = navigator.appVersion.indexOf('Mac') != -1? 'Mac' : 'Win';
+    if(os == 'Win')
+        {
+                window.open('http://sketchup.google.com/gsu6/help/gsuwin.html');
+        }
+        else
+        {
+                window.open('http://sketchup.google.com/gsu6/help/gsumac.html', 'Help');
+        }
+}
+
+function expand(id) {
+    element = document.getElementById(id);
+    if (element.style.display=='') {
+        // hide visible help text
+        document.getElementById(id).style.display='none';
+        document.getElementById(id+'_link').innerHTML="show help";
+        // resize window - a bit annoying
+        // window.location = "skp:small_window";
+    }
+    else {
+        // first hide all help text
+        for ( var n=1; n<=4; n++ )
+        {
+            document.getElementById('help' + n).style.display='none';
+            document.getElementById('help' + n + '_link').innerHTML="show help";
+        }
+        // now show element identified with 'id'
+        document.getElementById(id).style.display='';
+        document.getElementById(id+'_link').innerHTML="hide help";
+        // resize window - a bit annoying
+        // window.location = "skp:large_window";
+    }
+}
+
+function expand_old(id) {
+  styleObj=document.getElementById().style;
+   if (styleObj.display=='none')
+   {
+        styleObj.display='';
+        tag.innerHTML = "<span style=\"font-family:'sans-serif'; font-size:83%; cursor:hand; color:blue;\">hide Help<\/span>";
+   }
+   else {
+        styleObj.display='none';
+        tag.innerHTML = "<span style=\"font-family:'sans-serif'; font-size:83%; cursor:hand; color:blue;\">show Help<\/span>";
+   }
+}
+
+function checkNumberLessThan60(id) {
+    var chkZ = 1
+    for (i = 0; i < document.getElementById(id).value.length; ++i) {
+        if (document.getElementById(id).value.charAt(i) < "0" || document.getElementById(id).value.charAt(i) > "9") {
+            chkZ = -1;
+        }
+    }
+    if (chkZ == -1) {
+        alert ("'" + id + "' not a number!");
+        document.getElementById(id).focus();
+        return false;
+    }
+    if (document.getElementById(id).value.length > 1 && document.getElementById(id).value.charAt(0) >= "6") { 
+        alert ("'" + id + "' must be less than 60!");
+        document.getElementById(id).focus();
+        return false;
+    }
+    else {
+        window.location='skp:on_number_changed@' + id + ',' + document.getElementById(id).value;
+    }
+}
+
+function checkNumberNotZero(id) {
+    var chkZ = 1;
+    for (i = 0; i < document.getElementById(id).value.length; ++i) {
+        if (document.getElementById(id).value.charAt(i) < "0" || document.getElementById(id).value.charAt(i) > "9") {
+            chkZ = -1;
+        }
+    }
+    if (chkZ == -1) {
+        alert ("'" + id + "' not a number!");
+        document.getElementById(id).focus();
+        return false;
+    }
+    var chkZ = -1;
+    for (i = 0; i < document.getElementById(id).value.length; ++i) {
+        if (document.getElementById(id).value.charAt(i) != "0") {
+            chkZ = 1;
+        }
+    }
+    if (chkZ == -1) {
+        alert ("'" + id + "' can not be 0!");
+        document.getElementById(id).focus();
+        return false;
+    }
+    if (chkZ != -1) {
+        window.location='skp:on_number_changed@' + id + ',' + document.getElementById(id).value;
+    }
+}
+
+function checkNumber(id) {
+    var chkZ = 1;
+    for (i = 0; i < document.getElementById(id).value.length; ++i) {
+        if (document.getElementById(id).value.charAt(i) < "0" || document.getElementById(id).value.charAt(i) > "9") {
+            chkZ = -1;
+        }
+    }
+    if (chkZ == -1) {
+        alert ("'" + id + "' not a number!");
+        document.getElementById(id).focus();
+        return false;
+    }
+    if (chkZ != -1) {
+        window.location='skp:on_number_changed@' + id + ',' + document.getElementById(id).value;
+    }
+}
+
+function onCancel() {
+    window.location='skp:on_cancel';
+}
+
+function onOK() {
+    // TODO: this does not work
+    checkNumberLessThan60('todMinute');
+    checkNumberNotZero('minStep');
+    checkNumber('imgWidth');
+    checkNumber('imgHeight');
+    window.location='skp:on_selection_changed@imgPrefix,' + document.getElementById('imgPrefix').value;
+    window.location='skp:on_ok';
+}
+
+function onCheckboxChanged(id) {
+    window.location='skp:on_checkbox_changed@' + id + ',' + document.getElementById(id).checked;
+}
+    
+function onSelectionChanged(id) {
+    window.location='skp:on_selection_changed@' + id + ',' + document.getElementById(id).value;
+}
+    
+function onImagePicked(id) {
+    document.getElementById('checkbox'+id).checked=true;
+    // uncheck the other one
+    other = id == "3D" ? "2D" : "3D";
+    document.getElementById('checkbox'+other).checked=false;
+    onTemplateChanged();
+}
+    
+function show_optionset_day_of_year() {
+    document.getElementById("timeofday").style.display='none';
+    document.getElementById("dayofyear").style.display='';
+    }
+
+function show_optionset_time_of_day() {
+    document.getElementById("timeofday").style.display='';
+    document.getElementById("dayofyear").style.display='none';
+    }
+    
+function show_postprocess() {
+    document.getElementById('postprocess_title').style.display='';
+    document.getElementById('postprocess_options').style.display='';
+    }
+    
+function setHidden(id) {
+    document.getElementById().style.display='none';
+    }
+    
+function setVisible(id) {
+    document.getElementById().style.display='';
+    } 
+    
+function sizeWindow() {
+    // check the screen size
+    if ( window.screen.availHeight <= 600 || window.screen.availWidth <= 800 )
+        {
+            window.location = "skp:small_window";
+        }
+    }
+        
+function doLoad_old() {
+    var os = navigator.appVersion.indexOf('Mac') != -1 ? 'Mac' : 'Win';
+    if(os == 'Win')
+        {
+        window.location='skp:onload';
+        }
+    }
+    
+function doLoad() {
+    // do stuff on load of dialog
+    }
+    
+function initValues(imgWidth,imgHeight,imgPrefix) {
+    // set initial variables
+    document.getElementById('imgWidth').value=imgWidth;
+    document.getElementById('imgHeight').value=imgHeight;
+    document.getElementById('imgPrefix').value=imgPrefix;
+}
+function setValue(id, val) {
+    // set initial variable values
+    document.getElementById(id).value=val;
+    }
+-->
+</script>
+</head>
+
+<body onload="doLoad()">
+  <div align="center">
+    <table width="100%" cellspacing="0" cellpadding="5">
+      <tr>
+        <td class="header">time range</td>
+      </tr>
+
+      <tr>
+        <td>
+          <table id="timeofday" class="options" style="display:''; border:1px;">
+            <tr>
+              <td class="optlabel">months</td>
+
+              <td class="optfield">
+                <select id="monthsSelect" onchange="onSelectionChanged('monthsSelect')" name="monthsSelect" style="width: 120px;">
+                  <option value="Jun | Sep | Dec" selected>Jun | Sep | Dec</option>
+                  <option value="Jun - Dec">Jun - Dec</option>
+                  <option value="Jan - Dec">Jan - Dec</option>
+                  <option value="current">current</option>
+                </select>
+              </td>
+
+              <td class="optlabel">minutes step</td>
+
+              <td class="optfield2"><input name="minStep" type="text" id="minStep" style="WIDTH: 50px;" maxlength="3" value="60" onchange="checkNumberNotZero('minStep')"></td>
+            </tr>
+
+            <tr>
+              <td class="optlabel">days</td>
+
+              <td class="optfield">
+                <select id="daysSelect" onchange="onSelectionChanged('daysSelect')" name="daysSelect" style="width: 120px;">
+                  <option value="21" selected>21</option>
+                  <option value="7|21">7|21</option>
+                  <option value="7|14|21|28">7|14|21|28</option>
+                  <option value="current">current</option>
+                </select>
+              </td>
+
+              <td class="optlabel"><span style="display:none;">solar time</span></td>
+
+              <td class="optfield2"><input name="use_solar" style="display:none;" type="checkbox" id="use_solar" onchange="onCheckboxChanged('use_solar')"></td>
+            </tr>
+
+            <tr>
+              <td colspan=2>&nbsp;</td>
+            </tr>
+
+            <tr>
+              <td class="body" colspan="4">
+                <span class="helplink"><a href="javascript:expand('help1')" id="help1_link" name="help1_link">show help</a></span><br>
+
+                <div id="help1" style="display:none">
+                  <dl>
+                    <dt>months</dt>
+
+                    <dd>
+                      set the month(s) to calculate to
+
+                      <ul>
+                        <li>solistice and equinox (<em>'Jun, Sep, Dec'</em>)</li>
+                        <li>continous from June to December (<em>'half year'</em>)</li>
+                        <li>all 12 months of the year (<em>'full year'</em>)</li>
+                        <li>the month set in the shadow options (<em>'current'</em>)</li>
+                      </ul>
+                    </dd>
+
+                    <dt>days</dt>
+
+                    <dd>
+                      set the day(s) to calculate to
+
+                      <ul>
+                        <li>the 21st of the month</li>
+                        <li>the 7th and 21st</li>
+                        <li>7th, 14th, 21st and 28th</li>
+                        <li>the day set in the shadow options (<em>'current'</em>)</li>
+                      </ul>
+                    </dd>
+
+                    <dt>minutes step</dt>
+
+                    <dd>defines the time difference between pictures on the same day.</dd>
+
+                    <dt>solar time</dt>
+
+                    <dd>If this option is set daylight saving time will be ignored for the file name and time stamp of the image. Thus the time reported for summer months is the
+                    same (solar) time as for winter months. Solar time is 1 hour earlier than the clock time during the period of daylight saving time.</dd>
+                  </dl>
+                </div>
+              </td>
+            </tr>
+          </table>
+          
+          <table id="dayofyear" class="options" style="display:none;">
+            <tr>
+              <td class="optlabel">start date</td>
+
+              <td class="optfield"><select id="startMonth" onchange="checkNumber('startMonth')" name="startMonth" style="width: 60px;">
+                <option value="01">Jan</option>
+                <option value="02">Feb</option>
+                <option value="03">Mar</option>
+                <option value="04">Apr</option>
+                <option value="05">May</option>
+                <option value="06" selected>Jun</option>
+                <option value="07">Jul</option>
+                <option value="08">Aug</option>
+                <option value="09">Sep</option>
+                <option value="10">Oct</option>
+                <option value="11">Nov</option>
+                <option value="12">Dec</option>
+              </select> / <select id="startDay" onchange="checkNumber('startDay')" name="startDay" style="width: 50px;">
+                <option value="01">01</option>
+                <option value="02">02</option>
+                <option value="03">03</option>
+                <option value="04">04</option>
+                <option value="05">05</option>
+                <option value="06">06</option>
+                <option value="07">07</option>
+                <option value="08">08</option>
+                <option value="09">09</option>
+                <option value="10">10</option>
+                <option value="11">11</option>
+                <option value="12">12</option>
+                <option value="13">13</option>
+                <option value="14">14</option>
+                <option value="15">15</option>
+                <option value="16">16</option>
+                <option value="17">17</option>
+                <option value="18">18</option>
+                <option value="19">19</option>
+                <option value="20">20</option>
+                <option value="21" selected>21</option>
+                <option value="22">22</option>
+                <option value="23">23</option>
+                <option value="24">24</option>
+                <option value="25">25</option>
+                <option value="26">26</option>
+                <option value="27">27</option>
+                <option value="28">28</option>
+                <option value="29">29</option>
+                <option value="30">30</option>
+                <option value="31">31</option>
+              </select></td>
+
+              <td class="optlabel">days step</td>
+
+              <td class="optfield2"><input name="daysStep" type="text" id="daysStep" style="WIDTH: 45px;" maxlength="3" value="14" onchange="checkNumberNotZero('daysStep')"></td>
+            </tr>
+
+            <tr>
+              <td class="optlabel">end date</td>
+
+              <td class="optfield"><select id="endMonth" onchange="checkNumber('endMonth')" name="endMonth" style="width: 60px;">
+                <option value="01">Jan</option>
+                <option value="02">Feb</option>
+                <option value="03">Mar</option>
+                <option value="04">Apr</option>
+                <option value="05">May</option>
+                <option value="06">Jun</option>
+                <option value="07">Jul</option>
+                <option value="08">Aug</option>
+                <option value="09">Sep</option>
+                <option value="10">Oct</option>
+                <option value="11">Nov</option>
+                <option value="12" selected>Dec</option>
+              </select> / <select id="endDay" onchange="checkNumber('endDay')" name="endDay" style="width: 50px;">
+                <option value="01">01</option>
+                <option value="02">02</option>
+                <option value="03">03</option>
+                <option value="04">04</option>
+                <option value="05">05</option>
+                <option value="06">06</option>
+                <option value="07">07</option>
+                <option value="08">08</option>
+                <option value="09">09</option>
+                <option value="10">10</option>
+                <option value="11">11</option>
+                <option value="12">12</option>
+                <option value="13">13</option>
+                <option value="14">14</option>
+                <option value="15">15</option>
+                <option value="16">16</option>
+                <option value="17">17</option>
+                <option value="18">18</option>
+                <option value="19">19</option>
+                <option value="20">20</option>
+                <option value="21" selected>21</option>
+                <option value="22">22</option>
+                <option value="23">23</option>
+                <option value="24">24</option>
+                <option value="25">25</option>
+                <option value="26">26</option>
+                <option value="27">27</option>
+                <option value="28">28</option>
+                <option value="29">29</option>
+                <option value="30">30</option>
+                <option value="31">31</option>
+              </select></td>
+
+              <td class="optlabel">time of day</td>
+
+              <td class="optfield2"><select id="todHour" onchange="checkNumber('todHour')" name="todHour" style="width: 45px;">
+                <option value="00">00</option>
+                <option value="01">01</option>
+                <option value="02">02</option>
+                <option value="03">03</option>
+                <option value="04">04</option>
+                <option value="05">05</option>
+                <option value="06">06</option>
+                <option value="07">07</option>
+                <option value="08">08</option>
+                <option value="09">09</option>
+                <option value="10">10</option>
+                <option value="11">11</option>
+                <option value="12" selected>12</option>
+                <option value="13">13</option>
+                <option value="14">14</option>
+                <option value="15">15</option>
+                <option value="16">16</option>
+                <option value="17">17</option>
+                <option value="18">18</option>
+                <option value="19">19</option>
+                <option value="20">20</option>
+                <option value="21">21</option>
+                <option value="22">22</option>
+                <option value="23">23</option>
+              </select> : <input name="todMinute" type="text" id="todMinute" style="WIDTH: 25px;" maxlength="2" value="00" onchange="checkNumberLessThan60('todMinute')"></td>
+            </tr>
+
+            <tr>
+              <td class="body" colspan="4">
+                <span class="helplink"><a href="javascript:expand('help2')" id="help2_link" name="help2_link">show help</a></span><br>
+
+                <div id="help2" style="display:none">
+                  <p>The <em>day of year</em> sequence changes the date of the shadow settings while keeping the time of the day fixed. This can be used to show the change of the
+                  shadows over the seasons.</p>
+
+                  <dl>
+                    <dt>start date</dt>
+                    <dd>first day of the sequence</dd>
+
+                    <dt>end date</dt>
+                    <dd>the last possible day of the sequence (depends also on <em>days step</em>)</dd>
+
+                    <dt>days step</dt>
+                    <dd>sequence progress in days</dd>
+
+                    <dt>time of day</dt>
+                    <dd>time of the shadow settings; daylight saving time is ignored in this sequence to avoid 'jumps' in the direction of the shadows.</dd>
+                  </dl>
+                </div>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+
+      <tr>
+        <td class="header">image options</td>
+      </tr>
+
+      <tr>
+        <td>
+          <table class="options">
+            <tr>
+              <td class="optlabel">file imgPrefix</td>
+              <td class="optfield"><input name="imgPrefix" type="text" id="imgPrefix" style="width: 120px;" value="shadow_" onchange="onSelectionChanged('imgPrefix')"></td>
+              <td class="optlabel">image width</td>
+              <td class="optfield2"><input name="imgWidth" type="text" id="imgWidth" style="width: 50px;" maxlength="5" value="1200" onchange="checkNumber('imgWidth')"></td>
+            </tr>
+
+            <tr>
+              <td class="optlabel">&nbsp;</td>
+              <td class="optfield">&nbsp;</td>
+              <td class="optlabel">image height</td>
+              <td class="optfield2"><input name="imgHeight" type="text" id="imgHeight" style="WIDTH: 50px;" maxlength="5" value="800" onchange="checkNumber('imgHeight')"></td>
+            </tr>
+
+            <tr>
+              <td class="body" colspan="4">
+                <span class="helplink"><a href="javascript:expand('help3')" id="help3_link" name="help3_link">show help</a></span><br>
+
+                <div id="help3" style="display:none">
+                  <dl>
+                    <dt>file prefix</dt>
+                    <dd>Every image name is composed from the <em>prefix</em> and a time stamp in the format <em>'mmdd_HHMM'</em> where <em>'mmdd'</em> are the month and day and
+                    <em>'MMHH'</em> represent the hour and minute of the shadow settings of the image. Defaults to the title/filename of the model.</dd>
+
+                    <dt>width and height</dt>
+                    <dd>The width and height of the saved image. Default is the size of the current view.<br>
+                    If the aspect of w and h is different from the current view the image will be clipped. To keep the aspect ratio set one of the values to '0'.</dd>
+                  </dl>
+                </div>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+
+      <tr>
+        <td id="postprocess_title" class="header" style="display:'';">post process options</td>
+      </tr>
+
+      <tr>
+        <td>
+          
+          <table id="postprocess_options" class="options" style="display:'';">
+            <tr>
+              <td class="optlabel">shadow color</td>
+
+              <td class="optfield">
+                <select id="shadowColor" onchange="onSelectionChanged('shadowColor')" name="shadowColor" style="width: 120px;">
+                  <option value="none" selected>none</option>
+                  <option value="red"   >red</option>
+                  <option value="orange">orange</option>
+                  <option value="violet">violet</option>
+                  <option value="blue"  >blue</option>
+                  <option value="green" >green</option>
+                  <option value="pink"  >pink</option>
+                </select>
+              </td>
+
+              <td class="optlabel">only shadows</td>
+
+              <td class="optfield2"><input name="onlyShadows" type="checkbox" id="onlyShadows" onchange="onCheckboxChanged('onlyShadows')"></td>
+            </tr>
+
+            <tr>
+              <td class="optlabel">layout</td>
+
+              <td class="optfield">
+                <select id="layoutSize" onchange="onSelectionChanged('layoutSize')" name="layoutSize" style="width: 120px;">
+                  <option value="3,3" selected>7 (3x3)</option>
+                  <option value="4,3"> 8 (4x3)</option>
+                  <option value="3,4"> 9 (3x4)</option>
+                  <option value="5,3"> 9 (5x3)</option>
+                  <option value="4,4">10 (4x4)</option>
+                  <option value="5,4">11 (5x4)</option>
+                </select>
+              </td>
+
+              <td class="optlabel">&nbsp;</td>
+
+              <td class="optfield2">&nbsp;</td>
+            </tr>
+
+            <tr>
+              <td class="optlabel">time stamp</td>
+
+              <td class="optfield">
+                <select id="timeStamp" onchange="onSelectionChanged('timeStamp')" name="timeStamp" style="width: 120px;">
+                  <option value="none">none</option>
+                  <option value="NorthWest" selected>top right</option>
+                  <option value="North"     >top</option>
+                  <option value="NorthEast" >top left</option>
+                  <option value="East"      >left</option>
+                  <option value="SouthEast" >bottom left</option>
+                  <option value="South"     >bottom</option>
+                  <option value="SouthWest" >bottom right</option>
+                  <option value="West"      >rigth</option>
+                </select>
+              </td>
+
+              <td class="optlabel">remove temp</td>
+
+              <td class="optfield2"><input name="removeTmp" type="checkbox" id="removeTmp" onchange="onCheckboxChanged('removeTmp')" checked></td>
+            </tr>
+
+            <tr>
+              <td class="body" colspan="4">
+                <span class="helplink"><a href="javascript:expand('help4')" id="help4_link" name="help4_link">show help</a></span><br>
+
+                <div id="help4" style="display:none">
+                  <p><span style="font-weight: bold; color: red;">These options are only available if <em>ImageMagick</em> and <em>ghostscript</em> are
+                    installed and the <em>'$imconvert'</em> and <em>'$imlabelfont'</em> variables in the script are set.</span></p>
+
+                  <dl>
+                    <dt>shadow color</dt>
+                    <dd><em>ImageMagick</em> can be used to give the shadows of the image a colored tint.
+                    This is useful in combination with black and white rendering styles. Select the color from the list.</dd>
+                    
+                    <dt>layout</dt>
+                    <dd>The images of a sequence are arranged in a grid on a larger image. Only the fields at the right, bottom and left edge are used.
+                    The resulting image shows the progress of the shadows from sunrise to sunset in clockwise direction with noon at the bottom centre.</dd>
+                    
+                    <dt>time stamp</dt>
+                    <dd>The date and time of the shadow settings are added in the selected corner of each image. Requires <em>ghostscript</em>.</dd>
+                    
+                    <dt>only shadows</dt>
+                    <dd>Shows the difference between an image rendered with and without shadows. Choose a b/w style (ie. "02 HiddenLine") for best results.</dd>
+                    
+                    <dt>remove temp</dt>
+                    <dd>Intermediate images in the postprocess sequence are deleted by default. Deselect to keep these for manual editing.</dd>
+                  </dl>
+                </div>
+              </td>
+            </tr>
+          </table>
+          
+        </td>
+      </tr>
+    </table>
+
+    <table width="100%" class="blue" align="center" cellpadding="15">
+      <tr>
+        <td>
+          <p align="center"><input onclick="onCancel()" type="button" size="100" value="Cancel"></p>
+        </td>
+
+        <td>
+          <p align="center"><input onclick="onOK()" type="button" size="100" value="Continue"></p>
+        </td>
+      </tr>
+    </table>
+  </div>
+</body>
+</html>
