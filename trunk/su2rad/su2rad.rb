@@ -161,6 +161,7 @@ end
 
 if $DEBUG
     printf "debug mode\n"
+    startExport()
 else
     ## create menu entry
     begin
