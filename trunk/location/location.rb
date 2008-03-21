@@ -23,6 +23,7 @@
 
 
 # revisions:
+# v 0.1              :
 # v 0.0              :  first release
 
 ## defaults
@@ -38,9 +39,47 @@ class LocationDialog
         @tzoffset    = 0
         @north       = 0.0
         @shownorth   = 'false'
-        getValues
+        @tzdefault   = '0.0 - GMT'
+        @tzlist = ['+12.0 - NZT,IDLE',
+                   '+10.0 - EAST,GST',
+                   '+9.0 - JST',
+                   '+8.0 - CCT',
+                   '+7.0 - WAST',
+                   '+6.0 - ZP6',
+                   '+5.0 - ZP5',
+                   '+4.0 - ZP4',
+                   '+3.0 - BT',
+                   '+2.0 - EET',
+                   '+1.0 - CET',
+                   @tzdefault,
+                   '-3.0 - ADT',
+                   '-4.0 - AST',
+                   '-5.0 - EST',
+                   '-6.0 - CST',
+                   '-7.0 - MST',
+                   '-8.0 - PST',
+                   '-9.0 - ALA',
+                   '-10.0 - HAW',
+                   '-11.0 - Nome,Alaska']
+        updateValues
         printf "=================\nLocation dialog\n=================\n"
         showValues
+    end
+    
+    def checkTimeZone(var)
+        begin
+            offset = var.split()[0]
+            offset = offset.to_f
+            @tzlist.each { |tz|
+                i = tz.split()[0]
+                if i.to_f == offset
+                    return offset
+                end
+            }
+        rescue
+            @errormsg += "Could not identify timezone from selection ('#{var}')\n"
+            return 0.0
+        end
     end
     
     def checkRange(var, max, name="variable")
@@ -63,7 +102,7 @@ class LocationDialog
         @country   = dlg[1]
         @latitude  = checkRange(dlg[2],   90, 'latitude')
         @longitude = checkRange(dlg[3],  180, 'longitude')
-        @tzoffset  = checkRange(dlg[4], 12.5, 'time zone offset')
+        @tzoffset  = checkTimeZone(dlg[4])
         @north     = checkRange(dlg[5],  180, 'north angle')
         shownorth  = dlg[6]
         if shownorth == 'true'
@@ -80,7 +119,7 @@ class LocationDialog
         end
     end
 
-    def getValues
+    def updateValues
         ## get values from shadow settings
         s = Sketchup.active_model.shadow_info
         @city      = s['City']       
@@ -115,13 +154,23 @@ class LocationDialog
         s['DisplayNorth'] = @shownorth
     end
 
+    def getTimeZoneValue
+        @tzlist.each { |tz|
+            i = tz.split()[0]
+            if i.to_f == @tzoffset
+                return tz
+            end
+        }
+        ## failsave if not found
+        return @tzdefault
+    end
+    
     def show
-        getValues
-        tzones  = (-12..12).to_a
-        tzones.collect! { |i| "%.1f" % i.to_f }
-        tzones  = tzones.join('|')
+        updateValues
+        tzones  =  @tzlist.join('|')
+        tzvalue = getTimeZoneValue()
         prompts = ['city', 'country', 'latitude (+=N)', 'longitude (+=E)', 'tz offset', 'north', 'show north']
-        values  = [@city,  @country,  @latitude,         @longitude,    @tzoffset.to_s,  @north,  @shownorth.to_s]
+        values  = [@city,  @country,  @latitude,         @longitude,           tzvalue,  @north,  @shownorth.to_s]
         choices = ['','','','',tzones,'','true|false']
         dlg = UI.inputbox(prompts, values, choices, 'location')
         if not dlg
