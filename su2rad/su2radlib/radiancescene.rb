@@ -1,4 +1,5 @@
 require "su2radlib/exportbase.rb"
+require "su2radlib/context.rb"
 
 class RadianceScene < ExportBase
 
@@ -12,9 +13,6 @@ class RadianceScene < ExportBase
         $scene_name = "unnamed_scene"
         $export_dir = Dir.pwd()
         setExportDirectory()
-        
-        #@copy_textures = true
-        #@texturewriter = Sketchup.create_texture_writer
     end
 
     def initGlobals
@@ -32,11 +30,17 @@ class RadianceScene < ExportBase
         $filecount = 0
         $createdFiles = Hash.new()
         $inComponent = [false]
+        
+        $materialstack = MaterialStack.new()
+        $layerstack = LayerStack.new()
+        $matrixstack = Stack.new()
+        $groupstack = Stack.new() 
     end
     
     def initGlobalHashes
         $byColor = {}
         $byLayer = {}
+        $meshStartIndex = {}
         $visibleLayers = {}
         @model.layers.each { |l|
             $byLayer[remove_spaces(l.name)] = []
@@ -185,7 +189,8 @@ class RadianceScene < ExportBase
         $globaltrans = Geom::Transformation.new
         $nameContext.push($scene_name) 
         sceneref = exportByGroup(entities, Geom::Transformation.new)
-        saveFilesByCL()
+        saveFilesByColor()
+        saveFilesByLayer()
         $nameContext.pop()
         $materialContext.export()
         createRifFile()
@@ -193,16 +198,67 @@ class RadianceScene < ExportBase
         writeLogFile()
     end
     
-    def saveFilesByCL
-        if $MODE == 'by layer'
-            hash = $byLayer
-        elsif $MODE == 'by color'
-            hash = $byColor
-        else
+    def saveFilesByColor
+        if $MODE != 'by color'
             return
         end
         references = []
-        hash.each_pair { |name,lines|
+        $byColor.each_pair { |name,lines|
+            if lines.length == 0
+                next
+            end
+            m = $materialContext.getByName(name)
+            name = remove_spaces(name)
+            if $OBJ2MESH != '' and m.texture != nil
+                references.push(obj2mesh(name, lines))
+            else
+                filename = getFilename("objects/#{name}.rad")
+                if not createFile(filename, lines.join("\n"))
+                    uimessage("Error: could not create file '#{filename}'")
+                else
+                    references.push("!xform objects/#{name}.rad")
+                end
+            end
+        }
+        createMainScene(references, '')
+    end
+
+    def obj2mesh(name, lines)
+        objfile = getFilename("objects/#{name}.obj")
+        uimessage("creating obj file '#{objfile}'")
+        if not createFile(objfile, lines.join("\n"))
+            msg = "Error: could not create file '#{objfile}'"
+            uimessage(msg)
+            return "## #{msg}"
+        else
+            #TODO convert obj to mesh
+            begin
+                rtmfile = getFilename("objects/#{name}.rtm")
+                cmd = "#{$OBJ2MESH} #{objfile} #{rtmfile}"
+                uimessage("converting obj to rtm (cmd='#{cmd}')", 2)
+                f = IO.popen(cmd)
+                f.close()
+                if File.exists?(rtmfile)
+                    return "\n#{name} mesh #{name}_obj\n1 objects/#{name}.rtm\n0\n0"
+                else
+                    msg = "Error: could not convert obj file '#{objfile}'"
+                    uimessage(msg, -2)
+                    return "## #{msg}"
+                end
+            rescue
+                msg = "Error converting obj file '#{name}.obj'"
+                uimessage(msg, -2)
+                return "## #{msg}"
+            end
+        end
+    end
+    
+    def saveFilesByLayer
+        if $MODE != 'by layer'
+            return
+        end
+        references = []
+        $byLayer.each_pair { |name,lines|
             if lines.length == 0
                 next
             end
@@ -211,7 +267,7 @@ class RadianceScene < ExportBase
             if not createFile(filename, lines.join("\n"))
                 uimessage("Error: could not create file '#{filename}'")
             else
-                references.push("!xform objects/#{name}.rad")
+                references.push("\n!xform objects/#{name}.rad")
             end
         }
         createMainScene(references, '')

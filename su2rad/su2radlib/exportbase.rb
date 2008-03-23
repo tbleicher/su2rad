@@ -10,12 +10,18 @@ class ExportBase
     end
    
     def clearDirectory(scene_dir)
-        uimessage("clearing directory '#{scene_dir}'")
+        uimessage("clearing directory '#{scene_dir}'",1)
+        if not File.exists?(scene_dir)
+            return
+        end
         Dir.foreach(scene_dir) { |f|
             fpath = File.join(scene_dir, f)
 	    if f == '.' or f == '..'
 		next
             elsif f[0,1] == '.'
+                next
+            elsif f == 'textures'
+                uimessage("skipping directory 'textures'", 2)
                 next
             elsif FileTest.directory?(fpath) == true
                 clearDirectory(fpath)
@@ -116,7 +122,6 @@ class ExportBase
                     face = rp.getText(globaltrans)
                 else
                     face = rp.getPolyMesh(globaltrans)
-                    #XXX$texturewriter.load(e,true)
                 end
                 lines.push([rp.material, rp.layer.name, face])
             end
@@ -152,7 +157,6 @@ class ExportBase
                     end
                 end
                 faces.push(e)
-                #@texturewriter.load(e,true)
             elsif e.class == Sketchup::Edge
                 next
             else
@@ -205,19 +209,41 @@ class ExportBase
         ## only implemented by RadianceScene
         true
     end
+
+    def push
+        uimessage("begin export #{@entity.class} name='#{@entity.name}'")
+        $materialstack.push(@entity.material)
+        $matrixstack.push(@entity.transformation)
+        $layerstack.push(@entity.layer)
+        $groupstack.push(@entity)
+    end
+    
+    def pop
+        $materialstack.pop()
+        $matrixstack.pop()
+        $layerstack.pop()
+        $groupstack.pop()
+        uimessage("end export #{@entity.class} name='#{@entity.name}'")
+    end 
     
     def prepareSceneDir(scene_dir)
         ["octrees", "images", "logfiles", "ambfiles"].each { |subdir|
-            createDirectory("#{scene_dir}/#{subdir}")
+            createDirectory(File.join(scene_dir,subdir))
         }
     end 
     
     def removeExisting(scene_dir)
         if FileTest.exists?(scene_dir)
             scene_name = File.basename(scene_dir)
+            if $CONFIRM_REPLACE == false
+                uimessage("removing scene directory #{scene_name}")
+                clearDirectory(scene_dir)
+                prepareSceneDir(scene_dir)
+                return true
+            end
             ui_result = (UI.messagebox "Remove existing directory\n'#{scene_name}'?", MB_OKCANCEL, "Remove directory?")
             if ui_result == 1
-                uimessage('removing directories')
+                uimessage("removing scene directory #{scene_name}")
                 clearDirectory(scene_dir)
                 prepareSceneDir(scene_dir)
                 return true
@@ -251,6 +277,35 @@ class ExportBase
         return false
     end
     
+    def checkTransformation
+        resetglobal = false
+        if isMirror(@entity.transformation)
+            if $MAKEGLOBAL == false
+                $MAKEGLOBAL = true
+                resetglobal = true
+                if @entity.class == Sketchup::ComponentInstance
+                    name = getUniqueName(@entity.name)
+                    eclass = 'instance'
+                else
+                    name = @entity.name
+                    eclass = 'group'
+                end
+                uimessage("#{eclass} '#{name}' is mirrored; using global coords")
+            end
+        end
+        return resetglobal
+    end
+    
+    def setTransformation(parenttrans, resetglobal)
+        if $MAKEGLOBAL == true and not resetglobal == true
+            parenttrans *= @entity.transformation
+        else
+            uimessage('parenttrans = entity.transformation')
+            parenttrans = @entity.transformation
+        end
+        return parenttrans
+    end
+    
     def createDirectory(path)
         if File.exists?(path) and FileTest.directory?(path)
             return true
@@ -265,7 +320,7 @@ class ExportBase
         dirs.reverse!
         dirs.each { |p|
             begin 
-                uimessage("creating '%s'" % p)
+                #uimessage("creating '%s'" % p)
                 Dir.mkdir(p)
             rescue
                 uimessage("ERROR creating directory '%s'" %  p)
@@ -325,16 +380,53 @@ class ExportBase
     def getMaterial(entity)
         return getEntityMaterial(entity)
     end
-    
+   
+    def getEffectiveMaterial(entity)
+        frontface = true
+        if entity.class == Sketchup::Face
+            if entity.material == entity.back_material
+                if entity.material == nil
+                    m = $materialstack.get()
+                else
+                    m = entity.material
+                end
+            else
+                f = entity.material
+                b = entity.back_material
+                if f and b
+                    m = f
+                    uimessage("WARNING: front vs. back material: '%s' - '%s'" % [f,b])
+                elsif f
+                    m = f
+                else
+                    m = b
+                    frontface = false
+                end
+            end
+        elsif entity.material != nil
+            m = entity.material
+        end 
+        if not m
+            m = $materialstack.get()
+        end
+        if m != nil
+            $materialContext.loadTexture(m, entity, frontface)
+            $usedMaterials[m] = 1
+        end
+        return m
+    end
+
     def getEntityMaterial(entity)
         begin
             material = entity.material
         rescue
             material = nil
         end
+        frontface = true
         if entity.class == Sketchup::Face
             if material == nil
                 material = entity.back_material
+                frontface = false
             elsif entity.back_material != nil
                 front = getMaterialName(entity.material)
                 back = getMaterialName(entity.back_material)
@@ -342,6 +434,9 @@ class ExportBase
                     uimessage("WARNING: front vs. back material: '%s' - '%s'" % [front, back])
                 end
             end
+        end
+        if entity != nil and material != nil
+            $materialContext.loadTexture(material, entity, frontface)
         end
         return material
     end
@@ -467,9 +562,17 @@ class ExportBase
     end
 
     def uimessage(msg, loglevel=0)
-        n = $nameContext.length
-        prefix = "    " * (n+loglevel)
-        line = "%s [%d] %s" % [prefix, n, msg]
+        if $groupstack
+            n = $groupstack.length
+        else
+            n = 0
+        end
+        if n+loglevel > 0
+            prefix = "    " * (n+loglevel)
+        else
+            prefix = ""
+        end
+        line = "%s[%d] %s" % [prefix, n, msg]
         Sketchup.set_status_text(line.strip())
         if loglevel <= $LOGLEVEL
             printf "%s\n" % line

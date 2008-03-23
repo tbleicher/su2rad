@@ -61,18 +61,22 @@ class PreferencesDialog
         @filepath = File.expand_path('config.rb', File.dirname(__FILE__))
         
         @loglevel   = 0                             ## level of report messages
-        @replmarks  = '/usr/local/bin/replmarks'    ## path to replmarks binary
         @mode       = 'by group'                    ## "by group"|"by layer"|"by color"
         @makeglobal = false                         ## keep local coordinates of groups and instances
         @triangulate = false                        ## export faces as triangles (should always work)
         @unit       = 0.0254                        ## use meters for Radiance scene
         
+        @replmarks  = '/usr/local/bin/replmarks'    ## path to replmarks binary
+        @convert    = '/usr/local/bin/convert'      ## path to ImageMagick 'convert'
+        @ra_tiff    = '/usr/local/bin/ra_tiff  '    ## path to ra_tiff binary
+        
+        @confirm_replace = false                    ## replace existing dirs without asking
         @utc_offset = nil
-        @showradopts = true                        ## show Radiance option dialog
-        @exportallviews = false                     ## export all saved views
+        @showradopts = true                         ## show Radiance option dialog
+        @allviews = false                           ## export all saved views
 
         @supportdir = '/Library/Application Support/Google Sketchup 6/Sketchup'
-        @build_material_lib = false                 ## update/create material library in file system
+        @build_mlib = false                         ## update/create material library in file system
        
         printf "\n=====\nPreferencesDialog('#{filepath}')\n=====\n"
         
@@ -95,17 +99,17 @@ class PreferencesDialog
             end
         end
         ## now all values are in global vars
-        @loglevel   = $LOGLEVEL
-        @replmarks  = $REPLMARKS
-        @mode       = $MODE
-        @makeglobal = $MAKEGLOBAL
+        @loglevel    = $LOGLEVEL
+        @replmarks   = $REPLMARKS
+        @mode        = $MODE
+        @makeglobal  = $MAKEGLOBAL
         @triangulate = $TRIANGULATE
-        @unit       = $UNIT
-        @utc_offset = $UTC_OFFSET
+        @unit        = $UNIT
+        @utc_offset  = $UTC_OFFSET
         @showradopts = $SHOWRADOPTS
-        @exportallviews = $EXPORTALLVIEWS
-        @supportdir = $SUPPORTDIR
-        @build_material_lib = $BUILD_MATERIAL_LIB
+        @allviews = $EXPORTALLVIEWS
+        @supportdir  = $SUPPORTDIR
+        @build_mlib = $BUILD_MATERIAL_LIB
         validate()
     end
 
@@ -121,6 +125,20 @@ class PreferencesDialog
             @replmarks = ''
             $REPLMARKS = ''
         end
+        if @convert != '' and not File.exists?(@convert)
+            disableConvert()
+        end
+        if @ra_tiff != '' and not File.exists?(@ra_tiff)
+            disableConvert()
+        end
+    end
+   
+    def disableConvert
+        printf "$CONVERT or $RA_TIFF do not exits => settings ignored\n"
+        @convert = ''
+        $CONVERT = ''
+        @ra_tiff = ''
+        $RA_TIFF = ''
     end
     
     def showDialog
@@ -132,9 +150,12 @@ class PreferencesDialog
         prompts = [   'log level', 'export mode',  'global coords', 'triangulate faces',     'show options']
         values  = [     @loglevel,         @mode,      @makeglobal,   @triangulate.to_s,  @showradopts.to_s]
         choices = [     '0|1|2|3',         modes,     'true|false',        'true|false',       'true|false']
-        prompts += [  'export all views', 'unit', 'replmarks path', 'supportdir',         'update library',  'system clock offset']
-        values  += [@exportallviews.to_s,  @unit,       @replmarks,  @supportdir, @build_material_lib.to_s,       @utc_offset.to_s]
-        choices += [        'true|false',     '',               '',           '',             'true|false',                   utcs]
+        prompts += ['export all views',  'unit',  'replmarks path',  'convert path', 'ra_tiff path']
+        values  += [    @allviews.to_s,   @unit,        @replmarks,        @convert,       @ra_tiff]
+        choices += [       'true|false',     '',                '',              '',             '']
+        prompts += ['supportdir',   'update library',  'system clock offset']
+        values  += [ @supportdir,   @build_mlib.to_s,       @utc_offset.to_s]
+        choices += [          '',       'true|false',                   utcs]
         
         dlg = UI.inputbox(prompts, values, choices, 'preferences')
         if not dlg
@@ -153,19 +174,21 @@ class PreferencesDialog
         @makeglobal  = truefalse(dlg[2])
         @triangulate = truefalse(dlg[3])
         @showradopts = truefalse(dlg[4])
-        @exportallviews = truefalse(dlg[5])
+        @allviews    = truefalse(dlg[5])
         begin
             @unit = dlg[6].to_f
         rescue
             printf "unit setting not a number('#{dlg[6]}') => ignored\n"
         end 
         @replmarks  = dlg[7]
-        @supportdir = dlg[8]
-        @build_material_lib = dlg[9]
-        if dlg[10] == 'nil'
+        @convert    = dlg[8]
+        @ra_tiff    = dlg[9]
+        @supportdir = dlg[10]
+        @build_mlib = dlg[11]
+        if dlg[12] == 'nil'
             @utc_offset = nil
         else
-            @utc_offset = dlg[10].to_f
+            @utc_offset = dlg[12].to_f
         end
         validate()
     end    
@@ -203,7 +226,6 @@ class PreferencesDialog
                 '#',
                 '# This file is generated by a script.',
                 "# Do not change unless you know what you're doing!",
-                '',
                 values, ''].join("\n")
         begin
             f = File.new(@filepath, 'w')
@@ -218,17 +240,20 @@ class PreferencesDialog
     end
 
     def applySettings
-        $LOGLEVEL   = @loglevel
-        $REPLMARKS  = @replmarks 
-        $MODE       = @mode 
-        $MAKEGLOBAL = @makeglobal
-        $TRIANGULATE = @triangulate
-        $UTC_OFFSET = @utc_offset
-        $UNIT       = @unit
-        $SUPPORTDIR = @supportdir
+        $LOGLEVEL           = @loglevel
+        $REPLMARKS          = @replmarks 
+        $MODE               = @mode 
+        $MAKEGLOBAL         = @makeglobal
+        $TRIANGULATE        = @triangulate
+        $UTC_OFFSET         = @utc_offset
+        $UNIT               = @unit
+        $SUPPORTDIR         = @supportdir
         $SHOWRADOPTS        = @showradopts 
-        $EXPORTALLVIEWS     = @exportallviews  
-        $BUILD_MATERIAL_LIB = @build_material_lib
+        $EXPORTALLVIEWS     = @allviews  
+        $BUILD_MATERIAL_LIB = @build_mlib
+        $RA_TIFF            = @ra_tiff
+        $CONVERT            = @convert
+        $CONFIRM_REPLACE    = @confirm_replace
     end
     
     def getSettingsText
@@ -237,22 +262,31 @@ class PreferencesDialog
         else
             utc = "%.1f" % $UTC_OFFSET
         end
-        l= ["$LOGLEVEL              = #{$LOGLEVEL}",
-            "$UNIT                  = %.4f" % $UNIT,
-            "$UTC_OFFSET            = %s" % utc,
-            "$SUPPORTDIR            = '#{$SUPPORTDIR}'",
-            "$REPLMARKS             = '#{$REPLMARKS}'",
+        l= ["\n## script behaviour",
             "$MODE                  = '#{$MODE}'",
             "$MAKEGLOBAL            = #{$MAKEGLOBAL}",
             "$TRIANGULATE           = #{$TRIANGULATE}",
             "$SHOWRADOPTS           = #{$SHOWRADOPTS}",
             "$EXPORTALLVIEWS        = #{$EXPORTALLVIEWS}",
+            "",
+            "$LOGLEVEL              = #{$LOGLEVEL}",
+            "$UNIT                  = %.4f" % $UNIT,
+            "$UTC_OFFSET            = %s" % utc,
+            "\n## paths to utility programs",
+            "$REPLMARKS             = '#{$REPLMARKS}'",
+            "$CONVERT               = '#{$CONVERT}'",
+            "$RA_TIFF               = '#{$RA_TIFF}'"
+            "\n## library options",
+            "$SUPPORTDIR            = '#{$SUPPORTDIR}'",
             "$BUILD_MATERIAL_LIB    = #{$BUILD_MATERIAL_LIB}",
+            "\n## misc and unused options",
             "$ZOFFSET               = nil",
+            "$CONFIRM_REPLACE       = #{$CONFIRM_REPLACE}",
             "$RAD                   = ''",
             "$PREVIEW               = false"]
         return l.join("\n")
     end
+    
 end
 
 def preferencesTest

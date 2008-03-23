@@ -97,10 +97,15 @@ end
 
 class MaterialContext < ExportBase
 
+    attr_reader :texturewriter
+    
     def initialize
         @nameStack = ['sketchup_default_material']
+        @materialsByName = {}
         @materialHash = Hash[nil => 'sketchup_default_material']
         @aliasHash = {}
+        @texturewriter = Sketchup.create_texture_writer
+        @textureHash = {}
 
         ## matrix for sRGB color space transformation
         ## TODO: Apple RGB?
@@ -111,6 +116,7 @@ class MaterialContext < ExportBase
     end
     
     def export(filename='')
+        printf "DEBUG: material.export()\n"
         if filename == ''
             filename = getFilename("materials.rad")
         end
@@ -131,7 +137,11 @@ class MaterialContext < ExportBase
                 defined[lname] = getMaterialDescription(lname)
             }
         else
-            @materialHash.each_pair { |mat,mname|
+            #@materialHash.each_pair { |mat,mname|
+            #    defined[mname] = getMaterialDescription(mat)
+            #}
+            $usedMaterials.each_pair { |mat,foo|
+                mname = getMaterialName(mat)
                 defined[mname] = getMaterialDescription(mat)
             }
         end
@@ -146,9 +156,11 @@ class MaterialContext < ExportBase
                 m = reg_obj.match(fpath)
                 if m
                     ofilename = File.basename(fpath, '.rad')
-                    if not defined.has_key?(ofilename)
-                        uimessage("WARNING: material #{ofilename} undefined; adding alias")
-                        text += getAliasDescription(ofilename)
+                    if fpath[-4..-1] != '.obj'
+                        if not defined.has_key?(ofilename)
+                            uimessage("WARNING: material #{ofilename} undefined; adding alias")
+                            text += getAliasDescription(ofilename)
+                        end
                     end
                 end
             }
@@ -156,10 +168,77 @@ class MaterialContext < ExportBase
         if not createFile(filename, text)
             uimessage("ERROR creating material file '#{filename}'")
         end
-        #$texturewriter.write_all
-        #$texturewriter = nil
+        
+        ## textures
+        
+        if @texturewriter.count > 0
+            exportTextures()
+        end
+        @texturewriter = nil
+        @textureHash = {}
     end
 
+    def exportTextures
+        uimessage("found #{@texturewriter.count} textures")
+        texdir = getFilename('textures')
+        if createDirectory(texdir)
+            @texturewriter.write_all(texdir, false)
+            uimessage("textures written successfully", 1)
+            convertTextures(texdir)
+        end
+    end
+
+    def convertTextures(texdir)
+        ## convert sketchup textures to *.pic
+        if $CONVERT == '' or $RA_TIFF == ''
+            uimessage("texture converters not available; no conversion", -1)
+            return false
+        end
+        Dir.foreach(texdir) { |p|
+            img = File.join(texdir, p)
+            if p[0,1] == '.'[0,1]
+                next
+            else
+                begin
+                    idx = img.rindex('.')
+                    tif = img[0..idx] + 'tif'
+                    pic = img[0..idx] + 'pic'
+                    if File.exists?(pic)
+                        uimessage("using existing texture ('#{pic}')", 1)
+                    else
+                        cmd = "#{$CONVERT} -format tif -compress None #{img} #{tif}"
+                        uimessage("convert command: '#{cmd}'", 3)
+                        f = IO.popen(cmd)
+                        f.close()
+                        uimessage("texture converted to *.tif ('#{tif}')", 2)
+                        
+                        cmd = "#{$RA_TIFF} -r #{tif} #{pic}"
+                        uimessage("ra_tiff command: '#{cmd}'", 3)
+                        f = IO.popen(cmd)
+                        f.close()
+                        uimessage("texture converted to *.pic ('#{pic}')", 2)
+                    end 
+                rescue => e
+                    msg = "%s\n%s" % [$!.message,e.backtrace.join("\n")]
+                    uimessage("Error: conversion to *.pic failed\n\n#{msg}", -2)
+                end
+            end 
+        }
+        uimessage("textures converted successfully", 1)
+    end
+
+    def loadTexture(material, entity, frontface)
+        if material.texture == nil
+            return
+        end
+        if not @textureHash.has_key?(material)
+            #printf ("texture material '%s'\n" % material.display_name)
+            #printf ("\ttexture='%s'\n" % material.texture.filename)
+            handle = @texturewriter.load(entity, frontface)
+            @textureHash[material] = handle
+        end
+    end
+    
     def setAlias(material, alias_name)
         if @aliasHash.has_key?(alias_name)
             m = @aliasHash[alias_name]
@@ -173,6 +252,7 @@ class MaterialContext < ExportBase
         end
         @aliasHash[alias_name] = material
         @materialHash[alias_name] = getSaveMaterialName(material)
+        @materialsByName[alias_name] = material
     end
 
     def getCurrentMaterialName
@@ -185,6 +265,14 @@ class MaterialContext < ExportBase
     
     def get(mat)
         return @materialHash[mat]
+    end
+   
+    def getByName(name)
+        if @materialsByName.has_key?(name)
+            return @materialsByName[name]
+        else
+            return nil
+        end
     end
     
     def has_key?(mat)
@@ -206,6 +294,7 @@ class MaterialContext < ExportBase
     
     def set(material, name)
         @materialHash[material] = name
+        @materialsByName[name] = material
     end
    
     def getAliasDescription(material)
@@ -231,7 +320,6 @@ class MaterialContext < ExportBase
             if @aliasHash.has_key?(material)
                 return getMaterialDescription(@aliasHash[material])
             else
-                uimessage("WARNING: material '#{material} undefined; adding alias\n")
                 s  = "\n## undefined material #{material}"
                 s += "\nvoid alias #{material} sketchup_default_material\n"
                 return s
@@ -282,6 +370,23 @@ class MaterialContext < ExportBase
     def convertRGBColor(material, name)
         ## TODO: proper conversion between color spaces
         text = "\n## material conversion from Sketchup rgb color"
+        base = getBaseMaterial(material, name)
+        if material.texture != nil
+            uimessage("creating texture material", 2)
+            img = File.basename(material.texture.filename)
+            idx = img.rindex('.')
+            img = img[0..idx-1]
+            tex = [ "\nvoid colorpict #{name}_tex",
+                    "7 red green blue textures/#{img}.pic . frac(Lu) frac(Lv)",
+                    "0\n0",
+                    base.sub("void", "#{name}_tex")]
+            base = tex.join("\n")
+        end
+        return text + base
+    end
+    
+    def getBaseMaterial(material, name)
+        text = ""
         c = material.color
         r,g,b = rgb2rgb(c)
         spec = 0.0
@@ -311,10 +416,15 @@ class MaterialContext < ExportBase
     end
     
     def rgb2rgb(color)
-        var_R = 0.8 * color.red/255.0
-        var_G = 0.8 * color.green/255.0
-        var_B = 0.8 * color.blue/255.0
-        return [var_R,var_G,var_B]
+        ## simple conversion from RGB to RGB
+        #return rgb2rgb_TEST(color)
+        r = color.red/255.0
+        g = color.green/255.0
+        b = color.blue/255.0
+        r *= 0.85
+        g *= 0.85
+        b *= 0.85
+        return [r,g,b]
     end
     
     def rgb2rgb_TEST(color)
