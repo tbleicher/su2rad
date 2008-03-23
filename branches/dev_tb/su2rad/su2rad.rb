@@ -45,6 +45,7 @@ end
 
 require "su2radlib/preferences.rb"
 require "su2radlib/exportbase.rb"
+require "su2radlib/context.rb"
 require "su2radlib/interface.rb"
 require "su2radlib/numeric.rb"
 require "su2radlib/material.rb"
@@ -68,6 +69,7 @@ $testdir = ""
 if $DEBUG
     load "su2radlib/preferences.rb"
     load "su2radlib/exportbase.rb"
+    load "su2radlib/context.rb"
     load "su2radlib/interface.rb"
     load "su2radlib/numeric.rb"
     load "su2radlib/material.rb"
@@ -91,6 +93,11 @@ $TRIANGULATE        = false
 $UNIT               = 0.0254           ## inch (SU native unit) to meters (Radiance)
 $UTC_OFFSET         = nil
 $ZOFFSET            = nil     
+
+$CONFIRM_REPLACE    = true
+$RA_TIFF            = '/usr/local/bin/ra_tiff'
+$CONVERT            = '/usr/local/bin/convert'
+
 
 ## try to load configuration from file
 loadPreferences()

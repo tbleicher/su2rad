@@ -52,6 +52,7 @@ class ObjMesh < ExportBase
 end
 
 
+
 class RadianceGroup < ExportBase
    
     def initialize(entity)
@@ -60,19 +61,11 @@ class RadianceGroup < ExportBase
     end
        
     def export(parenttrans)
+        push()
         entities = @entity.entities
         name = getUniqueName(@entity.name)
-        resetglobal = false
-        if isMirror(@entity.transformation) and not $MAKEGLOBAL
-            resetglobal = true
-            $MAKEGLOBAL = true
-            uimessage("group '#{name}' is mirrored; using global coords")
-        end
-        if $MAKEGLOBAL == true
-            parenttrans *= @entity.transformation
-        else
-            parenttrans = @entity.transformation
-        end
+        resetglobal = checkTransformation()
+        parenttrans = setTransformation(parenttrans, resetglobal)
         
         $nameContext.push(name)
         $materialContext.push(getMaterial(@entity))
@@ -85,6 +78,7 @@ class RadianceGroup < ExportBase
         if resetglobal == true
             $MAKEGLOBAL = false
         end
+        pop()
         return ref
     end
     
@@ -125,7 +119,7 @@ class RadianceComponent < ExportBase
             datatext = f.read()
             f.close()
             if createFile(datafilename, datatext) != true
-                uimessage("## error creating data file '#{datafilename}'")
+                uimessage("Error creating data file '#{datafilename}'", -2)
                 return false
             end
         end
@@ -177,7 +171,7 @@ class RadianceComponent < ExportBase
         
         if $createdFiles[filename] != 1 and createFile(filename, radtext) != true
             msg = "Error creating replacement file '#{filename}'"
-            uimessage(msg)
+            uimessage(msg, -2)
             return "\n## #{msg}\n"
         else
             ref = getXform(filename, transformation)
@@ -185,7 +179,7 @@ class RadianceComponent < ExportBase
         cpdata = copyDataFile(transformation)
         if cpdata == false
             msg = "Error: could not copy data file for '#{filename}'"
-            uimessage(msg)
+            uimessage(msg, -2)
             return "\n## #{msg}\n"
         else
             return "\n" + ref
@@ -209,8 +203,9 @@ class RadianceComponent < ExportBase
             uimessage("replacement file '#{@replacement}' found", 1)
         end
     end
-    
+   
     def export(parenttrans)
+        push()
         entities = @entity.definition.entities
         defname = getComponentName(@entity)
         iname = getUniqueName(@entity.name)
@@ -223,14 +218,7 @@ class RadianceComponent < ExportBase
         
         ## force export to global coords if transformation
         ## can't be reproduced with xform
-        resetglobal = false
-        if isMirror(@entity.transformation)
-            if $MAKEGLOBAL == false
-                $MAKEGLOBAL = true
-                resetglobal = true
-                uimessage("instance '#{iname}' is mirrored; using global coords")
-            end
-        end
+        resetglobal = checkTransformation()
         
         skip_export = false
         if $MAKEGLOBAL == false
@@ -246,15 +234,7 @@ class RadianceComponent < ExportBase
             $nameContext.push(iname)    ## use instance name for file
         end
         
-        if $MAKEGLOBAL == true and not resetglobal == true
-            showTransformation(parenttrans)
-            showTransformation(@entity.transformation)
-            parenttrans *= @entity.transformation
-            showTransformation(parenttrans)
-        else
-            parenttrans = @entity.transformation
-        end
-        
+        parenttrans = setTransformation(parenttrans, resetglobal)
         if @iesdata != ''
             ## luminaire from IES data
             ref = copyIESLuminaire(parenttrans)
@@ -274,6 +254,7 @@ class RadianceComponent < ExportBase
         
         $materialContext.pop()
         $nameContext.pop()
+        pop()
         if resetglobal == true
             $MAKEGLOBAL = false
         end
@@ -440,41 +421,83 @@ class RadiancePolygon < ExportBase
             text = ''
             count = 0
             @triangles.each { |points|
-                text += getPolygon(points, count, trans)
+                text += getPolygonText(points, count, trans)
                 count += 1
             }
         else
             points = @verts.collect { |v| v.position }
-            text = getPolygon(points, 0, trans)
+            text = getPolygonText(points, 0, trans)
         end
         return text       
     end
 
-    def getPolygon(points,count, trans)
-        ## store text for byColor/byLayer export
-        worldpoints = points.collect { |p| p.transform($globaltrans) }
-        matname = getMaterialName(@material)
-        poly = "\n%s polygon f_%d_%d\n" % [matname, @index, count]
-        poly += "0\n0\n%d\n" % [worldpoints.length*3]
-        worldpoints.each { |wp|
-            poly += "    %f  %f  %f\n" % [wp.x*$UNIT,wp.y*$UNIT,wp.z*$UNIT]
-        }
-        if not $byColor.has_key?(matname)
-            $byColor[matname] = []
-            uimessage("new material for 'by Color': '#{matname}'")
+    def getEffectiveLayer(entity)
+        layer = entity.layer
+        if layer.name == 'Layer0'
+            layer = $layerstack.get()
         end
-        $byColor[matname].push(poly)
-        
-        layername = remove_spaces(@layer.name)
+        return layer
+    end
+    
+    def getEffectiveLayerName(entity)
+        layer = getEffectiveLayer(entity)
+        return getLayerName(layer)
+    end
+    
+    def getLayerName(layer=nil)
+        if not layer
+            layer = getEffectiveLayer(@face)
+        end
+        layername = remove_spaces(layer.name)
         if $RADPRIMITIVES.has_key?(layername)
             layername = "layer_" + layername
         end
         if not $byLayer.has_key?(layername)
             $byLayer[layername] = []
         end
-        $byLayer[layername].push(poly.sub(matname, layername))
+        return layername
+    end
+        
+    def getPolygonText(points, count, trans)
+        ## return chunk of text to describe face in global/local space
+        material = getEffectiveMaterial(@face)
+        if material == nil
+            printf "## no material\n"
+        end
+        matname = getMaterialName(material)
+        
+        ## create text of polygon in world coords for byColor/byLayer
+        worldpoints = points.collect { |p| p.transform($globaltrans) }
+        wpoly = "\n%s polygon f_%d_%d\n" % [matname, @index, count]
+        wpoly += "0\n0\n%d\n" % [worldpoints.length*3]
+        worldpoints.each { |wp|
+            wpoly += "    %f  %f  %f\n" % [wp.x*$UNIT,wp.y*$UNIT,wp.z*$UNIT]
+        }
+
+        ## 'by layer': replace material in text name with layer name
+        layername = getEffectiveLayerName(@face) 
+        if not $byLayer.has_key?(layername)
+            $byLayer[layername] = []
+        end
+        $byLayer[layername].push(wpoly.sub(matname, layername))
             
-        ## return text for byGroup export
+        ## 'by color' export: if material has texture create obj format
+        if not $byColor.has_key?(matname)
+            $byColor[matname] = []
+        end
+        if material and material.texture != nil
+            if not $meshStartIndex.has_key?(matname)
+                $meshStartIndex[matname] = 1
+            end
+            imgx = material.texture.width
+            imgy = material.texture.height
+            texpoly = getTexturePolygon(trans, matname,imgx,imgy) #XXX $globaltrans?
+            $byColor[matname].push(texpoly)
+        else
+            $byColor[matname].push(wpoly)
+        end
+        
+        ## 'by group': create polygon text with coords in local space
         text = "\n%s polygon t_%d_%d\n" % [getMaterialName(@material), @index, count]
         text += "0\n0\n%d\n" % [points.length*3]
         points.each { |p|
@@ -486,6 +509,41 @@ class RadiancePolygon < ExportBase
         return text
     end
 
+    def getTexturePolygon(trans, matname,imgx,imgy)
+        ## create '.obj' format description of face with uv-coordinates
+        #uvHelp = @face.get_UVHelper(true,true,$materialContext.texturewriter)
+        m = getPolyMesh(trans)
+        si = $meshStartIndex[matname]
+        text = ''
+        m.polygons.each { |p|
+            [0,1,2].each { |i|
+                idx = p[i]
+                if idx < 0
+                    idx *= -1
+                end
+                v = m.point_at(idx)
+                if @face.material != nil
+                    ## has to be texture material or we wouldn't do this
+                    ## textures applied to face work with uv_at
+                    t = m.uv_at(idx,1)
+                    tx = t.x
+                    ty = t.y
+                else
+                    ## textures applied to group work have to be scaled
+                    t = m.uv_at(idx,1)
+                    tx = t.x/imgx
+                    ty = t.y/imgy
+                end
+                text += "v    %f  %f  %f\n" % [v.x*$UNIT,v.y*$UNIT,v.z*$UNIT]
+                text += "vt   %f  %f\n"     % [tx,ty]
+            }
+            text += "f   %d/%d  %d/%d  %d/%d\n" % [si,si, si+1,si+1, si+2,si+2]
+            si += 3
+        }
+        $meshStartIndex[matname] = si
+        return text
+    end
+    
     def isNumeric 
         if @face.layer.name.downcase == 'numeric'
             return true
