@@ -1,57 +1,5 @@
 require "su2radlib/exportbase.rb"
 
-class ObjMesh < ExportBase
-
-    def getObjText(polymeshes)
-        verts = []
-        norms = []
-        texuv = []
-        tris  = []
-        offset = 0
-        polymeshes.each { |p|
-            nverts = p.count_points
-            i = 1
-            while i <= nverts
-                verts.push(p.point_at(i))
-                norms.push(p.normal_at(i))
-                texuv.push(p.uv_at(i))
-            end
-            p.polygons.each { |poly|
-                v1 = poly[0] > 0 ? poly[0] : poly[0]*-1
-                v2 = poly[1] > 0 ? poly[1] : poly[1]*-1
-                v3 = poly[2] > 0 ? poly[2] : poly[2]*-1
-                f = [v1+offset, v2+offset, v3=offset]
-                ## if there are more than 3 vertices
-                if poly.length == 4
-                    v4 = poly[3] > 0 ? poly[3] : poly[3]*-1
-                    f.push(v4+offset)
-                end
-                tris.push(f)
-            }
-            offset += nverts
-        }
-        lines = []
-        verts.each { |v|
-            lines.push("v  %.f %.f %.f" % v.to_a)
-        }
-        norms.each { |vn|
-            lines.push("vn %.f %.f %.f" % vn.to_a)
-        }
-        texuv.each { |vt|
-            lines.push("vt %.f %.f %.f" % vt.to_a)
-        }
-        tris.each { |t|
-            line = "f %d/%d/%d %d/%d/%d %d/%d/%d" % [t[0],t[0],t[0],t[1],t[1],t[1],t[2],t[2],t[2]]
-            if t.length == 4
-                line += " %d/%d/%d" % [t[3],t[3],t[3]]
-            end
-            lines.push(line)
-        }
-        return lines.join("\n")
-    end
-end
-
-
 
 class RadianceGroup < ExportBase
    
@@ -460,11 +408,11 @@ class RadiancePolygon < ExportBase
         
     def getPolygonText(points, count, trans)
         ## return chunk of text to describe face in global/local space
-        material = getEffectiveMaterial(@face)
-        if material == nil
+        skm = getEffectiveMaterial(@face)
+        if skm == nil
             printf "## no material\n"
         end
-        matname = getMaterialName(material)
+        matname = getMaterialName(skm)
         
         ## create text of polygon in world coords for byColor/byLayer
         worldpoints = points.collect { |p| p.transform($globaltrans) }
@@ -485,12 +433,12 @@ class RadiancePolygon < ExportBase
         if not $byColor.has_key?(matname)
             $byColor[matname] = []
         end
-        if material and material.texture != nil
+        if doTextures(skm)
             if not $meshStartIndex.has_key?(matname)
                 $meshStartIndex[matname] = 1
             end
-            imgx = material.texture.width
-            imgy = material.texture.height
+            imgx = skm.texture.width
+            imgy = skm.texture.height
             texpoly = getTexturePolygon(trans, matname,imgx,imgy) #XXX $globaltrans?
             $byColor[matname].push(texpoly)
         else

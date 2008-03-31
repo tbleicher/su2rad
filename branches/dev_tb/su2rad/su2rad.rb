@@ -89,12 +89,15 @@ $REPLMARKS          = '/usr/local/bin/replmarks'
 $PREVIEW            = false        
 $SHOWRADOPTS        = true
 $SUPPORTDIR         = '/Library/Application Support/Google Sketchup 6/Sketchup'
+$MATERIALLIB        = '/usr/local/lib/ray/lib/material.rad'
 $TRIANGULATE        = false    
 $UNIT               = 0.0254           ## inch (SU native unit) to meters (Radiance)
 $UTC_OFFSET         = nil
 $ZOFFSET            = nil     
 
 $CONFIRM_REPLACE    = true
+
+$TEXTURES           = true
 $RA_TIFF            = '/usr/local/bin/ra_tiff'
 $CONVERT            = '/usr/local/bin/convert'
 
