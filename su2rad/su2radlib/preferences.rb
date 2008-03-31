@@ -64,11 +64,13 @@ class PreferencesDialog
         @mode       = 'by group'                    ## "by group"|"by layer"|"by color"
         @makeglobal = false                         ## keep local coordinates of groups and instances
         @triangulate = false                        ## export faces as triangles (should always work)
+        @textures   = true                          ## export textures
         @unit       = 0.0254                        ## use meters for Radiance scene
         
         @replmarks  = '/usr/local/bin/replmarks'    ## path to replmarks binary
+        @obj2mesh   = '/usr/local/bin/obj2mesh'     ## path to obj2mesh binary
         @convert    = '/usr/local/bin/convert'      ## path to ImageMagick 'convert'
-        @ra_tiff    = '/usr/local/bin/ra_tiff  '    ## path to ra_tiff binary
+        @ra_tiff    = '/usr/local/bin/ra_tiff'      ## path to ra_tiff binary
         
         @confirm_replace = false                    ## replace existing dirs without asking
         @utc_offset = nil
@@ -76,6 +78,7 @@ class PreferencesDialog
         @allviews = false                           ## export all saved views
 
         @supportdir = '/Library/Application Support/Google Sketchup 6/Sketchup'
+        @matlib     = '/usr/local/lib/ray/lib/material.rad'
         @build_mlib = false                         ## update/create material library in file system
        
         printf "\n=====\nPreferencesDialog('#{filepath}')\n=====\n"
@@ -107,9 +110,17 @@ class PreferencesDialog
         @unit        = $UNIT
         @utc_offset  = $UTC_OFFSET
         @showradopts = $SHOWRADOPTS
-        @allviews = $EXPORTALLVIEWS
+        @allviews    = $EXPORTALLVIEWS
+        
+        @convert     = $CONVERT 
+        @ra_tiff     = $RA_TIFF
+        @obj2mesh    = $OBJ2MESH
+        @textures    = $TEXTURES
+        
         @supportdir  = $SUPPORTDIR
-        @build_mlib = $BUILD_MATERIAL_LIB
+        @matlib      = $MATERIALLIB
+        @build_mlib  = $BUILD_MATERIAL_LIB
+
         validate()
     end
 
@@ -120,6 +131,15 @@ class PreferencesDialog
             @supportdir = ''
             $SUPPORTDIR = ''
         end
+        newpaths = []
+        ml_paths = @matlib.split(':')
+        ml_paths.each { |p|
+            if File.exists?(p)
+                newpaths.push(p)
+            end
+        }
+        @matlib = newpaths.join(':')
+        $MATERIALLIB = newpaths.join(':')
         if @replmarks != '' and not File.exists?(@replmarks)
             printf "$REPLMARKS does not exist => setting ignored ('#{@REPLMARKS}')\n"
             @replmarks = ''
@@ -141,23 +161,41 @@ class PreferencesDialog
         $RA_TIFF = ''
     end
     
+    def addOption(lable, value, choices)
+        @prompts.push(lable)
+        @values.push(value)
+        @choices.push(choices)
+    end
+    
     def showDialog
         updateFromFile(@filepath)
-        modes = 'by group|by layer|by color'
+        @prompts = []
+        @values  = []
+        @choices = []
         a = (-12..12).to_a
         a.collect! { |i| "%.1f" % i }
         utcs = 'nil|' + a.join("|")
-        prompts = [   'log level', 'export mode',  'global coords', 'triangulate faces',     'show options']
-        values  = [     @loglevel,         @mode,      @makeglobal,   @triangulate.to_s,  @showradopts.to_s]
-        choices = [     '0|1|2|3',         modes,     'true|false',        'true|false',       'true|false']
-        prompts += ['export all views',  'unit',  'replmarks path',  'convert path', 'ra_tiff path']
-        values  += [    @allviews.to_s,   @unit,        @replmarks,        @convert,       @ra_tiff]
-        choices += [       'true|false',     '',                '',              '',             '']
-        prompts += ['supportdir',   'update library',  'system clock offset']
-        values  += [ @supportdir,   @build_mlib.to_s,       @utc_offset.to_s]
-        choices += [          '',       'true|false',                   utcs]
+        options = [['log level',           @loglevel,    '-2|-1|0|1|2|3'],
+                   ['export mode',         @mode,        'by group|by layer|by color'],
+                   ['global coords',       @makeglobal,  'true|false'],   
+                   ['triangulate faces',   @triangulate, 'true|false'],
+                   ['export textures',     @textures,    'true|false'],
+                   ['show options',        @showradopts, 'true|false'],       
+                    
+                   ['export all views',    @allviews,    'true|false'],
+                   ['unit',                @unit,        ''],
+                   ['replmarks path',      @replmarks,   ''],
+                   ['convert path',        @convert,     ''],
+                   ['ra_tiff path',        @ra_tiff,     ''],
+                   ['obj2mesh path',       @obj2mesh,    ''],
+                   ['supportdir',          @supportdir,  ''],
+                   ['material library',    @matlib,      ''],
+                   ['update library',      @build_mlib,  'true|false'],
+                   ['system clock offset', @utc_offset,  utcs]]
         
-        dlg = UI.inputbox(prompts, values, choices, 'preferences')
+        options.each { |l,v,c| addOption(l,v,c) }
+        
+        dlg = UI.inputbox(@prompts, @values, @choices, 'preferences')
         if not dlg
             printf "preferences dialog.rb canceled\n"
             return 
@@ -173,22 +211,25 @@ class PreferencesDialog
         @mode        = dlg[1]  
         @makeglobal  = truefalse(dlg[2])
         @triangulate = truefalse(dlg[3])
-        @showradopts = truefalse(dlg[4])
-        @allviews    = truefalse(dlg[5])
+        @textures    = truefalse(dlg[4])
+        @showradopts = truefalse(dlg[5])
+        @allviews    = truefalse(dlg[6])
         begin
-            @unit = dlg[6].to_f
+            @unit = dlg[7].to_f
         rescue
             printf "unit setting not a number('#{dlg[6]}') => ignored\n"
         end 
-        @replmarks  = dlg[7]
-        @convert    = dlg[8]
-        @ra_tiff    = dlg[9]
-        @supportdir = dlg[10]
-        @build_mlib = dlg[11]
-        if dlg[12] == 'nil'
+        @replmarks  = dlg[8]
+        @convert    = dlg[9]
+        @ra_tiff    = dlg[10]
+        @obj2mesh   = dlg[11]
+        @supportdir = dlg[12]
+        @matlib     = dlg[13]
+        @build_mlib = dlg[14]
+        if dlg[15] == 'nil'
             @utc_offset = nil
         else
-            @utc_offset = dlg[12].to_f
+            @utc_offset = dlg[15].to_f
         end
         validate()
     end    
@@ -245,15 +286,17 @@ class PreferencesDialog
         $MODE               = @mode 
         $MAKEGLOBAL         = @makeglobal
         $TRIANGULATE        = @triangulate
+        $TEXTURES           = @textures
         $UTC_OFFSET         = @utc_offset
         $UNIT               = @unit
         $SUPPORTDIR         = @supportdir
         $SHOWRADOPTS        = @showradopts 
         $EXPORTALLVIEWS     = @allviews  
         $BUILD_MATERIAL_LIB = @build_mlib
+        $MATERIALLIB        = @matlib
         $RA_TIFF            = @ra_tiff
         $CONVERT            = @convert
-        $CONFIRM_REPLACE    = @confirm_replace
+        $OBJ2MESH           = @obj2mesh
     end
     
     def getSettingsText
@@ -266,6 +309,8 @@ class PreferencesDialog
             "$MODE                  = '#{$MODE}'",
             "$MAKEGLOBAL            = #{$MAKEGLOBAL}",
             "$TRIANGULATE           = #{$TRIANGULATE}",
+            "$TEXTURES              = #{$TEXTURES}",
+            "",
             "$SHOWRADOPTS           = #{$SHOWRADOPTS}",
             "$EXPORTALLVIEWS        = #{$EXPORTALLVIEWS}",
             "",
@@ -275,8 +320,10 @@ class PreferencesDialog
             "\n## paths to utility programs",
             "$REPLMARKS             = '#{$REPLMARKS}'",
             "$CONVERT               = '#{$CONVERT}'",
-            "$RA_TIFF               = '#{$RA_TIFF}'"
+            "$RA_TIFF               = '#{$RA_TIFF}'",
+            "$OBJ2MESH              = '#{$OBJ2MESH}'",
             "\n## library options",
+            "$MATERIALLIB           = '#{$MATERIALLIB}'",
             "$SUPPORTDIR            = '#{$SUPPORTDIR}'",
             "$BUILD_MATERIAL_LIB    = #{$BUILD_MATERIAL_LIB}",
             "\n## misc and unused options",

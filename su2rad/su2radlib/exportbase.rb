@@ -370,6 +370,20 @@ class ExportBase
         end
     end
 
+    def doTextures(skm)
+        if skm == nil
+            return false
+        elsif skm.texture == nil
+            return false
+        elsif $TEXTURES == false
+            return false
+        elsif $OBJ2MESH == ''
+            return false
+        else
+            return true
+        end
+    end
+    
     def getFilename(name=nil)
         if name == nil
             name = "objects/%s.rad" % remove_spaces($nameContext[-1])
@@ -573,10 +587,14 @@ class ExportBase
             prefix = ""
         end
         line = "%s[%d] %s" % [prefix, n, msg]
-        Sketchup.set_status_text(line.strip())
-        if loglevel <= $LOGLEVEL
-            printf "%s\n" % line
-            $log.push(line)
+        begin
+            Sketchup.set_status_text(line.strip())
+            if loglevel <= $LOGLEVEL
+                printf "#{line}\n"
+                $log.push(line)
+            end
+        rescue
+            printf "#{line}\n"
         end
     end
 end 

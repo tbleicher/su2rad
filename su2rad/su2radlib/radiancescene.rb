@@ -52,10 +52,10 @@ class RadianceScene < ExportBase
     
     def initLog
         super
-        line1 = "###  su2rad.rb export ###" 
+        line1 = "###  su2rad.rb export  ###" 
         line2 = "###  %s  ###" % Time.now.asctime
         $log = [line1,line2]
-        printf "%s\n" % line1
+        printf "\n\n%s\n" % line1
         Sketchup.set_status_text(line1)
     end
     
@@ -79,6 +79,7 @@ class RadianceScene < ExportBase
         ud.addOption("show options", $SHOWRADOPTS) 
         ud.addOption("all views", $EXPORTALLVIEWS) 
         ud.addOption("mode", $MODE, "by group|by layer|by color")
+        ud.addOption("textures", $TEXTURES)
         ud.addOption("triangulate", $TRIANGULATE)
         if $REPLMARKS != '' and File.exists?($REPLMARKS)
             ud.addOption("global coords", $MAKEGLOBAL) 
@@ -92,9 +93,10 @@ class RadianceScene < ExportBase
             $SHOWRADOPTS = ud.results[2] 
             $EXPORTALLVIEWS = ud.results[3] 
             $MODE = ud.results[4]
-            $TRIANGULATE = ud.results[5]
+            $TEXTURES = ud.results[5]
+            $TRIANGULATE = ud.results[6]
             if $REPLMARKS != '' and File.exists?($REPLMARKS)
-                $MAKEGLOBAL = ud.results[6]
+                $MAKEGLOBAL = ud.results[7]
             end
             #if $RAD != ''
             #    $PREVIEW = ud.result[7]
@@ -105,11 +107,13 @@ class RadianceScene < ExportBase
         end
         
         ## use test directory in debug mode
-        if $DEBUG and  $testdir != ''
-            $export_dir = $testdir
-            scene_dir = "#{$export_dir}/#{$scene_name}"
-            if FileTest.exists?(scene_dir)
-                system("rm -rf #{scene_dir}")
+        if $DEBUG 
+            if $testdir and $testdir != ''
+                $export_dir = $testdir
+                scene_dir = "#{$export_dir}/#{$scene_name}"
+                if FileTest.exists?(scene_dir)
+                    system("rm -rf #{scene_dir}")
+                end
             end
         end
         if $export_dir[-1,1] == '/'
@@ -194,7 +198,7 @@ class RadianceScene < ExportBase
         $nameContext.pop()
         $materialContext.export()
         createRifFile()
-        runPreview()
+        #runPreview()
         writeLogFile()
     end
     
@@ -207,9 +211,10 @@ class RadianceScene < ExportBase
             if lines.length == 0
                 next
             end
-            m = $materialContext.getByName(name)
+            skm = $materialContext.getByName(name)
             name = remove_spaces(name)
-            if $OBJ2MESH != '' and m.texture != nil
+            if doTextures(skm)
+                uimessage("material='#{skm}' texture='#{skm.texture}'", 2)
                 references.push(obj2mesh(name, lines))
             else
                 filename = getFilename("objects/#{name}.rad")
@@ -231,7 +236,6 @@ class RadianceScene < ExportBase
             uimessage(msg)
             return "## #{msg}"
         else
-            #TODO convert obj to mesh
             begin
                 rtmfile = getFilename("objects/#{name}.rtm")
                 cmd = "#{$OBJ2MESH} #{objfile} #{rtmfile}"
@@ -407,7 +411,7 @@ class RadianceScene < ExportBase
     end
     
     def getFoVAngle(ang1, side1, side2)
-        ang1_rad = ang1*Math::PI/180
+        ang1_rad = ang1*Math::PI/180.0
         dist = side1 / (2.0*Math::tan(ang1_rad/2.0))
         ang2_rad = 2 * Math::atan2(side2/(2*dist), 1)
         ang2 = (ang2_rad*180.0)/Math::PI
