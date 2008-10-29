@@ -1,0 +1,254 @@
+body {
+    font-size: 16px; /* @ EOMB */
+    color: #333333;
+    line-height: 1.2;
+}
+* html body {
+    font-size: 100%; /* @ IE */
+    color: #333333;
+    line-height: 1.2;
+}
+body * {
+    font-size: 87.5%;
+    font-family: "Trebuchet MS", Trebuchet, Verdana, Helvetica, Arial, sans-serif;
+    /* border: solid; */
+    margin: 0.2em 0 0.2em;
+}
+body * * {
+    font-size: 100%;
+}
+code {
+    font-family: "Courier New", Courier, monospace;
+}
+.column {
+    width: 140px;
+    /* margin-right: 15px; */
+    /* background: lightskyblue; */
+}
+.column2 {
+    width: 275px;
+    /* background: lightskyblue; */
+}
+.exportbutton {
+    float: right;
+    width: 100px;
+    height: 24px;
+    margin: 14px;
+}
+.floatright {
+    float: right;
+    width: 50px;
+    margin-right: 10px;
+}
+h1 {
+    margin: 1em 0 1.5em;
+    font-size: 18px;
+}
+h2 {
+    margin: 2em 0 1.5em;
+    font-size: 18px;
+    background: url(gradient.png) repeat-x;
+    height: 44px; /* IE 6 treats height as min-height */
+    min-height: 44px; /* IE 6 treats height as min-height */
+}
+h3,th {
+    margin: 0.8em 0 0.8em;
+    padding: 0.3em;
+    padding-left: 0.5em;
+    font-weight: bold;
+    color: blue;
+    color: #27537a;
+    background: url(gradient.png) repeat-x;
+    height: 18px; /* IE 6 treats height as min-height */
+    min-height: 18px; /* IE 6 treats height as min-height */
+    /* background: lightskyblue; */
+}
+input, select {
+    font-size: 12px;
+    height: 14px;
+    padding: 0;
+    margin: 0;
+}
+select {
+    width: 90px;
+}
+table {
+    padding: 0;
+    margin: 0;
+}
+td {
+    /* border-style: solid; border-width: 1px; */
+    vertical-align: middle;
+    padding: 0;
+    margin: 0;
+    height: 14px; 
+    min-height: 14px;  
+}
+.tableHeader {
+    margin: 0.8em 0 0.8em;
+    padding: 0.3em;
+    padding-left: 0.5em;
+    color: #27537a; /* blue-grey */
+    background: url(gradient.png) repeat-x;
+    /* font-size: 14px; */ 
+    height: 30px; 
+    min-height: 30px;  
+    font-weight: bold;
+    text-align: left;
+    vertical-align: bottom;
+    /* width: 180px; */
+}
+.column_lable {
+    font-weight: bold;
+    width: 60px;
+}
+.column_lable_highlight {
+    font-weight: bold;
+    width: 60px;
+    color: #ff0000;
+}
+input[type=button] {
+    font-size: 12px;
+    height: 20px;
+}
+input[type=checkbox] {
+   position: relative;
+   top: 2px;
+}
+.columnRadLable{
+    font-weight: bold;
+    width: 85px;
+    padding-left: 0.5em;
+}
+.columnRadOption {
+    width: 95px;
+}
+.option_lable {
+    font-weight: bold;
+    width: 60px;
+}
+.control_value {
+    font-size: 12px;
+    line-height: 1;
+}
+p {
+    padding: 0.2;
+    margin: 0.2 0 0.2;
+}
+pre, pre+p, p+p {
+    margin: 0.2 0 0.2;
+}
+
+div.fileinputs {
+    position: relative;
+    float: right;
+    width: 24px;
+    top: -3px;
+    height: 20px;
+    margin: 0;
+}
+div.fakefile {
+    position: absolute;
+    top: -1px;
+    height: 20px;
+    left: 5px;
+    z-index: 1;
+    margin: 0;
+}
+input.file {
+    width: 20px;
+    height: 24px;
+    position: relative;
+    text-align: right;
+    -moz-opacity:0.0;
+    filter:alpha(opacity: 0.0);
+    opacity: 0.0;
+    z-index: 2;
+    margin: 0;
+}
+
+
+#radOptionsLeft {
+    float:left;
+    width: 180px;
+    margin: 0;
+    padding: 0;
+}
+#radOptionsMiddle {
+    float:left;
+    width: 180px;
+    margin: 0;
+    margin-left: 10px;
+    padding: 0;
+}
+#radOptionsRight {
+    float:left;
+    width: 180px;
+    margin: 0;
+    margin-left: 10px;
+    padding: 0;
+}
+
+#genskyOptionsLeft {
+    float:left;
+    width: 80px;
+}
+#rpictOptionsLeft {
+    float:left;
+    width: 120px;
+}
+#rpictOptionsLeft {
+    float:left;
+    width: 120px;
+}
+#rpictOptionsMiddle {
+    float:left;
+    width: 120px;
+    margin-left: 10px;
+}
+#rpictOptionsRight {
+    float:left;
+    width: 180px;
+    margin-left: 10px;
+}
+
+#radRenderLine_1 {
+    font-size: 12px;
+    font-family: "Monaco", "Courier New", Courier, monospace;
+    /* font-weight: bold; */
+    color: #27537a; 
+    background-color: #d9eaf4;
+    padding: 2px;
+}
+
+.rpictCB {
+    /* margin-left: 5px; */
+}
+
+.genskyOption {
+    font-size: 12px;
+    font-family: "Monaco", "Courier New", Courier, monospace;
+    font-weight: bold;
+    padding-left: 0.5em;
+}
+.rpictOverride, .rpictOverrideSelected {
+    font-size: 12px;
+    font-family: "Monaco", "Courier New", Courier, monospace;
+    padding-left: 0.5em;
+}
+.rpictOverrideSelected {
+    font-weight: bold;
+    background-color: #d9eaf4;
+}
+.rpictOverrideInput {
+    width: 40px;
+    font-weight: bold;
+    background-color: #d9eaf4;
+}
+.rpictOverrideHeader {
+    font-weight: bold;
+    padding-left: 0.5em;
+    /* padding-top: 2.5em; */
+    color: #27537a; /* blue-grey */
+}
+

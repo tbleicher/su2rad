@@ -1,0 +1,620 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+
+<html lang="en">
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+        <meta http-equiv="Content-Style-Type" content="text/css">
+        <meta http-equiv="Content-Script-Type" content="text/javascript">
+
+        <title>Radiance Export</title>
+        
+        <script type="text/javascript" src="http://maps.google.com/maps?file=api&amp;v=2&amp;key=ABQIAAAAVkCvvMxWS6sy1KKSLvN3URTDis0fJxnS-wzgwKhlyWVJxXLRhxQq9kdL_d2nO8XPOQO2xIrAWCmccw"></script>
+        
+        <!--
+        <script type="text/javascript" src="http://ws.geonames.org/export/geonamesData.js"></script>
+        -->
+        <script type="text/javascript" src="./js/jsr_class.js"></script>
+        
+        <!--
+        <script type="text/javascript" src="./js/jquery-1.1.3.1.pack.js"></script>
+        -->
+        <script type="text/javascript" src="./js/jquery-1.2.6.js"></script>
+        <script type="text/javascript" src="./js/jquery.history_remote.pack.js"></script>
+        <script type="text/javascript" src="./js/jquery.tabs.pack.js"></script>
+        
+        <!-- tabs v3.0 - does not work ...
+        <script type="text/javascript" src="./js/ui.core.js"></script>
+        <script type="text/javascript" src="./js/ui.tabs.js"></script>
+        -->
+        
+        <script type="text/javascript" src="./js/dialog.js"></script>
+        <script type="text/javascript" src="./js/googlemap.js"></script>
+        <script type="text/javascript" src="./js/sky_location.js"></script>
+        <script type="text/javascript" src="./js/radopts.js"></script>
+        <script type="text/javascript" src="./blackbirdjs/blackbird.js"></script>
+        
+        <script type="text/javascript">
+            /* create tabs */
+            $(function() {
+                $('#tab-container').tabs(1, {
+                    disabled: [5], 
+                    onClick: function(a,s,h) { onTabClick(a,s,h); },
+                    onHide:  function(a,s,h) { onTabHide(a,s,h); },
+                    onShow:  function(a,s,h) { onTabShow(a,s,h); }
+                } );
+            });
+
+            var SKETCHUP = false;
+            function setSketchup() {
+                SKETCHUP = true;
+            }
+            function checkInitPage() {
+                log.toggle();
+                if (SKETCHUP != true) {
+                    initPage();
+                }
+            }
+            function onRadToggleOption() {
+                // TODO
+            }
+            function onSkyTypeChange() {
+                // TODO
+            }
+
+        </script>
+
+        <link rel="stylesheet" href="./css/jquery.tabs.css" type="text/css" media="print, projection, screen">
+        <!-- Additional IE/Win specific style sheet (Conditional Comments) -->
+        <!--[if lte IE 7]>
+        <link rel="stylesheet" href="./css/jquery.tabs-ie.css" type="text/css" media="projection, screen">
+        <![endif]-->
+        <!-- style sheet for the rest of the dialog -->
+        <link rel="stylesheet" href="./css/dialog.css" type="text/css" media="print, projection, screen">
+        <link rel="stylesheet" href="./blackbirdjs/blackbird.css" type="text/css" media="screen">
+    
+    </head>
+    
+    <body onLoad="checkInitPage()">
+    
+        <div id="tab-container">
+            <ul class="tabs-nav">
+                <li><a href="#tab-export"><span>Export</span></a></li>
+                <li><a href="#tab-render"><span>Render</span></a></li>
+                <li><a href="#tab-sky"><span>Sky</span></a></li>
+                <li><a href="#tab-fields"><span>Fields</span></a></li>
+                <li><a href="#tab-climate"><span>Climate</span></a></li>
+            </ul>
+
+            
+            <div id="tab-export">
+                <h3>
+                    Export Options
+                </h3>
+                <table style="width: 375px;">
+                    <tr>
+                        <td class="column_lable">path:</td>
+                        <td colspan="2">
+                            <div class="fileinputs">
+                                <input type="file" class="file" id="fileselection" onchange="setExportPath()" />
+                                <div class="fakefile">
+                                    <img src="./css/24-zoom.png" />
+                                </div>
+                            </div>
+                            <input type="text" class="column2" name="scene_path" id="scene_path" value="-"/>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="column_lable">scene:</td>
+                        <td colspan="2">
+                            <input type="text" class="column2" name="scene_name" id="scene_name" value="-"/>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td colspan="3" style="height: 10px;"></td>
+                    </tr>
+                    <tr>
+                        <td class="column_lable">mode:</td>
+                        <td class="column">
+                            <select id="export_mode" name="export_mode" onchange="setExportMode()">
+                                <option value="by_group" selected>by group</option>
+                                <option value="by_layer">by layer</option>
+                                <option value="by_material">by material</option>
+                            </select>
+                        </td>
+                        <td>
+                            <span id="global_coords_display">
+                                <input id="global_coords_cb" value="global_coords" type="checkbox" 
+                                onchange="toggle_option("global_coords")"> global coords
+                            </span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td></td>
+                        <td colspan="2">
+                            <input id="triangulate_cb" value="triangulate" type="checkbox" class="cblow"
+                            onchange="toggle_option("triangulate")"> triangulate<br/>
+                            <input id="textures_cb" value="textures" type="checkbox" class="cblow"
+                            onchange="toggle_option("textures")"> textures
+                        </td>
+                    </tr>
+                </table>
+                
+                    
+                <h3>Views</h3>
+                <div id="viewsSelection"></div>
+                
+                
+                <!-- ###   RENDER   ### --> 
+                <h3>
+                    <input class="floatright" type="button" value="edit" onclick="switch_to_tab(2)">
+                    Render Options
+                </h3>
+                <table>
+                    <tr>
+                        <td class="column_lable">quality:</td>
+                        <td class="column">
+                            <select id="radQuality_1" name="radQuality_1" onchange="onRadOptionChange('radQuality_1')">
+                                <option value="high">high</option>
+                                <option value="medium" selected>medium</option>
+                                <option value="low">low</option>
+                            </select>
+                        </td>
+                        <td class="column_lable">img x:</td>
+                        <td>
+                            <input type="text" size="5" name="radImageSizeX_1" id="radImageSizeX_1" value="512" onchange="onRadOptionImageSize('radImageSizeX_1')" />
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="column_lable">detail:</td>
+                        <td>
+                            <select id="radDetail_1" name="radDetail_1" onchange="onRadOptionChange('radDetail_1')">
+                                <option value="high">high</option>
+                                <option value="medium" selected>medium</option>
+                                <option value="low">low</option>
+                            </select>
+                        </td>
+                        <td class="column_lable">img y:</td>
+                        <td>
+                            <input type="text" size="5" name="radImageSizeY_1" id="radImageSizeY_1" value="512" onchange="onRadOptionImageSize('radImageSizeY_1')" />
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="column_lable">varia:</td>
+                        <td>
+                            <select id="radVariability_1" name="radVariability_1" onchange="onRadOptionChange('radVariability_1')">
+                                <option value="high" selected>high</option>
+                                <option value="medium">medium</option>
+                                <option value="low">low</option>
+                            </select>
+                        </td>
+                        <td class="column_lable">type:</td>
+                        <td>
+                            <select id="radImageType_1" name="radImageType_1" style="width: 90px;" onchange="selectImageType('radImageType_1')">
+                                <option value="normal" selected>normal</option>
+                                <option value="irridiance">irridiance</option>
+                                <option value="falsecolor">falsecolor</option>
+                            </select>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td colspan="4" style="height: 5px;"></td>
+                    </tr>    
+                    <tr>
+                        <td class="column_lable">render:</td>
+                        <td colspan="3">
+                            <span class="renderLine" id="radRenderLine_1"></span>
+                            <!-- <input type="text" class="column2" name="radRenderLine_1" id="radRenderLine_1" value="" onchnge="parseRenderLine('_1')"/> -->
+                        </td>
+                    </tr>
+                </table>
+                
+                
+                <h3>
+                    <input class="floatright" type="button" value="edit" onclick="switch_to_tab(4)">
+                    Sky
+                </h3>
+                <table>
+                    <tr>
+                        <td class="column_lable">location:</td>
+                        <td style="min-width: 280px">
+                            <span id="skySummaryLocation">town, country</span>
+                        </td>
+                        <td class="column_lable">
+                            north:
+                        </td>
+                        <td>
+                            <span id="skySummaryNorth">0.00</span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="column_lable">gensky:</td>
+                        <td colspan="3">
+                            <span id="skySummaryOptions">summary of sky settings (gensky ...)</span>
+                        </td>
+                    </tr>
+                </table>
+                
+                 
+                <h3>
+                    <input class="floatright" type="button" id="edit_climate" value="edit" onclick="switch_to_tab(5)" disabled>
+                    <input type="checkbox" id="climate_checkbox" value="climate"
+                    onchange="toggleClimateTab()"> Climate Data
+                </h3>
+                <table id="climate_options" style="display:none;">
+                    <tr>
+                        <td class="column_lable">climate:</td>
+                        <td>
+                            climate data file
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="column_lable">process:</td>
+                        <td>
+                            processing option
+                        </td>
+                    </tr>
+                </table>
+                <div>
+                    <span id="statusMsg">status</span>
+                </div>
+
+                
+                <h2><INPUT class="exportbutton" type="submit" name="export" value="export"></h2>
+            
+            
+            </div>
+            
+
+            <!-- tab contents -->
+
+            
+            <div id="tab-render">
+                <h3>
+                    <input class="floatright" type="button" value="done" onclick="switch_to_tab(1)">
+                    Render Settings
+                </h3>
+                <div id="radOptions">
+                    <div id="radOptionsLeft">
+                        <table>
+                            <tr>
+                                <td colspan="2" class="tableHeader">Quality</td>
+                            </tr>
+                            <tr>
+                                <td class="columnRadLable">quality:</td>
+                                <td class="column">
+                                    <select id="radQuality_2" name="radQuality_2" onchange="onRadOptionChange('radQuality_2')">
+                                        <option value="high">high</option>
+                                        <option value="medium" selected>medium</option>
+                                        <option value="low">low</option>
+                                    </select>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="columnRadLable">detail:</td>
+                                <td class="column">
+                                    <select id="radDetail_2" name="radDetail_2" onchange="onRadOptionChange('radDetail_2')">
+                                        <option value="high">high</option>
+                                        <option value="medium" selected>medium</option>
+                                        <option value="low">low</option>
+                                    </select>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="columnRadLable">varia:</td>
+                                <td>
+                                    <select id="radVariability_2" name="radVariability_2" onchange="onRadOptionChange('radVariability_2')">
+                                        <option value="high" selected>high</option>
+                                        <option value="medium">medium</option>
+                                        <option value="low">low</option>
+                                    </select>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="columnRadLable">indirect:</td>
+                                <td class="columnRadOption">
+                                    <select id="radIndirect" name="radIndirect">
+                                        <option value="0">0</option>
+                                        <option value="1">1</option>
+                                        <option value="2">2</option>
+                                        <option value="3" selected>3</option>
+                                        <option value="4">4</option>
+                                        <option value="5">5</option>
+                                    </select>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="columnRadLable" style="font-size: 12px;">penumbra:</td>
+                                <td>
+                                    <input type="checkbox" id="radPenumbras" checked onchange="onRadOptionChange('radPenumbras')" /> 
+                                </td>
+                            </tr>
+                        </table>
+                    </div>        
+                    
+                    <div id="radOptionsMiddle">
+                        <table>
+                            <tr>
+                                <td colspan="2" class="tableHeader">Image</td>
+                            </tr>
+                            <tr>
+                                <td class="columnRadLable">size x:</td>
+                                <td>
+                                    <input type="text" size="4" name="radImageSizeX_2" id="radImageSizeX_2" value="512" onchange="onRadOptionImageSize('radImageSizeX_2')" />
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="columnRadLable">size y:</td>
+                                <td>
+                                    <input type="text" size="4" name="radImageSizeY_2" id="radImageSizeY_2" value="512" onchange="onRadOptionImageSize('radImageSizeY_2')" />
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="columnRadLable">type:</td>
+                                <td>
+                                    <select id="radImageType_2" name="radImageType_2" style="width: 90px;" onchange="selectImageType('radImageType_2')">
+                                        <option value="normal" selected>normal</option>
+                                        <option value="irridiance">irridiance</option>
+                                        <option value="falsecolor">falsecolor</option>
+                                    </select>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td colspan="2" class="tableHeader">Zone</td>
+                            </tr>
+                            <tr>
+                                <td class="columnRadLable">size:</td>
+                                <td>
+                                    <input type="text" name="radZoneSize" id="radZoneSize" size="6" value="10.0" onchange="onRadOptionChange('radZoneSize')"/>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="columnRadLable">type:</td>
+                                <td>
+                                    <select id="radZoneType" name="radZoneType" onchange="onRadOptionChange('radZoneType')">
+                                        <option value="exterior" selected>exterior</option>
+                                        <option value="interior">interior</option>
+                                    </select>
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                    
+                    <div id="radOptionsRight">
+                        <table>
+                            <tr>
+                                <td colspan="2" class=tableHeader>Report</td>
+                            </tr>
+                            <tr>
+                                <td class="columnRadLable">time:</td>
+                                <td class="columnRadOption">
+                                    <select id="radReport" name="radReport" onchange="onRadOptionChange('radReport')">
+                                        <option value="0" selected>none</option>
+                                        <option value="60">1 min</option>
+                                        <option value="120">2 min</option>
+                                        <option value="180">3 min</option>
+                                        <option value="300">5 min</option>
+                                        <option value="600">10 min</option>
+                                    </select>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="columnRadLable">file:</td>
+                                <td class="columnRadOption">
+                                    <input type="text" size="40" style="width:85px;" name="radReportFile" id="radReportFile" value="scene.log" onchange="onRadOptionChange('radReportFile')" />
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                    <div style="clear:both;">
+                        <table style="width: 370px; margin-top: 10px;">
+                            <tr>
+                                <td class="columnRadLable">render:</td>
+                                <td>
+                                    <input type="text" style="width:285px;" name="radRenderLine_2" id="radRenderLine_2" value="" onchange="parseRenderLine('_2')" />
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+                <h3>
+                    details
+                </h3>
+                <div id="rpictOptionsDisplay">
+                    <input type="button" value="show details" onclick="updateRpictValues()">
+                </div>
+            </div>
+            
+            
+            <div id="tab-sky">
+                <h3>
+                    <input class="floatright" type="button" value="done" onclick="switch_to_tab(1)">
+                    Sky Settings
+                </h3>
+                <table id="skySettings" style="width: 500px;">
+                    <tr>
+                        <td class="column_lable">gensky:</td>
+                        <td class="column">
+                            <select id="genskySkyType" name="genskySkyType" style="width:125px;" onchange="onSkyTypeChange()">
+                                <option value="-u">uniform</option>
+                                <option value="-c" selected>CIE overcast</option>
+                                <option value="-i">CIE intermediate</option>
+                                <option value="-s">CIE clear</option>
+                            </select>
+                        </td>
+                        <td class="column_lable">
+                             <input type="checkbox" id="sunOption" value="sunOption" onchange="toggleSun()"> sun
+                         </td>
+                         <td colspan="3"></td>
+                    </tr>
+                    <tr>
+                        <td class="column_lable"></td>
+                        <td colspan="5">
+                            <span>
+                                <div id="genskyOptionsLeft">
+                                    <span class="genskyOption">-g</span>
+                                    <input type="text" style="width:40px;" size="10" name="gensky_g" id="gensky_g" value="0.2"
+                                    onchange="onGenskyOptionChanged('-g')"/><br/>
+                                    <span class="genskyOption">-t</span>
+                                    <input type="text" style="width:40px;" size="10" name="gensky_t" id="gensky_t" value="1.7"
+                                    onchange="onGenskyOptionChanged('-t')"/><br/>
+                                </div>
+                                <div id="genskyOptionsLeft">
+                                    <span class="genskyOption">-b</span>
+                                    <input type="text" style="width:40px;" size="10" name="gensky_b" id="gensky_b" value=""
+                                    onchange="onGenskyOptionChanged('-b')"/><br/>
+                                    <span class="genskyOption">-B</span>
+                                    <input type="text" style="width:40px;" size="10" name="gensky_B" id="gensky_B" value=""
+                                    onchange="onGenskyOptionChanged('-B')"/><br/>
+                                </div>
+                                <div id="genskyOptionsLeft">
+                                    <span class="genskyOption">-r</span>
+                                    <input type="text" style="width:40px;" size="10" name="gensky_r" id="gensky_r" value=""
+                                    onchange="onGenskyOptionChanged('-r')"/><br/>
+                                    <span class="genskyOption">-R</span>
+                                    <input type="text" style="width:40px;" size="10" name="gensky_R" id="gensky_R" value=""
+                                    onchange="onGenskyOptionChanged('-R')"/><br/>
+                                </div>
+                            </span>
+                        </td>
+                    </tr>
+                </table>
+                <h3>
+                    <input class="floatright" type="button" value="done" onclick="switch_to_tab(1)">
+                    Location Settings
+                </h3>
+                
+                <table id="locationSettings">
+                    <tr>
+                        <td class="column_lable">City:</td>
+                        <td style="width: 120px;">
+                            <input type="text" size="15" name="City" id="City" value="City" tabindex="1" onchange="onCityCountryChanged()"/>
+                        </td>
+                        <td class="column_lable" style="width:75px;">Latitude:</td>
+                        <td style="width: 80px;">
+                            <input type="text" size="8" name="Latitude" id="Latitude" value="56.7" tabindex="4" onchange="onLatLongChange()" />
+                        </td>
+                        <td class="column_lable">North:</td>
+                        <td>
+                            <input type="text" size="4" name="NorthAngle" id="NorthAngle" value="12.3" tabindex="6" onchange="onNorthAngleChange()" />
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="column_lable">Country:</td>
+                        <td style="width: 120px;">
+                            <input type="text" size="15" name="Country" id="Country" value="Country" tabindex="2" onchange="onCityCountryChanged()"/>
+                        </td>
+                        <td class="column_lable" style="width:75px;">Longitude:</td>
+                        <td style="width: 80px;">
+                            <input type="text" size="8" name="Longitude" id="Longitude" value="0.12" tabindex="5" onchange="onLatLongChange()"/>
+                        </td>
+                        <td class="column_lable" id="TZOffsetLable" style="width:75px;">time zone:</td>
+                        <td>
+                            <select name="TZOffset" id="TZOffset" tabindex="7" onchange="selectTZ()">
+                                <option value="13"  >NZDT +13</option>
+                                <option value="12"  >NZST +12</option>
+                                <option value="11"  >AEDT +11</option>
+                                <option value="10.5">ACDT +10.5</option>
+                                <option value="10"  >AEST +10</option>
+                                <option value="9.5" >ACST +9.5</option>
+                                <option value="9"   >AWDT +9</option>
+                                <option value="8"   >AWST +8</option>
+                                <option value="7"   >CXT +7</option>
+                                
+                                <option value="6"   >none +6</option>
+                                <option value="5"   >none +7</option>
+                                
+                                <option value="4" >MSD +4</option>
+                                <option value="3" >EEST/MSK +3</option>
+                                <option value="2" >EET/CEST +2</option>
+                                <option value="1" >CET/WEST +1</option>
+                                <option value="0" selected>GMT/WET +0</option>
+                                <option value="-1"   >none -1</option>
+                                <option value="-2"   >none -2</option>
+                                <option value="-2.5" >NDT -2.5</option>
+                                <option value="-3"   >ADT -3</option>
+                                <option value="-3.5" >NST -3.5</option>
+                                <option value="-4"   >AST/EDT -4</option>
+                                <option value="-5"   >EST -5</option>
+                                <option value="-6"   >MDT -6</option>
+                                <option value="-7"   >MST/PDT -7</option>
+                                <option value="-8"   >PST/AKDT -8</option>
+                                <option value="-9"   >AKST -9</option>
+                                <option value="-10"  >none -10</option>
+                                <option value="-11"  >none -11</option>
+                                <option value="-12"  >none -12</option>
+                            </select>
+                        </td> 
+                    </tr>
+                    <tr>
+                        <td colspan="3" style="height: 12px;"></td>
+                        <td class="control_value" style="color:#cc0000; font-weight:bold;">
+                            <span id="meridianWarning"></span>
+                        </td>
+                        <td></td>
+                        <td class="control_value">
+                            <span id="meridianDisplay"></span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="column_lable">model:</td>
+                        <td>
+                            <input type="button" id="applyLocationValues" value="apply values" onclick="onApplyLocation()" disabled=true />
+                        </td>
+                        <td>
+                            <input type="button" id="reloadShadowInfo" value="reload" onclick="getShadowInfo()">
+                        </td>    
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+                </table>
+
+                <h3>
+                    <input type="checkbox" id="useGoogleMap" value="useGoogleMap"
+                    onchange="toggleGoogleMap()"><span id="googleMapHeader"> use Google Map</span>
+                </h3>
+                <div id="googleMapPanel" style="display:none;">
+                    <table id="skySettings">
+                        <tr>
+                            <td class="column_lable"></td>
+                            <td class="column">
+                                <input type="button" id="googleMapLookup" value="map lookup" onclick="googleMapLookup()" disabled=true />
+                            </td>
+                            <td class="column_lable" style="width: 250px;">
+                                <!-- <input type="checkbox" id="jumpToNearestLocation" checked
+                                onchange="toggleNearestPlace()" /> jump to nearest location -->
+                             </td>
+                        </tr>
+                    </table>
+                    <!-- this map canvas code is taken from the google examples --> 
+                    <div id="map_canvas" style="left: 30px; width: 520px; height: 320px"></div>
+                    <div id="message" style="margin-left: 32px; left: 32px;">&nbsp;</div>
+                </div>
+                <div style="color: #27537a; background-color: #cbe6f4;">
+                    <span id="debug_message">debug</span>
+                </div>
+            </div>
+            
+            
+            <div id="tab-fields">
+                <h3>Numeric Fields</h3>
+                TODO<br/>
+                TODO<br/>
+                TODO
+            </div>
+            
+            
+            <div id="tab-climate">
+                <h3>
+                    <input class="floatright" type="button" value="done" onclick="switch_to_tab(1)">
+                    Climate Data
+                </h3>
+                    <div>*** MOCKUP PAGE *** MOCKUP PAGE *** MOCKUP PAGE *** MOCKUP PAGE ***</div>
+                    <div>
+                        <img src="./img/climate_data_plot.jpg" width="480px;"/>
+                    </div>
+            </div>
+        </div>
+
+    </body>
+</html>
