@@ -481,21 +481,41 @@ class MaterialContext < ExportBase
 
     def exportTextures
         uimessage("found #{@texturewriter.count} textures")
+        uimessage("skipping 'exportTextures()' ...")
+        return
         texdir = getFilename('textures')
         if createDirectory(texdir)
-            @texturewriter.write_all(texdir, false)
+            @textureHash.each_value { |v|
+                handle,entity = v
+                filename = @texturewriter.filename(handle)
+                printf "TEXTURE: '%s'\n" % filename
+                printf "  entity='%s'\n" % entity
+                printf "  handle='%s'\n" % handle
+                printf "  fname1='%s'\n" % filename
+                filename = _cleanTextureFilename(filename)
+                printf "  fname2='%s'\n" % filename
+                #@texturewriter.write(entity, true, filename)
+            }
+            #@texturewriter.write_all(texdir, false)
             uimessage("textures written successfully", 1)
-            convertTextures(texdir)
+            #convertTextures(texdir)
         end
     end
 
-    def convertTextures(texdir)
+    def convertTextures(texdir, filename='')
         ## convert sketchup textures to *.pic
         if $CONVERT == '' or $RA_TIFF == ''
             uimessage("texture converters not available; no conversion", -1)
             return false
         end
-        Dir.foreach(texdir) { |p|
+        if filename != ''
+            filelist = [filename]
+            uimessage("converting texture '%s' ..." % filename, 1)
+        else
+            filelist = Dir.entries(texdir)
+            uimessage("converting textures ...", 1)
+        end
+        filelist.each { |p|
             img = File.join(texdir, p)
             if p[0,1] == '.'[0,1]
                 next
@@ -534,9 +554,25 @@ class MaterialContext < ExportBase
         end
         if not @textureHash.has_key?(material)
             #printf ("texture material '%s'\n" % material.display_name)
-            #printf ("\ttexture='%s'\n" % material.texture.filename)
+            printf ("texture='%s'\n" % material.texture.filename)
             handle = @texturewriter.load(entity, frontface)
-            @textureHash[material] = handle
+            @textureHash[material] = [handle, entity]
+            ## write image to texture file
+            texdir = getFilename('textures')
+            if createDirectory(texdir)
+                filename = material.texture.filename
+                printf "TEXTURE: '%s'\n" % filename
+                printf "  entity='%s'\n" % entity
+                printf "  handle='%s'\n" % handle
+                filename = _cleanTextureFilename(filename)
+                printf "  fname2='%s'\n" % filename
+                if entity.class == Sketchup::Face
+                    @texturewriter.write(entity, frontface, File.join(texdir, filename)) 
+                else
+                    @texturewriter.write(entity, File.join(texdir, filename)) 
+                end
+                convertTextures(texdir, filename)
+            end
         end
     end
     
@@ -681,9 +717,9 @@ class MaterialContext < ExportBase
         base = getBaseMaterial(skm, name)
         if doTextures(skm)
             uimessage("creating texture for '#{skm}'", 2)
+            filename =  _cleanTextureFilename(skm.texture.filename)
             img = File.basename(skm.texture.filename)
-            idx = img.rindex('.')
-            img = img[0..idx-1]
+            img = img[0..img.rindex('.')-1]
             tex = [ "\nvoid colorpict #{name}_tex",
                     "7 red green blue textures/#{img}.pic . frac(Lu) frac(Lv)",
                     "0\n0",
@@ -691,6 +727,19 @@ class MaterialContext < ExportBase
             base = tex.join("\n")
         end
         return text + base
+    end
+   
+    def _cleanTextureFilename(filename)
+        ## strip texture filename to basename
+        if filename.index('\\')
+            filename = filename.split('\\')[-1]
+        end
+        if filename.index('/')
+            filename = filename.split('/')[-1]
+        end
+        filename.gsub!(' ', '_')    ## XXX better in path module
+        ## TODO: check if first char is digit
+        return filename
     end
     
     def getBaseMaterial(material, name)
@@ -700,26 +749,26 @@ class MaterialContext < ExportBase
         r,g,b = rgb2rgb(c)
         spec = 0.0
         rough = 0.0
-        ## XXX color.alpha does not work in SketchUp 6
         ## hack: search for 'glass' in the name
         if (name.downcase() =~ /glass/) != nil
             text += "\nvoid glass #{name}"
             text += "\n0\n0\n3"
             text += "  %.4f %.4f %.4f\n" % [r,g,b]
-        elsif c.alpha >= 250
+        ## use c.alpha to decide on material type (alpha between 0 and 1!) 
+        elsif c.alpha >= 0.95
             text += "\nvoid plastic #{name}"
-            text += "\n0\n0\n5"
-            text += "  %.4f %.4f %.4f %.3f %.3f\n" % [r,g,b,spec,rough]
-        elsif c.alpha >= 55     ## treshold to use glass or trans
-            trans = c.alpha/255.0 #XXX
+            text += "\n0\n0\n"
+            text += "5 %.4f %.4f %.4f %.3f %.3f\n" % [r,g,b,spec,rough]
+        elsif c.alpha >= 0.2     ## treshold to use glass or trans
+            trans = c.alpha
             transspec = 0.2
             text += "\nvoid trans #{name}"
-            text += "\n0\n0\n7"
-            text += "  %.4f %.4f %.4f %.3f %.3f %.3f %.3f\n" % [r,g,b,spec,rough,trans,transspec]
+            text += "\n0\n0\n"
+            text += "7 %.4f %.4f %.4f %.3f %.3f %.3f %.3f\n" % [r,g,b,spec,rough,trans,transspec]
         else
             text += "\nvoid glass #{name}"
-            text += "\n0\n0\n3"
-            text += "  %.4f %.4f %.4f\n" % [r,g,b]
+            text += "\n0\n0\n"
+            text += "3 %.4f %.4f %.4f\n" % [r,g,b]
         end
         return text
     end

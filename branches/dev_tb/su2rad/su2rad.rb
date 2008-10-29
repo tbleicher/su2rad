@@ -37,12 +37,14 @@
 #                       added exception error display to export function
 # v 0.0  - 28/10/07  :  initial release
 
+
 if PLATFORM =~ /darwin/
     $OS = 'MAC'
 else
     $OS = 'WIN'
 end
 
+require "sketchup.rb"
 require "su2radlib/preferences.rb"
 require "su2radlib/exportbase.rb"
 require "su2radlib/context.rb"
@@ -67,6 +69,7 @@ $testdir = ""
 
 ## reload all script files for debugging
 if $DEBUG
+    printf "reloading modules ...\n"
     load "su2radlib/preferences.rb"
     load "su2radlib/exportbase.rb"
     load "su2radlib/context.rb"
@@ -102,7 +105,7 @@ $RA_TIFF            = '/usr/local/bin/ra_tiff'
 $CONVERT            = '/usr/local/bin/convert'
 
 
-## try to load configuration from file
+## load configuration from file
 loadPreferences()
 
 ## define scale matrix for unit conversion

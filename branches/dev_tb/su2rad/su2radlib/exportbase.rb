@@ -66,10 +66,6 @@ class ExportBase
         return paths
     end
         
-    def getSaveMaterialName(mat)
-        return $materialContext.getSaveMaterialName(mat)
-    end
-    
     def initLog
         if $nameContext == nil
             $nameContext = []
@@ -462,7 +458,7 @@ class ExportBase
         if mat.class != Sketchup::Material
             mat = getEntityMaterial(mat)
         end
-        return getSaveMaterialName(mat)
+        return $materialContext.getSaveMaterialName(mat)
     end
     
     def point_to_vector(p)

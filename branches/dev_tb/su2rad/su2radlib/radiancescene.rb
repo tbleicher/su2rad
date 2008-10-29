@@ -35,6 +35,9 @@ class RadianceScene < ExportBase
         $layerstack = LayerStack.new()
         $matrixstack = Stack.new()
         $groupstack = Stack.new() 
+        
+        ## add 'Layer0' as default for faces without group
+        $layerstack.push(Sketchup.active_model.layers['Layer0'])
     end
     
     def initGlobalHashes

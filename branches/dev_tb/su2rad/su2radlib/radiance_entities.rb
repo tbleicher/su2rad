@@ -382,7 +382,14 @@ class RadiancePolygon < ExportBase
     def getEffectiveLayer(entity)
         layer = entity.layer
         if layer.name == 'Layer0'
-            layer = $layerstack.get()
+            ## use layer of parent group (on stack)
+            layer_s = $layerstack.get()
+            if layer_s != nil
+                layer = layer_s
+            else
+                ## safety catch if no group on stack
+                layer = Sketchup.active_model.layers["Layer0"]
+            end
         end
         return layer
     end
@@ -434,13 +441,7 @@ class RadiancePolygon < ExportBase
             $byColor[matname] = []
         end
         if doTextures(skm)
-            if not $meshStartIndex.has_key?(matname)
-                $meshStartIndex[matname] = 1
-            end
-            imgx = skm.texture.width
-            imgy = skm.texture.height
-            texpoly = getTexturePolygon(trans, matname,imgx,imgy) #XXX $globaltrans?
-            $byColor[matname].push(texpoly)
+            $byColor[matname].push(getTexturePolygon(trans, matname,skm)) #XXX $globaltrans?
         else
             $byColor[matname].push(wpoly)
         end
@@ -457,9 +458,14 @@ class RadiancePolygon < ExportBase
         return text
     end
 
-    def getTexturePolygon(trans, matname,imgx,imgy)
+    def getTexturePolygon(trans, matname,skm)
         ## create '.obj' format description of face with uv-coordinates
         #uvHelp = @face.get_UVHelper(true,true,$materialContext.texturewriter)
+        if not $meshStartIndex.has_key?(matname)
+            $meshStartIndex[matname] = 1
+        end
+        imgx = skm.texture.width
+        imgy = skm.texture.height
         m = getPolyMesh(trans)
         si = $meshStartIndex[matname]
         text = ''
@@ -471,13 +477,12 @@ class RadiancePolygon < ExportBase
                 end
                 v = m.point_at(idx)
                 if @face.material != nil
-                    ## has to be texture material or we wouldn't do this
                     ## textures applied to face work with uv_at
                     t = m.uv_at(idx,1)
                     tx = t.x
                     ty = t.y
                 else
-                    ## textures applied to group work have to be scaled
+                    ## textures applied to group have to be scaled
                     t = m.uv_at(idx,1)
                     tx = t.x/imgx
                     ty = t.y/imgy
