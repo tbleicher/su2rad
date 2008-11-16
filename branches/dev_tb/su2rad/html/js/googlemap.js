@@ -23,6 +23,9 @@ function checkGoogleMap() {
     }
 }
 
+function clearNearByCities() {
+    document.getElementById('nearByCities').innerHTML='';
+}
 
 function toggleGoogleMap() {
     // now set visibility
@@ -77,14 +80,17 @@ function googleMapDragend() {
     geonamesLookup(point.lat(), point.lng(), zoom);
 }
 
-function googleMapSetCenter(lat,long) {
+function googleMapSetCenter(lat,long,zoom) {
     if (checkGoogleMap() == false) {
         log.warn("googleMapSetCentre: map API not available");
         return;
     }
     var latlong = new GLatLng(lat, long);
-    marker.setLatLng(latlong);    
-    map.setCenter(latlong, map.getZoom());
+    marker.setLatLng(latlong);
+    if (zoom == null) {
+        zoom = map.getZoom();
+    }
+    map.setCenter(latlong, zoom);
 }
 
 function googleMapInitialize(lat,long) {
@@ -123,7 +129,7 @@ function googleMapInitialize(lat,long) {
         //    });
         GEvent.addListener(map, "moveend", function() {
             var center = map.getCenter();
-            document.getElementById("message").innerHTML = center.toString();
+            document.getElementById("message").innerHTML = "loc=" + center.toString();
         });
         // GEvent.addListener(marker, "dragend", googleMapCenterMarker);
         googleMapCenterMarker();
@@ -167,6 +173,11 @@ function googleMapLookup() {
     var city = document.getElementById("City").value;
     var country = document.getElementById("Country").value;
     var location = city + ', ' + country;
+    googleMapLookupLocation(location);
+}
+
+
+function googleMapLookupLocation(location) {
     log.info("googleMapLookup(): '" + location + "'");
     var geocoder = new GClientGeocoder();
     geocoder.getLatLng(location, function(point) {
@@ -175,6 +186,7 @@ function googleMapLookup() {
             log.warn(msg);
             alert(msg);
         } else {
+            clearNearByCities();
             setLatLong(point.lat(),point.lng());
             googleMapEnable();
             googleMapInitialize(point.lat(),point.lng());

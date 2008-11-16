@@ -21,12 +21,14 @@
         <script type="text/javascript" src="./js/jquery-1.2.6.js"></script>
         <script type="text/javascript" src="./js/jquery.history_remote.pack.js"></script>
         <script type="text/javascript" src="./js/jquery.tabs.pack.js"></script>
+        <script type="text/javascript" src="./js/jquery.alphanumeric.js"></script>
         
         <!-- tabs v3.0 - does not work ...
         <script type="text/javascript" src="./js/ui.core.js"></script>
         <script type="text/javascript" src="./js/ui.tabs.js"></script>
         -->
         
+        <script type="text/javascript" src="./js/backend_interface.js"></script>
         <script type="text/javascript" src="./js/dialog.js"></script>
         <script type="text/javascript" src="./js/googlemap.js"></script>
         <script type="text/javascript" src="./js/sky_location.js"></script>
@@ -49,15 +51,12 @@
                 SKETCHUP = true;
             }
             function checkInitPage() {
-                log.toggle();
+                // log.toggle();
                 if (SKETCHUP != true) {
                     initPage();
                 }
             }
             function onRadToggleOption() {
-                // TODO
-            }
-            function onSkyTypeChange() {
                 // TODO
             }
 
@@ -100,13 +99,13 @@
                                     <img src="./css/24-zoom.png" />
                                 </div>
                             </div>
-                            <input type="text" class="column2" name="scene_path" id="scene_path" value="-"/>
+                            <input type="text" style="width:275px;" name="scene_path" id="scene_path" value="-"/>
                         </td>
                     </tr>
                     <tr>
                         <td class="column_lable">scene:</td>
                         <td colspan="2">
-                            <input type="text" class="column2" name="scene_name" id="scene_name" value="-"/>
+                            <input type="text" class="fileNameInput" style="width:275px;" name="scene_name" id="scene_name" value="-"/>
                         </td>
                     </tr>
                     <tr>
@@ -121,18 +120,20 @@
                                 <option value="by_material">by material</option>
                             </select>
                         </td>
+                        <td colspan="2">
+                            <input id="triangulate_cb" value="triangulate" type="checkbox" class="cblow"
+                            onchange="toggle_option("triangulate")"> triangulate<br/>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td></td>
                         <td>
                             <span id="global_coords_display">
                                 <input id="global_coords_cb" value="global_coords" type="checkbox" 
                                 onchange="toggle_option("global_coords")"> global coords
                             </span>
                         </td>
-                    </tr>
-                    <tr>
-                        <td></td>
-                        <td colspan="2">
-                            <input id="triangulate_cb" value="triangulate" type="checkbox" class="cblow"
-                            onchange="toggle_option("triangulate")"> triangulate<br/>
+                        <td>
                             <input id="textures_cb" value="textures" type="checkbox" class="cblow"
                             onchange="toggle_option("textures")"> textures
                         </td>
@@ -161,7 +162,7 @@
                         </td>
                         <td class="column_lable">img x:</td>
                         <td>
-                            <input type="text" size="5" name="radImageSizeX_1" id="radImageSizeX_1" value="512" onchange="onRadOptionImageSize('radImageSizeX_1')" />
+                            <input type="text" class="numeric_int" size="5" name="radImageSizeX_1" id="radImageSizeX_1" value="512" onchange="onRadOptionImageSize('radImageSizeX_1')" />
                         </td>
                     </tr>
                     <tr>
@@ -175,7 +176,7 @@
                         </td>
                         <td class="column_lable">img y:</td>
                         <td>
-                            <input type="text" size="5" name="radImageSizeY_1" id="radImageSizeY_1" value="512" onchange="onRadOptionImageSize('radImageSizeY_1')" />
+                            <input type="text" class="numeric_int" size="5" name="radImageSizeY_1" id="radImageSizeY_1" value="512" onchange="onRadOptionImageSize('radImageSizeY_1')" />
                         </td>
                     </tr>
                     <tr>
@@ -202,7 +203,7 @@
                     <tr>
                         <td class="column_lable">render:</td>
                         <td colspan="3">
-                            <span class="renderLine" id="radRenderLine_1"></span>
+                            <span class="commandLine" id="radRenderLine_1"></span>
                             <!-- <input type="text" class="column2" name="radRenderLine_1" id="radRenderLine_1" value="" onchnge="parseRenderLine('_1')"/> -->
                         </td>
                     </tr>
@@ -254,13 +255,13 @@
                         </td>
                     </tr>
                 </table>
-                <div>
+
+
+                <h2><input class="exportbutton" type="submit" name="export" value="export"></h2>
+            
+                <div class="statusMessage">
                     <span id="statusMsg">status</span>
                 </div>
-
-                
-                <h2><INPUT class="exportbutton" type="submit" name="export" value="export"></h2>
-            
             
             </div>
             
@@ -339,13 +340,13 @@
                             <tr>
                                 <td class="columnRadLable">size x:</td>
                                 <td>
-                                    <input type="text" size="4" name="radImageSizeX_2" id="radImageSizeX_2" value="512" onchange="onRadOptionImageSize('radImageSizeX_2')" />
+                                    <input type="text" class="numeric_int" size="4" name="radImageSizeX_2" id="radImageSizeX_2" value="512" onchange="onRadOptionImageSize('radImageSizeX_2')" />
                                 </td>
                             </tr>
                             <tr>
                                 <td class="columnRadLable">size y:</td>
                                 <td>
-                                    <input type="text" size="4" name="radImageSizeY_2" id="radImageSizeY_2" value="512" onchange="onRadOptionImageSize('radImageSizeY_2')" />
+                                    <input type="text" class="numeric_int" size="4" name="radImageSizeY_2" id="radImageSizeY_2" value="512" onchange="onRadOptionImageSize('radImageSizeY_2')" />
                                 </td>
                             </tr>
                             <tr>
@@ -364,7 +365,7 @@
                             <tr>
                                 <td class="columnRadLable">size:</td>
                                 <td>
-                                    <input type="text" name="radZoneSize" id="radZoneSize" size="6" value="10.0" onchange="onRadOptionChange('radZoneSize')"/>
+                                    <input type="text" class="numeric_float" name="radZoneSize" id="radZoneSize" size="6" value="10.0" onchange="onRadOptionChange('radZoneSize')"/>
                                 </td>
                             </tr>
                             <tr>
@@ -400,7 +401,7 @@
                             <tr>
                                 <td class="columnRadLable">file:</td>
                                 <td class="columnRadOption">
-                                    <input type="text" size="40" style="width:85px;" name="radReportFile" id="radReportFile" value="scene.log" onchange="onRadOptionChange('radReportFile')" />
+                                    <input type="text" class="fileNameInput" size="40" style="width:85px;" name="radReportFile" id="radReportFile" value="scene.log" onchange="onRadOptionChange('radReportFile')" />
                                 </td>
                             </tr>
                         </table>
@@ -430,85 +431,102 @@
                     <input class="floatright" type="button" value="done" onclick="switch_to_tab(1)">
                     Sky Settings
                 </h3>
-                <table id="skySettings" style="width: 500px;">
-                    <tr>
-                        <td class="column_lable">gensky:</td>
-                        <td class="column">
-                            <select id="genskySkyType" name="genskySkyType" style="width:125px;" onchange="onSkyTypeChange()">
-                                <option value="-u">uniform</option>
-                                <option value="-c" selected>CIE overcast</option>
-                                <option value="-i">CIE intermediate</option>
-                                <option value="-s">CIE clear</option>
+                
+                <div class="skyOptionsGroup">
+                    <div class="skyOptionsGroupLabel">generator:</div>
+                    <div class="skyOptionsLeft" style="width: 240px">
+                            <select id="genskyGenerator" name="genskyGenerator" style="width:140px;" onchange="onSkyGenChange()">
+                                <option value="gensky" selected>gensky</option>
+                                <option value="gendaylit">gendaylit</option>
+                                <option value="hdr-image">hdr-image</option>
                             </select>
-                        </td>
-                        <td class="column_lable">
-                             <input type="checkbox" id="sunOption" value="sunOption" onchange="toggleSun()"> sun
-                         </td>
-                         <td colspan="3"></td>
-                    </tr>
-                    <tr>
-                        <td class="column_lable"></td>
-                        <td colspan="5">
-                            <span>
-                                <div id="genskyOptionsLeft">
-                                    <span class="genskyOption">-g</span>
-                                    <input type="text" style="width:40px;" size="10" name="gensky_g" id="gensky_g" value="0.2"
-                                    onchange="onGenskyOptionChanged('-g')"/><br/>
-                                    <span class="genskyOption">-t</span>
-                                    <input type="text" style="width:40px;" size="10" name="gensky_t" id="gensky_t" value="1.7"
-                                    onchange="onGenskyOptionChanged('-t')"/><br/>
-                                </div>
-                                <div id="genskyOptionsLeft">
-                                    <span class="genskyOption">-b</span>
-                                    <input type="text" style="width:40px;" size="10" name="gensky_b" id="gensky_b" value=""
-                                    onchange="onGenskyOptionChanged('-b')"/><br/>
-                                    <span class="genskyOption">-B</span>
-                                    <input type="text" style="width:40px;" size="10" name="gensky_B" id="gensky_B" value=""
-                                    onchange="onGenskyOptionChanged('-B')"/><br/>
-                                </div>
-                                <div id="genskyOptionsLeft">
-                                    <span class="genskyOption">-r</span>
-                                    <input type="text" style="width:40px;" size="10" name="gensky_r" id="gensky_r" value=""
-                                    onchange="onGenskyOptionChanged('-r')"/><br/>
-                                    <span class="genskyOption">-R</span>
-                                    <input type="text" style="width:40px;" size="10" name="gensky_R" id="gensky_R" value=""
-                                    onchange="onGenskyOptionChanged('-R')"/><br/>
-                                </div>
-                            </span>
-                        </td>
-                    </tr>
-                </table>
+                    </div>
+                </div>
+                <div class="skyOptionsGroup">
+                    <div class="skyOptionsGroupLabel">type:</div>
+                    <div class="skyOptionsLeft" style="width: 153px;">
+                        <select id="genskySkyType" name="genskySkyType" style="width:140px;" onchange="onSkyTypeChange()">
+                            <option value="u">uniform</option>
+                            <option value="c" selected>CIE overcast</option>
+                            <option value="i">CIE intermediate</option>
+                            <option value="s">CIE clear</option>
+                        </select>
+                    </div>
+                    <div class="skyOptionsLeft" id="genskySunOption" style="display:none;">
+                        <span style="font-weight: bold;">sun</span>
+                        <input type="checkbox" id="sunOptionCB" value="sunOption" onchange="onSkyTypeChange()">
+                    </div>
+                </div>
+                <div class="skyOptionsGroup">
+                    <div class="skyOptionsGroupLabel">options:</div>
+                    <div class="skyOptionsLeft">
+                        <span class="skyOption">-g</span>
+                        <input type="text" class="skyOptionInput" name="gensky_g" id="gensky_g" value="0.2"
+                        onchange="onGenskyOptionChanged('g')"/><br/>
+                        <span class="skyOption">-t</span>
+                        <input type="text" class="skyOptionInput" name="gensky_t" id="gensky_t" value="1.7"
+                        onchange="onGenskyOptionChanged('t')"/><br/>
+                    </div>
+                    <div class="skyOptionsLeft">
+                        <span class="skyOption">-b</span>
+                        <input type="text" class="skyOptionInput" name="gensky_b" id="gensky_b" value=""
+                        onchange="onGenskyOptionChanged('b')"/><br/>
+                        <span class="skyOption">-B</span>
+                        <input type="text" class="skyOptionInput" name="gensky_B" id="gensky_B" value=""
+                        onchange="onGenskyOptionChanged('B')"/><br/>
+                    </div>
+                    <div class="skyOptionsLeft">
+                        <span class="skyOption">-r</span>
+                        <input type="text" class="skyOptionInput" name="gensky_r" id="gensky_r" value=""
+                        onchange="onGenskyOptionChanged('r')"/><br/>
+                        <span class="skyOption">-R</span>
+                        <input type="text" class="skyOptionInput" name="gensky_R" id="gensky_R" value=""
+                        onchange="onGenskyOptionChanged('R')"/><br/>
+                    </div>
+                </div>
+                <div style="clear:both; margin-left: 75px;">
+                    <span class="commandLine" id="skyCommandLine">foo</span> 
+                </div>
+            
+                            
                 <h3>
                     <input class="floatright" type="button" value="done" onclick="switch_to_tab(1)">
                     Location Settings
                 </h3>
                 
-                <table id="locationSettings">
-                    <tr>
-                        <td class="column_lable">City:</td>
-                        <td style="width: 120px;">
-                            <input type="text" size="15" name="City" id="City" value="City" tabindex="1" onchange="onCityCountryChanged()"/>
-                        </td>
-                        <td class="column_lable" style="width:75px;">Latitude:</td>
-                        <td style="width: 80px;">
-                            <input type="text" size="8" name="Latitude" id="Latitude" value="56.7" tabindex="4" onchange="onLatLongChange()" />
-                        </td>
-                        <td class="column_lable">North:</td>
-                        <td>
-                            <input type="text" size="4" name="NorthAngle" id="NorthAngle" value="12.3" tabindex="6" onchange="onNorthAngleChange()" />
-                        </td>
-                    </tr>
-                    <tr>
-                        <td class="column_lable">Country:</td>
-                        <td style="width: 120px;">
-                            <input type="text" size="15" name="Country" id="Country" value="Country" tabindex="2" onchange="onCityCountryChanged()"/>
-                        </td>
-                        <td class="column_lable" style="width:75px;">Longitude:</td>
-                        <td style="width: 80px;">
-                            <input type="text" size="8" name="Longitude" id="Longitude" value="0.12" tabindex="5" onchange="onLatLongChange()"/>
-                        </td>
-                        <td class="column_lable" id="TZOffsetLable" style="width:75px;">time zone:</td>
-                        <td>
+                <div class="locationOptionsGroup">
+                    <div class="locationOptionsLeft" style="width: 200px;">
+                        <div style="width: 200px;">
+                            <span class="locationOption" style="width: 75px;">City:</span>
+                            <input type="text" class="locationOptionInput2" name="City" id="City" value="City" tabindex="1" onchange="onCityCountryChanged()"/>
+                        </div>
+                        <div style="width: 200px;">
+                            <span class="locationOption" style="width: 75px;">Country:</span>
+                            <input type="text" class="locationOptionInput2" name="Country" id="Country" value="Country" tabindex="2" onchange="onCityCountryChanged()"/>
+                        </div>
+                    </div>
+                    
+                    <div class="locationOptionsLeft">
+                        <div>
+                            <span class="locationOption">Latitude:</span>
+                            <input type="text" class="locationOptionInput" name="Latitude" id="Latitude" value="56.7" tabindex="4" onchange="onLatLongChange()" />
+                        </div>
+                        <div>
+                            <span class="locationOption">Longitude:</span>
+                            <input type="text" class="locationOptionInput" name="Longitude" id="Longitude" value="0.12" tabindex="5" onchange="onLatLongChange()"/>
+                        </div>
+                        <div>
+                            <span class="controlValue" style="height: 12px; color:#cc0000; font-weight:bold;" id="meridianWarning"></span>
+                        </div>
+                    </div>
+                        
+                    <div class="locationOptionsLeft" style="width: 180px;">
+                        <div>
+                            <span class="locationOption">north angle:</span>
+                            <input type="text" class="locationOptionInput" name="NorthAngle" id="NorthAngle" value="12.3" tabindex="6" onchange="onNorthAngleChange()" />
+                        </div>
+                        <div style="width: 180px;">
+                            <span class="locationOption" id="TZOffsetLable">time zone:</span>
                             <select name="TZOffset" id="TZOffset" tabindex="7" onchange="selectTZ()">
                                 <option value="13"  >NZDT +13</option>
                                 <option value="12"  >NZST +12</option>
@@ -543,55 +561,44 @@
                                 <option value="-11"  >none -11</option>
                                 <option value="-12"  >none -12</option>
                             </select>
-                        </td> 
-                    </tr>
-                    <tr>
-                        <td colspan="3" style="height: 12px;"></td>
-                        <td class="control_value" style="color:#cc0000; font-weight:bold;">
-                            <span id="meridianWarning"></span>
-                        </td>
-                        <td></td>
-                        <td class="control_value">
-                            <span id="meridianDisplay"></span>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td class="column_lable">model:</td>
-                        <td>
-                            <input type="button" id="applyLocationValues" value="apply values" onclick="onApplyLocation()" disabled=true />
-                        </td>
-                        <td>
-                            <input type="button" id="reloadShadowInfo" value="reload" onclick="getShadowInfo()">
-                        </td>    
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                    </tr>
-                </table>
+                        </div>
+                        <div style="width: 180px;">
+                            <span class="locationOption" style="height: 12px;"></span>
+                            <span class="controlValue" style="height: 12px;" id="meridianDisplay">-m</span>
+                        </div>
+                    </div>
+                </div>
+                        
+                <div class="locationOptionsGroup" style="width: 300px;">
+                    <span class="locationOption" style="width: 75px;">model:</span>
+                    <span style="width: 125px; float: left;">
+                        <input type="button" id="applyLocationValues" value="apply values" onclick="onApplyLocation()" disabled=true />
+                    </span>
+                    <span style="float: left;">
+                        <input type="button" id="reloadShadowInfo" value="reload" onclick="getShadowInfo()">
+                    </span>
+                </div>
+                <div style="clear:both;"></div>
+                        
+                
 
                 <h3>
                     <input type="checkbox" id="useGoogleMap" value="useGoogleMap"
                     onchange="toggleGoogleMap()"><span id="googleMapHeader"> use Google Map</span>
                 </h3>
-                <div id="googleMapPanel" style="display:none;">
-                    <table id="skySettings">
-                        <tr>
-                            <td class="column_lable"></td>
-                            <td class="column">
-                                <input type="button" id="googleMapLookup" value="map lookup" onclick="googleMapLookup()" disabled=true />
-                            </td>
-                            <td class="column_lable" style="width: 250px;">
-                                <!-- <input type="checkbox" id="jumpToNearestLocation" checked
-                                onchange="toggleNearestPlace()" /> jump to nearest location -->
-                             </td>
-                        </tr>
-                    </table>
+                <div id="googleMapPanel" style="display:none; width:580px;">
+                    <div style="margin-left: 30px; width: 400px;">
+                        <span style="width: 100px; float: left;">
+                            <input type="button" id="googleMapLookup" value="map lookup" onclick="googleMapLookup()" disabled=true />
+                        </span>    
+                        <input type="checkbox" id="doGeoNamesLookup" checked /> geonames lookup
+                    </div>    
                     <!-- this map canvas code is taken from the google examples --> 
-                    <div id="map_canvas" style="left: 30px; width: 520px; height: 320px"></div>
-                    <div id="message" style="margin-left: 32px; left: 32px;">&nbsp;</div>
+                    <div id="map_canvas" style="left: 30px; margin-top: 5px; width: 520px; height: 320px"></div>
+                    <div id="message" style="margin-left: 32px; width: 518; font-size: 12px;">&nbsp;</div>
                 </div>
-                <div style="color: #27537a; background-color: #cbe6f4;">
-                    <span id="debug_message">debug</span>
+                <div class="statusMessage">
+                    <span id="nearByCities"></span>
                 </div>
             </div>
             
@@ -615,6 +622,15 @@
                     </div>
             </div>
         </div>
+
+        <script type="text/javascript">
+            // input restrictions via jquery.alphanumeric
+            $('.numeric_int').numeric();
+            $('.numeric_float').numeric({allow:"."});
+            $('.skyOptionInput').numeric({allow:"."});
+            $('.locationOptionInput').numeric({allow:".-"});
+            $('.fileNameInput').alphanumeric({allow:"._"});
+        </script>
 
     </body>
 </html>

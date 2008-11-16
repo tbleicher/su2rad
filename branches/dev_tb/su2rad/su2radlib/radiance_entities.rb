@@ -361,6 +361,10 @@ class RadiancePolygon < ExportBase
     end
         
     def getText(trans=nil)
+        if @face.area == 0
+            uimessage("face.area == 0! skipping face", 1)
+            return ''
+        end 
         if $TRIANGULATE == true
             if @triangles.length == 0
                 uimessage("WARNING: no triangles found for polygon")
