@@ -2,7 +2,7 @@
 var map, marker, lastPoint;
 
 function initPage() {
-    // log.toggle();
+    log.toggle();
     // getShadowInfo();
     initViews();
     updateExportPage();
@@ -10,6 +10,7 @@ function initPage() {
     //document.getElementById("statusMsg").innerHTML = "modelLocation=" + modelLocation;
     
 }
+
 
 function toggleClimateTab() {
     if (document.getElementById("climate_checkbox").checked == true) {
@@ -25,8 +26,6 @@ function toggleClimateTab() {
 }
 
 
-
-
 function setExportMode() {
     var val=document.getElementById("export_mode").value;
     window.status = "export mode=" + val; 
@@ -39,9 +38,11 @@ function setExportMode() {
     return true;
 }
 
+
 function switch_to_tab(pos) {
     $('#tab-container').triggerTab(pos);
 }
+
 
 function reverseData(val) {
     var d="";
@@ -51,6 +52,7 @@ function reverseData(val) {
     }
     return d;
 }
+
 
 function setExportPath() {
     var val=document.getElementById("fileselection").value;
@@ -69,31 +71,12 @@ function setExportPath() {
     return name;
 }
 
+
 function setValue(id, val) {
     // set initial variable values
     document.getElementById(id).value=val;
 }
 
-
-function getViewsList() {
-    log.debug("getViewsList(SKETCHUP='"+SKETCHUP+"')");
-    if (SKETCHUP == true) {
-        log.info("getting views from SketchUp ...");
-        window.location = 'skp:getViewsList@'; 
-    } else {
-        log.debug("getViewsList(): 'skp:' not available");
-        var msg =   "[{\"name\":\"view_1\"#COMMA#\"selected\":\"false\"#COMMA#\"current\":\"false\"}";
-        msg += "#COMMA#{\"name\":\"front (1)\"#COMMA#\"selected\":\"false\"#COMMA#\"current\":\"false\"}";
-        msg += "#COMMA#{\"name\":\"current view\"#COMMA#\"selected\":\"false\"#COMMA#\"current\":\"true\"}";
-        msg += "#COMMA#{\"name\":\"sel_view\"#COMMA#\"selected\":\"true\"#COMMA#\"current\":\"false\"}";
-        msg += "#COMMA#{\"name\":\"scene (2)\"#COMMA#\"selected\":\"true\"#COMMA#\"current\":\"false\"}";
-        msg += "#COMMA#{\"name\":\"next to last\"#COMMA#\"selected\":\"false\"#COMMA#\"current\":\"false\"}";
-        msg += "#COMMA#{\"name\":\"last\"#COMMA#\"selected\":\"false\"#COMMA#\"current\":\"false\"}";
-        msg += "]";
-        log.info("setting shadowInfo from text (" + msg.length + " bytes)");
-        setViewsListJSON(msg);
-    }
-}
 
 function replaceChars(text) {
     text = text.replace(/\(/g,"");
@@ -103,6 +86,7 @@ function replaceChars(text) {
     text = text.replace(/>/g,"");
     return text;
 }
+
 
 function onViewSelectionChange(viewname) {
     // callback for views checkboxes
@@ -122,7 +106,8 @@ function onViewSelectionChange(viewname) {
     }
 }
 
-function getViewTD(view) {
+
+function _getViewTD(view) {
     // return <td> for view line (lable and checkbox)
     var text = '<td class="column">';
     var id = replaceChars(view.name);
@@ -145,7 +130,7 @@ function setViewsListJSON(msg) {
         var view = viewsList[i];
         if(view != null) {
             // log.info("view = '" + view.name + "'");
-            text += getViewTD(view);
+            text += _getViewTD(view);
             col += 1;
         }
         // reset column counter except for last row
@@ -166,21 +151,9 @@ function setViewsListJSON(msg) {
 
 
 function onApplyLocation() {
-    log.error("TODO: onApplyValues")
-    if (SKETCHUP == true) {
-        log.info("setting shadowInfo ...");
-        params = 'City=' + modelLocation.City;
-        params = params + ';Country=' + modelLocation.Country;
-        params = params + ';Latitude=' + modelLocation.Latitude;
-        params = params + ';Longitude=' + modelLocation.Longitude;
-        params = params + ';TZOffset=' + modelLocation.TZOffset;
-        params = params + ';NorthAngle=' + modelLocation.NorthAngle;
-        setShadowInfoSketchup(params);
-    }
+    applyModelLocation(modelLocation)
     modelLocation.changed = false;
     updateSkyFormValues()
-    log.error("after onApplyValues()")
-    
 }
 
 
@@ -230,6 +203,8 @@ function updateRenderPage() {
 
 function updateSkyPage() {
     log.debug("updateSkyPage()");
+    onSkyTypeChange(); // triggers update of sky command line; 
+    // google map initiation
     if (checkGoogleMap() == true) {
         log.debug("  updating map ...");
         var lat = parseFloat(modelLocation.Latitude);

@@ -157,6 +157,7 @@ class ExportBase
                 next
             else
                 uimessage("WARNING: Can't export entity of type '%s'!\n" % e.class)
+                next
             end
         }
         faces_text = ''
@@ -207,7 +208,7 @@ class ExportBase
     end
 
     def push
-        uimessage("begin export #{@entity.class} name='#{@entity.name}'")
+        uimessage("begin export #{@entity.class} name='#{@entity.name}' id='#{@entity.id}'")
         $materialstack.push(@entity.material)
         $matrixstack.push(@entity.transformation)
         $layerstack.push(@entity.layer)

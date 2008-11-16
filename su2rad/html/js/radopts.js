@@ -95,7 +95,14 @@ function getRpictOptionSpan(opt) {
     text += "<input type=\"checkbox\" class=\"rpictCB\" id=\"rpictOverrideCB" + opt + "\"";
     text += " onchange=\"onRpictOverride('" + opt + "')\" " + state + "/> -" + opt + ": ";
     if (selected == true) {
-        text += "<input type=\"text\" class=\"rpictOverrideInput\" id=\"rpictOverrideInput" + opt + "\"";
+        if (opt == "lr") {
+            text += "<input type=\"text\" class=\"rpictOverrideInputIntN\"";
+        } else if (isInList(rpictIntOptions, opt) == true) {
+            text += "<input type=\"text\" class=\"rpictOverrideInputInt\"";
+        } else {
+            text += "<input type=\"text\" class=\"rpictOverrideInput\"";
+        } 
+        text += " id=\"rpictOverrideInput" + opt + "\"";
         text += " value=\"" + rpictOpts[opt] + "\" onchange=\"validateRpictOverride('" + opt + "')\" />";
     } else {
         text += rpictOpts[opt]
@@ -556,7 +563,6 @@ function selectImageType(id) {
 }
 
 
-
 function setRpictOverride(opt, newValue) {
     // update or set override value for 'opt' 
     if (isInList(rpictBoolOptions, opt) == true) {
@@ -655,6 +661,11 @@ function _updateRpictOptionDisplay() {
     text += getRpictOptionSpansBool();
     text += "</div>";
     document.getElementById("rpictOptionsDisplay").innerHTML = text;
+    // set restrictions on text input fields
+    // TODO: add int, float and negative options
+    $('.rpictOverrideInput').numeric({allow:"."});
+    $('.rpictOverrideInputInt').numeric({allow:""});
+    $('.rpictOverrideInputIntN').numeric({allow:"-"});
 }
 
 

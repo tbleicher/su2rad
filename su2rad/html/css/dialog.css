@@ -69,6 +69,7 @@ input, select {
     padding: 0;
     margin: 0;
 }
+
 select {
     width: 90px;
 }
@@ -84,6 +85,20 @@ td {
     height: 14px; 
     min-height: 14px;  
 }
+/* td {
+     border-style: solid;
+     border-width: 1px;
+}
+div {
+    border-style: solid;
+    border-width: 1px;
+    border-color: green;
+}
+span {
+    border-style: solid;
+    border-width: 1px;
+    border-color: red;
+} */
 .tableHeader {
     margin: 0.8em 0 0.8em;
     padding: 0.3em;
@@ -108,6 +123,8 @@ td {
     color: #ff0000;
 }
 input[type=button] {
+    position: relative;
+    top: -2px;
     font-size: 12px;
     height: 20px;
 }
@@ -127,7 +144,7 @@ input[type=checkbox] {
     font-weight: bold;
     width: 60px;
 }
-.control_value {
+.controlValue {
     font-size: 12px;
     line-height: 1;
 }
@@ -189,14 +206,95 @@ input.file {
     padding: 0;
 }
 
-#genskyOptionsLeft {
-    float:left;
+.statusMessage {
+    color: #27537a;
+    background-color: #cbe6f4;
+    padding-left: 0.5em;
+}
+
+.locationOption {
+    float: left;
+    /* font-family: "Monaco", "Courier New", Courier, monospace; */
+    font-weight: bold;
+    /* padding-left: 0.5em; */
+    width: 85px;
+}
+.locationOptionInput {
+    width: 40px;
+    size: 10;
+}
+.locationOptionInput2 {
+    width: 100px;
+    size: 60;
+}
+.locationOptionsGroup {
+    padding: 0;
+    margin: 0;
+    width: 550px;
+    vertical-align: middle;
+    clear: both;
+}
+.locationOptionsGroupLabel {
+    font-weight: bold;
+    float: left;
+    width: 75px;
+    height: 20px;
+    min-height: 20px;
+}
+.locationOptionsLeft {
+    float: left;
+    width: 150px;
+}
+
+.skyOption {
+    font-size: 12px;
+    font-family: "Monaco", "Courier New", Courier, monospace;
+    font-weight: bold;
+    /* padding-left: 0.5em; */
+}
+.skyOptionInput {
+    width: 40px;
+    size: 10;
+}
+.skyOptionsGroup {
+    padding: 0;
+    margin: 0;
+    width: 400px;
+    vertical-align: middle;
+    clear: both;
+}
+.skyOptionsGroupLabel {
+    font-weight: bold;
+    float: left;
+    width: 75px;
+    height: 20px;
+    min-height: 20px;
+}
+.skyOptionsLeft {
+    float: left;
     width: 80px;
 }
-#rpictOptionsLeft {
-    float:left;
-    width: 120px;
+
+#thegrid * TH {
+    font-size: 2px;
+    font-weight: bold;
+    text-align: center;
+    height: 10px;
+    width: 10px;
+    padding: 0;
+    margin: 0;
 }
+#thegrid * TD {
+    font-size: 2px;
+    text-align: center;
+    height: 10px;
+    width: 10px;
+    padding: 0;
+    margin: 0;
+}
+
+
+
 #rpictOptionsLeft {
     float:left;
     width: 120px;
@@ -212,7 +310,7 @@ input.file {
     margin-left: 10px;
 }
 
-#radRenderLine_1 {
+.commandLine {
     font-size: 12px;
     font-family: "Monaco", "Courier New", Courier, monospace;
     /* font-weight: bold; */
@@ -225,12 +323,6 @@ input.file {
     /* margin-left: 5px; */
 }
 
-.genskyOption {
-    font-size: 12px;
-    font-family: "Monaco", "Courier New", Courier, monospace;
-    font-weight: bold;
-    padding-left: 0.5em;
-}
 .rpictOverride, .rpictOverrideSelected {
     font-size: 12px;
     font-family: "Monaco", "Courier New", Courier, monospace;
@@ -240,7 +332,7 @@ input.file {
     font-weight: bold;
     background-color: #d9eaf4;
 }
-.rpictOverrideInput {
+.rpictOverrideInput, .rpictOverrideInputInt, .rpictOverrideInputIntN {
     width: 40px;
     font-weight: bold;
     background-color: #d9eaf4;
