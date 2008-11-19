@@ -662,7 +662,6 @@ function _updateRpictOptionDisplay() {
     text += "</div>";
     document.getElementById("rpictOptionsDisplay").innerHTML = text;
     // set restrictions on text input fields
-    // TODO: add int, float and negative options
     $('.rpictOverrideInput').numeric({allow:"."});
     $('.rpictOverrideInputInt').numeric({allow:""});
     $('.rpictOverrideInputIntN').numeric({allow:"-"});

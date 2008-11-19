@@ -1,13 +1,41 @@
 
-var modelLocation = {};
-modelLocation.City = "Rock";
-modelLocation.Country = "Hardplace";
-modelLocation.NorthAngle = 0.0;
-modelLocation.TZOffset = 0;
-modelLocation.Latitude = 51.5030;
-modelLocation.Longitude = 0.0031;
-modelLocation.changed = false;
+function ModelLocationObject() {
+    this.City = "Rock";
+    this.Country = "Hardplace";
+    this.NorthAngle = 0.0;
+    this.TZOffset = 0;
+    this.Latitude = 51.5030;
+    this.Longitude = 0.0031;
+    this.changed = false;
+    this.logging = true;
+}
 
+ModelLocationObject.prototype.setValue = function (opt,val) {
+    try {
+        switch (opt) {
+        case 'NorthAngle':
+            val = parseFloat(val);
+        case 'TZOffset':
+            val = parseFloat(val);
+        case 'Latitude':
+            val = parseFloat(val);
+        case 'Longitude':
+            val = parseFloat(val);
+        }
+        if (this[opt] != val) {
+            this.changed = true;
+            if (this.logging == true) {
+                log.info("new " + opt + ": " + val);
+            }
+        }
+        this[opt] = val;
+    }
+    catch (e) {
+        log.error(e.name + ": opt='" + opt + "' val='" + val + "'")
+    }
+}
+
+var modelLocation = new ModelLocationObject();
 
 function SkyOptionsObject() {
     this.generator = "gensky";
@@ -207,11 +235,7 @@ function geonamesTimeZoneCallback(jData) {
     // Test if 'geonames' exists
     try {
         log.info("jData.gmtOffset: " + jData.gmtOffset);
-        if (parseFloat(modelLocation.TZOffset) != parseFloat(jData.gmtOffset)) {
-            modelLocation.changed = true;
-        }
-        modelLocation.TZOffset = jData.gmtOffset;
-        modelLocation.TZOffset = jData.gmtOffset;
+        modelLocation.setValue('TZOffset', jData.gmtOffset);
         setTZOffsetSelection(jData.gmtOffset);
         setTZHighlight(false);
     }
@@ -227,10 +251,10 @@ function geonamesTimeZoneCallback(jData) {
 function centerCity(city, country, lat, lng) {
     // center map on lat/lng of city from geonames
     log.info("new city selected: " + city);
-    modelLocation.City = city;
-    modelLocation.Country = country;
-    modelLocation.Latitude = parseFloat(lat);
-    modelLocation.Longitude = parseFloat(lng);
+    modelLocation.setValue('City', city);
+    modelLocation.setValue('Country',country);
+    modelLocation.setValue('Latitude', lat);
+    modelLocation.setValue('Longitude', lng);
     googleMapSetCenter(parseFloat(lat),parseFloat(lng),11);
     clearNearByCities();
     updateSkyFormValues()
@@ -260,15 +284,12 @@ function onCityCountryChanged() {
     var city = document.getElementById("City").value;
     if (city != modelLocation.City) {
         log.info("new city: " + city);
-        modelLocation.City = city;
-        modelLocation.changed = true;
+        modelLocation.setValue('City', city);
         document.getElementById("googleMapLookup").disabled = false;
     }
     var country = document.getElementById("Country").value;
     if (country != modelLocation.Country) {
-        log.info("new country: " + country);
-        modelLocation.Country = country;
-        modelLocation.changed = true;
+        modelLocation.setValue('Country', country);
         document.getElementById("googleMapLookup").disabled = false;
     }
     updateSkyFormValues()
@@ -291,10 +312,7 @@ function onNorthAngleChange() {
         return;
     }
     var north = parseFloat(document.getElementById("NorthAngle").value);
-    if (north != modelLocation.NorthAngle) {
-        modelLocation.NorthAngle = north;
-        modelLocation.changed = true;
-    }
+    modelLocation.setValue('NorthAngle', north);
     updateSkyFormValues()
 } 
 
@@ -320,10 +338,8 @@ function onLatLongChange() {
 function resetCityCountry() {
     // unused?
     log.info("resetting city and country names ...");
-    document.getElementById("City").value = "no city";
-    document.getElementById("Country").value = "no country";
-    modelLocation.city = "no city";
-    modelLocation.country = "no country";
+    modelLocation.setValue('City', "no city");
+    modelLocation.setValue('Country', "no country");
     modelLocation.changed = true;
 }
 
@@ -331,25 +347,20 @@ function resetCityCountry() {
 function selectTZ() {
     var offset = document.getElementById('TZOffset').value;
     log.debug("selectTZ(" + offset + ")");
-    modelLocation.TZOffset   = offset;
-    modelLocation.changed    = true;
+    modelLocation.setValue('TZOffset', offset);
     setTZHighlight(false);
     setTZWarning(parseFloat(offset));
     updateSkyFormValues();
 }
 
 
-function setLatLong(lat,long) {
-    log.debug("setLatLong(lat=" + lat.toFixed(4) + ", long=" + long.toFixed(4));
-    if (modelLocation.Latitude != lat) {
-        modelLocation.Latitude = lat;
-        modelLocation.changed = true;
-    }
-    if (modelLocation.Longitude != long) {
-        modelLocation.Longitude = long;
-        modelLocation.changed = true;
-        var offset = calculateTZOffset(long);
-        modelLocation.TZOffset = offset;
+function setLatLong(lat,lng) {
+    log.debug("setLatLong(lat=" + lat.toFixed(4) + ", lng=" + lng.toFixed(4));
+    modelLocation.setValue('Latitude', lat);
+    if (modelLocation.Longitude != parseFloat(lng)) {
+        modelLocation.setValue('Longitude', lng);
+        var offset = calculateTZOffset(lng);
+        modelLocation.setValue('TZOffset', offset);
         setTZOffsetSelection(offset);
     }
     updateSkyFormValues()
@@ -368,9 +379,9 @@ function setLocationFromGeonames(geoLoc) {
         offset = calculateTZOffset(parseFloat(geoLoc.lng));
     }
     
-    modelLocation.City       = geoLoc.name;
-    modelLocation.Country    = geoLoc.countryName;
-    modelLocation.TZOffset   = offset;
+    modelLocation.setValue('City', geoLoc.name);
+    modelLocation.setValue('Country', geoLoc.countryName);
+    modelLocation.setValue('TZOffset', offset);
     setTZOffsetSelection(offset);
     // if (document.getElementById("jumpToNearestLocation").checked == true) { 
     //    log.debug("jump=true");
@@ -378,7 +389,6 @@ function setLocationFromGeonames(geoLoc) {
     //    modelLocation.Longitude  = parseFloat(geoLoc.lng);
     //    googleMapSetCenter(modelLocation.Latitude, modelLocation.Longitude);
     // }
-    modelLocation.changed = true;
     updateSkyFormValues()
 }
 
@@ -386,28 +396,27 @@ function setLocationFromGeonames(geoLoc) {
 function setShadowInfoJSON(msg) {
     // parse and apply shadow_info settings in JSON string 'msg'
     log.debug("setShadowInfoJSON() (" + msg.length + " bytes)");
-    //document.getElementById('nearByCities').innerHTML=msg;
     var json = msg.replace(/#COMMA#/g,",");
-    eval("var metadata = " + json);
-    var text = '';
-    for(var i=0; i<metadata.dictionaries.length; i++) {
-        var dict = metadata.dictionaries[i];
-        if(dict != null) {
-            log.info("dict = " + dict.name);
-            text = text + '<b>' + dict.name + '</b><br/>';
-            if (dict.name == 'shadowinfo') {
-                for(var j=0; j<dict.attributes.length; j++) {
-                    var attrib = dict.attributes[j];
-                    if(attrib != null) {
-                        modelLocation[attrib.name] = attrib.value;
-                        text = text + '&nbsp;&nbsp;<b>' + attrib.name + ':</b> ' + attrib.value + '<br/>';
-                    }
-                }
-                modelLocation.changed = false;
-                setTZHighlight(false);
-            } 
+    try {
+        eval("var shadowinfo = " + json);
+    } catch (e) {
+        log.error(e.name);
+        setNearByCities("error: " + e.name + "<br/>" + json);
+        return
+        var shadowinfo = new Array();
+    }
+    var text = '<b>shadow info settings:</b><br/>';
+    modelLocation.logging = false;
+    for(var j=0; j<shadowinfo.length; j++) {
+        var attrib = shadowinfo[j];
+        if(attrib != null) {
+            modelLocation.setValue(attrib.name, attrib.value);
+            text = text + '&nbsp;&nbsp;<b>' + attrib.name + ':</b> ' + attrib.value + '<br/>';
         }
     }
+    modelLocation.changed = false;
+    modelLocation.logging = true;
+    setTZHighlight(false);
     setNearByCities(text);
     updateSkyFormValues();
     googleMapInitialize(modelLocation.Latitude, modelLocation.Longitude);
@@ -453,15 +462,20 @@ function setTZWarning(offset) {
 
 
 function setSkySummary() {
-    log.debug("setSkySummary()");
-    var loc = modelLocation.City + ", "+ modelLocation.Country;
-    document.getElementById("skySummaryLocation").innerHTML = loc;
-    document.getElementById("skySummaryNorth").innerHTML = modelLocation.NorthAngle;
-    var lat = modelLocation.Latitude;
-    var lng = modelLocation.Longitude * -1;
-    var mer = modelLocation.TZOffset * -15.0;
-    latlng = " -a " + lat.toFixed(4) + " -o " + lng.toFixed(4) + " -m " + mer.toFixed(1);
-    document.getElementById("skySummaryOptions").innerHTML = skyOptions.toString() + " " + latlng;
+    try {
+        var loc = modelLocation.City + ", "+ modelLocation.Country;
+        document.getElementById("skySummaryLocation").innerHTML = loc;
+        document.getElementById("skySummaryNorth").innerHTML = modelLocation.NorthAngle.toFixed(2);
+        var lat = modelLocation.Latitude * 1.0;
+        var lng = modelLocation.Longitude * -1.0;
+        var mer = modelLocation.TZOffset * -15.0;
+        latlng = " -a " + lat.toFixed(4) + " -o " + lng.toFixed(4) + " -m " + mer.toFixed(1);
+        log.debug("...skySummaryOptions");
+        document.getElementById("skySummaryOptions").innerHTML = skyOptions.toString() + " " + latlng;
+    }
+    catch (e) {
+        log.error(e.name)
+    }
 }
 
 
@@ -486,9 +500,9 @@ function updateSkyFormValues() {
     log.debug("updateSkyFormValues");
     document.getElementById('City').value       = modelLocation.City;
     document.getElementById('Country').value    = modelLocation.Country;
-    document.getElementById('Latitude').value   = parseFloat(modelLocation.Latitude).toFixed(4);
-    document.getElementById('Longitude').value  = parseFloat(modelLocation.Longitude).toFixed(4);
-    document.getElementById('NorthAngle').value = modelLocation.NorthAngle;
+    document.getElementById('Latitude').value   = modelLocation.Latitude.toFixed(4);
+    document.getElementById('Longitude').value  = modelLocation.Longitude.toFixed(4);
+    document.getElementById('NorthAngle').value = modelLocation.NorthAngle.toFixed(2);
     setTZOffsetSelection(modelLocation.TZOffset);
     // make 'apply' button visible if values have changed
     if (modelLocation.changed == true) {
