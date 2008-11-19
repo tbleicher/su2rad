@@ -51,6 +51,59 @@ class UserDialog
 end    
 
 
+class UserWebDialog
+
+    def inititalize
+        @model = Sketchup.active_model
+        
+        ## rad defaults 
+        @quality  = "low"
+        @detail   = "medium"  
+        @varia    = "medium" 
+        @penumbra = "true" 
+        @indirect = "2" 
+        @zonetype = "Exterior"
+        @zonesize = getBBox()
+        @skytype  = getSkyType()
+        @imgsize  = "768"
+        @render   = ""
+    end
+    
+    def getBBox
+        begin
+            bbox = @model.bounds
+            max = bbox.max
+            min = bbox.min
+            x = max.x*$UNIT - min.x*$UNIT
+            y = max.y*$UNIT - min.y*$UNIT 
+            z = max.z*$UNIT - min.z*$UNIT
+            return  "%.1f %.1f %1.f" % [x, y, z]
+        rescue
+            #uimessage("## Error generating bbox; using default values")
+            return "10 10 10"
+        end
+    end
+    
+    def getSkyType
+        sinfo = @model.shadow_info
+        type = "i"
+        if sinfo['UseSunForAllShading'] == true
+            type = "s"
+        end
+        if sinfo['DisplayShadows'] == true
+            type = "+" + type
+        else
+            type = "-" + type
+        end
+        return type
+    end
+    
+    def showDialog
+    
+    end
+
+end
+
 
 class RadianceOptions
 

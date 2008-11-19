@@ -53,6 +53,7 @@ require "su2radlib/numeric.rb"
 require "su2radlib/material.rb"
 require "su2radlib/radiance_entities.rb"
 require "su2radlib/radiancescene.rb"
+require "su2radlib/webdialog.rb"
 
 $RADPRIMITIVES = {  "plastic"    => 1,
                     "glass"      => 1,
@@ -78,6 +79,7 @@ if $DEBUG
     load "su2radlib/material.rb"
     load "su2radlib/radiance_entities.rb"
     load "su2radlib/radiancescene.rb"
+    load "su2radlib/webdialog.rb"
 end
 
 
@@ -117,6 +119,18 @@ def startExport(selected_only=0)
         $MatLib = MaterialLibrary.new()
         rs = RadianceScene.new()
         rs.export(selected_only)
+    rescue => e 
+        msg = "%s\n\n%s" % [$!.message,e.backtrace.join("\n")]
+        UI.messagebox msg            
+    end 
+end
+
+
+def startWebExport(selected_only=0)
+    begin
+        $MatLib = MaterialLibrary.new()
+        rs = RadianceScene.new()
+        rs.showWebDialog(selected_only)
     rescue => e 
         msg = "%s\n\n%s" % [$!.message,e.backtrace.join("\n")]
         UI.messagebox msg            
@@ -181,6 +195,7 @@ else
         if (not file_loaded?("su2rad.rb"))
             pmenu = UI.menu("Plugin")
             radmenu = pmenu.add_submenu("Radiance")
+            radmenu.add_item("web dialog (test)") { startWebExport(0) }
             radmenu.add_item("export scene") { startExport(0) }
             radmenu.add_item("export selection") { startExport(1) }
             matmenu = radmenu.add_submenu("Material")

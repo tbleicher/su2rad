@@ -8,31 +8,24 @@
 
         <title>Radiance Export</title>
         
+        <!-- google map and jsr_class for geonames.org requests -->
         <script type="text/javascript" src="http://maps.google.com/maps?file=api&amp;v=2&amp;key=ABQIAAAAVkCvvMxWS6sy1KKSLvN3URTDis0fJxnS-wzgwKhlyWVJxXLRhxQq9kdL_d2nO8XPOQO2xIrAWCmccw"></script>
-        
-        <!--
-        <script type="text/javascript" src="http://ws.geonames.org/export/geonamesData.js"></script>
-        -->
         <script type="text/javascript" src="./js/jsr_class.js"></script>
         
-        <!--
-        <script type="text/javascript" src="./js/jquery-1.1.3.1.pack.js"></script>
-        -->
+        <!-- jquery and plugins -->
         <script type="text/javascript" src="./js/jquery-1.2.6.js"></script>
         <script type="text/javascript" src="./js/jquery.history_remote.pack.js"></script>
         <script type="text/javascript" src="./js/jquery.tabs.pack.js"></script>
         <script type="text/javascript" src="./js/jquery.alphanumeric.js"></script>
         
-        <!-- tabs v3.0 - does not work ...
-        <script type="text/javascript" src="./js/ui.core.js"></script>
-        <script type="text/javascript" src="./js/ui.tabs.js"></script>
-        -->
-        
+        <!-- su2rad specific javascript files -->
         <script type="text/javascript" src="./js/backend_interface.js"></script>
         <script type="text/javascript" src="./js/dialog.js"></script>
         <script type="text/javascript" src="./js/googlemap.js"></script>
         <script type="text/javascript" src="./js/sky_location.js"></script>
         <script type="text/javascript" src="./js/radopts.js"></script>
+        
+        <!-- log panel for debugging -->
         <script type="text/javascript" src="./blackbirdjs/blackbird.js"></script>
         
         <script type="text/javascript">
@@ -46,16 +39,6 @@
                 } );
             });
 
-            var SKETCHUP = false;
-            function setSketchup() {
-                SKETCHUP = true;
-            }
-            function checkInitPage() {
-                // log.toggle();
-                if (SKETCHUP != true) {
-                    initPage();
-                }
-            }
             function onRadToggleOption() {
                 // TODO
             }
@@ -73,7 +56,7 @@
     
     </head>
     
-    <body onLoad="checkInitPage()">
+    <body onLoad="initPage()">
     
         <div id="tab-container">
             <ul class="tabs-nav">
@@ -94,18 +77,18 @@
                         <td class="column_lable">path:</td>
                         <td colspan="2">
                             <div class="fileinputs">
-                                <input type="file" class="file" id="fileselection" onchange="setExportPath()" />
+                                <input type="file" class="file" id="fileselection" onchange="onSelectExportPath()" />
                                 <div class="fakefile">
                                     <img src="./css/24-zoom.png" />
                                 </div>
                             </div>
-                            <input type="text" style="width:275px;" name="scene_path" id="scene_path" value="-"/>
+                            <input type="text" style="width:275px;" name="scenePath" id="scenePath" value="-"/>
                         </td>
                     </tr>
                     <tr>
                         <td class="column_lable">scene:</td>
                         <td colspan="2">
-                            <input type="text" class="fileNameInput" style="width:275px;" name="scene_name" id="scene_name" value="-"/>
+                            <input type="text" class="fileNameInput" style="width:275px;" name="sceneName" id="sceneName" value="-"/>
                         </td>
                     </tr>
                     <tr>
@@ -114,28 +97,28 @@
                     <tr>
                         <td class="column_lable">mode:</td>
                         <td class="column">
-                            <select id="export_mode" name="export_mode" onchange="setExportMode()">
+                            <select id="exportMode" name="exportMode" onchange="onExportModeChange()">
                                 <option value="by_group" selected>by group</option>
                                 <option value="by_layer">by layer</option>
-                                <option value="by_material">by material</option>
+                                <option value="by_color">by color</option>
                             </select>
                         </td>
                         <td colspan="2">
-                            <input id="triangulate_cb" value="triangulate" type="checkbox" class="cblow"
-                            onchange="toggle_option("triangulate")"> triangulate<br/>
+                            <input id="triangulate" type="checkbox" class="cblow"
+                            onchange="onToggleOption('triangulate')"> triangulate<br/>
                         </td>
                     </tr>
                     <tr>
                         <td></td>
                         <td>
                             <span id="global_coords_display">
-                                <input id="global_coords_cb" value="global_coords" type="checkbox" 
-                                onchange="toggle_option("global_coords")"> global coords
+                                <input id="global_coords" type="checkbox" 
+                                onchange="onToggleOption('global_coords')"> global coords
                             </span>
                         </td>
                         <td>
-                            <input id="textures_cb" value="textures" type="checkbox" class="cblow"
-                            onchange="toggle_option("textures")"> textures
+                            <input id="textures" type="checkbox" class="cblow"
+                            onchange="onToggleOption('textures')"> textures
                         </td>
                     </tr>
                 </table>
@@ -313,11 +296,11 @@
                             <tr>
                                 <td class="columnRadLable">indirect:</td>
                                 <td class="columnRadOption">
-                                    <select id="radIndirect" name="radIndirect">
+                                    <select id="radIndirect" name="radIndirect" onchange="onRadOptionChange('radIndirect')">
                                         <option value="0">0</option>
                                         <option value="1">1</option>
-                                        <option value="2">2</option>
-                                        <option value="3" selected>3</option>
+                                        <option value="2" selected>2</option>
+                                        <option value="3">3</option>
                                         <option value="4">4</option>
                                         <option value="5">5</option>
                                     </select>

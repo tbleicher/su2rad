@@ -1,5 +1,6 @@
 require "su2radlib/exportbase.rb"
 require "su2radlib/context.rb"
+require "su2radlib/webdialog.rb"
 
 class RadianceScene < ExportBase
 
@@ -13,6 +14,7 @@ class RadianceScene < ExportBase
         $scene_name = "unnamed_scene"
         $export_dir = Dir.pwd()
         setExportDirectory()
+        printf "$scene name, path='%s','%s'\n" % [$scene_name, $export_dir]
     end
 
     def initGlobals
@@ -73,42 +75,18 @@ class RadianceScene < ExportBase
             $export_dir = path[0..-5]
         end
     end
-   
+  
+
     def confirmExportDirectory
         ## show user dialog for export options
         ud = UserDialog.new()
-        ud.addOption("export path", $export_dir)
-        ud.addOption("scene name", $scene_name)
-        ud.addOption("show options", $SHOWRADOPTS) 
-        ud.addOption("all views", $EXPORTALLVIEWS) 
-        ud.addOption("mode", $MODE, "by group|by layer|by color")
-        ud.addOption("textures", $TEXTURES)
-        ud.addOption("triangulate", $TRIANGULATE)
-        if $REPLMARKS != '' and File.exists?($REPLMARKS)
-            ud.addOption("global coords", $MAKEGLOBAL) 
-        end
-        #if $RAD != ''
-        #    ud.addOption("run preview", $PREVIEW)
-        #end
+        _setDialogOptions(ud)
         if ud.show('export options') == true
-            $export_dir = ud.results[0] 
-            $scene_name = ud.results[1] 
-            $SHOWRADOPTS = ud.results[2] 
-            $EXPORTALLVIEWS = ud.results[3] 
-            $MODE = ud.results[4]
-            $TEXTURES = ud.results[5]
-            $TRIANGULATE = ud.results[6]
-            if $REPLMARKS != '' and File.exists?($REPLMARKS)
-                $MAKEGLOBAL = ud.results[7]
-            end
-            #if $RAD != ''
-            #    $PREVIEW = ud.result[7]
-            #end
+            _applyDialogResults(ud)
         else
             uimessage('export canceled')
             return false
         end
-        
         ## use test directory in debug mode
         if $DEBUG 
             if $testdir and $testdir != ''
@@ -124,6 +102,41 @@ class RadianceScene < ExportBase
         end
         return true
     end
+   
+    def _setDialogOptions(ud)
+        ud.addOption("export path", $export_dir)
+        ud.addOption("scene name", $scene_name)
+        ud.addOption("show options", $SHOWRADOPTS) 
+        ud.addOption("all views", $EXPORTALLVIEWS) 
+        ud.addOption("mode", $MODE, "by group|by layer|by color")
+        ud.addOption("textures", $TEXTURES)
+        ud.addOption("triangulate", $TRIANGULATE)
+        if $REPLMARKS != '' and File.exists?($REPLMARKS)
+            ud.addOption("global coords", $MAKEGLOBAL) 
+        end
+        #if $RAD != ''
+        #    ud.addOption("run preview", $PREVIEW)
+        #end
+    end
+    
+    def _applyDialogResults(ud)
+        $export_dir = ud.results[0] 
+        $scene_name = ud.results[1] 
+        $SHOWRADOPTS = ud.results[2] 
+        $EXPORTALLVIEWS = ud.results[3] 
+        ## TODO: fill views_to_export list
+        
+        $MODE = ud.results[4]
+        $TEXTURES = ud.results[5]
+        $TRIANGULATE = ud.results[6]
+        if $REPLMARKS != '' and File.exists?($REPLMARKS)
+            $MAKEGLOBAL = ud.results[7]
+        end
+        #if $RAD != ''
+        #    $PREVIEW = ud.result[7]
+        #end
+    end
+
     
     def createMainScene(references, faces_text, parenttrans=nil)
         ## top level scene split in references (*.rad) and faces ('objects/*_faces.rad')
@@ -159,6 +172,13 @@ class RadianceScene < ExportBase
             return msg
         end
     end
+    
+
+    def showWebDialog(selected_only=0)
+        edw = ExportDialogWeb.new()
+        edw.show("Radiance Export")
+    end 
+   
     
     def export(selected_only=0)
         scene_dir = "#{$export_dir}/#{$scene_name}"
@@ -204,6 +224,7 @@ class RadianceScene < ExportBase
         #runPreview()
         writeLogFile()
     end
+   
     
     def saveFilesByColor
         if $MODE != 'by color'
