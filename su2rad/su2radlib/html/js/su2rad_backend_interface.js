@@ -1,3 +1,5 @@
+var SKETCHUP = false;
+
 
 function applyModelLocationSketchup(locObj) {
     // apply modelLocation settings to Sketchup.shadow_info
@@ -91,7 +93,8 @@ function setViewSelectionTest(param) {
 // switches to call right functions for context
 
 function setSketchup() {
-    log.debug('switching to Sketchup functions ...') 
+    log.debug('switching to Sketchup functions ...'); 
+    SKETCHUP = true;
     applyModelLocation = applyModelLocationSkechup;
     getShadowInfo = getShadowInfoSketchup;
     getViewsList = getViewsListSketchup;
@@ -99,7 +102,12 @@ function setSketchup() {
 }
 
 function setTest() {
-    //log.debug('switching to test functions ...') 
+    try {
+        log.debug('switching to test functions ...');
+    } catch (e) {
+        // log might not be defined yet
+    }
+    SKETCHUP = false;
     applyModelLocation = applyModelLocationTest;
     getShadowInfo = getShadowInfoTest;
     getViewsList = getViewsListTest;
