@@ -1,28 +1,50 @@
 
 
-var radOpts = {};
-// Quality group
-radOpts.Quality = "medium";
-radOpts.Detail = "medium";
-radOpts.Variability = "high";
-radOpts.Indirect = 2;
-radOpts.Penumbras = true;
-// Image group
-radOpts.ImageSizeX = 512;  // XXX
-radOpts.ImageSizeY = 512;  // XXX
-radOpts.ImageType = "normal";
-// Zone group
-radOpts.ZoneSize = 10.0;  // XXX
-radOpts.ZoneType = "interior";
-// Report group
-radOpts.Report = 0;
-radOpts.ReportFile = 'scene.log';
+function RadOptsObject() {
+    // Quality group
+    this.Quality = "medium";
+    this.Detail = "medium";
+    this.Variability = "high";
+    this.Indirect = 2;
+    this.Penumbras = true;
+    // Image group
+    this.ImageSizeX = 512;  // XXX
+    this.ImageSizeY = 512;  // XXX
+    this.ImageType = "normal";
+    // Zone group
+    this.ZoneSize = 10.0;  // XXX
+    this.ZoneType = "interior";
+    // Report group
+    this.Report = 0;
+    this.ReportFile = 'scene.log';
+    this.render = '';
+}
+
+RadOptsObject.prototype.toString = function () {
+    text  =  "Quality=" + this.Quality;
+    text += "&Detail=" + this.Detail;
+    text += "&Variability=" + this.Detail;
+    text += "&Indirect=" + this.Indirect;
+    text += "&Penumbras=" + this.Penumbras;
+    text += "&ImageType=" + this.ImageType;
+    text += "&ImageSizeX=" + this.ImageSizeX;
+    text += "&ImageSizeY=" + this.ImageSizeY;
+    text += "&ZoneSize=" + this.ZoneSize;
+    text += "&ZoneType=" + this.ZoneType;
+    text += "&Report=" + this.Report;
+    text += "&ReportFile=" + this.ReportFile;
+    text += "&render=" + this.render;
+    return text
+}
+
+
+var radOpts = new RadOptsObject();
+
 
 
 var rpictOpts = {};
 
 function setRpictDefaults() {
-    log.debug("DEBUG setRpictDefaults()")
     // ambient
     rpictOpts.aa = 0.2;
     rpictOpts.ab = 0;
@@ -162,7 +184,6 @@ function getRpictOverride(opt) {
 
 
 function syncRadOption(id) {
-    log.debug("sync(), id='" + id + "'");
     var suffix = id.slice(-2);
     var other = "";
     if (suffix == "_1") {
@@ -196,24 +217,17 @@ function onRadOptionChange(id) {
         radOpts[opt] = parseInt(document.getElementById(id).value);
     } else {
         var suffix = id.slice(-2);
-        log.debug("suffix='" +  suffix + "'");
         if (suffix == "_1" || suffix == "_2") {
             opt = opt.slice(0,-2)
         }
         radOpts[opt] = document.getElementById(id).value;
-        log.debug("DEBUG: value=" + document.getElementById(id).value);
         if (suffix == "_1" || suffix == "_2") {
             syncRadOption(id);
         }
     }
-    // check if option needs sync
-    /* var suffix = id.slice(-2);
-    log.debug("suffix='" +  suffix + "'");
-    if (suffix == "_1" || suffix == "_2") {
-        syncRadOption(id);
-    } */
     updateRpictValues();
     updateRenderLine();
+    applyRenderOptions();
 }
 
 
@@ -227,6 +241,7 @@ function onRadOptionImageSize(id) {
         radOpts[opt] = newVal;
         document.getElementById("rad" + opt + "_1").value = radOpts[opt];
         document.getElementById("rad" + opt + "_2").value = radOpts[opt];
+        applyRenderOptions();
     }
 }
 
@@ -254,6 +269,7 @@ function onRpictOverride(opt) {
     }
     updateRpictValues();
     updateRenderLine();
+    applyRenderOptions();
 }
 
 
@@ -316,6 +332,7 @@ function parseRenderLine(suffix) {
     }
     _updateRpictOptionDisplay();
     updateRenderLine();
+    applyRenderOptions();
 }
 
 
@@ -560,6 +577,7 @@ function selectImageType(id) {
     radOpts[opt] = document.getElementById(id).value;
     syncRadOption(id); 
     updateRenderLine();
+    applyRenderOptions();
 }
 
 
@@ -632,7 +650,9 @@ function updateRenderLine() {
     }
     document.getElementById("radRenderLine_1").innerHTML = text;
     document.getElementById("radRenderLine_2").value = text;
+    radOpts.render = text;
 }
+
 
 
 function _updateRpictOptionDisplay() {
@@ -693,6 +713,7 @@ function validateRpictOverride(opt) {
         document.getElementById(id).value = newValue;
         setRpictOverride(opt, newValue);
         updateRenderLine();
+        applyRenderOptions();
     }
 }
 

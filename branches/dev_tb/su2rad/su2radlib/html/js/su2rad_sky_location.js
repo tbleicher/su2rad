@@ -15,12 +15,16 @@ ModelLocationObject.prototype.setValue = function (opt,val) {
         switch (opt) {
         case 'NorthAngle':
             val = parseFloat(val);
+            break;
         case 'TZOffset':
             val = parseFloat(val);
+            break;
         case 'Latitude':
             val = parseFloat(val);
+            break;
         case 'Longitude':
             val = parseFloat(val);
+            break;
         }
         if (this[opt] != val) {
             this.changed = true;
@@ -33,6 +37,16 @@ ModelLocationObject.prototype.setValue = function (opt,val) {
     catch (e) {
         log.error(e.name + ": opt='" + opt + "' val='" + val + "'")
     }
+}
+
+ModelLocationObject.prototype.toString = function () {
+    var text = 'City=' + locObj.City;
+    text += '&Country=' + locObj.Country;
+    text += '&Latitude=' + locObj.Latitude.toFixed(4);;
+    text += '&Longitude=' + locObj.Longitude.toFixed(4);
+    text += '&TZOffset=' + locObj.TZOffset.toFixed(1);
+    text += '&NorthAngle=' + locObj.NorthAngle.toFixed(2);
+    return text;
 }
 
 var modelLocation = new ModelLocationObject();
@@ -48,7 +62,7 @@ function SkyOptionsObject() {
     this.R = '';
 }
 
-SkyOptionsObject.prototype.removeValue = function (opt) {
+SkyOptionsObject.prototype.removeOption = function (opt) {
     if (opt == 'g') {
         this.g = 0.2;
     } else if (opt == 't') {
@@ -299,7 +313,7 @@ function onGenskyOptionChanged(opt) {
     var id = "gensky_" + opt;
     var value = document.getElementById(id).value;
     if (value == '') {
-        skyOptions.removeValue(opt);
+        skyOptions.removeOption(opt);
         document.getElementById(id).value = skyOptions[opt];
     } else {
         skyOptions.setValue(opt, value);

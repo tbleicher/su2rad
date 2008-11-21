@@ -10,7 +10,6 @@ function ExportSettingsObject() {
     this.triangulate = false;
 }
 
-
 ExportSettingsObject.prototype.setMode = function(val) {
     var value = val.replace(/_/g," ");
     this.exportMode = value;
@@ -27,11 +26,9 @@ ExportSettingsObject.prototype.setBool = function(name,value) {
     } else {
         this[name] = false;
     }
-    log.debug("setBool()  n='" + name + "' v='" + value +  "' this.n='" + this[name] + "'");
 }
 
 ExportSettingsObject.prototype.setValue = function(name,value) {
-    log.debug("setValue()  n='" + name + "' v='" + value +  "'");
     switch (name) {
     case 'exportMode': 
         this.setMode(value);
@@ -54,17 +51,21 @@ ExportSettingsObject.prototype.setValue = function(name,value) {
 ExportSettingsObject.prototype.updateDisplay = function() {
     document.getElementById("scenePath").value = this.scenePath;
     document.getElementById("sceneName").value = this.sceneName;
-    
     document.getElementById("triangulate").checked = this.triangulate;
-    log.debug("triangulate=" + document.getElementById("triangulate").checked);
-    log.debug("this.triangulate=" + this.triangulate);
-    
     document.getElementById("textures").checked = this.textures;
-    log.debug("textures=" + document.getElementById("textures").checked);
-    log.debug("this.textures=" + this.textures);
     setExportMode(this.exportMode);
-    // do not set global_coords, just hide it via onExportModeChange()
-    onExportModeChange();
+    // set visibility of global_coords checkbox
+    _setGlobalCoordsDisplay(this.exportMode);
+}
+
+ExportSettingsObject.prototype.toString = function() {
+    text  =  'scenePath='     + this.scenePath;
+    text += '&sceneName='     + this.sceneName;
+    text += '&triangulate='   + this.triangulate;
+    text += '&textures='      + this.textures;
+    text += '&exportMode='    + this.exportMode;
+    text += '&global_coords=' + this.global_coords;
+    return text
 }
 
 var exportSettings = new ExportSettingsObject();
@@ -73,15 +74,11 @@ var exportSettings = new ExportSettingsObject();
 
 function initPage() {
     log.toggle();
-    window.statusbar.visible = true;
+    //window.statusbar.visible = true;
     window.resizeTo(640,800);
-    //setExportOptionsTest();
+    log.info("initPage() end");
 }
 
-function initExportPage() {
-    log.debug("initExportPage() ...");
-    updateExportPage();
-}
 
 function disableGlobalOption() {
     // remove 'by group' option from selection
@@ -127,10 +124,37 @@ function setExportMode(mode) {
 }
 
 
+function onExportButton() {
+    try {
+        //log.info("export canceled by user")
+        window.location = 'skp:onExport@';
+    } catch (e) {
+        // do something
+    }
+}
+
+function onCancelButton() {
+    try {
+        //log.info("export canceled by user")
+        window.location = 'skp:onCancel@';
+    } catch (e) {
+        window.opener='x';
+        window.close();
+    }
+}
+
+
 function onExportModeChange() {
+    // apply new value for exportMode
     var val=document.getElementById("exportMode").value;
-    exportSettings.setMode(val);
     log.debug("new export mode: '" + val + "'"  );
+    exportSettings.setMode(val);
+    _setGlobalCoordsDisplay(val);
+    applyExportOptions();
+}
+
+function _setGlobalCoordsDisplay(val) {
+    // show or hide global_coords checkbox
     if (val == 'by_group') {
         enableGlobalOption()
     }
@@ -144,6 +168,7 @@ function onToggleOption(opt) {
     var val = document.getElementById(opt).checked;
     log.debug("onToggleOption: " + opt + "=" + val );
     exportSettings[opt] = val;
+    applyExportOptions();
 }
 
 
@@ -178,15 +203,16 @@ function onSelectExportPath() {
     exportSettings.scenePath = path;
     exportSettings.sceneName = name;
     exportSettings.updateDisplay();
-    return name;
+    applyExportOptions();
 }
 
 
-
 function setExportOptionsJSON(msg) {
-    log.debug("setExportOptionsJSON() (" + msg.length + " bytes)");
+    var text = 'setExportOptionsJSON';
+    document.getElementById('statusMsg').innerHTML = text;
+    //log.debug("setExportOptionsJSON() (" + msg.length + " bytes)");
     var json = msg.replace(/#COMMA#/g,",");
-    log.debug("json='" + json + "'");
+    //log.debug("json='" + json + "'");
     try {
         eval("var exportOpts = " + json);
     } catch (e) {
@@ -197,7 +223,7 @@ function setExportOptionsJSON(msg) {
     for(var j=0; j<exportOpts.length; j++) {
         var attrib = exportOpts[j];
         if(attrib != null) {
-            log.debug("  name='" + attrib.name + "' value='" + attrib.value +  "'");
+            //log.debug("  name='" + attrib.name + "' value='" + attrib.value +  "'");
             exportSettings.setValue(attrib.name, attrib.value);
             text = text + '&nbsp;&nbsp;<b>' + attrib.name + ':</b> ' + attrib.value + '<br/>';
         }
@@ -238,11 +264,7 @@ function onViewSelectionChange(viewname) {
         param += "deselected";
     }
     log.info(msg);
-    setViewSelection(param);
-
-    //if (SKETCHUP == true) {
-    //    window.location = 'skp:setViewSelection@' + param;
-    //}
+    setViewsSelection(param);
 }
 
 
@@ -263,6 +285,7 @@ function _getViewTD(view) {
 
 function setViewsListJSON(msg) {
     // eval JSON views string from SketchUp
+    log.info('setViewsListJSON()');
     var json = msg.replace(/#COMMA#/g,",");
     try {
         eval("var viewsList = " + json);
@@ -275,7 +298,7 @@ function setViewsListJSON(msg) {
     for(var i=0; i<viewsList.length; i++) {
         var view = viewsList[i];
         if(view != null) {
-            // log.info("view = '" + view.name + "'");
+            log.info("view = '" + view.name + "'");
             text += _getViewTD(view);
             col += 1;
         }
@@ -297,15 +320,9 @@ function setViewsListJSON(msg) {
 
 
 function onApplyLocation() {
-    applyModelLocation(modelLocation)
+    applyModelLocation(modelLocation.toString())
     modelLocation.changed = false;
     updateSkyFormValues()
-}
-
-
-function initViews() {
-    log.debug("initViews()");
-    getViewsList();
 }
 
 
