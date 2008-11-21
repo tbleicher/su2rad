@@ -62,40 +62,42 @@ module JSONUtils
         return str
     end
 
+    def pprintJSON(json, text="\njson string:")
+        ## prettyprint JSON string
+        printf "#{text}\n"
+        printf json.gsub!(/#COMMA#\{/,"\n\{")
+        printf "\n"
+        
+    end
+    
     def test_toStringJSON()
         i = 17
         f = 3.14
         s = "string"
         a = [1, 2.3, "four"]
         h = { "one" => 1, "two" => 2, "three" => [1,2,3], "nested" => { "n1" => 11, "n2" => 22 } }
-        
         obj = { "int" => i, "float" => f, "string" => s, "array" => a, "hash" => h }
-        
         printf toStringJSON(obj) + "\n"
     end 
 
 end
 
 
+class ExportOptions
 
-
-
-class ExportDialogWeb
-    
     include JSONUtils
 
-    def initialize()
-        @selectedViews = {}
+    def initialize
+        @scenePath = $export_dir
+        @sceneName = $scene_name
+        @triangulate = $TRIANGULATE
+        @textures = $TEXTURES
+        @exportMode = $MODE
+        @global_coords = $MAKEGLOBAL
     end
 
-    
-    def getExportOptions(dlg, p='')
-        ## collect and set general export options
-        d = Hash.new()
-        d['scenePath'] = $export_dir
-        d['sceneName'] = $scene_name
-        d['triangulate'] = $TRIANGULATE
-        d['textures'] = $TEXTURES
+    def setDialogOptions(dlg)
+        ## disable 'global_coords' option in dialog if not available
         if $REPLMARKS != '' and File.exists?($REPLMARKS)
             dlg.execute_script('enableGlobalOption()')
         else
@@ -105,25 +107,96 @@ class ExportDialogWeb
             end
             $MAKEGLOBAL = true
         end
-        d['exportMode'] = $MODE
-        d['global_coords'] = $MAKEGLOBAL
+    end
+    
+    def setOptionsFromString(params)
+        ## set export options from string <p>
+        pairs = params.split("&")
+        pairs.each { |pair|
+            k,v = pair.split("=")
+            if (v == 'true' || v == 'false')
+                eval("@%s = %s" % [k,v])
+            else
+                eval("@%s = '%s'" % [k,v])
+            end
+        }
+        #pprintJSON(toJSON(), "\nnew values:")
+    end
+    
+    def toJSON
+        ## collect export options and return JSON string
+        dict = Hash.new()
+        dict['scenePath'] = @scenePath
+        dict['sceneName'] = @sceneName
+        dict['triangulate'] = @triangulate
+        dict['textures'] = @textures
+        dict['exportMode'] = @exportMode
+        dict['global_coords'] = @global_coords
         #TODO render options
-        json = getJSONDictionary(d)
-        printf "\nJSON=\n%s\n" % json
-        dlg.execute_script("setExportOptionsJSON(%s)" % json )
+        json = getJSONDictionary(dict)
+        return json
+    end
+    
+end
+
+
+class RenderOptions
+
+    include JSONUtils
+
+    def setOptionsFromString(params)
+        ## set export options from string <p>
+        pairs = params.split("&")
+        printf "\nnew RenderOptions:\n"
+        pairs.each { |pair|
+            k,v = pair.split("=")
+            printf "  => %12s : %s\n" % [k,v]
+            if (v == 'true' || v == 'false')
+                eval("@%s = %s" % [k,v])
+            else
+                eval("@%s = '%s'" % [k,v])
+            end
+        }
+        printf "\n"
+    end
+
+    def toJSON
+        return ''
+    end
+    
+end
+
+
+class ExportDialogWeb
+    
+    include JSONUtils
+
+    def initialize
+        printf "ExportDialogWeb.intiialize()\n"
+        @selectedViews = {}
+        @exportOptions = ExportOptions.new()
+        @renderOptions = RenderOptions.new()
+    end
+
+    def _initExportOptions(dlg, p='')
+        ## set general export options
+        printf "\n_initExportOptions() ... "
+        @exportOptions.setDialogOptions(dlg)
+        json = @exportOptions.toJSON()
+        dlg.execute_script("setExportOptionsJSON('%s')" % json )
+        printf " done\n"
     end 
     
     
-    
-    
-    def getViewsList(d,p='')
+    def getViewsList(dlg,p='')
         ## build and return JSON string of views (scenes)
-        printf ("getViewsList()\n")
+        printf ("\ngetViewsList() ... ")
         json = "["
         pages = Sketchup.active_model.pages
-        #printf "pages.count=%d\n" % pages.count
+        nViews = 0
         if pages.count == 0
             json += "{\"name\":\"%s\",\"selected\":\"false\",\"current\":\"%s\"}" % ['unnamed_view', true]
+            nViews = 1
         else 
             pages.each { |page|
                 current = "false"
@@ -134,16 +207,18 @@ class ExportDialogWeb
                     next
                 end
                 json += ",{\"name\":\"%s\",\"selected\":\"false\",\"current\":\"%s\"}" % [page.name, current]
+                nViews += 1
             }
         end
         json += "]"
         json.gsub!(/,/,"#COMMA#")
-        d.execute_script("setViewsListJSON(%s)" % json )
+        dlg.execute_script("setViewsListJSON('%s')" % json )
+        printf "done [%d views]\n" % nViews
+        #pprintJSON(json)
     end
 
-    
-    def setViewSelection(d,p)
-        printf "TEST: setViewsSelection() p='%s'\n" % p 
+    def setViewsSelection(d,p)
+        printf "\nsetViewsSelection() p='%s'\n" % p 
         viewname, state = p.split('&')
         if state == 'selected'
             @selectedViews[viewname] = true
@@ -151,23 +226,25 @@ class ExportDialogWeb
             @selectedViews.delete(viewname) {|v| printf "error: view '%s' not found\n" % v}
         end 
         @selectedViews.each_key { |k|
-            printf "%15s\n" % k
+            printf "    %s\n" % k
         }
     end
 
     def getShadowInfo(d,p='')
         ## get shadow_info dict and apply to dialog
+        printf "\ngetShadowInfo() ... "
         sinfo = Sketchup.active_model.shadow_info
         dict = {}
         sinfo.each { |k,v| dict[k] = v }
         json = getJSONDictionary(dict)
-        d.execute_script("setShadowInfoJSON(%s)" % json )
+        d.execute_script( "setShadowInfoJSON('%s')" % json )
+        printf "done\n"
     end
 
     def setShadowInfoValues(d,p)
         ## set shadow_info values from dialog
         sinfo = Sketchup.active_model.shadow_info
-        pairs = p.split(";")
+        pairs = p.split("&")
         pairs.each { |pair|
             k,v = pair.split("=")
             begin
@@ -181,12 +258,23 @@ class ExportDialogWeb
     def show(title="dialog_TEST")
         ## create and show WebDialog
         dlg = UI::WebDialog.new(title, true, nil, 600, 750, 50, 50, true);
+            
+        ## export and cancel actions
+        dlg.add_action_callback("onCancel") { |d,p|
+            printf "closing dialog ...\n"
+            d.close();
+        }
+        dlg.add_action_callback("onExport") {|d,p|
+            printf "TODO: starting export ...\n"
+        }
         
-        dlg.add_action_callback("on_close") { |d,p| d.close(); }
-        ## would be called when dialog is loaded
-        #dlg.add_action_callback("onload") {|d,p|
-        #   pass
-        #}
+        ## update of ...Options objects
+        dlg.add_action_callback("applyExportOptions") { |d,p|
+            @exportOptions.setOptionsFromString(p)
+        }
+        dlg.add_action_callback("applyRenderOptions") { |d,p|
+            @renderOptions.setOptionsFromString(p)
+        }
         
         ## shadow_info (location and sky)
         dlg.add_action_callback("getShadowInfo") { |d,p|
@@ -202,16 +290,10 @@ class ExportDialogWeb
         dlg.add_action_callback("getViewsList") { |d,p|
             getViewsList(d,p)
         }
-        dlg.add_action_callback("setViewSelection") { |d,p|
-            setViewSelection(d,p)
+        dlg.add_action_callback("setViewsSelection") { |d,p|
+            setViewsSelection(d,p)
         }
         
-        ## "apply" button callback 
-        dlg.add_action_callback("apply_action") {|d,p|
-            #XXX read all text input variables to get latest changes
-            #d.execute_script("getFinalValues()")
-            d.close();
-        }
         #dlg.set_on_close {
         #}
         
@@ -220,13 +302,11 @@ class ExportDialogWeb
         
         ## show dialog
         dlg.show_modal {
-            #isize = 456
-            #dlg.execute_script("setValue('image_size','%d')" % isize )
-            if $DEBUG 
-                dlg.execute_script("log.toggle()")
-            end
+            #if $DEBUG 
+            #    dlg.execute_script("log.toggle()")
+            #end
             dlg.execute_script("setSketchup()")
-            getExportOptions(dlg, '')
+            _initExportOptions(dlg, '')
             getViewsList(dlg, '')
             getShadowInfo(dlg, '')
             dlg.execute_script("updateExportPage()")

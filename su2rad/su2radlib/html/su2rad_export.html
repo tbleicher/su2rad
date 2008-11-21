@@ -39,10 +39,6 @@
                 } );
             });
 
-            function onRadToggleOption() {
-                // TODO
-            }
-
         </script>
 
         <link rel="stylesheet" href="./css/jquery.tabs.css" type="text/css" media="print, projection, screen">
@@ -122,8 +118,9 @@
                         </td>
                     </tr>
                 </table>
-                
+                 
                     
+                <!-- ###   VIEWS   ### --> 
                 <h3>Views</h3>
                 <div id="viewsSelection"></div>
                 
@@ -240,7 +237,10 @@
                 </table>
 
 
-                <h2><input class="exportbutton" type="submit" name="export" value="export"></h2>
+                <h2>
+                    <input class="exportbutton" type="button" name="export" value="export" onclick="onExportButton()">
+                    <input class="exportbutton" type="button" name="cancel" value="cancel" onclick="onCancelButton()">
+                </h2>
             
                 <div class="statusMessage">
                     <span id="statusMsg">status</span>

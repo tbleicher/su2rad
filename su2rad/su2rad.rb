@@ -188,7 +188,7 @@ end
 
 if $DEBUG
     printf "debug mode\n"
-    startExport()
+    startWebExport(0)
 else
     ## create menu entry
     begin

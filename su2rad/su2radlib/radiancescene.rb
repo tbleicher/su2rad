@@ -11,10 +11,9 @@ class RadianceScene < ExportBase
         initLog()
         @radOpts = RadianceOptions.new()
         
-        $scene_name = "unnamed_scene"
+        $ecene_name = "unnamed_scene"
         $export_dir = Dir.pwd()
         setExportDirectory()
-        printf "$scene name, path='%s','%s'\n" % [$scene_name, $export_dir]
     end
 
     def initGlobals
@@ -175,6 +174,7 @@ class RadianceScene < ExportBase
     
 
     def showWebDialog(selected_only=0)
+        printf "$scene_name=#{$scene_name}\n"
         edw = ExportDialogWeb.new()
         edw.show("Radiance Export")
     end 

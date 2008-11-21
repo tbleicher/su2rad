@@ -1,45 +1,67 @@
 var SKETCHUP = false;
 
+// switches to call right functions for context
+function setSketchup() {
+    // switch to actions for Sketchup (skp:...)
+    log.debug('switching to Sketchup functions ...'); 
+    SKETCHUP = true;
+}
 
-function applyModelLocationSketchup(locObj) {
+function setTest() {
+    // set dummy actions
+    try {
+        log.debug('switching to test functions ...');
+    } catch (e) {
+        // log might not be defined yet
+    }
+    SKETCHUP = false;
+}
+
+
+function applyModelLocation(params) {
     // apply modelLocation settings to Sketchup.shadow_info
-    log.info("setting Sketchup.shadow_info ...");
-    params = 'City=' + locObj.City;
-    params = params + ';Country=' + locObj.Country;
-    params = params + ';Latitude=' + locObj.Latitude;
-    params = params + ';Longitude=' + locObj.Longitude;
-    params = params + ';TZOffset=' + locObj.TZOffset;
-    params = params + ';NorthAngle=' + locObj.NorthAngle;
-    window.location = 'skp:setShadowInfo@' + params;
-}
-
-function applyModelLocationTest(locObj) {
-    // do nothing if SketchUp is not present
-    log.debug("applyModelLocationTest(): no need to set shadow_info");
+    if (SKETCHUP == true) {
+        log.info("setting Sketchup.shadow_info ...");
+        window.location = 'skp:setShadowInfo@' + params;
+    } else {
+        log.debug("applyModelLocation(): no need to set shadow_info");
+    }
 }
 
 
-function setExportOptionsTest() {
-   var s =    "[{\"name\":\"sceneName\"#COMMA#\"value\":\"Scene_Dummy1\"}";
-   s += "#COMMA#{\"name\":\"scenePath\"#COMMA#\"value\":\"/home/user/tmp/testfile\"}";
-   s += "#COMMA#{\"name\":\"exportMode\"#COMMA#\"value\":\"by color\"}";
-   s += "#COMMA#{\"name\":\"triangulate\"#COMMA#\"value\":\"false\"}";
-   s += "#COMMA#{\"name\":\"textures\"#COMMA#\"value\":\"true\"}";
-   s += "#COMMA#{\"name\":\"global_coords\"#COMMA#\"value\":\"false\"}#COMMA#]";
-   setExportOptionsJSON(s);
+function getExportOptionsTest() {
+    // collect and set export option values
+    if (SKETCHUP == true) {
+        log.info("getting shadowInfo from SketchUp ...");
+        window.location = 'skp:getExportOptions@';
+        // setExportOptionsJSON() called by Sketchup
+    } else {
+        var s =    "[{\"name\":\"sceneName\"#COMMA#\"value\":\"Scene_Dummy1\"}";
+        s += "#COMMA#{\"name\":\"scenePath\"#COMMA#\"value\":\"/home/user/tmp/testfile\"}";
+        s += "#COMMA#{\"name\":\"exportMode\"#COMMA#\"value\":\"by color\"}";
+        s += "#COMMA#{\"name\":\"triangulate\"#COMMA#\"value\":\"false\"}";
+        s += "#COMMA#{\"name\":\"textures\"#COMMA#\"value\":\"true\"}";
+        s += "#COMMA#{\"name\":\"global_coords\"#COMMA#\"value\":\"false\"}#COMMA#]";
+        setExportOptionsJSON(s);
+    }
 }
 
 
-function getShadowInfoSketchup() {
+function getShadowInfo() {
     // get SketchUp shadow_info settings and apply to modelLocation
-    log.info("getting shadowInfo from SketchUp ...");
-    window.location = 'skp:getShadowInfo@';
-    // setShadowInfoJSON() called by Sketchup
+    if (SKETCHUP == true) {
+        log.info("getting shadowInfo from SketchUp ...");
+        window.location = 'skp:getShadowInfo@';
+        // setShadowInfoJSON() called by Sketchup
+    } else {
+        log.debug("getShadowInfo(): 'skp:' not available");
+        msg = getShadowInfoTest();
+        setShadowInfoJSON(msg);
+    }
 }
 
-function getShadowInfoTest() {
+function _getShadowInfoTest() {
     // return dummy JSON string of SketchUp.shadow_info
-    log.debug("getShadowInfo(): 'skp:' not available");
     var msg =     "{\"name\":\"shadowinfo\"#COMMA#\"attributes\":[";
     msg +=        "{\"name\":\"City\"#COMMA#\"value\":\"foo_Boulder (CO)\"}";
     msg += "#COMMA#{\"name\":\"Country\"#COMMA#\"value\":\"foo_USA\"}";
@@ -51,24 +73,46 @@ function getShadowInfoTest() {
     msg += "#COMMA#{\"name\":\"DisplayShadows\"#COMMA#\"value\":\"false\"}";
     msg += "#COMMA#{\"name\":\"UseSunForAllShading\"#COMMA#\"value\":\"false\"}";
     msg += "#COMMA#]}";
-    setShadowInfoJSON(msg);
+    return msg;
 }
 
-
-
-function getViewsListSketchup() {
-    try {
-        log.info("getting views from SketchUp ...");
-        window.location = 'skp:getViewsList@'; 
-        // setViewsListJSON() called by Sketchup
-    } catch (e) {
-        log.error("getViewsListSU: " + e.name);
+function applyExportOptions() {
+    if (SKETCHUP == true) {
+        param = exportSettings.toString();
+        log.debug("param=" + param);
+        window.location = 'skp:applyExportOptions@' + param;
+    } else {
+        param = exportSettings.toString();
+        log.debug("no options to apply");
     }
 }
 
-function getViewsListTest() {
+function applyRenderOptions() {
+    log.debug('applyRenderOptions()');
+    param = radOpts.toString();
+    if (SKETCHUP == true) {
+        log.debug("param=" + param);
+        window.location = 'skp:applyRenderOptions@' + param;
+    } else {
+        log.debug("no options to apply");
+    }
+}
+
+
+function getViewsList() {
+    if (SKETCHUP == true) {
+        log.info("getting views from SketchUp ...");
+        window.location = 'skp:getViewsList@'; 
+        // setViewsListJSON() called by Sketchup
+    } else {
+        log.debug("getViewsList(): 'skp:' not available");
+        var msg = _getViewsListTest();
+        setViewsListJSON(msg);
+    }    
+}
+
+function _getViewsListTest() {
     // return dummy JSON string of SketchUp views
-    log.debug("getViewsList(): 'skp:' not available");
     var msg =   "[{\"name\":\"view_1\"#COMMA#\"selected\":\"false\"#COMMA#\"current\":\"false\"}";
     msg += "#COMMA#{\"name\":\"front (1)\"#COMMA#\"selected\":\"false\"#COMMA#\"current\":\"false\"}";
     msg += "#COMMA#{\"name\":\"current view\"#COMMA#\"selected\":\"false\"#COMMA#\"current\":\"true\"}";
@@ -77,44 +121,18 @@ function getViewsListTest() {
     msg += "#COMMA#{\"name\":\"next to last\"#COMMA#\"selected\":\"false\"#COMMA#\"current\":\"false\"}";
     msg += "#COMMA#{\"name\":\"last\"#COMMA#\"selected\":\"false\"#COMMA#\"current\":\"false\"}";
     msg += "]";
-    setViewsListJSON(msg);
+    return msg;
 }
 
-function setViewSelectionSketchup(param) {
-    log.debug("setViewSelectionSketchup(param='" + param + "')"); 
-    window.location = 'skp:setViewSelection@' + param;
-}
-
-function setViewSelectionTest(param) {
-    log.debug("no action for setViewSelection() [" + param + "]"); 
-}
-
-
-// switches to call right functions for context
-
-function setSketchup() {
-    log.debug('switching to Sketchup functions ...'); 
-    SKETCHUP = true;
-    applyModelLocation = applyModelLocationSkechup;
-    getShadowInfo = getShadowInfoSketchup;
-    getViewsList = getViewsListSketchup;
-    setViewSelection = setViewSelectionSketchup;
-}
-
-function setTest() {
-    try {
-        log.debug('switching to test functions ...');
-    } catch (e) {
-        // log might not be defined yet
+function setViewsSelection(param) {
+    if (SKETCHUP == true) {
+        log.debug("setViewsSelection(param='" + param + "')"); 
+        window.location = 'skp:setViewsSelection@' + param;
+    } else {
+        log.debug("no action for setViewsSelection() [" + param + "]"); 
     }
-    SKETCHUP = false;
-    applyModelLocation = applyModelLocationTest;
-    getShadowInfo = getShadowInfoTest;
-    getViewsList = getViewsListTest;
-    setViewSelection = setViewSelectionTest;
 }
-// set default actions
-setTest();
+
 
 
 
