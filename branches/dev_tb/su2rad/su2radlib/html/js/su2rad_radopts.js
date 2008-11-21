@@ -17,7 +17,51 @@ function RadOptsObject() {
     // Report group
     this.Report = 0;
     this.ReportFile = 'scene.log';
-    this.render = '';
+    
+    // hash for rpict options
+    this._rpictOpts = {};
+    // array to hold active overrides
+    this._rpictOverrides = new Array();
+}
+
+RadOptsObject.prototype.getRenderLine = function () {
+    // return rpict options for rad 'render' line
+    text = ""
+    // add -i switch
+    if (this.ImageType != "normal") {
+        text += "-i "
+    }
+    // other overrides
+    for (var i=0; i<this._rpictOverrides.length; i++) {
+        var opt = this._rpictOverrides[i][0];
+        if (opt == 'av') {
+            var v = this._rpictOverrides[i][1]; 
+            text += "-" + opt + " " + v + " " + v + " " + v + " ";
+        } else if (isInList(rpictBoolOptions, opt) == true) {
+            var sign = "+";
+            if (this._rpictOverrides[i][1] == false) {
+                sign = "-";
+            }
+            text += "-" + opt + sign + " ";
+        } else {
+            text += "-" + opt + " " + this._rpictOverrides[i][1] + " ";
+        }
+    }
+    return text;
+}
+
+RadOptsObject.prototype.getOption = function (opt) {
+    return this.getRpictOverride(opt);
+}
+
+RadOptsObject.prototype.getRpictOverride = function (opt) {
+    // return value of override or this._rpictOpts value
+    for (var i=0; i<this._rpictOverrides.length; i++) {
+        if (this._rpictOverrides[i][0] == opt) {
+            return this._rpictOverrides[i][1];
+        }
+    }
+    return this._rpictOpts[opt];
 }
 
 RadOptsObject.prototype.toString = function () {
@@ -33,64 +77,294 @@ RadOptsObject.prototype.toString = function () {
     text += "&ZoneType=" + this.ZoneType;
     text += "&Report=" + this.Report;
     text += "&ReportFile=" + this.ReportFile;
-    text += "&render=" + this.render;
+    text += "&render=" + this.getRenderLine();
     return text
 }
 
-
-var radOpts = new RadOptsObject();
-
-
-
-var rpictOpts = {};
-
-function setRpictDefaults() {
+RadOptsObject.prototype.setRpictDefaults = function () {
     // ambient
-    rpictOpts.aa = 0.2;
-    rpictOpts.ab = 0;
-    rpictOpts.ad = 512;
-    rpictOpts.ar = 64;
-    rpictOpts.as = 128;
-    rpictOpts.av = 0.0;
+    this._rpictOpts.aa = 0.2;
+    this._rpictOpts.ab = 0;
+    this._rpictOpts.ad = 512;
+    this._rpictOpts.ar = 64;
+    this._rpictOpts.as = 128;
+    this._rpictOpts.av = 0.0;
     // one value for r,g and b
-    rpictOpts.aw = 0;
+    this._rpictOpts.aw = 0;
     // direct calc
-    rpictOpts.dc = 0.5;
-    rpictOpts.dj = 0.0;
-    rpictOpts.dp = 512;
-    rpictOpts.dr = 1;
-    rpictOpts.ds = 0.25;
-    rpictOpts.dt = 0.05;
+    this._rpictOpts.dc = 0.5;
+    this._rpictOpts.dj = 0.0;
+    this._rpictOpts.dp = 512;
+    this._rpictOpts.dr = 1;
+    this._rpictOpts.ds = 0.25;
+    this._rpictOpts.dt = 0.05;
     // reflections
-    rpictOpts.lr = 7;
-    rpictOpts.lw = 0.05;
+    this._rpictOpts.lr = 7;
+    this._rpictOpts.lw = 0.05;
     // pixel opts
-    rpictOpts.pa = 1.0;
-    rpictOpts.pd = 0.0;
-    rpictOpts.pj = 0.67;
-    rpictOpts.pm = 0.0;
-    rpictOpts.ps = 1.0;
-    rpictOpts.pt = 0.05;
+    this._rpictOpts.pa = 1.0;
+    this._rpictOpts.pd = 0.0;
+    this._rpictOpts.pj = 0.67;
+    this._rpictOpts.pm = 0.0;
+    this._rpictOpts.ps = 1.0;
+    this._rpictOpts.pt = 0.05;
     // specular
-    rpictOpts.sj = 1.0;
-    rpictOpts.st = 0.15;
+    this._rpictOpts.sj = 1.0;
+    this._rpictOpts.st = 0.15;
     // bool options
-    rpictOpts.bv = true;
-    rpictOpts.dv = true;
-    rpictOpts.u = false;
-    rpictOpts.w = true;
+    this._rpictOpts.bv = true;
+    this._rpictOpts.dv = true;
+    this._rpictOpts.u = false;
+    this._rpictOpts.w = true;
 }
 
+RadOptsObject.prototype.setRpictOptions = function () {
+    // calculate and set rpict options from quality settings
+    log.debug("this.setRpictOptions(" + this.Quality + ")");
+    this.setRpictDefaults()
+    if (this.Quality == "low") {
+        this._setRpictOptsLow();
+    } else if (this.Quality == "medium") {
+        this._setRpictOptsMedium();
+    } else if (this.Quality == "high") {
+        this._setRpictOptsHigh();
+    } else {
+        log.error("unexpected value for 'quality': '" + this.Quality + "'")
+        log.error("  --> returning 'medium' options")
+        this.Quality = "medium";
+        this._setRpictOptsMedium();
+    } 
+    // todo: ambient file, overture
+    if (this.ZoneType == "interior") {
+        this._rpictOpts.av = 0.1;
+    } else {
+        this._rpictOpts.av = 10.0;
+    }
+    // apply overrides
+    for (var i=0; i<this._rpictOverrides.length; i++) {
+        var opt = this._rpictOverrides[i][0]; 
+        this._rpictOpts[opt] = this._rpictOverrides[i][1];
+    }
+}
+
+RadOptsObject.prototype._setRpictOptsHigh = function () {
+    this._rpictOpts.ab = this.Indirect + 1;
+    // this._rpictOpts.as = 0;
+    this._rpictOpts.dc = 0.75;
+    this._rpictOpts.dt = 0.05;
+    this._rpictOpts.dr = 3;
+    this._rpictOpts.lr = 12;
+    this._rpictOpts.lw = 0.0005;
+    this._rpictOpts.pt = 0.04;
+    this._rpictOpts.sj = 1.0;
+    this._rpictOpts.st = 0.01;
+    if (this.Detail == "high") {
+        this._rpictOpts.ar = 128 * parseInt(this.ZoneSize);
+        this._rpictOpts.dp = 4096;
+        this._rpictOpts.ps = 3;
+    } else if (this.Detail == "medium") {
+        this._rpictOpts.ar = 32 * parseInt(this.ZoneSize);
+        this._rpictOpts.dp = 2048;
+        this._rpictOpts.ps = 5;
+    } else {
+        this._rpictOpts.ar = 16 * parseInt(this.ZoneSize);
+        this._rpictOpts.dp = 1024;
+        this._rpictOpts.ps = 8;
+    }
+    if (this.Penumbras == true) {
+        this._rpictOpts.dj = 0.65;
+        this._rpictOpts.ds = 0.1;
+        this._rpictOpts.ps = 1;
+    } else {
+        this._rpictOpts.ds = 2;
+    }
+    if (this.Variability == "high") {
+        this._rpictOpts.aa = 0.075;
+        this._rpictOpts.ad = 4096;
+        this._rpictOpts.as = 2048;
+    } else if (this.Variability == "medium") {
+        this._rpictOpts.aa = 0.1;
+        this._rpictOpts.ad = 1536;
+        this._rpictOpts.as = 768;
+    } else {
+        this._rpictOpts.aa = 0.125;
+        this._rpictOpts.ad = 512;
+        this._rpictOpts.as = 64;
+    }
+}
+
+RadOptsObject.prototype._setRpictOptsLow = function () {
+    this._rpictOpts.as = 0;
+    this._rpictOpts.dc = 0.25;
+    this._rpictOpts.dt = 0.2;
+    this._rpictOpts.dr = 0;
+    this._rpictOpts.lr = 6;
+    this._rpictOpts.lw = 0.01;
+    this._rpictOpts.pt = 0.16;
+    this._rpictOpts.sj = 0;
+    this._rpictOpts.st = 0.5;
+    if (this.Detail == "high") {
+        this._rpictOpts.ar = 32 * parseInt(this.ZoneSize);
+        this._rpictOpts.dp = 256;
+        this._rpictOpts.ps = 4;
+    } else if (this.Detail == "medium") {
+        this._rpictOpts.ar = 16 * parseInt(this.ZoneSize);
+        this._rpictOpts.dp = 128;
+        this._rpictOpts.ps = 8;
+    } else {
+        this._rpictOpts.ar = 8 * parseInt(this.ZoneSize);
+        this._rpictOpts.dp = 64;
+        this._rpictOpts.ps = 16;
+    }
+    if (this.Penumbras == true) {
+        this._rpictOpts.ds = 0.4;
+    } else {
+        this._rpictOpts.ds = 0;
+    }
+    if (this.Variability == "high") {
+        this._rpictOpts.aa = 0.2;
+        this._rpictOpts.ad = 1024;
+    } else if (this.Variability == "medium") {
+        this._rpictOpts.aa = 0.25;
+        this._rpictOpts.ad = 512;
+    } else {
+        this._rpictOpts.aa = 0.3;
+        this._rpictOpts.ad = 256;
+    }
+}
+
+RadOptsObject.prototype._setRpictOptsMedium = function () {
+    this._rpictOpts.ab = this.Indirect;
+    // this._rpictOpts.as = 0;
+    this._rpictOpts.dc = 0.5;
+    this._rpictOpts.dt = 0.1;
+    this._rpictOpts.dr = 1;
+    this._rpictOpts.lr = 8;
+    this._rpictOpts.lw = 0.002;
+    this._rpictOpts.pt = 0.08;
+    this._rpictOpts.sj = 0.7;
+    this._rpictOpts.st = 0.1;
+    if (this.Detail == "high") {
+        this._rpictOpts.ar = 64 * parseInt(this.ZoneSize);
+        this._rpictOpts.dp = 1024;
+        this._rpictOpts.ps = 4;
+    } else if (this.Detail == "medium") {
+        this._rpictOpts.ar = 32 * parseInt(this.ZoneSize);
+        this._rpictOpts.dp = 512;
+        this._rpictOpts.ps = 6;
+    } else {
+        this._rpictOpts.ar = 16 * parseInt(this.ZoneSize);
+        this._rpictOpts.dp = 256;
+        this._rpictOpts.ps = 8;
+    }
+    if (this.Penumbras == true) {
+        this._rpictOpts.dj = 0.5;
+        this._rpictOpts.ds = 0.2;
+        this._rpictOpts.ps /= 2;;
+    } else {
+        this._rpictOpts.ds = 0.3;
+    }
+    if (this.Variability == "high") {
+        this._rpictOpts.aa = 0.1;
+        this._rpictOpts.ad = 1024;
+        this._rpictOpts.as = 392;
+    } else if (this.Variability == "medium") {
+        this._rpictOpts.aa = 0.15;
+        this._rpictOpts.ad = 800;
+        this._rpictOpts.as = 128;
+    } else {
+        this._rpictOpts.aa = 0.2;
+        this._rpictOpts.ad = 329;
+        this._rpictOpts.as = 42;
+    }
+}
+
+RadOptsObject.prototype.setRpictOverride = function (opt, newValue) {
+    // update or set override value for 'opt' 
+    if (isInList(rpictBoolOptions, opt) == true) {
+        this._setRpictOverrideBool(opt);
+        newValue = this._rpictOpts[opt]
+    } 
+    var found = false;
+    for (var i=0; i<this._rpictOverrides.length; i++) {
+        if (this._rpictOverrides[i][0] == opt) {
+            this._rpictOverrides[i][1] = newValue;
+            log.info("new value for override: '-" + opt + "' " + newValue);
+            found = true;
+            break;
+        }
+    }
+    if (found == false) {
+        this._rpictOverrides.push([opt, newValue]);
+        log.info("new override: '-" + opt + "': " + newValue);
+    }
+    this._rpictOpts[opt] = newValue;
+    this._rpictOverrides.sort(_sortOverrides);
+}
+
+RadOptsObject.prototype._setRpictOverrideBool = function (opt) {
+    // change this._rpictOpts value to non-default
+    for (var idx=0; idx<rpictBoolOptions.length; idx++) {
+        if (rpictBoolOptions[idx] == opt) {
+            this._rpictOpts[opt] = !rpictBoolDefaults[idx];
+        }
+    }
+}
+
+RadOptsObject.prototype.removeAllOverrides = function () {
+    while (this._rpictOverrides.length > 0) {
+        var opt = this._rpictOverrides[0][0];
+        this.removeRpictOverride(opt);
+    }
+    // reset ImageType to 'normal'
+    this.ImageType = "normal";
+}
+
+RadOptsObject.prototype.removeRpictOverride = function (opt) {
+    if (isInList(rpictBoolOptions, opt) == true) {
+        this._removeRpictOverrideBool(opt);
+    }
+    for (var idx=0; idx<this._rpictOverrides.length; idx++) {
+        if (this._rpictOverrides[idx][0] == opt) {
+            try {
+                var deletedOpt = this._rpictOverrides.splice(idx,1);
+                log.info("override removed for option '" + opt + "'");
+            } catch(e) {
+                log.warn("error removing override for '" + opt + "'(" + e.name + ")");
+            }
+            break;
+        }
+    }
+}
+
+RadOptsObject.prototype._removeRpictOverrideBool = function (opt) {
+    // set default option for bool value 
+    for (var idx=0; idx<rpictBoolOptions.length; idx++) {
+        if (rpictBoolOptions[idx] == opt) {
+            this._rpictOpts[opt] = rpictBoolDefaults[idx];
+        }
+    }
+}
+
+function _sortOverrides(a,b) {
+    if (a[0] < b[0])
+        return -1;
+    if (b[0] < a[0])
+        return 1;
+    return 0;
+}
+
+
+
+// object instances
+var radOpts = new RadOptsObject();
+
 // arrays to look up option types and defaults
-var rpictBoolOptions = ["bv", "dv", "u", "w"];
+var rpictBoolOptions  = ["bv", "dv", "u", "w"];
 var rpictBoolComments = ["backface", "direct", "monte carlo", "warnings"];
 var rpictBoolDefaults = [true, true, false, true];
-
 var rpictIntOptions   = ["ab","ad","ar","as","aw","dp", "dr","lr","ps"];
 
-
-// array to hold active overrides
-var rpictOverrides = new Array();;
 
 
 function isInList(list, element) {
@@ -102,7 +376,6 @@ function isInList(list, element) {
     }
     return false;
 }
-
 
 function getRpictOptionSpan(opt) {
     // return text for option span (checkbox and textfield)
@@ -125,9 +398,9 @@ function getRpictOptionSpan(opt) {
             text += "<input type=\"text\" class=\"rpictOverrideInput\"";
         } 
         text += " id=\"rpictOverrideInput" + opt + "\"";
-        text += " value=\"" + rpictOpts[opt] + "\" onchange=\"validateRpictOverride('" + opt + "')\" />";
+        text += " value=\"" + radOpts.getOption(opt) + "\" onchange=\"validateRpictOverride('" + opt + "')\" />";
     } else {
-        text += rpictOpts[opt]
+        text += radOpts.getOption(opt);
     }
     text += "</span><br/>"
     return text;
@@ -138,7 +411,7 @@ function getRpictOptionSpansBool() {
     var text = "";
     for (var i=0; i<rpictBoolOptions.length; i++) {
         var opt = rpictBoolOptions[i];
-        var bvalue = rpictOpts[opt];
+        var bvalue = radOpts.getOption(opt);
         var style = "rpictOverride";
         var state = "";
         var textvalue = "on";
@@ -172,17 +445,6 @@ function getRpictOptionSpansBool() {
 }
 
 
-function getRpictOverride(opt) {
-    // return value of override or rpictOpts value
-    for (var i=0; i<rpictOverrides.length; i++) {
-        if (rpictOverrides[i][0] == opt) {
-            return rpictOverrides[i][1];
-        }
-    }
-    return rpictOpts[opt];
-}
-
-
 function syncRadOption(id) {
     var suffix = id.slice(-2);
     var other = "";
@@ -204,7 +466,6 @@ function syncRadOption(id) {
         }
     }
 }
-
 
 function onRadOptionChange(id) {
     var opt=id.slice(3);    
@@ -230,7 +491,6 @@ function onRadOptionChange(id) {
     applyRenderOptions();
 }
 
-
 function onRadOptionImageSize(id) {
     var opt=id.slice(3,-2);    
     var newVal=parseInt(document.getElementById(id).value);
@@ -245,33 +505,18 @@ function onRadOptionImageSize(id) {
     }
 }
 
-function removeAllOverrides() {
-    while (rpictOverrides.length > 0) {
-        var opt = rpictOverrides[0][0];
-        removeRpictOverride(opt);
-    }
-    // reset ImageType to 'normal'
-    radOpts.ImageType = "normal";
-    syncRadOption('radImageType_1');
-    syncRadOption('radImageType_2');
-    updateRpictValues();
-}
-
-
-
 function onRpictOverride(opt) {
-    // callback for option checkboxes 
+    // set or remove override when checkbox is ticked
     var id = "rpictOverrideCB" + opt;
     if (document.getElementById(id).checked == true) {
-        setRpictOverride(opt, rpictOpts[opt]);
+        setOverride(opt, radOpts.getOption(opt));
     } else {
-        removeRpictOverride(opt);
+        removeOverride(opt);
     }
     updateRpictValues();
     updateRenderLine();
     applyRenderOptions();
 }
-
 
 function parseRenderLine(suffix) {
     // validate render line input and set overrides
@@ -287,7 +532,13 @@ function parseRenderLine(suffix) {
         }
     }
     if (parts.length == 0) {
-        removeAllOverrides();
+        radOpts.removeAllOverrides();
+        setImageType('normal')
+        updateRpictValues();
+    }
+    var removeIrr = false;
+    if (radOpts.ImageType != "normal") {
+        removeIrr = true;
     }
     i = 0;
     while (i<parts.length) {
@@ -297,10 +548,9 @@ function parseRenderLine(suffix) {
             opt = opt.slice(1);
         }
         if (opt == "i") {
+            removeIrr = false;
             if (radOpts.ImageType == "normal") {
-                radOpts.ImageType = "irridiance";
-                syncRadOption('radImageType_1');
-                syncRadOption('radImageType_2');
+                setImageType('irridiance')
             }
         } else if (isInList(rpictBoolOptions, opt.slice(0,-1) )) {
             parseBoolOverride(opt)
@@ -309,7 +559,7 @@ function parseRenderLine(suffix) {
         } else {
             var value = _validateRpictOverrideValue(opt, parts[i+1]) 
             if (isNaN(value) == false) {
-                setRpictOverride(opt, value);
+                setOverride(opt, value);
                 i += 1;
             } else {
                 log.error("'" + opt + "' argument is not a number: '" + parts[i] + "'");
@@ -330,9 +580,20 @@ function parseRenderLine(suffix) {
         // dont forget to increase counter!
         i += 1;
     }
+    // if '-i' was removed reset image type
+    if (removeIrr == true) {
+        setImageType('normal')
+    }
     _updateRpictOptionDisplay();
     updateRenderLine();
     applyRenderOptions();
+}
+
+function setImageType(imgType) {
+    // set new image type and sync select boxes
+    radOpts.ImageType = imgType;
+    syncRadOption('radImageType_1');
+    syncRadOption('radImageType_2');
 }
 
 
@@ -355,48 +616,23 @@ function parseBoolOverride(txt) {
         var flag = false;
     }
     if (flag == rpictBoolDefaults[idx]) {
-        removeRpictOverride(opt);   
+        removeOverride(opt);   
     } else {
-        setRpictOverride(opt);   
+        setOverride(opt);   
     }
 }
 
-
-function removeRpictOverride(opt) {
-    if (isInList(rpictBoolOptions, opt) == true) {
-        removeRpictOverrideBool(opt);
-    }
-    for (var idx=0; idx<rpictOverrides.length; idx++) {
-        if (rpictOverrides[idx][0] == opt) {
-            try {
-                var deletedOpt = rpictOverrides.splice(idx,1);
-                log.info("override removed for option '" + opt + "'");
-            } catch(e) {
-                log.warn("error removing override for '" + opt + "'(" + e.name + ")");
-            }
-            break;
-        }
-    }
+function removeOverride(opt) {
+    // remove override from radOpts and clear checkbox
+    radOpts.removeRpictOverride(opt);   
     try {
         document.getElementById("rpictOverrideCB" + opt).checked = false;
     } catch(e) {
         log.error("check box for '-" + opt + "' not found");
     }
+
 }
-
-
-function removeRpictOverrideBool(opt) {
-    // set default option for bool value 
-    for (var idx=0; idx<rpictBoolOptions.length; idx++) {
-        if (rpictBoolOptions[idx] == opt) {
-            rpictOpts[opt] = rpictBoolDefaults[idx];
-            var id = "rpictOverrideCB" + opt;
-            document.getElementById(id).checked = false;
-        }
-    }
-}
-
-
+    
 function rpictOverrideSelected(opt) {
     // return true if override for rpict opt id is set
     var selected = false;
@@ -410,166 +646,6 @@ function rpictOverrideSelected(opt) {
     return selected;
 }
 
-
-function _setRpictOptions() {
-    // calculate and set rpict options from quality settings
-    log.debug("_setRpictOptions(" + radOpts.Quality + ")");
-    setRpictDefaults()
-    if (radOpts.Quality == "low") {
-        _setRpictOptsLow();
-    } else if (radOpts.Quality == "medium") {
-        _setRpictOptsMedium();
-    } else if (radOpts.Quality == "high") {
-        _setRpictOptsHigh();
-    } else {
-        log.error("unexpected value for 'quality': '" + radOpts.Quality + "'")
-        log.error("  --> returning 'medium' options")
-        radOpts.Quality = "medium";
-        _setRpictOptsMedium();
-    } 
-    // todo: ambient file, overture
-    if (radOpts.ZoneType == "interior") {
-        rpictOpts.av = 0.1;
-    } else {
-        rpictOpts.av = 10.0;
-    }
-}
-
-
-function _setRpictOptsHigh() {
-    rpictOpts.ab = radOpts.Indirect + 1;
-    // rpictOpts.as = 0;
-    rpictOpts.dc = 0.75;
-    rpictOpts.dt = 0.05;
-    rpictOpts.dr = 3;
-    rpictOpts.lr = 12;
-    rpictOpts.lw = 0.0005;
-    rpictOpts.pt = 0.04;
-    rpictOpts.sj = 1.0;
-    rpictOpts.st = 0.01;
-    if (radOpts.Detail == "high") {
-        rpictOpts.ar = 128 * parseInt(radOpts.ZoneSize);
-        rpictOpts.dp = 4096;
-        rpictOpts.ps = 3;
-    } else if (radOpts.Detail == "medium") {
-        rpictOpts.ar = 32 * parseInt(radOpts.ZoneSize);
-        rpictOpts.dp = 2048;
-        rpictOpts.ps = 5;
-    } else {
-        rpictOpts.ar = 16 * parseInt(radOpts.ZoneSize);
-        rpictOpts.dp = 1024;
-        rpictOpts.ps = 8;
-    }
-    if (radOpts.Penumbras == true) {
-        rpictOpts.dj = 0.65;
-        rpictOpts.ds = 0.1;
-        rpictOpts.ps = 1;
-    } else {
-        rpictOpts.ds = 2;
-    }
-    if (radOpts.Variability == "high") {
-        rpictOpts.aa = 0.075;
-        rpictOpts.ad = 4096;
-        rpictOpts.as = 2048;
-    } else if (radOpts.Variability == "medium") {
-        rpictOpts.aa = 0.1;
-        rpictOpts.ad = 1536;
-        rpictOpts.as = 768;
-    } else {
-        rpictOpts.aa = 0.125;
-        rpictOpts.ad = 512;
-        rpictOpts.as = 64;
-    }
-}
-
-
-function _setRpictOptsLow() {
-    rpictOpts.as = 0;
-    rpictOpts.dc = 0.25;
-    rpictOpts.dt = 0.2;
-    rpictOpts.dr = 0;
-    rpictOpts.lr = 6;
-    rpictOpts.lw = 0.01;
-    rpictOpts.pt = 0.16;
-    rpictOpts.sj = 0;
-    rpictOpts.st = 0.5;
-    if (radOpts.Detail == "high") {
-        rpictOpts.ar = 32 * parseInt(radOpts.ZoneSize);
-        rpictOpts.dp = 256;
-        rpictOpts.ps = 4;
-    } else if (radOpts.Detail == "medium") {
-        rpictOpts.ar = 16 * parseInt(radOpts.ZoneSize);
-        rpictOpts.dp = 128;
-        rpictOpts.ps = 8;
-    } else {
-        rpictOpts.ar = 8 * parseInt(radOpts.ZoneSize);
-        rpictOpts.dp = 64;
-        rpictOpts.ps = 16;
-    }
-    if (radOpts.Penumbras == true) {
-        rpictOpts.ds = 0.4;
-    } else {
-        rpictOpts.ds = 0;
-    }
-    if (radOpts.Variability == "high") {
-        rpictOpts.aa = 0.2;
-        rpictOpts.ad = 1024;
-    } else if (radOpts.Variability == "medium") {
-        rpictOpts.aa = 0.25;
-        rpictOpts.ad = 512;
-    } else {
-        rpictOpts.aa = 0.3;
-        rpictOpts.ad = 256;
-    }
-}
-
-function _setRpictOptsMedium() {
-    rpictOpts.ab = radOpts.Indirect;
-    // rpictOpts.as = 0;
-    rpictOpts.dc = 0.5;
-    rpictOpts.dt = 0.1;
-    rpictOpts.dr = 1;
-    rpictOpts.lr = 8;
-    rpictOpts.lw = 0.002;
-    rpictOpts.pt = 0.08;
-    rpictOpts.sj = 0.7;
-    rpictOpts.st = 0.1;
-    if (radOpts.Detail == "high") {
-        rpictOpts.ar = 64 * parseInt(radOpts.ZoneSize);
-        rpictOpts.dp = 1024;
-        rpictOpts.ps = 4;
-    } else if (radOpts.Detail == "medium") {
-        rpictOpts.ar = 32 * parseInt(radOpts.ZoneSize);
-        rpictOpts.dp = 512;
-        rpictOpts.ps = 6;
-    } else {
-        rpictOpts.ar = 16 * parseInt(radOpts.ZoneSize);
-        rpictOpts.dp = 256;
-        rpictOpts.ps = 8;
-    }
-    if (radOpts.Penumbras == true) {
-        rpictOpts.dj = 0.5;
-        rpictOpts.ds = 0.2;
-        rpictOpts.ps /= 2;;
-    } else {
-        rpictOpts.ds = 0.3;
-    }
-    if (radOpts.Variability == "high") {
-        rpictOpts.aa = 0.1;
-        rpictOpts.ad = 1024;
-        rpictOpts.as = 392;
-    } else if (radOpts.Variability == "medium") {
-        rpictOpts.aa = 0.15;
-        rpictOpts.ad = 800;
-        rpictOpts.as = 128;
-    } else {
-        rpictOpts.aa = 0.2;
-        rpictOpts.ad = 329;
-        rpictOpts.as = 42;
-    }
-}
-
-
 function selectImageType(id) {
     // set new value and sync radImageType select element
     var opt = id.slice(3,-2)
@@ -580,95 +656,42 @@ function selectImageType(id) {
     applyRenderOptions();
 }
 
-
-function setRpictOverride(opt, newValue) {
-    // update or set override value for 'opt' 
-    if (isInList(rpictBoolOptions, opt) == true) {
-        setRpictOverrideBool(opt);
-        newValue = rpictOpts[opt]
-    } 
-    var found = false;
-    for (var i=0; i<rpictOverrides.length; i++) {
-        if (rpictOverrides[i][0] == opt) {
-            rpictOverrides[i][1] = newValue;
-            log.info("new value for override: '-" + opt + "' " + newValue);
-            found = true;
-            break;
-        }
-    }
-    if (found == false) {
-        rpictOverrides.push([opt, newValue]);
-        log.info("new override: '-" + opt + "': " + newValue);
-    }
-    rpictOpts[opt] = newValue;
+function setOverride(opt, newValue) {
+    // add override value and set checkbox.checked = true
+    radOpts.setRpictOverride(opt, newValue);
     try {
         document.getElementById("rpictOverrideCB" + opt).checked = true;
     } catch(e) {
         log.error("check box for '-" + opt + "' not found");
     }
-    rpictOverrides.sort(_sortOverrides);
 }
-
-function _sortOverrides(a,b) {
-    if (a[0] < b[0])
-        return -1;
-    if (b[0] < a[0])
-        return 1;
-    return 0;
-}
-
-
-function setRpictOverrideBool(opt) {
-    // change rpictOpts value to non-default
-    for (var idx=0; idx<rpictBoolOptions.length; idx++) {
-        if (rpictBoolOptions[idx] == opt) {
-            rpictOpts[opt] = !rpictBoolDefaults[idx];
-            var id = "rpictOverrideCB" + opt;
-            document.getElementById(id).checked = true;
-        }
-    }
-}
-
 
 function updateRenderLine() {
-    text = ""
-    // add -i switch
-    if (radOpts.ImageType != "normal") {
-        text += "-i"
-    }
-    for (var i=0; i<rpictOverrides.length; i++) {
-        var opt = rpictOverrides[i][0];
-        if (isInList(rpictBoolOptions, opt) == true) {
-            var sign = "+";
-            if (rpictOverrides[i][1] == false) {
-                sign = "-";
-            }
-            text += " -" + opt + sign;
-        } else {
-            text += " -" + opt + " " + rpictOverrides[i][1];
-        }
-    }
+    var text = radOpts.getRenderLine();
     document.getElementById("radRenderLine_1").innerHTML = text;
     document.getElementById("radRenderLine_2").value = text;
-    radOpts.render = text;
 }
 
-
-
 function _updateRpictOptionDisplay() {
-    log.debug("_updateRpictOptionDisplay()");
-    var options = [                      "ambient", "aa", "ab", "ad", "ar", "as", "aw", "amb. value", "av",
-                   "rpictOptionsMiddle", "direct",  "dc", "dj", "dp", "dr", "ds", "dt", "limits",     "lr", "lw",
-                   "rpictOptionsMiddle", "pixel",   "pa", "pd", "pj", "pm", "ps", "pt", "specular",   "sj", "st"]
+    // return HTML code for rpict option overrides
+    //log.debug("_updateRpictOptionDisplay()");
+    var options = ["ambient",    "aa", "ab", "ad", "ar", "as", "aw",
+                   "amb. value", "av",
+                   "NEWCOL", 
+                   "direct",     "dc", "dj", "dp", "dr", "ds", "dt",
+                   "limits",     "lr", "lw",
+                   "NEWCOL",
+                   "pixel",      "pa", "pd", "pj", "pm", "ps", "pt",
+                   "specular",   "sj", "st"]
 
     text = "<div id=\"rpictOptionsLeft\">"
     for (var i=0; i<options.length; i++) {
         var opt = options[i];
         if (opt == "") {
             text += "&nbsp;<br />";
-        } else if (opt[0] == "r") {
+        } else if (opt == "NEWCOL") {
             text += "</div>";
-            text += '<div id="' + opt + '">';
+            text += '<div id="rpictOptionsMiddle">';
         } else if (opt.length > 2) {
             text += "<span class=\"rpictOverrideHeader\">" + opt + "</span><br/>";
         } else {
@@ -687,18 +710,11 @@ function _updateRpictOptionDisplay() {
     $('.rpictOverrideInputIntN').numeric({allow:"-"});
 }
 
-
 function updateRpictValues() {
     log.debug("updateRpictValues()");
-    _setRpictOptions()
-    // apply values from overrides
-    for (var i=0; i<rpictOverrides.length; i++) {
-        var opt = rpictOverrides[i][0]; 
-        rpictOpts[opt] = rpictOverrides[i][1];
-    }
+    radOpts.setRpictOptions()
     _updateRpictOptionDisplay();
 }
-
 
 function validateRpictOverride(opt) {
     // validate rpict arg against int or float;
@@ -708,15 +724,15 @@ function validateRpictOverride(opt) {
     // check if return value is a valid number and apply
     if (isNaN(newValue)) {
         // NaN: revert to old value
-        document.getElementById(id).value = getRpictOverride(opt);
+        document.getElementById(id).value = radOpts.getRpictOverride(opt);
+        return
     } else {
         document.getElementById(id).value = newValue;
-        setRpictOverride(opt, newValue);
-        updateRenderLine();
-        applyRenderOptions();
+        setOverride(opt, newValue);
     }
+    updateRenderLine();
+    applyRenderOptions();
 }
-
 
 function _validateRpictOverrideValue(opt, value) {
     // find correct validator: parseInt() or parseFloat()
