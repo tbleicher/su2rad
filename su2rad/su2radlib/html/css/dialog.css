@@ -258,11 +258,6 @@ input.file {
     width: 200px;
     /*clear: both;*/
 }
-.optionLabel {
-    font-weight: bold;
-    float: left;
-    width: 75px;
-}
 .skyOptionsLeft {
     padding: 0;
     margin: 0;
@@ -392,6 +387,7 @@ input.file {
 
 .rpictCB {
     /* margie-left: 5px; */
+    float: left;
 }
 
 #rpictOptionsDisplay * div {
@@ -399,10 +395,11 @@ input.file {
 }
 
 .rpictOverride, .rpictOverrideSelected {
-    font-size: 12px;
-    font-family: "Monaco", "Courier New", Courier, monospace;
+    /*font-size: 12px; */
+    /* font-family: "Monaco", "Courier New", Courier, monospace; */
     height: 20px;
     padding-left: 0.5em;
+    width: 100px;
 }
 .rpictOverrideSelected {
     font-weight: bold;
@@ -420,13 +417,13 @@ input.file {
     color: #27537a; /* blue-grey */
 }
 
-#skyGeneratorOptions {
+.skyGeneratorOptions {
     padding: 0;
     margin: 0;
     float: left;
-    width: 320px;
+    width: 375px;
 }
-#skyGeneratorOptions div.optionsColumn {
+.skyGeneratorOptions div.optionsColumn {
     width: 100px;
     /* border: solid;
     border-width: 1px;
@@ -434,7 +431,7 @@ input.file {
     margin: 2px 2px 2px 2px;
     padding: 2px 0px 2px 0px; */
 }
-#skyGeneratorOptions * div.optionsRow {
+.skyGeneratorOptions * div.optionsRow {
     width: 80px;
 }
 
@@ -465,16 +462,15 @@ input.file {
 }
 
 .gridLabel{
+    font-weight: bold;
     float: left;
-    width: 65px;
+    width: 75px;
     height: 20px;
     min-height: 20px;
     padding: 0;
     margin: 0;
     border-color: yellow;
-    font-weight: bold;
 }
-
 .gridRow {
     width: 580px;
     height: 20px;
@@ -503,6 +499,6 @@ input.file {
 }
 
 #viewsSelection div.gridRow {
-    width: 520px;
-    margin-left: 65px;
+    width: 510px;
+    margin-left: 75px;
 }
