@@ -71,15 +71,17 @@ ExportSettingsObject.prototype.toString = function() {
 var exportSettings = new ExportSettingsObject();
 
 
-
 function initPage() {
-    log.toggle();
-    //window.statusbar.visible = true;
+    //log.toggle();
     window.resizeTo(640,800);
-    log.info("initPage() end");
+    if (SKETCHUP == false) {
+        // fill dialog with test data
+        getExportOptions();
+        getViewsList();
+        getShadowInfo();
+    }
 }
-
-
+    
 function disableGlobalOption() {
     // remove 'by group' option from selection
     select = document.getElementById('exportMode'); 
@@ -92,7 +94,6 @@ function disableGlobalOption() {
     document.getElementById("global_coords_display").style.display='none';
 }
 
-
 function enableGlobalOption() {
     // make global_coords check box visible
     document.getElementById("global_coords_display").style.display='';
@@ -103,12 +104,12 @@ function toggleClimateTab() {
     if (document.getElementById("climate_checkbox").checked == true) {
         $('#tab-container').enableTab(5);
         document.getElementById("edit_climate").disabled=false;
-        document.getElementById("climate_options").style.display='';
+        document.getElementById("climateSummary").style.display='';
     }
     else {
         $('#tab-container').disableTab(5);
         document.getElementById("edit_climate").disabled=true;
-        document.getElementById("climate_options").style.display='none';
+        document.getElementById("climateSummary").style.display='none';
     }
 }
 
@@ -282,6 +283,18 @@ function _getViewTD(view) {
     text += '/> ' + view.name + '</td>';
     return text;
 }
+function _getViewDiv(view) {
+    // return <td> for view line (lable and checkbox)
+    var text = '<div class="gridCell">';
+    var id = replaceChars(view.name);
+    text += '<input id="' + id + '"' 
+    text += 'type="checkbox" onchange="onViewSelectionChange(\'' + view.name + '\')"'
+    if (view.current == "true" || view.selected == "true") {
+        text += ' checked'
+    }
+    text += '/> ' + view.name + '</div>';
+    return text;
+}
 
 function setViewsListJSON(msg) {
     // eval JSON views string from SketchUp
@@ -293,28 +306,32 @@ function setViewsListJSON(msg) {
         log.error(e.name);
         var viewsList = new Array();
     }
-    var text = '<table><tr><td class="column_lable"></td>';
+    //var text = '<table><tr><td class="column_lable"></td>';
+    var text = '<div class="gridRow">';
     var col = 0;
     for(var i=0; i<viewsList.length; i++) {
         var view = viewsList[i];
         if(view != null) {
             log.info("view = '" + view.name + "'");
-            text += _getViewTD(view);
+            //text += _getViewTD(view);
+            text += _getViewDiv(view);
             col += 1;
         }
         // reset column counter except for last row
         if (col == 3 && i != (viewsList.length-1)) {
-            text += '</tr><tr><td class="column_lable"></td>';
+            //text += '</tr><tr><td class="column_lable"></td>';
+            text += '</div><div class="gridRow">';
             col = 0;
         }
     }
     // fill row with empty cells
-    if (col != 0) {
-        for(var i=0; i<(3-col); i++) {
-            text += "<td></td>";
-        }
-    }
-    text += "</tr></table>";
+    //if (col != 0) {
+    //    for(var i=0; i<(3-col); i++) {
+    //        text += "<td></td>";
+    //    }
+    //}
+    //text += "</tr></table>";
+    text += "</div>";
     document.getElementById("viewsSelection").innerHTML = text;
 }
 

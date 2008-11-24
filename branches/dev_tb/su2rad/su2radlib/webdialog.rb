@@ -176,6 +176,11 @@ class ExportDialogWeb
         @selectedViews = {}
         @exportOptions = ExportOptions.new()
         @renderOptions = RenderOptions.new()
+        
+        @sinfo_unused = ['DisplayNorth', 'EdgesCastShadows', 'Light', 'Dark', 
+                         'SunRise', 'SunRise_time_t',
+                         'SunSet', 'SunSet_time_t',
+                         'DisplayOnAllFaces', 'DisplayOnGroundPlane']
     end
 
     def _initExportOptions(dlg, p='')
@@ -236,6 +241,7 @@ class ExportDialogWeb
         sinfo = Sketchup.active_model.shadow_info
         dict = {}
         sinfo.each { |k,v| dict[k] = v }
+        @sinfo_unused.each { |k| dict.delete(k) }
         json = getJSONDictionary(dict)
         d.execute_script( "setShadowInfoJSON('%s')" % json )
         printf "done\n"
