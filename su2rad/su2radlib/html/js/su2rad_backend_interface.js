@@ -29,7 +29,7 @@ function applyModelLocation(params) {
 }
 
 
-function getExportOptionsTest() {
+function getExportOptions() {
     // collect and set export option values
     if (SKETCHUP == true) {
         log.info("getting shadowInfo from SketchUp ...");
@@ -55,15 +55,14 @@ function getShadowInfo() {
         // setShadowInfoJSON() called by Sketchup
     } else {
         log.debug("getShadowInfo(): 'skp:' not available");
-        msg = getShadowInfoTest();
+        msg = _getShadowInfoTest();
         setShadowInfoJSON(msg);
     }
 }
 
 function _getShadowInfoTest() {
     // return dummy JSON string of SketchUp.shadow_info
-    var msg =     "{\"name\":\"shadowinfo\"#COMMA#\"attributes\":[";
-    msg +=        "{\"name\":\"City\"#COMMA#\"value\":\"foo_Boulder (CO)\"}";
+    var msg =    "[{\"name\":\"City\"#COMMA#\"value\":\"foo_Boulder (CO)\"}";
     msg += "#COMMA#{\"name\":\"Country\"#COMMA#\"value\":\"foo_USA\"}";
     msg += "#COMMA#{\"name\":\"Latitude\"#COMMA#\"value\":\"40.017\"}";
     msg += "#COMMA#{\"name\":\"Longitude\"#COMMA#\"value\":\"-105.283\"}";
@@ -71,8 +70,9 @@ function _getShadowInfoTest() {
     msg += "#COMMA#{\"name\":\"NorthAngle\"#COMMA#\"value\":\"0.0\"}";
     msg += "#COMMA#{\"name\":\"DaylightSavings\"#COMMA#\"value\":\"false\"}";
     msg += "#COMMA#{\"name\":\"DisplayShadows\"#COMMA#\"value\":\"false\"}";
-    msg += "#COMMA#{\"name\":\"UseSunForAllShading\"#COMMA#\"value\":\"false\"}";
-    msg += "#COMMA#]}";
+    msg += "#COMMA#{\"name\":\"ShadowTime\"#COMMA#\"value\":\"Fri Nov 08 13:30:00 +0000 2002\"}";
+    msg += "#COMMA#{\"name\":\"ShadowTime_time_t\"#COMMA#\"value\":\"1036762200\"}";
+    msg += "#COMMA#{\"name\":\"UseSunForAllShading\"#COMMA#\"value\":\"false\"}]";
     return msg;
 }
 

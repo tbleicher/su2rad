@@ -386,7 +386,7 @@ function getRpictOptionSpan(opt) {
         style = "rpictOverrideSelected";
         state = "checked";
     }
-    var text = "<span class=\"" + style + "\">";
+    var text = "<div class=\"" + style + "\">";
     text += "<input type=\"checkbox\" class=\"rpictCB\" id=\"rpictOverrideCB" + opt + "\"";
     text += " onchange=\"onRpictOverride('" + opt + "')\" " + state + "/> -" + opt + ": ";
     if (selected == true) {
@@ -402,7 +402,7 @@ function getRpictOptionSpan(opt) {
     } else {
         text += radOpts.getOption(opt);
     }
-    text += "</span><br/>"
+    text += "</div>"
     return text;
 }
 
@@ -433,13 +433,13 @@ function getRpictOptionSpansBool() {
             textvalue = "off";
             flagvalue = "-";
         }
-        text += "<span class=\"" + style + "\">";
+        text += "<div class=\"" + style + "\">";
         text += "<input type=\"checkbox\" class=\"rpictCB\"";
         text += " id=\"rpictOverrideCB" + opt + "\"";
         text += " onchange=\"onRpictOverride('" + opt + "')\" " + state + "/> ";
         text += "-" + opt + flagvalue;
         text += ": " + rpictBoolComments[i] + " " + textvalue;
-        text += "</span><br/>";
+        text += "</div>";
     }
     return text;
 }
@@ -693,13 +693,15 @@ function _updateRpictOptionDisplay() {
             text += "</div>";
             text += '<div id="rpictOptionsMiddle">';
         } else if (opt.length > 2) {
-            text += "<span class=\"rpictOverrideHeader\">" + opt + "</span><br/>";
+            //text += "<span class=\"rpictOverrideHeader\">" + opt + "</span><br/>";
+            text += "<div class=\"rpictOverrideHeader\">" + opt + "</div>";
         } else {
             text += getRpictOptionSpan(opt)
         }
     }
     text += "</div><div id=\"rpictOptionsRight\">";
-    text += "<span class=\"rpictOverrideHeader\">bool options</span><br/>";
+    //text += "<span class=\"rpictOverrideHeader\">bool options</span><br/>";
+    text += "<div class=\"rpictOverrideHeader\">bool options</div>";
     // add bool options
     text += getRpictOptionSpansBool();
     text += "</div>";

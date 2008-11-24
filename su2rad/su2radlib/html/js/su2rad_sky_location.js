@@ -8,6 +8,8 @@ function ModelLocationObject() {
     this.Longitude = 0.0031;
     this.changed = false;
     this.logging = true;
+    this.ShadowTime = '';
+    this.ShadowTime_time_t = 0;
 }
 
 ModelLocationObject.prototype.setValue = function (opt,val) {
@@ -100,6 +102,87 @@ SkyOptionsObject.prototype.toString = function() {
 var skyOptions = new SkyOptionsObject();
 
 
+
+function SkyDateTimeObject() {
+    this.skyDateMonth = 3;
+    this.skyDateDay = 21;
+    this.skyTimeHour = 12;
+    this.skyTimeMinute = 00;
+    this._maxDays = [31,28,31,30,31,30,31,31,30,31,30,31];
+}
+
+SkyDateTimeObject.prototype.getValueString = function (id) {
+    var s = this[id].toString();
+    if (s.length == 1) {
+        s = '0' + s;
+    }
+    return s;
+}
+
+SkyDateTimeObject.prototype.set = function (id,val) {
+    if (this._checkLimit(id,val) == false) {
+        return false;
+    }
+    this[id] = val;
+    if (id == 'skyDateMonth') {
+        var maxdays = this._maxDays[val-1];
+        if (this.skyDateDay > maxdays) {
+            this.skyDateDay = maxdays;
+        }
+    } 
+}
+
+SkyDateTimeObject.prototype.setFromShadowTime = function (stime) {
+    //XXX
+    var text = "stime='" + stime + "'<br/> ";
+    var msec = Date.parse(stime);
+    var sdate = new Date(msec);
+    text += "msec=" + msec + "<br/>";
+    text += "sdate=" + sdate + "<br/>";
+    text += "GMTstring=" + sdate.toGMTString() + "<br/>";
+    text += "UTCstring=" + sdate.toUTCString() + "<br/>";
+    
+    this.skyDateMonth = sdate.getUTCMonth()+1;
+    this.skyDateDay = sdate.getUTCDate();
+    this.skyTimeHour = sdate.getUTCHours();
+    this.skyTimeMinute = sdate.getUTCMinutes();
+    
+    text += "gensky=" + this.toGenskyString() + "<br/>";
+    setNearByCities(text);
+}
+
+SkyDateTimeObject.prototype._checkLimit = function (id,val) {
+    // check value of input field against allowed limits
+    if (id.indexOf('Date') > 0 && val == 0) {
+        return false;
+    }
+    var max = 12;
+    if (id == 'skyDateMonth') {
+        max = 12;
+    } else if (id == 'skyDateDay') {
+        max = this._maxDays[this.skyDateMonth-1];
+    } else if (id == 'skyTimeHour') {
+        max = 23;
+    } else if (id == 'skyTimeMinute') {
+        max = 59;
+    }
+    // return true or false
+    if (max >= val) {
+        return true;
+    } else {
+        return false;
+    }
+}
+
+SkyDateTimeObject.prototype.toGenskyString = function () {
+    var text = this.skyDateMonth + " " + this.skyDateDay + " ";
+    text += this.skyTimeHour + ":" + this.skyTimeMinute;
+    return text;
+}
+
+var skyDateTime = new SkyDateTimeObject();
+
+
 function calculateTZOffset(long) {
     log.debug("calculateTZOffset(" + long + ")");
     var west = false;
@@ -127,6 +210,25 @@ function calculateTZOffset(long) {
     return offset;
 }
 
+function onSkyDateTimeChange(id) {
+    var val = document.getElementById(id).value;
+    if (val.indexOf('0') == 0 && val.length == 2) {
+        val = val.substring(1,2);
+    }
+    val = parseInt(val);
+    skyDateTime.set(id, val);
+    document.getElementById(id).value = skyDateTime.getValueString(id);
+    if (id == 'skyDateMonth') {
+        document.getElementById('skyDateDay').value = skyDateTime.getValueString('skyDateDay');
+    }
+}
+
+function updateSkyDateTimeDisplay() {
+    document.getElementById('skyDateMonth').value = skyDateTime.getValueString('skyDateMonth');
+    document.getElementById('skyDateDay').value = skyDateTime.getValueString('skyDateDay');
+    document.getElementById('skyTimeHour').value = skyDateTime.getValueString('skyTimeHour');
+    document.getElementById('skyTimeMinute').value = skyDateTime.getValueString('skyTimeMinute');
+}
 
 function checkValueLatLong(id, minmax) {
     var vNum = document.getElementById(id).value;
@@ -432,6 +534,8 @@ function setShadowInfoJSON(msg) {
     modelLocation.logging = true;
     setTZHighlight(false);
     setNearByCities(text);
+    skyDateTime.setFromShadowTime(modelLocation.ShadowTime);
+    updateSkyDateTimeDisplay();
     updateSkyFormValues();
     googleMapInitialize(modelLocation.Latitude, modelLocation.Longitude);
 }

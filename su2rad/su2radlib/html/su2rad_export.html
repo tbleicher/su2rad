@@ -9,7 +9,9 @@
         <title>Radiance Export</title>
         
         <!-- google map and jsr_class for geonames.org requests -->
+        <!-- XXX
         <script type="text/javascript" src="http://maps.google.com/maps?file=api&amp;v=2&amp;key=ABQIAAAAVkCvvMxWS6sy1KKSLvN3URTDis0fJxnS-wzgwKhlyWVJxXLRhxQq9kdL_d2nO8XPOQO2xIrAWCmccw"></script>
+        XXX -->
         <script type="text/javascript" src="./js/jsr_class.js"></script>
         
         <!-- jquery and plugins -->
@@ -68,57 +70,53 @@
                 <h3>
                     Export Options
                 </h3>
-                <table style="width: 375px;">
-                    <tr>
-                        <td class="column_lable">path:</td>
-                        <td colspan="2">
+                <div id="exportOptions">
+                    <div class="gridRow">
+                        <div class="gridLabel">path:</div>
+                        <div class="gridCell" style="width:305px;">
                             <div class="fileinputs">
                                 <input type="file" class="file" id="fileselection" onchange="onSelectExportPath()" />
                                 <div class="fakefile">
                                     <img src="./css/24-zoom.png" />
                                 </div>
                             </div>
-                            <input type="text" style="width:275px;" name="scenePath" id="scenePath" value="-"/>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td class="column_lable">scene:</td>
-                        <td colspan="2">
+                            <input type="text" style="width:275px;" name="scenePath" id="scenePath" value="-p-"/>
+                        </div>
+                    </div>
+                    <div class="gridRow">
+                        <div class="gridLabel">scene:</div>
+                        <div class="gridCell" style="width:305px;">
                             <input type="text" class="fileNameInput" style="width:275px;" name="sceneName" id="sceneName" value="-"/>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td colspan="3" style="height: 10px;"></td>
-                    </tr>
-                    <tr>
-                        <td class="column_lable">mode:</td>
-                        <td class="column">
+                        </div>
+                    </div>
+                    <div class="gridRow" style="margin-top:5px;">
+                        <div class="gridLabel">mode:</div>
+                        <div class="gridCell">
                             <select id="exportMode" name="exportMode" onchange="onExportModeChange()">
                                 <option value="by_group" selected>by group</option>
                                 <option value="by_layer">by layer</option>
                                 <option value="by_color">by color</option>
                             </select>
-                        </td>
-                        <td colspan="2">
-                            <input id="triangulate" type="checkbox" class="cblow"
+                        </div>
+                        <div class="gridCell">
+                            <input id="triangulate" type="checkbox"
                             onchange="onToggleOption('triangulate')"> triangulate<br/>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td></td>
-                        <td>
+                        </div>
+                    </div>
+                    <div class="gridRow">
+                        <div class="gridLabel"></div>
+                        <div class="gridCell">
                             <span id="global_coords_display">
                                 <input id="global_coords" type="checkbox" 
                                 onchange="onToggleOption('global_coords')"> global coords
                             </span>
-                        </td>
-                        <td>
-                            <input id="textures" type="checkbox" class="cblow"
+                        </div>
+                        <div class="gridCell">
+                            <input id="textures" type="checkbox"
                             onchange="onToggleOption('textures')"> textures
-                        </td>
-                    </tr>
-                </table>
-                 
+                        </div>
+                    </div>
+                </div>
                     
                 <!-- ###   VIEWS   ### --> 
                 <h3>Views</h3>
@@ -130,90 +128,87 @@
                     <input class="floatright" type="button" value="edit" onclick="switch_to_tab(2)">
                     Render Options
                 </h3>
-                <table>
-                    <tr>
-                        <td class="column_lable">quality:</td>
-                        <td class="column">
+                <div id="renderSummary">
+                    <div class="gridRow">
+                        <div class="gridLabel">quality:</div>
+                        <div class="gridCell">
                             <select id="radQuality_1" name="radQuality_1" onchange="onRadOptionChange('radQuality_1')">
                                 <option value="high">high</option>
                                 <option value="medium" selected>medium</option>
                                 <option value="low">low</option>
                             </select>
-                        </td>
-                        <td class="column_lable">img x:</td>
-                        <td>
+                        </div>
+                        <div class="gridLabel">img x:</div>
+                        <div class="gridCell">
                             <input type="text" class="numeric_int" size="5" name="radImageSizeX_1" id="radImageSizeX_1" value="512" onchange="onRadOptionImageSize('radImageSizeX_1')" />
-                        </td>
-                    </tr>
-                    <tr>
-                        <td class="column_lable">detail:</td>
-                        <td>
+                        </div>
+                    </div>
+                    <div class="gridRow">
+                        <div class="gridLabel">detail:</div>
+                        <div class="gridCell">
                             <select id="radDetail_1" name="radDetail_1" onchange="onRadOptionChange('radDetail_1')">
                                 <option value="high">high</option>
                                 <option value="medium" selected>medium</option>
                                 <option value="low">low</option>
                             </select>
-                        </td>
-                        <td class="column_lable">img y:</td>
-                        <td>
+                        </div>
+                        <div class="gridLabel">img y:</div>
+                        <div class="gridCell">
                             <input type="text" class="numeric_int" size="5" name="radImageSizeY_1" id="radImageSizeY_1" value="512" onchange="onRadOptionImageSize('radImageSizeY_1')" />
-                        </td>
-                    </tr>
-                    <tr>
-                        <td class="column_lable">varia:</td>
-                        <td>
+                        </div>
+                    </div>
+                    <div class="gridRow">
+                        <div class="gridLabel">varia:</div>
+                        <div class="gridCell">
                             <select id="radVariability_1" name="radVariability_1" onchange="onRadOptionChange('radVariability_1')">
                                 <option value="high" selected>high</option>
                                 <option value="medium">medium</option>
                                 <option value="low">low</option>
                             </select>
-                        </td>
-                        <td class="column_lable">type:</td>
-                        <td>
+                        </div>
+                        <div class="gridLabel">type:</div>
+                        <div class="gridCell">
                             <select id="radImageType_1" name="radImageType_1" style="width: 90px;" onchange="selectImageType('radImageType_1')">
                                 <option value="normal" selected>normal</option>
                                 <option value="irridiance">irridiance</option>
                                 <option value="falsecolor">falsecolor</option>
                             </select>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td colspan="4" style="height: 5px;"></td>
-                    </tr>    
-                    <tr>
-                        <td class="column_lable">render:</td>
-                        <td colspan="3">
+                        </div>
+                    </div>
+                    <div class="gridRow" style="margin-top:5px;">
+                        <div class="gridLabel">render:</div>
+                        <div class="gridCell" style="width:400px">
                             <span class="commandLine" id="radRenderLine_1"></span>
                             <!-- <input type="text" class="column2" name="radRenderLine_1" id="radRenderLine_1" value="" onchnge="parseRenderLine('_1')"/> -->
-                        </td>
-                    </tr>
-                </table>
+                        </div>
+                    </div>
+                </div>
                 
                 
                 <h3>
                     <input class="floatright" type="button" value="edit" onclick="switch_to_tab(4)">
                     Sky
                 </h3>
-                <table>
-                    <tr>
-                        <td class="column_lable">location:</td>
-                        <td style="min-width: 280px">
+                <div id="locationSummary">
+                    <div class="gridRow">
+                        <div class="gridLabel">location:</div>
+                        <div class="gridCell" style="width: 280px">
                             <span id="skySummaryLocation">town, country</span>
-                        </td>
-                        <td class="column_lable">
+                        </div>
+                        <div class="gridLabel">
                             north:
-                        </td>
-                        <td>
+                        </div>
+                        <div class="gridCell" style="width:50px;">
                             <span id="skySummaryNorth">0.00</span>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td class="column_lable">gensky:</td>
-                        <td colspan="3">
+                        </div>
+                    </div>
+                    <div class="gridRow" style="width:585px;">
+                        <div class="gridLabel">gensky:</div>
+                        <div class="gridCell" style="width:515px;">
                             <span id="skySummaryOptions">summary of sky settings (gensky ...)</span>
-                        </td>
-                    </tr>
-                </table>
+                        </div>
+                    </div>
+                </div>
                 
                  
                 <h3>
@@ -221,20 +216,20 @@
                     <input type="checkbox" id="climate_checkbox" value="climate"
                     onchange="toggleClimateTab()"> Climate Data
                 </h3>
-                <table id="climate_options" style="display:none;">
-                    <tr>
-                        <td class="column_lable">climate:</td>
-                        <td>
-                            climate data file
-                        </td>
-                    </tr>
-                    <tr>
-                        <td class="column_lable">process:</td>
-                        <td>
-                            processing option
-                        </td>
-                    </tr>
-                </table>
+                <div id="climateSummary" style="display:none;">
+                    <div class="gridRow">
+                        <div class="gridLabel">climate:</div>
+                        <div class="gridCell" style="width:490px">
+                            <i>climate data file</i>
+                        </div>
+                    </div>
+                    <div class="gridRow">
+                        <div class="gridLabel">climate:</div>
+                        <div class="gridCell" style="width:490px">
+                            <i>processing options</i>
+                        </div>
+                    </div>
+                </div>
 
 
                 <h2>
@@ -257,149 +252,119 @@
                     <input class="floatright" type="button" value="done" onclick="switch_to_tab(1)">
                     Render Settings
                 </h3>
-                <div id="radOptions">
-                    <div id="radOptionsLeft">
-                        <table>
-                            <tr>
-                                <td colspan="2" class="tableHeader">Quality</td>
-                            </tr>
-                            <tr>
-                                <td class="columnRadLable">quality:</td>
-                                <td class="column">
-                                    <select id="radQuality_2" name="radQuality_2" onchange="onRadOptionChange('radQuality_2')">
-                                        <option value="high">high</option>
-                                        <option value="medium" selected>medium</option>
-                                        <option value="low">low</option>
-                                    </select>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td class="columnRadLable">detail:</td>
-                                <td class="column">
-                                    <select id="radDetail_2" name="radDetail_2" onchange="onRadOptionChange('radDetail_2')">
-                                        <option value="high">high</option>
-                                        <option value="medium" selected>medium</option>
-                                        <option value="low">low</option>
-                                    </select>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td class="columnRadLable">varia:</td>
-                                <td>
-                                    <select id="radVariability_2" name="radVariability_2" onchange="onRadOptionChange('radVariability_2')">
-                                        <option value="high" selected>high</option>
-                                        <option value="medium">medium</option>
-                                        <option value="low">low</option>
-                                    </select>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td class="columnRadLable">indirect:</td>
-                                <td class="columnRadOption">
-                                    <select id="radIndirect" name="radIndirect" onchange="onRadOptionChange('radIndirect')">
-                                        <option value="0">0</option>
-                                        <option value="1">1</option>
-                                        <option value="2" selected>2</option>
-                                        <option value="3">3</option>
-                                        <option value="4">4</option>
-                                        <option value="5">5</option>
-                                    </select>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td class="columnRadLable" style="font-size: 12px;">penumbra:</td>
-                                <td>
-                                    <input type="checkbox" id="radPenumbras" checked onchange="onRadOptionChange('radPenumbras')" /> 
-                                </td>
-                            </tr>
-                        </table>
+                
+                <div id="radOptions" style="border-color:red;height:220px;">
+                    <div class="gridColumn">
+                        <div class="optionsHeader">
+                            <span>Quality</span>
+                        </div>
+                        <div class="gridLabel">quality:</div>
+                        <div class="gridCell">
+                            <select id="radQuality_2" name="radQuality_2" onchange="onRadOptionChange('radQuality_2')">
+                                <option value="high">high</option>
+                                <option value="medium" selected>medium</option>
+                                <option value="low">low</option>
+                            </select>
+                        </div>
+                        <div class="gridLabel">detail:</div>
+                        <div class="gridCell">
+                            <select id="radDetail_2" name="radDetail_2" onchange="onRadOptionChange('radDetail_2')">
+                                <option value="high">high</option>
+                                <option value="medium" selected>medium</option>
+                                <option value="low">low</option>
+                            </select>
+                        </div>
+                        <div class="gridLabel">varia:</div>
+                        <div class="gridCell">
+                            <select id="radVariability_2" name="radVariability_2" onchange="onRadOptionChange('radVariability_2')">
+                                <option value="high" selected>high</option>
+                                <option value="medium">medium</option>
+                                <option value="low">low</option>
+                            </select>
+                        </div>
+                        <div class="gridLabel">indirect:</div>
+                        <div class="gridCell">
+                            <select id="radIndirect" name="radIndirect" onchange="onRadOptionChange('radIndirect')">
+                                <option value="0">0</option>
+                                <option value="1">1</option>
+                                <option value="2" selected>2</option>
+                                <option value="3">3</option>
+                                <option value="4">4</option>
+                                <option value="5">5</option>
+                            </select>
+                        </div>
+                        <div class="gridLabel" style="font-size: 12px;">penumbra:</div>
+                        <div class="gridCell">
+                            <input type="checkbox" id="radPenumbras" checked onchange="onRadOptionChange('radPenumbras')" /> 
+                        </div>
                     </div>        
+
                     
-                    <div id="radOptionsMiddle">
-                        <table>
-                            <tr>
-                                <td colspan="2" class="tableHeader">Image</td>
-                            </tr>
-                            <tr>
-                                <td class="columnRadLable">size x:</td>
-                                <td>
-                                    <input type="text" class="numeric_int" size="4" name="radImageSizeX_2" id="radImageSizeX_2" value="512" onchange="onRadOptionImageSize('radImageSizeX_2')" />
-                                </td>
-                            </tr>
-                            <tr>
-                                <td class="columnRadLable">size y:</td>
-                                <td>
-                                    <input type="text" class="numeric_int" size="4" name="radImageSizeY_2" id="radImageSizeY_2" value="512" onchange="onRadOptionImageSize('radImageSizeY_2')" />
-                                </td>
-                            </tr>
-                            <tr>
-                                <td class="columnRadLable">type:</td>
-                                <td>
-                                    <select id="radImageType_2" name="radImageType_2" style="width: 90px;" onchange="selectImageType('radImageType_2')">
-                                        <option value="normal" selected>normal</option>
-                                        <option value="irridiance">irridiance</option>
-                                        <option value="falsecolor">falsecolor</option>
-                                    </select>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td colspan="2" class="tableHeader">Zone</td>
-                            </tr>
-                            <tr>
-                                <td class="columnRadLable">size:</td>
-                                <td>
-                                    <input type="text" class="numeric_float" name="radZoneSize" id="radZoneSize" size="6" value="10.0" onchange="onRadOptionChange('radZoneSize')"/>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td class="columnRadLable">type:</td>
-                                <td>
-                                    <select id="radZoneType" name="radZoneType" onchange="onRadOptionChange('radZoneType')">
-                                        <option value="exterior" selected>exterior</option>
-                                        <option value="interior">interior</option>
-                                    </select>
-                                </td>
-                            </tr>
-                        </table>
+                    <div class="gridColumn">
+                        <div class="optionsHeader">
+                            <span>Image</span>
+                        </div>
+                        <div class="gridLabel">size x:</div>
+                        <div class="gridCell">
+                            <input type="text" class="numeric_int" size="4" name="radImageSizeX_2" id="radImageSizeX_2" value="512" onchange="onRadOptionImageSize('radImageSizeX_2')" />
+                        </div>
+                        <div class="gridLabel">size y:</div>
+                        <div class="gridCell">
+                            <input type="text" class="numeric_int" size="4" name="radImageSizeY_2" id="radImageSizeY_2" value="512" onchange="onRadOptionImageSize('radImageSizeY_2')" />
+                        </div>
+                        <div class="gridLabel">type:</div>
+                        <div class="gridCell">
+                            <select id="radImageType_2" name="radImageType_2" style="width: 90px;" onchange="selectImageType('radImageType_2')">
+                                <option value="normal" selected>normal</option>
+                                <option value="irridiance">irridiance</option>
+                                <option value="falsecolor">falsecolor</option>
+                            </select>
+                        </div>
+                        
+                        <div class="optionsHeader">
+                            <span>Zone</span>
+                        </div>
+                        <div class="gridLabel">size:</div>
+                        <div class="gridCell">
+                            <input type="text" class="numeric_float" name="radZoneSize" id="radZoneSize" size="6" value="10.0" onchange="onRadOptionChange('radZoneSize')"/>
+                        </div>
+                        <div class="gridLabel">type:</div>
+                        <div class="gridCell">
+                            <select id="radZoneType" name="radZoneType" onchange="onRadOptionChange('radZoneType')">
+                                <option value="exterior" selected>exterior</option>
+                                <option value="interior">interior</option>
+                            </select>
+                        </div>
                     </div>
                     
-                    <div id="radOptionsRight">
-                        <table>
-                            <tr>
-                                <td colspan="2" class=tableHeader>Report</td>
-                            </tr>
-                            <tr>
-                                <td class="columnRadLable">time:</td>
-                                <td class="columnRadOption">
-                                    <select id="radReport" name="radReport" onchange="onRadOptionChange('radReport')">
-                                        <option value="0" selected>none</option>
-                                        <option value="60">1 min</option>
-                                        <option value="120">2 min</option>
-                                        <option value="180">3 min</option>
-                                        <option value="300">5 min</option>
-                                        <option value="600">10 min</option>
-                                    </select>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td class="columnRadLable">file:</td>
-                                <td class="columnRadOption">
-                                    <input type="text" class="fileNameInput" size="40" style="width:85px;" name="radReportFile" id="radReportFile" value="scene.log" onchange="onRadOptionChange('radReportFile')" />
-                                </td>
-                            </tr>
-                        </table>
+                    <div class="gridColumn">
+                        <div class="optionsHeader">
+                            <span>Report</span>
+                        </div>
+                        <div class="gridLabel">time:</div>
+                        <div class="gridCell">
+                            <select id="radReport" name="radReport" onchange="onRadOptionChange('radReport')">
+                                <option value="0" selected>none</option>
+                                <option value="60">1 min</option>
+                                <option value="120">2 min</option>
+                                <option value="180">3 min</option>
+                                <option value="300">5 min</option>
+                                <option value="600">10 min</option>
+                            </select>
+                        </div>
+                        <div class="gridLabel">file:</div>
+                        <div class="gridCell">
+                            <input type="text" class="fileNameInput" size="40" style="width:85px;" name="radReportFile" id="radReportFile" value="scene.log" onchange="onRadOptionChange('radReportFile')" />
+                        </div>
                     </div>
-                    <div style="clear:both;">
-                        <table style="width: 370px; margin-top: 10px;">
-                            <tr>
-                                <td class="columnRadLable">render:</td>
-                                <td>
-                                    <input type="text" style="width:285px;" name="radRenderLine_2" id="radRenderLine_2" value="" onchange="parseRenderLine('_2')" />
-                                </td>
-                            </tr>
-                        </table>
+                    <div class="gridColumn" style="clear:both;width:585px;margin-top:5px;">
+                        <div class="gridLabel">render:</div>
+                        <div class="gridCell" style="width:300px">
+                            <input type="text" style="width:287px;" name="radRenderLine_2" id="radRenderLine_2" value="" onchange="parseRenderLine('_2')" />
+                        </div>
                     </div>
                 </div>
+                
                 <h3>
                     details
                 </h3>
@@ -409,66 +374,124 @@
             </div>
             
             
+            <!--  TAB SKY  --> 
+            
             <div id="tab-sky">
+                <h3>
+                    <input type="button" id="applyLocationValues" value="apply" class="floatright" onclick="onApplyLocation()" disabled=true />
+                    <input type="button" id="reloadShadowInfo" value="reload" class="floatright" onclick="getShadowInfo()">
+                    SketchUp model settings
+                </h3>
+                
                 <h3>
                     <input class="floatright" type="button" value="done" onclick="switch_to_tab(1)">
                     Sky Settings
                 </h3>
-                
-                <div class="skyOptionsGroup">
-                    <div class="skyOptionsGroupLabel">generator:</div>
-                    <div class="skyOptionsLeft" style="width: 240px">
-                            <select id="genskyGenerator" name="genskyGenerator" style="width:140px;" onchange="onSkyGenChange()">
-                                <option value="gensky" selected>gensky</option>
-                                <option value="gendaylit">gendaylit</option>
-                                <option value="hdr-image">hdr-image</option>
-                            </select>
-                    </div>
-                </div>
-                <div class="skyOptionsGroup">
-                    <div class="skyOptionsGroupLabel">type:</div>
-                    <div class="skyOptionsLeft" style="width: 153px;">
-                        <select id="genskySkyType" name="genskySkyType" style="width:140px;" onchange="onSkyTypeChange()">
-                            <option value="u">uniform</option>
-                            <option value="c" selected>CIE overcast</option>
-                            <option value="i">CIE intermediate</option>
-                            <option value="s">CIE clear</option>
+                <div class="optionsColumn" style="height:120px">
+                    <div class="optionsHeader">
+                        <span class="optionLabel">generator:</span>
+                        <select id="genskyGenerator" name="genskyGenerator" onchange="onSkyGenChange()">
+                            <option value="gensky" selected>gensky</option>
+                            <option value="gendaylit">gendaylit</option>
+                            <option value="hdr-image">hdr-image</option>
                         </select>
                     </div>
-                    <div class="skyOptionsLeft" id="genskySunOption" style="display:none;">
-                        <span style="font-weight: bold;">sun</span>
+                    
+                    <div class="optionsRow" style="width:160px">
+                        <span class="optionLabel">type:</span>
+                        <select id="genskySkyType" name="genskySkyType" style="width:80px;" onchange="onSkyTypeChange()">
+                            <option value="u">uniform</option>
+                            <option value="c" selected>overcast</option>
+                            <option value="i">interm.</option>
+                            <option value="s">clear</option>
+                        </select>
+                    </div>
+                    <div id="genskySunOption" style="display:none;">
                         <input type="checkbox" id="sunOptionCB" value="sunOption" onchange="onSkyTypeChange()">
+                        <span style="font-size:12px">sun</span>
+                    </div>
+
+                    <div 
+                        class="optionsRow" id="genskySunOption" style="display:none; width:100px;">
+                        <input type="checkbox" id="sunOptionCB" value="sunOption" onchange="onSkyTypeChange()">
+                        <span style="font-size:12px">with sun</span>
+                    </div>
+                
+                    <div class="optionsRow">
+                        <span class="optionLabel">date:</span>
+                        <input type="text" class="timeOptionInput" name="skyDateMonth" id="skyDateMonth" value="03"
+                        onchange="onSkyDateTimeChange('skyDateMonth')"/>
+                        <span class="skyOption" style="width:12px">/</span>
+                        <input type="text" class="timeOptionInput" name="skyDateDay" id="skyDateDay" value="21"
+                        onchange="onSkyDateTimeChange('skyDateDay')"/>
+                    </div>
+                
+                    <div class="optionsRow">
+                        <span class="optionLabel">time:</span>
+                        <input type="text" class="timeOptionInput" name="skyTimeHour" id="skyTimeHour" value="12"
+                        onchange="onSkyDateTimeChange('skyTimeHour')"/>
+                        <span class="skyOption" style="width:12px">:</span>
+                        <input type="text" class="timeOptionInput" name="skyTimeMinute" id="skyTimeMinute" value="00"
+                        onchange="onSkyDateTimeChange('skyTimeMinute')"/>
+                    </div>
+
+                </div>
+
+                <div id="skyGeneratorOptions">
+                    <div class="optionsHeader" style="width:280px;">
+                        <span class="optionLabel">options:</span>
+                    </div>
+                    <div class="optionsColumn">
+                        <div class="rpictOverrideHeader">general</div>
+                        <div class="optionsRow">
+                            <input type="checkbox" id="gensky_b_CB" style="float:left;" onchange="onGenskyOptionCBChange()">
+                            <span class="skyOption">-g</span>
+                            <input type="text" class="skyOptionInput" name="gensky_g" id="gensky_g" value="0.2"
+                            onchange="onGenskyOptionChanged('g')"/>
+                        </div>
+                        <div class="optionsRow">
+                            <input type="checkbox" id="gensky_b_CB" style="float:left;" onchange="onGenskyOptionCBChange()">
+                            <span class="skyOption">-t</span>
+                            <input type="text" class="skyOptionInput" name="gensky_t" id="gensky_t" value="1.7"
+                            onchange="onGenskyOptionChanged('t')"/>
+                        </div>
+                    </div>
+                    <div class="optionsColumn">
+                        <div class="rpictOverrideHeader">zenith</div>
+                        <div class="optionsRow">
+                            <input type="checkbox" id="gensky_b_CB" style="float:left;" onchange="onGenskyOptionCBChange()">
+                            <span class="skyOption">-b</span>
+                            <input type="text" class="skyOptionInput" name="gensky_b" id="gensky_b" value=""
+                            onchange="onGenskyOptionChanged('b')"/>
+                        </div>
+                        <div class="optionsRow">
+                            <input type="checkbox" id="gensky_b_CB" style="float:left;" onchange="onGenskyOptionCBChange()">
+                            <span class="skyOption">-B</span>
+                            <input type="text" class="skyOptionInput" name="gensky_B" id="gensky_B" value=""
+                            onchange="onGenskyOptionChanged('B')"/>
+                        </div>
+                    </div>
+                    <div class="optionsColumn">
+                        <div class="rpictOverrideHeader">solar</div>
+                        <div class="optionsRow">
+                            <input type="checkbox" id="gensky_b_CB" style="float:left;" onchange="onGenskyOptionCBChange()">
+                            <span class="skyOption">-r</span>
+                            <input type="text" class="skyOptionInput" name="gensky_r" id="gensky_r" value=""
+                            onchange="onGenskyOptionChanged('r')"/>
+                        </div>
+                        <div class="optionsRow">
+                            <input type="checkbox" id="gensky_b_CB" style="float:left;" onchange="onGenskyOptionCBChange()">
+                            <span class="skyOption">-R</span>
+                            <input type="text" class="skyOptionInput" name="gensky_R" id="gensky_R" value=""
+                            onchange="onGenskyOptionChanged('R')"/>
+                        </div>
                     </div>
                 </div>
-                <div class="skyOptionsGroup">
-                    <div class="skyOptionsGroupLabel">options:</div>
-                    <div class="skyOptionsLeft">
-                        <span class="skyOption">-g</span>
-                        <input type="text" class="skyOptionInput" name="gensky_g" id="gensky_g" value="0.2"
-                        onchange="onGenskyOptionChanged('g')"/><br/>
-                        <span class="skyOption">-t</span>
-                        <input type="text" class="skyOptionInput" name="gensky_t" id="gensky_t" value="1.7"
-                        onchange="onGenskyOptionChanged('t')"/><br/>
-                    </div>
-                    <div class="skyOptionsLeft">
-                        <span class="skyOption">-b</span>
-                        <input type="text" class="skyOptionInput" name="gensky_b" id="gensky_b" value=""
-                        onchange="onGenskyOptionChanged('b')"/><br/>
-                        <span class="skyOption">-B</span>
-                        <input type="text" class="skyOptionInput" name="gensky_B" id="gensky_B" value=""
-                        onchange="onGenskyOptionChanged('B')"/><br/>
-                    </div>
-                    <div class="skyOptionsLeft">
-                        <span class="skyOption">-r</span>
-                        <input type="text" class="skyOptionInput" name="gensky_r" id="gensky_r" value=""
-                        onchange="onGenskyOptionChanged('r')"/><br/>
-                        <span class="skyOption">-R</span>
-                        <input type="text" class="skyOptionInput" name="gensky_R" id="gensky_R" value=""
-                        onchange="onGenskyOptionChanged('R')"/><br/>
-                    </div>
-                </div>
-                <div style="clear:both; margin-left: 75px;">
-                    <span class="commandLine" id="skyCommandLine">foo</span> 
+                <div style="clear:both;"></div>
+                
+                <div class="optionsRow" style="display:none;float:none;width:450px;">
+                    <span class="optionLabel">command:</span>
+                    <span class="commandLine" id="skyCommandLine">!gensky</span> 
                 </div>
             
                             
@@ -477,90 +500,78 @@
                     Location Settings
                 </h3>
                 
-                <div class="locationOptionsGroup">
-                    <div class="locationOptionsLeft" style="width: 200px;">
-                        <div style="width: 200px;">
-                            <span class="locationOption" style="width: 75px;">City:</span>
-                            <input type="text" class="locationOptionInput2" name="City" id="City" value="City" tabindex="1" onchange="onCityCountryChanged()"/>
-                        </div>
-                        <div style="width: 200px;">
-                            <span class="locationOption" style="width: 75px;">Country:</span>
-                            <input type="text" class="locationOptionInput2" name="Country" id="Country" value="Country" tabindex="2" onchange="onCityCountryChanged()"/>
-                        </div>
+                <div class="optionsColumn">
+                    <div class="optionsRow">
+                        <span class=optionLabel>City:</span>
+                        <input type="text" class="inputCityCountry" name="City" id="City" value="City" tabindex="1" onchange="onCityCountryChanged()"/>
                     </div>
-                    
-                    <div class="locationOptionsLeft">
-                        <div>
-                            <span class="locationOption">Latitude:</span>
-                            <input type="text" class="locationOptionInput" name="Latitude" id="Latitude" value="56.7" tabindex="4" onchange="onLatLongChange()" />
-                        </div>
-                        <div>
-                            <span class="locationOption">Longitude:</span>
-                            <input type="text" class="locationOptionInput" name="Longitude" id="Longitude" value="0.12" tabindex="5" onchange="onLatLongChange()"/>
-                        </div>
-                        <div>
-                            <span class="controlValue" style="height: 12px; color:#cc0000; font-weight:bold;" id="meridianWarning"></span>
-                        </div>
+                    <div class="optionsRow">
+                        <span class=optionLabel>Country:</span>
+                        <input type="text" class="inputCityCountry" name="Country" id="Country" value="Country" tabindex="2" onchange="onCityCountryChanged()"/>
                     </div>
-                        
-                    <div class="locationOptionsLeft" style="width: 180px;">
-                        <div>
-                            <span class="locationOption">north angle:</span>
-                            <input type="text" class="locationOptionInput" name="NorthAngle" id="NorthAngle" value="12.3" tabindex="6" onchange="onNorthAngleChange()" />
-                        </div>
-                        <div style="width: 180px;">
-                            <span class="locationOption" id="TZOffsetLable">time zone:</span>
-                            <select name="TZOffset" id="TZOffset" tabindex="7" onchange="selectTZ()">
-                                <option value="13"  >NZDT +13</option>
-                                <option value="12"  >NZST +12</option>
-                                <option value="11"  >AEDT +11</option>
-                                <option value="10.5">ACDT +10.5</option>
-                                <option value="10"  >AEST +10</option>
-                                <option value="9.5" >ACST +9.5</option>
-                                <option value="9"   >AWDT +9</option>
-                                <option value="8"   >AWST +8</option>
-                                <option value="7"   >CXT +7</option>
-                                
-                                <option value="6"   >none +6</option>
-                                <option value="5"   >none +7</option>
-                                
-                                <option value="4" >MSD +4</option>
-                                <option value="3" >EEST/MSK +3</option>
-                                <option value="2" >EET/CEST +2</option>
-                                <option value="1" >CET/WEST +1</option>
-                                <option value="0" selected>GMT/WET +0</option>
-                                <option value="-1"   >none -1</option>
-                                <option value="-2"   >none -2</option>
-                                <option value="-2.5" >NDT -2.5</option>
-                                <option value="-3"   >ADT -3</option>
-                                <option value="-3.5" >NST -3.5</option>
-                                <option value="-4"   >AST/EDT -4</option>
-                                <option value="-5"   >EST -5</option>
-                                <option value="-6"   >MDT -6</option>
-                                <option value="-7"   >MST/PDT -7</option>
-                                <option value="-8"   >PST/AKDT -8</option>
-                                <option value="-9"   >AKST -9</option>
-                                <option value="-10"  >none -10</option>
-                                <option value="-11"  >none -11</option>
-                                <option value="-12"  >none -12</option>
-                            </select>
-                        </div>
-                        <div style="width: 180px;">
-                            <span class="locationOption" style="height: 12px;"></span>
-                            <span class="controlValue" style="height: 12px;" id="meridianDisplay">-m</span>
-                        </div>
+                </div>
+                
+                <div class="optionsColumn" style="width:170px;">
+                    <div class="optionsRow" style="width:160px;">
+                        <span class="optionLabel">Latitude:</span>
+                        <input type="text" class="locationOptionInput" name="Latitude" id="Latitude" value="56.7" tabindex="4" onchange="onLatLongChange()" />
+                    </div>
+                    <div class="optionsRow" style="width:160px;">
+                        <span class=optionLabel>Longitude:</span>
+                        <input type="text" class="locationOptionInput" name="Longitude" id="Longitude" value="0.12" tabindex="5" onchange="onLatLongChange()"/>
+                    </div>
+                    <div class="optionsRow" style="width:160px;height:14px;min-height:14px;">
+                        <span class="controlValue" id="meridianWarning"></span>
+                    </div>
+                </div>
+                
+                <div class="optionsColumn" style="width:180px;">
+                    <div class="optionsRow" style="width: 170px;">
+                        <span class=optionLabel style="width:60px;">north:</span>
+                        <input type="text" class="locationOptionInput" name="NorthAngle" id="NorthAngle" value="12.3" tabindex="6" onchange="onNorthAngleChange()" />
+                    </div>
+                    <div class="optionsRow" style="width: 170px;">
+                        <span class=optionLabel style="width:60px;" id="TZOffsetLable">tzone:</span>
+                        <select name="TZOffset" id="TZOffset" tabindex="7" style="width:110px;" onchange="selectTZ()">
+                            <option value="13"  >NZDT +13</option>
+                            <option value="12"  >NZST +12</option>
+                            <option value="11"  >AEDT +11</option>
+                            <option value="10.5">ACDT +10.5</option>
+                            <option value="10"  >AEST +10</option>
+                            <option value="9.5" >ACST +9.5</option>
+                            <option value="9"   >AWDT +9</option>
+                            <option value="8"   >AWST +8</option>
+                            <option value="7"   >CXT +7</option>
+                            
+                            <option value="6"   >none +6</option>
+                            <option value="5"   >none +7</option>
+                            
+                            <option value="4" >MSD +4</option>
+                            <option value="3" >EEST/MSK +3</option>
+                            <option value="2" >EET/CEST +2</option>
+                            <option value="1" >CET/WEST +1</option>
+                            <option value="0" selected>GMT/WET +0</option>
+                            <option value="-1"   >none -1</option>
+                            <option value="-2"   >none -2</option>
+                            <option value="-2.5" >NDT -2.5</option>
+                            <option value="-3"   >ADT -3</option>
+                            <option value="-3.5" >NST -3.5</option>
+                            <option value="-4"   >AST/EDT -4</option>
+                            <option value="-5"   >EST -5</option>
+                            <option value="-6"   >MDT -6</option>
+                            <option value="-7"   >MST/PDT -7</option>
+                            <option value="-8"   >PST/AKDT -8</option>
+                            <option value="-9"   >AKST -9</option>
+                            <option value="-10"  >none -10</option>
+                            <option value="-11"  >none -11</option>
+                            <option value="-12"  >none -12</option>
+                        </select>
+                    </div>
+                    <div class="optionsRow" style="width:170px;height:14px;min-height:14px;">
+                        <span class="controlValue" id="meridianDisplay" style="margin-left:62px";>-m</span>
                     </div>
                 </div>
                         
-                <div class="locationOptionsGroup" style="width: 300px;">
-                    <span class="locationOption" style="width: 75px;">model:</span>
-                    <span style="width: 125px; float: left;">
-                        <input type="button" id="applyLocationValues" value="apply values" onclick="onApplyLocation()" disabled=true />
-                    </span>
-                    <span style="float: left;">
-                        <input type="button" id="reloadShadowInfo" value="reload" onclick="getShadowInfo()">
-                    </span>
-                </div>
                 <div style="clear:both;"></div>
                         
                 
@@ -608,6 +619,7 @@
 
         <script type="text/javascript">
             // input restrictions via jquery.alphanumeric
+            $('.timeOptionInput').numeric();
             $('.numeric_int').numeric();
             $('.numeric_float').numeric({allow:"."});
             $('.skyOptionInput').numeric({allow:"."});
