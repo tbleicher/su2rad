@@ -9,7 +9,7 @@
         <title>Radiance Export</title>
         
         <!-- google map and jsr_class for geonames.org requests -->
-        <!-- XXX
+        <!-- XXX REMOVE
         <script type="text/javascript" src="http://maps.google.com/maps?file=api&amp;v=2&amp;key=ABQIAAAAVkCvvMxWS6sy1KKSLvN3URTDis0fJxnS-wzgwKhlyWVJxXLRhxQq9kdL_d2nO8XPOQO2xIrAWCmccw"></script>
         XXX -->
         <script type="text/javascript" src="./js/jsr_class.js"></script>
@@ -54,7 +54,7 @@
     
     </head>
     
-    <body onLoad="initPage()">
+    <body style="background-color: white" onLoad="initPage()">
     
         <div id="tab-container">
             <ul class="tabs-nav">
@@ -203,8 +203,8 @@
                         </div>
                     </div>
                     <div class="gridRow" style="width:585px;">
-                        <div class="gridLabel">gensky:</div>
-                        <div class="gridCell" style="width:515px;">
+                        <div class="gridLabel">sky cmd:</div>
+                        <div class="gridCell" style="width:505px;">
                             <span id="skySummaryOptions">summary of sky settings (gensky ...)</span>
                         </div>
                     </div>
@@ -389,36 +389,43 @@
                 </h3>
                 <div class="optionsColumn" style="height:120px">
                     <div class="optionsHeader">
-                        <span class="optionLabel">generator:</span>
-                        <select id="genskyGenerator" name="genskyGenerator" onchange="onSkyGenChange()">
+                        <span class="gridLabel">generator:</span>
+                        <select id="skyGenerator" name="skyGenerator" onchange="onSkyGenChange()">
                             <option value="gensky" selected>gensky</option>
                             <option value="gendaylit">gendaylit</option>
                             <option value="hdr-image">hdr-image</option>
                         </select>
                     </div>
                     
-                    <div class="optionsRow" style="width:160px">
-                        <span class="optionLabel">type:</span>
-                        <select id="genskySkyType" name="genskySkyType" style="width:80px;" onchange="onSkyTypeChange()">
-                            <option value="u">uniform</option>
-                            <option value="c" selected>overcast</option>
-                            <option value="i">interm.</option>
-                            <option value="s">clear</option>
-                        </select>
+                    <div class="optionsRow" id="genskyTypeOptions">
+                        <div class="optionsRow" style="width:160px">
+                            <span class="gridLabel">type:</span>
+                            <select id="genskySkyType" name="genskySkyType" style="width:80px;" onchange="onSkyTypeChange()">
+                                <option value="u">uniform</option>
+                                <option value="c" selected>overcast</option>
+                                <option value="i">interm.</option>
+                                <option value="s">clear</option>
+                            </select>
+                        </div>
+                        <div id="genskySunOption" style="display:none;">
+                            <input type="checkbox" id="sunOptionCB" value="sunOption" onchange="onSkyTypeChange()">
+                            <span style="font-size:12px">sun</span>
+                        </div>
                     </div>
-                    <div id="genskySunOption" style="display:none;">
-                        <input type="checkbox" id="sunOptionCB" value="sunOption" onchange="onSkyTypeChange()">
-                        <span style="font-size:12px">sun</span>
-                    </div>
-
-                    <div 
-                        class="optionsRow" id="genskySunOption" style="display:none; width:100px;">
-                        <input type="checkbox" id="sunOptionCB" value="sunOption" onchange="onSkyTypeChange()">
-                        <span style="font-size:12px">with sun</span>
+                    
+                    <div class="optionsRow" id="gendaylitTypeOptions">
+                        <div class="optionsRow">
+                            <span class="gridLabel">params:</span>
+                            <select id="gendaylitSkyType" name="gendaylitSkyType" style="width:120px;" onchange="onSkyTypeChange()">
+                                <option value="P">epsilon/delta</option>
+                                <option value="W" selected>irridiance</option>
+                                <option value="L">illuminance</option>
+                            </select>
+                        </div>
                     </div>
                 
                     <div class="optionsRow">
-                        <span class="optionLabel">date:</span>
+                        <span class="gridLabel">date:</span>
                         <input type="text" class="timeOptionInput" name="skyDateMonth" id="skyDateMonth" value="03"
                         onchange="onSkyDateTimeChange('skyDateMonth')"/>
                         <span class="skyOption" style="width:12px">/</span>
@@ -427,7 +434,7 @@
                     </div>
                 
                     <div class="optionsRow">
-                        <span class="optionLabel">time:</span>
+                        <span class="gridLabel">time:</span>
                         <input type="text" class="timeOptionInput" name="skyTimeHour" id="skyTimeHour" value="12"
                         onchange="onSkyDateTimeChange('skyTimeHour')"/>
                         <span class="skyOption" style="width:12px">:</span>
@@ -437,60 +444,42 @@
 
                 </div>
 
-                <div id="skyGeneratorOptions">
+                <div class="skyGeneratorOptions" id="skyOptsGensky">
+                    <!-- filled in by javascript -->
+                </div>
+                
+                <div class="skyGeneratorOptions" id="skyOptsGendaylit" style="display:none">
                     <div class="optionsHeader" style="width:280px;">
-                        <span class="optionLabel">options:</span>
+                        <span class="gridLabel" style="width:240px">TODO gendaylit options:</span>
                     </div>
                     <div class="optionsColumn">
                         <div class="rpictOverrideHeader">general</div>
                         <div class="optionsRow">
-                            <input type="checkbox" id="gensky_b_CB" style="float:left;" onchange="onGenskyOptionCBChange()">
-                            <span class="skyOption">-g</span>
-                            <input type="text" class="skyOptionInput" name="gensky_g" id="gensky_g" value="0.2"
-                            onchange="onGenskyOptionChanged('g')"/>
-                        </div>
-                        <div class="optionsRow">
-                            <input type="checkbox" id="gensky_b_CB" style="float:left;" onchange="onGenskyOptionCBChange()">
-                            <span class="skyOption">-t</span>
-                            <input type="text" class="skyOptionInput" name="gensky_t" id="gensky_t" value="1.7"
-                            onchange="onGenskyOptionChanged('t')"/>
-                        </div>
-                    </div>
-                    <div class="optionsColumn">
-                        <div class="rpictOverrideHeader">zenith</div>
-                        <div class="optionsRow">
-                            <input type="checkbox" id="gensky_b_CB" style="float:left;" onchange="onGenskyOptionCBChange()">
-                            <span class="skyOption">-b</span>
-                            <input type="text" class="skyOptionInput" name="gensky_b" id="gensky_b" value=""
-                            onchange="onGenskyOptionChanged('b')"/>
-                        </div>
-                        <div class="optionsRow">
-                            <input type="checkbox" id="gensky_b_CB" style="float:left;" onchange="onGenskyOptionCBChange()">
-                            <span class="skyOption">-B</span>
-                            <input type="text" class="skyOptionInput" name="gensky_B" id="gensky_B" value=""
-                            onchange="onGenskyOptionChanged('B')"/>
-                        </div>
-                    </div>
-                    <div class="optionsColumn">
-                        <div class="rpictOverrideHeader">solar</div>
-                        <div class="optionsRow">
-                            <input type="checkbox" id="gensky_b_CB" style="float:left;" onchange="onGenskyOptionCBChange()">
-                            <span class="skyOption">-r</span>
-                            <input type="text" class="skyOptionInput" name="gensky_r" id="gensky_r" value=""
-                            onchange="onGenskyOptionChanged('r')"/>
-                        </div>
-                        <div class="optionsRow">
-                            <input type="checkbox" id="gensky_b_CB" style="float:left;" onchange="onGenskyOptionCBChange()">
-                            <span class="skyOption">-R</span>
-                            <input type="text" class="skyOptionInput" name="gensky_R" id="gensky_R" value=""
-                            onchange="onGenskyOptionChanged('R')"/>
+                            <input type="checkbox" id="sunOptionCB" style="float:left;" value="sunOption" onchange="onSkyTypeChange()">
+                            <span class="gridLabel" style="width:60px;">no sun</span>
                         </div>
                     </div>
                 </div>
+                <div class="skyGeneratorOptions" id="skyOptsHDRImage" style="display:none">
+                    <div class="optionsHeader" style="width:340px;">
+                        <span class="gridLabel" style="width:240px">TODO hdr-image options:</span>
+                    </div>
+                    <div class="gridLabel" style="width:40px;">path:</div>
+                    <div class="gridCell" style="width:305px;">
+                        <div class="fileinputs">
+                            <input type="file" class="file" id="fileselection" onchange="onSelectSkyImage()" />
+                            <div class="fakefile">
+                                <img src="./css/24-zoom.png" />
+                            </div>
+                        </div>
+                        <input type="text" style="width:275px;" name="skyImagePath" id="skyImagePath" value=".pic"/>
+                    </div>
+                </div>
+                            
                 <div style="clear:both;"></div>
                 
                 <div class="optionsRow" style="display:none;float:none;width:450px;">
-                    <span class="optionLabel">command:</span>
+                    <span class="gridLabel">command:</span>
                     <span class="commandLine" id="skyCommandLine">!gensky</span> 
                 </div>
             
@@ -502,22 +491,22 @@
                 
                 <div class="optionsColumn">
                     <div class="optionsRow">
-                        <span class=optionLabel>City:</span>
+                        <span class=gridLabel>City:</span>
                         <input type="text" class="inputCityCountry" name="City" id="City" value="City" tabindex="1" onchange="onCityCountryChanged()"/>
                     </div>
                     <div class="optionsRow">
-                        <span class=optionLabel>Country:</span>
+                        <span class=gridLabel>Country:</span>
                         <input type="text" class="inputCityCountry" name="Country" id="Country" value="Country" tabindex="2" onchange="onCityCountryChanged()"/>
                     </div>
                 </div>
                 
                 <div class="optionsColumn" style="width:170px;">
                     <div class="optionsRow" style="width:160px;">
-                        <span class="optionLabel">Latitude:</span>
+                        <span class="gridLabel">Latitude:</span>
                         <input type="text" class="locationOptionInput" name="Latitude" id="Latitude" value="56.7" tabindex="4" onchange="onLatLongChange()" />
                     </div>
                     <div class="optionsRow" style="width:160px;">
-                        <span class=optionLabel>Longitude:</span>
+                        <span class=gridLabel>Longitude:</span>
                         <input type="text" class="locationOptionInput" name="Longitude" id="Longitude" value="0.12" tabindex="5" onchange="onLatLongChange()"/>
                     </div>
                     <div class="optionsRow" style="width:160px;height:14px;min-height:14px;">
@@ -527,11 +516,11 @@
                 
                 <div class="optionsColumn" style="width:180px;">
                     <div class="optionsRow" style="width: 170px;">
-                        <span class=optionLabel style="width:60px;">north:</span>
+                        <span class=gridLabel style="width:60px;">north:</span>
                         <input type="text" class="locationOptionInput" name="NorthAngle" id="NorthAngle" value="12.3" tabindex="6" onchange="onNorthAngleChange()" />
                     </div>
                     <div class="optionsRow" style="width: 170px;">
-                        <span class=optionLabel style="width:60px;" id="TZOffsetLable">tzone:</span>
+                        <span class=gridLabel style="width:60px;" id="TZOffsetLable">tzone:</span>
                         <select name="TZOffset" id="TZOffset" tabindex="7" style="width:110px;" onchange="selectTZ()">
                             <option value="13"  >NZDT +13</option>
                             <option value="12"  >NZST +12</option>

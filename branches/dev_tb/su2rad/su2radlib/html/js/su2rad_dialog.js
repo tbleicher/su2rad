@@ -72,7 +72,7 @@ var exportSettings = new ExportSettingsObject();
 
 
 function initPage() {
-    //log.toggle();
+    log.toggle();
     window.resizeTo(640,800);
     if (SKETCHUP == false) {
         // fill dialog with test data
@@ -339,7 +339,7 @@ function setViewsListJSON(msg) {
 function onApplyLocation() {
     applyModelLocation(modelLocation.toString())
     modelLocation.changed = false;
-    updateSkyFormValues()
+    updateSkyLocFormValues()
 }
 
 
@@ -404,7 +404,7 @@ function updateSkyPage() {
         // googleMapInitialize(lat,lng);
     }
     // window.resizeBy(-10,0);
-    updateSkyFormValues()
+    updateSkyLocFormValues()
     // window.resizeBy(10,0);
 }
 

@@ -58,10 +58,15 @@ function SkyOptionsObject() {
     this.skytype = "-c";
     this.g = 0.2;
     this.t = 1.7;
-    this.b = '';
-    this.B = '';
-    this.r = '';
-    this.R = '';
+    this.b = -1;
+    this.B = -1;
+    this.r = -1;
+    this.R = -1;
+    this._activeOptions = {};
+    this._activeOptions.b = false;
+    this._activeOptions.B = false;
+    this._activeOptions.r = false;
+    this._activeOptions.R = false;
 }
 
 SkyOptionsObject.prototype.removeOption = function (opt) {
@@ -74,34 +79,81 @@ SkyOptionsObject.prototype.removeOption = function (opt) {
     }
 }
 
+SkyOptionsObject.prototype.setActive = function (opt, checked) {
+    log.debug("setActive o=" + opt + " checked=" + checked); 
+    if (opt == 'g' || opt == 't') {
+        this._activeOptions[opt] = checked;
+    } else {
+        this._activeOptions[opt.toLowerCase()] = false;
+        this._activeOptions[opt.toUpperCase()] = false;
+        this._activeOptions[opt] = checked;
+    }
+}
+
+SkyOptionsObject.prototype.setGenerator = function(val) {
+    if (val == 'gendaylit') {
+        this.generator = 'gendaylit';
+        // TODO enable gendaylit options
+        alert("'gendaylit' not enabled yet\ndefault to 'gensky'")
+        this.generator = 'gensky';
+    } else if (val == 'hdr-image') {
+        this.generator = 'hdr-image';
+        // TODO enable hdr options
+        alert("'hdr-image' not enabled yet\ndefault to 'gensky'")
+        this.generator = 'gensky';
+    } else {
+        this.generator = 'gensky';
+        // TODO enable gensky options
+    }
+}
+
 SkyOptionsObject.prototype.setValue = function(opt, val) {
     log.error("setValue: opt='" + opt + "' val='" + val + "'")
-    if (isNaN(parseFloat(val))) {
+    var v=parseFloat(val);
+    if (isNaN(v)) {
         return false;
     } else {
-        this[opt] = val;
+        this[opt] = v;
         return true;
     }
 }
     
 SkyOptionsObject.prototype.toString = function() {
-        var text = this.generator;
-        text += " " + this.skytype;
-        text += " -g " + this.g;
-        text += " -t " + this.t;
-        var opts = ['b', 'B', 'r', 'R'];
-        for(var i=0; i<opts.length; i++) {
-            var opt = opts[i];
-            if (this[opt] != '') {
-                text += " -" + opt + " " + this[opt];
-            }
+    var text = this.generator;
+    text += " " + this.skytype;
+    var opts = ['g', 't', 'b', 'B', 'r', 'R'];
+    for(var i=0; i<opts.length; i++) {
+        var opt = opts[i];
+        if (this._activeOptions[opt] == true) {
+            text += " -" + opt + " " + this[opt].toFixed(3);
         }
-        return text;
     }
+    return text;
+}
 
 var skyOptions = new SkyOptionsObject();
 
-
+function setOptionsVisibility(generator) {
+    if (generator == 'gendaylit') {
+        document.getElementById('genskyTypeOptions').style.display='none';
+        document.getElementById('gendaylitTypeOptions').style.display='';
+        document.getElementById('skyOptsGensky').style.display='none';
+        document.getElementById('skyOptsGendaylit').style.display='';
+        document.getElementById('skyOptsHDRImage').style.display='none';
+    } else if (generator == 'hdr-image') {
+        document.getElementById('genskyTypeOptions').style.display='none';
+        document.getElementById('gendaylitTypeOptions').style.display='none';
+        document.getElementById('skyOptsGensky').style.display='none';
+        document.getElementById('skyOptsGendaylit').style.display='none';
+        document.getElementById('skyOptsHDRImage').style.display='';
+    } else {
+        document.getElementById('genskyTypeOptions').style.display='';
+        document.getElementById('gendaylitTypeOptions').style.display='none';
+        document.getElementById('skyOptsGensky').style.display='';
+        document.getElementById('skyOptsGendaylit').style.display='none';
+        document.getElementById('skyOptsHDRImage').style.display='none';
+    }
+}
 
 function SkyDateTimeObject() {
     this.skyDateMonth = 3;
@@ -210,6 +262,17 @@ function calculateTZOffset(long) {
     return offset;
 }
 
+function onSkyGenChange() {
+    var sel = document.getElementById('skyGenerator');
+    skyOptions.setGenerator(sel.value);
+    for (i=0; i<sel.options.length; i++) {
+        if (sel.options[i].value == skyOptions.generator) {
+            sel.selectedIndex = i;
+        }
+    }
+    updateSkyOptionsDisplay()
+}
+
 function onSkyDateTimeChange(id) {
     var val = document.getElementById(id).value;
     if (val.indexOf('0') == 0 && val.length == 2) {
@@ -230,9 +293,106 @@ function updateSkyDateTimeDisplay() {
     document.getElementById('skyTimeMinute').value = skyDateTime.getValueString('skyTimeMinute');
 }
 
+function updateGenskyOptions() {
+    var opts = ["general","-g","-t","zenith","-b","-B","solar","-r","-R"];
+    var text = "<div class=\"optionsHeader\" style=\"width:280px;\">";
+    text += "<span class=\"gridLabel\" style=\"width:240px;\">gensky options:</span>";
+    for (var i=0; i<opts.length; i++) {
+        opt = opts[i];
+        if (opt[0] != '-') {
+            text += "</div><div class=\"optionsColumn\">";
+            text += "<div class=\"rpictOverrideHeader\">" + opt + "</div>";
+        } else {
+            text += _getGenskyOptionDiv(opt[1]);
+        }
+    }
+    text += "</div>";
+    document.getElementById("skyOptsGensky").innerHTML = text;
+    $('.skyOptionInput').numeric({allow:"."});
+}
+
+function _getGenskyOptionDiv(opt) {
+    var text = "";
+    var style = "rpictOverride";
+    var state = "";
+    try {
+        var cbid = "genskyOptionCB_" + opt;
+        var selected = document.getElementById(cbid).checked;
+    } catch (e) {
+        log.error(e.name);
+        var selected = false;
+    }
+    if (selected == true) {
+        style = "rpictOverrideSelected";
+        state = "checked";
+    }
+    var text = "<div class=\"" + style + "\" style=\"width:85px;\">";
+    text += "<input type=\"checkbox\" class=\"rpictCB\" id=\"genskyOptionCB_" + opt + "\"";
+    text += " onchange=\"onGenskyOptionCB('" + opt + "')\" " + state + "/>"
+    text += "<span class=\"gridLabel\" style=\"width:20px;padding-left:5px;\">-" + opt + ":</span>";
+    if (selected == true) {
+        text += "<input type=\"text\" class=\"skyOptionInput\"";
+        text += " id=\"genskyOptionInput" + opt + "\"";
+        text += " value=\"" + skyOptions[opt] + "\"";
+        text += " onchange=\"onGenskyInputChanged('" + opt + "')\" />";
+    } else if (opt == 'g' || opt == 't') {
+        text += "<span class=\"gridLabel\" style=\"width:40px\">" + skyOptions[opt] + "</span>";
+    }
+    text += "</div>"
+    return text;
+}
+
+function onGenskyOptionCB(opt) {
+    var other = '';
+    if (opt == "b" || opt == "r") {
+        other = opt.toUpperCase();
+    } else if (opt == "B" || opt == "R") {
+        other = opt.toLowerCase();
+    }
+    if (other != '') {
+        var otherid = "genskyOptionCB_" + other;
+        document.getElementById(otherid).checked = false;
+        if (skyOptions[opt] == -1) {
+            skyOptions[opt] = 1;
+        }
+    }
+    var checked = false;
+    try {
+        var cbid = "genskyOptionCB_" + opt;
+        checked = document.getElementById(cbid).checked;
+    } catch (e) {
+        log.error(e.name + " opt=" + opt + " cbid=" + cbid);
+    }
+    skyOptions.setActive(opt, checked);
+    updateGenskyOptions();
+    setSkySummary();
+}
+
+function onGenskyInputChanged(opt) {
+    var id = "genskyOptionInput" + opt;
+    var val = document.getElementById(id).value;
+    var v = parseFloat(val);
+    if (isNaN(v)) {
+        alert("value is not a number: '" + val + "'");
+        document.getElementById(id).value = skyOptions[opt];;
+    } else {
+        skyOptions[opt] = v;
+    }
+    //document.getElementById('skyCommandLine').innerHTML = skyOptions.toString();
+    setSkySummary();
+}
+
+function updateSkyOptionsDisplay() {
+    log.debug("TODO: updateSkyOptionsDisplay()");
+    if (skyOptions.generator == 'gensky') {
+        updateGenskyOptions();
+    }
+    setOptionsVisibility(skyOptions.generator); 
+}
+
 function checkValueLatLong(id, minmax) {
     var vNum = document.getElementById(id).value;
-    num = parseFloat(vNum);
+    var num = parseFloat(vNum);
     if (isNaN(num)) {
         alert(id + " is not a number: '" + vNum + "'");
         document.getElementById(id).value = modelLocation[id].toFixed(4);
@@ -246,7 +406,6 @@ function checkValueLatLong(id, minmax) {
     }
     return true;
 }
-
 
 function geonamesCallback(jData) {
     // restore cursor
@@ -373,7 +532,7 @@ function centerCity(city, country, lat, lng) {
     modelLocation.setValue('Longitude', lng);
     googleMapSetCenter(parseFloat(lat),parseFloat(lng),11);
     clearNearByCities();
-    updateSkyFormValues()
+    updateSkyLocFormValues()
 }
 
 
@@ -408,19 +567,7 @@ function onCityCountryChanged() {
         modelLocation.setValue('Country', country);
         document.getElementById("googleMapLookup").disabled = false;
     }
-    updateSkyFormValues()
-}
-
-function onGenskyOptionChanged(opt) {
-    var id = "gensky_" + opt;
-    var value = document.getElementById(id).value;
-    if (value == '') {
-        skyOptions.removeOption(opt);
-        document.getElementById(id).value = skyOptions[opt];
-    } else {
-        skyOptions.setValue(opt, value);
-    }
-    document.getElementById('skyCommandLine').innerHTML = skyOptions.toString();
+    updateSkyLocFormValues()
 }
 
 function onNorthAngleChange() {
@@ -429,9 +576,8 @@ function onNorthAngleChange() {
     }
     var north = parseFloat(document.getElementById("NorthAngle").value);
     modelLocation.setValue('NorthAngle', north);
-    updateSkyFormValues()
+    updateSkyLocFormValues()
 } 
-
 
 function onLatLongChange() {
     if (checkValueLatLong("Latitude", 90) == false) {
@@ -466,7 +612,7 @@ function selectTZ() {
     modelLocation.setValue('TZOffset', offset);
     setTZHighlight(false);
     setTZWarning(parseFloat(offset));
-    updateSkyFormValues();
+    updateSkyLocFormValues();
 }
 
 
@@ -479,7 +625,7 @@ function setLatLong(lat,lng) {
         modelLocation.setValue('TZOffset', offset);
         setTZOffsetSelection(offset);
     }
-    updateSkyFormValues()
+    updateSkyLocFormValues()
 }
 
 
@@ -505,7 +651,7 @@ function setLocationFromGeonames(geoLoc) {
     //    modelLocation.Longitude  = parseFloat(geoLoc.lng);
     //    googleMapSetCenter(modelLocation.Latitude, modelLocation.Longitude);
     // }
-    updateSkyFormValues()
+    updateSkyLocFormValues()
 }
 
 
@@ -536,7 +682,7 @@ function setShadowInfoJSON(msg) {
     setNearByCities(text);
     skyDateTime.setFromShadowTime(modelLocation.ShadowTime);
     updateSkyDateTimeDisplay();
-    updateSkyFormValues();
+    updateSkyLocFormValues();
     googleMapInitialize(modelLocation.Latitude, modelLocation.Longitude);
 }
 
@@ -580,20 +726,20 @@ function setTZWarning(offset) {
 
 
 function setSkySummary() {
-    try {
-        var loc = modelLocation.City + ", "+ modelLocation.Country;
-        document.getElementById("skySummaryLocation").innerHTML = loc;
-        document.getElementById("skySummaryNorth").innerHTML = modelLocation.NorthAngle.toFixed(2);
-        var lat = modelLocation.Latitude * 1.0;
-        var lng = modelLocation.Longitude * -1.0;
-        var mer = modelLocation.TZOffset * -15.0;
-        latlng = " -a " + lat.toFixed(4) + " -o " + lng.toFixed(4) + " -m " + mer.toFixed(1);
-        log.debug("...skySummaryOptions");
-        document.getElementById("skySummaryOptions").innerHTML = skyOptions.toString() + " " + latlng;
+    var loc = modelLocation.City + ", "+ modelLocation.Country;
+    document.getElementById("skySummaryLocation").innerHTML = loc;
+    document.getElementById("skySummaryNorth").innerHTML = modelLocation.NorthAngle.toFixed(2);
+    var rot = '';
+    if (modelLocation.NorthAngle != 0.0) {
+        rot = " | xform -rz " + modelLocation.NorthAngle.toFixed(2);
     }
-    catch (e) {
-        log.error(e.name)
-    }
+    var lat = modelLocation.Latitude * 1.0;
+    var lng = modelLocation.Longitude * -1.0;
+    var mer = modelLocation.TZOffset * -15.0;
+    latlng = " -a " + lat.toFixed(4) + " -o " + lng.toFixed(4) + " -m " + mer.toFixed(1);
+    var sky = skyOptions.toString() + " " + latlng + rot;
+    document.getElementById("nearByCities").innerHTML = sky;
+    document.getElementById("skySummaryOptions").innerHTML = sky;
 }
 
 
@@ -610,18 +756,14 @@ function onSkyTypeChange() {
         sun = '+';
     }
     skyOptions.skytype = sun + stype;
-    document.getElementById('skyCommandLine').innerHTML = skyOptions.toString();
+    setSkySummary()
+    //document.getElementById('skyCommandLine').innerHTML = skyOptions.toString();
 }
 
-
-function updateSkyFormValues() {
-    log.debug("updateSkyFormValues");
-    document.getElementById('City').value       = modelLocation.City;
-    document.getElementById('Country').value    = modelLocation.Country;
-    document.getElementById('Latitude').value   = modelLocation.Latitude.toFixed(4);
-    document.getElementById('Longitude').value  = modelLocation.Longitude.toFixed(4);
-    document.getElementById('NorthAngle').value = modelLocation.NorthAngle.toFixed(2);
-    setTZOffsetSelection(modelLocation.TZOffset);
+function updateSkyLocFormValues() {
+    _updateLocationFormValues();
+    _updateSkyFormValues();
+    setSkySummary()
     // make 'apply' button visible if values have changed
     if (modelLocation.changed == true) {
         document.getElementById("applyLocationValues").disabled=false;
@@ -630,11 +772,26 @@ function updateSkyFormValues() {
         document.getElementById("applyLocationValues").disabled=true;
         document.getElementById("reloadShadowInfo").disabled=true;
     }
-    // check values
-    checkValueLatLong("Latitude", 90);
-    checkValueLatLong("Longitude", 190);
-    checkValueLatLong("NorthAngle", 360);
+    updateSkyOptionsDisplay()
+}
+
+function _updateLocationFormValues() {
+    log.debug("_updateLocationFormValues");
+    document.getElementById('City').value       = modelLocation.City;
+    document.getElementById('Country').value    = modelLocation.Country;
+    document.getElementById('Latitude').value   = modelLocation.Latitude.toFixed(4);
+    document.getElementById('Longitude').value  = modelLocation.Longitude.toFixed(4);
+    document.getElementById('NorthAngle').value = modelLocation.NorthAngle.toFixed(2);
+    setTZOffsetSelection(modelLocation.TZOffset);
     // set meridian display
     var mer = parseFloat(document.getElementById('TZOffset').value)*15.0;
     document.getElementById('meridianDisplay').innerHTML = "-m " + mer.toFixed(1);
+    // check values
+    //checkValueLatLong("Latitude", 90);
+    //checkValueLatLong("Longitude", 190);
+    //checkValueLatLong("NorthAngle", 360);
+}
+
+function _updateSkyFormValues () {
+    
 }
