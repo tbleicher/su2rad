@@ -10,6 +10,7 @@ function ModelLocationObject() {
     this.logging = true;
     this.ShadowTime = '';
     this.ShadowTime_time_t = 0;
+    this.SkyCommand = "";
 }
 
 ModelLocationObject.prototype.setValue = function (opt,val) {
@@ -69,6 +70,14 @@ function SkyOptionsObject() {
     this._activeOptions.R = false;
 }
 
+SkyOptionsObject.prototype.parseSkyCommand = function (cmdline) {
+    // set sky options from sky command
+    if (cmdline == '') {
+        return
+    }
+    log.error("TODO: parseSkyCommand(): '" + cmdline + "'");
+}
+
 SkyOptionsObject.prototype.removeOption = function (opt) {
     if (opt == 'g') {
         this.g = 0.2;
@@ -102,6 +111,9 @@ SkyOptionsObject.prototype.setGenerator = function(val) {
         alert("'hdr-image' not enabled yet\ndefault to 'gensky'")
         this.generator = 'gensky';
     } else {
+        if val != 'gensky' {
+            log.error("sky generator '" + val + "' unknown; using 'gensky'");
+        }
         this.generator = 'gensky';
         // TODO enable gensky options
     }
@@ -319,7 +331,10 @@ function _getGenskyOptionDiv(opt) {
         var cbid = "genskyOptionCB_" + opt;
         var selected = document.getElementById(cbid).checked;
     } catch (e) {
-        log.error(e.name);
+        if (e.name != 'TypeError') {
+            // 'TypeError' if element does not exist yet => ignored
+            log.error(e.name);
+        }
         var selected = false;
     }
     if (selected == true) {
@@ -383,7 +398,6 @@ function onGenskyInputChanged(opt) {
 }
 
 function updateSkyOptionsDisplay() {
-    log.debug("TODO: updateSkyOptionsDisplay()");
     if (skyOptions.generator == 'gensky') {
         updateGenskyOptions();
     }
@@ -680,6 +694,7 @@ function setShadowInfoJSON(msg) {
     modelLocation.logging = true;
     setTZHighlight(false);
     setNearByCities(text);
+    skyOptions.parseSkyCommand(modelLocation.SkyCommand);
     skyDateTime.setFromShadowTime(modelLocation.ShadowTime);
     updateSkyDateTimeDisplay();
     updateSkyLocFormValues();

@@ -24,7 +24,9 @@
         <script type="text/javascript" src="./js/su2rad_backend_interface.js"></script>
         <script type="text/javascript" src="./js/su2rad_dialog.js"></script>
         <script type="text/javascript" src="./js/su2rad_googlemap.js"></script>
-        <script type="text/javascript" src="./js/su2rad_sky_location.js"></script>
+        <script type="text/javascript" src="./js/su2rad_geonames.js"></script>
+        <script type="text/javascript" src="./js/su2rad_sky.js"></script>
+        <script type="text/javascript" src="./js/su2rad_location.js"></script>
         <script type="text/javascript" src="./js/su2rad_radopts.js"></script>
         
         <!-- log panel for debugging -->
@@ -237,8 +239,8 @@
                     <input class="exportbutton" type="button" name="cancel" value="cancel" onclick="onCancelButton()">
                 </h2>
             
-                <div class="statusMessage">
-                    <span id="statusMsg">status</span>
+                <div class="statusMessage" id="statusTabExport">
+                    msg
                 </div>
             
             </div>
@@ -371,6 +373,11 @@
                 <div id="rpictOptionsDisplay">
                     <input type="button" value="show details" onclick="updateRpictValues()">
                 </div>
+                
+                <div class="statusMessage" id="statusTabRender">
+                    msg
+                </div>
+            
             </div>
             
             
@@ -580,9 +587,11 @@
                     <div id="map_canvas" style="left: 30px; margin-top: 5px; width: 520px; height: 320px"></div>
                     <div id="message" style="margin-left: 32px; width: 518; font-size: 12px;">&nbsp;</div>
                 </div>
-                <div class="statusMessage">
-                    <span id="nearByCities"></span>
+                
+                <div class="statusMessage" id="statusTabSky">
+                    msg
                 </div>
+            
             </div>
             
             
@@ -591,6 +600,11 @@
                 TODO<br/>
                 TODO<br/>
                 TODO
+                
+                <div class="statusMessage" id="statusTabFields">
+                    msg
+                </div>
+            
             </div>
             
             
@@ -599,11 +613,18 @@
                     <input class="floatright" type="button" value="done" onclick="switch_to_tab(1)">
                     Climate Data
                 </h3>
-                    <div>*** MOCKUP PAGE *** MOCKUP PAGE *** MOCKUP PAGE *** MOCKUP PAGE ***</div>
-                    <div>
-                        <img src="./img/climate_data_plot.jpg" width="480px;"/>
-                    </div>
+                
+                <div>*** MOCKUP PAGE *** MOCKUP PAGE *** MOCKUP PAGE *** MOCKUP PAGE ***</div>
+                <div>
+                    <img src="./img/climate_data_plot.jpg" width="480px;"/>
+                </div>
+                
+                <div class="statusMessage" id="statusTabClimate">
+                    msg
+                </div>
+                
             </div>
+            
         </div>
 
         <script type="text/javascript">

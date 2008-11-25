@@ -72,7 +72,8 @@ function _getShadowInfoTest() {
     msg += "#COMMA#{\"name\":\"DisplayShadows\"#COMMA#\"value\":\"false\"}";
     msg += "#COMMA#{\"name\":\"ShadowTime\"#COMMA#\"value\":\"Fri Nov 08 13:30:00 +0000 2002\"}";
     msg += "#COMMA#{\"name\":\"ShadowTime_time_t\"#COMMA#\"value\":\"1036762200\"}";
-    msg += "#COMMA#{\"name\":\"UseSunForAllShading\"#COMMA#\"value\":\"false\"}]";
+    msg += "#COMMA#{\"name\":\"UseSunForAllShading\"#COMMA#\"value\":\"false\"}";
+    msg += "#COMMA#{\"name\":\"SkyCommand\"#COMMA#\"value\":\"!gensky +i 03 21 12:34 -a 40.017 -o 105.283 -m 105.0 -g 0.22 -t 1.8\"}]";
     return msg;
 }
 

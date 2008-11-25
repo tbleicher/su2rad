@@ -185,6 +185,8 @@ class RadianceScene < ExportBase
         if not confirmExportDirectory or not removeExisting(scene_dir)
             return
         end
+        sky = RadianceSky.new()
+        @radOpts.skytype = sky.skytype
         if $SHOWRADOPTS == true
             @radOpts.showDialog
         end
@@ -202,7 +204,6 @@ class RadianceScene < ExportBase
         end
         
         ## write sky first for <scene>.rad file
-        sky = RadianceSky.new()
         sky.skytype = @radOpts.skytype
         $skyfile = sky.export()
         
