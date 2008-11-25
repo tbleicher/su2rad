@@ -1,6 +1,8 @@
 
 var map, marker, lastPoint;
 
+var _currentStatusDiv = "statusTabExport"
+
 function ExportSettingsObject() {
     this.scenePath = '.';
     this.sceneName = 'unnamed';
@@ -113,6 +115,9 @@ function toggleClimateTab() {
     }
 }
 
+function setStatusMsg (msg) {
+    document.getElementById(_currentStatusDiv).innerHTML = msg;
+}
 
 function setExportMode(mode) {
     exportSettings.setMode(mode);
@@ -209,11 +214,7 @@ function onSelectExportPath() {
 
 
 function setExportOptionsJSON(msg) {
-    var text = 'setExportOptionsJSON';
-    document.getElementById('statusMsg').innerHTML = text;
-    //log.debug("setExportOptionsJSON() (" + msg.length + " bytes)");
     var json = msg.replace(/#COMMA#/g,",");
-    //log.debug("json='" + json + "'");
     try {
         eval("var exportOpts = " + json);
     } catch (e) {
@@ -224,16 +225,15 @@ function setExportOptionsJSON(msg) {
     for(var j=0; j<exportOpts.length; j++) {
         var attrib = exportOpts[j];
         if(attrib != null) {
-            //log.debug("  name='" + attrib.name + "' value='" + attrib.value +  "'");
             exportSettings.setValue(attrib.name, attrib.value);
-            text = text + '&nbsp;&nbsp;<b>' + attrib.name + ':</b> ' + attrib.value + '<br/>';
+            var line = '&nbsp;&nbsp;<b>' + attrib.name + ':</b> ' + attrib.value + '<br/>';
+            //log.debug(line);
+            text = text + line;
         }
     }
     exportSettings.updateDisplay();
-    //text += "<br/>" + json;
-    document.getElementById('statusMsg').innerHTML = text;
+    setStatusMsg(text);
 }
-
 
 
 function setValue(id, val) {
@@ -346,14 +346,19 @@ function onApplyLocation() {
 function onTabClick(link,div_show,div_hide) {
     log.debug("switching to tab '" + div_show.id + "'");
     if (div_show.id == "tab-export") {
+        _currentStatusDiv = "statusTabExport"
         updateExportPage();
     } else if  (div_show.id == "tab-render") {
+        _currentStatusDiv = "statusTabRender"
         updateRenderPage();
     } else if (div_show.id == "tab-sky") {
+        _currentStatusDiv = "statusTabSky"
         updateSkyPage();
     } else if (div_show.id == "tab-fields") {
+        _currentStatusDiv = "statusTabFields"
         updateFieldsPage();
     } else if (div_show.id == "tab-climate") {
+        _currentStatusDiv = "statusTabClimate"
         updateClimatePage();
     } else {
         log.warn("unexpected tab id '" + div_show.id + "'");

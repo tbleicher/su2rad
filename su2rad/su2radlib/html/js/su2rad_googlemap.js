@@ -23,10 +23,6 @@ function checkGoogleMap() {
     }
 }
 
-function clearNearByCities() {
-    document.getElementById('nearByCities').innerHTML='';
-}
-
 function toggleGoogleMap() {
     // now set visibility
     if (checkGoogleMap() == false) {
@@ -186,7 +182,7 @@ function googleMapLookupLocation(location) {
             log.warn(msg);
             alert(msg);
         } else {
-            clearNearByCities();
+            setStatusMsg('');  // clear near by cities list
             setLatLong(point.lat(),point.lng());
             googleMapEnable();
             googleMapInitialize(point.lat(),point.lng());

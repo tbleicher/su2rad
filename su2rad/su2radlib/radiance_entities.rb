@@ -565,15 +565,26 @@ class RadianceSky < ExportBase
     attr_writer :skytype 
     
     def initialize
-        @skytype = "-c"
+        @skytype = getSkyType()
         @comments = ''
+    end
+    
+    def getSkyType
+        sinfo = Sketchup.active_model.shadow_info
+        type = "-c"
+        if sinfo['DisplayShadows'] == true
+            type = "+i"
+            if sinfo['UseSunForAllShading'] == true
+                type = "+s" + type
+            end
+        end
+        return type
     end
     
     def export
         sinfo = Sketchup.active_model.shadow_info
         
-        text = getGenSkyOptions(sinfo)
-        text += " #{@skytype} -g 0.2 -t 1.7"
+        text = "!%s" % getGenSkyOptions(sinfo)
         text += " | xform -rz %.1f\n\n" % (-1*sinfo['NorthAngle']) 
         text += "skyfunc glow skyglow\n0\n0\n4 1.000 1.000 1.000 0\n"
         text += "skyglow source sky\n0\n0\n4 0 0 1 180\n\n"
@@ -592,7 +603,24 @@ class RadianceSky < ExportBase
         end
     end
     
-    def getGenSkyOptions(sinfo)
+    def getGenSkyOptions(sinfo=nil)
+        if sinfo == nil
+            sinfo = Sketchup.active_model.shadow_info
+        end
+        skytime = sinfo['ShadowTime']
+        if skytime.isdst == true
+            skytime -= 3600
+        end
+        ## time zone of ShadowTime is UTC
+        skytime.utc
+        lat  = sinfo['Latitude']
+        long = sinfo['Longitude']
+        mer  = "%.1f" % (sinfo['TZOffset']*-15.0)
+        text = "gensky %s #{@skytype}" % skytime.strftime("%m %d %H:%M")
+        text += " -a %.3f -o %.3f -m %1.f" % [lat, -1*long, mer]
+        text += " -g 0.2 -t 1.7"
+        return text
+        
         ## Time zone of ShadowTime is UTC. When strftime is used
         ## local tz is applied which shifts the time string for gensky.
         ## $UTC_OFFSET has to be defined to compensate this. Without
@@ -607,7 +635,7 @@ class RadianceSky < ExportBase
             lat  = sinfo['Latitude']
             long = sinfo['Longitude']
             mer  = "%.1f" % (sinfo['TZOffset']*-15.0)
-            text = "!gensky %s " % skytime.strftime("%m %d %H:%M")
+            text = "gensky %s " % skytime.strftime("%m %d %H:%M")
             text += " -a %.2f -o %.2f -m %1.f" % [lat, -1*long, mer]
         else
             ## use gensky with angles derieved from sun direction
@@ -623,7 +651,7 @@ class RadianceSky < ExportBase
             if d.x > 0.0
                 azi *= -1
             end
-            text += "!gensky -ang %.3f %.3f " % [alti, azi]
+            text += "gensky -ang %.3f %.3f " % [alti, azi]
         end
         return text
     end

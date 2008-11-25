@@ -1,6 +1,6 @@
 
 require 'sketchup.rb'
-
+require 'su2radlib/radiance_entities.rb'
 
 module JSONUtils
     
@@ -235,6 +235,13 @@ class ExportDialogWeb
         }
     end
 
+    def getSkyCommand()
+        rsky = RadianceSky.new()
+        txt = rsky.getGenSkyOptions()
+        #TODO: update from attributes
+        return txt
+    end
+    
     def getShadowInfo(d,p='')
         ## get shadow_info dict and apply to dialog
         printf "\ngetShadowInfo() ... "
@@ -242,9 +249,11 @@ class ExportDialogWeb
         dict = {}
         sinfo.each { |k,v| dict[k] = v }
         @sinfo_unused.each { |k| dict.delete(k) }
+        dict['SkyCommand'] = getSkyCommand()
         json = getJSONDictionary(dict)
         d.execute_script( "setShadowInfoJSON('%s')" % json )
         printf "done\n"
+        printf "SkyCommand: %s\n" % getSkyCommand()
     end
 
     def setShadowInfoValues(d,p)
