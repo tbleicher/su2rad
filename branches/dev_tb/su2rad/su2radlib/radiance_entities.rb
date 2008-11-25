@@ -613,11 +613,11 @@ class RadianceSky < ExportBase
         end
         ## time zone of ShadowTime is UTC
         skytime.utc
-        lat  = sinfo['Latitude']
-        long = sinfo['Longitude']
-        mer  = "%.1f" % (sinfo['TZOffset']*-15.0)
+        lat = sinfo['Latitude']
+        lng = sinfo['Longitude']
+        mer = "%.1f" % (sinfo['TZOffset']*-15.0)
         text = "gensky %s #{@skytype}" % skytime.strftime("%m %d %H:%M")
-        text += " -a %.3f -o %.3f -m %1.f" % [lat, -1*long, mer]
+        text += " -a %.3f -o %.3f -m %1.f" % [lat, -1*lng, mer]
         text += " -g 0.2 -t 1.7"
         return text
         
