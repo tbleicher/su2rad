@@ -13,6 +13,26 @@ function ModelLocationObject() {
     this.SkyCommand = "";
 }
 
+ModelLocationObject.prototype.parseSkyCmd = function () {
+    if (this.SkyCommand == "") {
+        return true;
+    }
+    var parts = this.SkyCommand.split(' ');
+    for (var i=0; i<parts.length; i++) {
+        if (parts[i] == '-rz' && i<parts.length-1) {
+            var north = parseFloat(parts[i+1]);
+            if (isNaN(north) == false) {
+                this.NorthAngle = north*-1;
+            }
+        } else if (parts[i] == '-m' && i<parts.length-1) {
+            var mer = parseInt(parts[i+1]);
+            if (isNaN(mer) == false) {
+                this.TZOffset = mer/-15.0;
+            }
+        }
+    }
+}
+
 ModelLocationObject.prototype.setValue = function (opt,val) {
     try {
         switch (opt) {
@@ -42,13 +62,14 @@ ModelLocationObject.prototype.setValue = function (opt,val) {
     }
 }
 
-ModelLocationObject.prototype.toString = function () {
-    var text = 'City=' + locObj.City;
-    text += '&Country=' + locObj.Country;
-    text += '&Latitude=' + locObj.Latitude.toFixed(4);;
-    text += '&Longitude=' + locObj.Longitude.toFixed(4);
-    text += '&TZOffset=' + locObj.TZOffset.toFixed(1);
-    text += '&NorthAngle=' + locObj.NorthAngle.toFixed(2);
+ModelLocationObject.prototype.toParamString = function () {
+    // return params string for SU
+    var text = 'City=' + this.City;
+    text += '&Country=' + this.Country;
+    text += '&Latitude=' + this.Latitude.toFixed(4);;
+    text += '&Longitude=' + this.Longitude.toFixed(4);
+    text += '&TZOffset=' + this.TZOffset.toFixed(1);
+    text += '&NorthAngle=' + this.NorthAngle.toFixed(4);
     return text;
 }
 
@@ -228,6 +249,7 @@ function setShadowInfoJSON(msg) {
             text = text + '&nbsp;&nbsp;<b>' + attrib.name + ':</b> ' + attrib.value + '<br/>';
         }
     }
+    modelLocation.parseSkyCmd();
     modelLocation.changed = false;
     modelLocation.logging = true;
     setTZHighlight(false);

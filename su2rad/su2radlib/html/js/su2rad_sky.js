@@ -385,7 +385,8 @@ function setSkySummary() {
     document.getElementById("skySummaryNorth").innerHTML = modelLocation.NorthAngle.toFixed(2);
     var rot = '';
     if (modelLocation.NorthAngle != 0.0) {
-        rot = " | xform -rz " + modelLocation.NorthAngle.toFixed(2);
+        var gensky_north = modelLocation.NorthAngle*-1;
+        rot = " | xform -rz " + gensky_north.toFixed(2);
     }
     var lat = modelLocation.Latitude * 1.0;
     var lng = modelLocation.Longitude * -1.0;

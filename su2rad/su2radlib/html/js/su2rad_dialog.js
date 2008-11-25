@@ -337,7 +337,8 @@ function setViewsListJSON(msg) {
 
 
 function onApplyLocation() {
-    applyModelLocation(modelLocation.toString())
+    var params = modelLocation.toParamString();
+    applyModelLocation(params);
     modelLocation.changed = false;
     updateSkyLocFormValues()
 }
