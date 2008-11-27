@@ -1,4 +1,3 @@
-var SKETCHUP = false;
 
 // switches to call right functions for context
 function setSketchup() {
@@ -77,14 +76,29 @@ function _getShadowInfoTest() {
     return msg;
 }
 
-function applyExportOptions() {
+function loadFileCallback(text) {
+    //dummy function to be reasigned to real callback
+}
+
+function loadTextFile(fname) {
+    log.debug("loadTextFile() fname='" + fname + "'");
     if (SKETCHUP == true) {
-        param = exportSettings.toString();
+        window.location = 'skp:loadTextFile@' + fname;
+    } else {
+        log.warn("Warning: can't load file without backend! (fname='" + fname + "')");
+        loadFileCallback('');
+    }
+}
+
+function applyExportOptions() {
+    var param = exportSettings.toString();
+    if (SKETCHUP == true) {
         log.debug("param=" + param);
         window.location = 'skp:applyExportOptions@' + param;
     } else {
-        param = exportSettings.toString();
         log.debug("no options to apply");
+        param = param.replace(/&/g,"<br/>");
+        setStatusMsg("applyExportOptions:<br/>" + param);
     }
 }
 

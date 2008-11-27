@@ -38,7 +38,9 @@ body * * {
     font-size: 100%;
 }
 code {
-    font-family: "Courier New", Courier, monospace;
+    font-family: "Monaco", "Courier New", Courier, monospace;
+    font-size: 12px;
+    line-height: 1.0;
 }
 .column {
     width: 140px;
@@ -49,7 +51,12 @@ code {
     width: 275px;
     /* background: lightskyblue; */
 }
-
+#loadSceneButton {
+    margin-left: 5px;
+    width: 50px;
+    position: relative;
+    top: 0px;
+}
 .exportbutton {
     float: right;
     width: 100px;
@@ -135,6 +142,7 @@ input[type=button] {
     top: -2px;
     font-size: 12px;
     height: 20px;
+    width: 50;
 }
 input[type=checkbox] {
    position: relative;
@@ -182,11 +190,12 @@ div.fileinputs {
 }
 div.fakefile {
     position: absolute;
-    top: -1px;
+    top: -2px;
     height: 20px;
-    left: 5px;
+    left: 3px;
     z-index: 1;
     margin: 0;
+    border-color: red;
 }
 input.file {
     width: 20px;
@@ -200,6 +209,11 @@ input.file {
     margin: 0;
 }
 
+listing {
+    font-family: "Monaco", "Courier New", Courier, monospace;
+    font-size: 12px;
+    line-height: 1.0;
+}
 .statusMessage {
     color: #27537a;
     background-color: #cbe6f4;
@@ -236,7 +250,6 @@ input.file {
 }
 
 .skyOption {
-    /*font-size: 12px;*/
     /*font-family: "Monaco", "Courier New", Courier, monospace;*/
     font-weight: bold;
     float: left;
@@ -451,7 +464,6 @@ input.file {
     min-height: 20px;
     padding: 0;
     margin: 0;
-    border-color: yellow;
 }
 
 .gridColumn {
@@ -469,7 +481,6 @@ input.file {
     min-height: 20px;
     padding: 0;
     margin: 0;
-    border-color: yellow;
 }
 .gridRow {
     width: 580px;

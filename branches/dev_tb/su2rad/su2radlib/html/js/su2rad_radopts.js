@@ -1,5 +1,3 @@
-
-
 function RadOptsObject() {
     // Quality group
     this.Quality = "medium";
@@ -22,6 +20,13 @@ function RadOptsObject() {
     this._rpictOpts = {};
     // array to hold active overrides
     this._rpictOverrides = new Array();
+
+    this.loadedFile = ''
+}
+
+RadOptsObject.prototype.getOptionsFromFileText = function (text) {
+    log.debug("TODO: getOtionsFromFileText()")
+    return true;
 }
 
 RadOptsObject.prototype.getRenderLine = function () {

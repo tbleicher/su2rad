@@ -1,6 +1,6 @@
 
 require 'sketchup.rb'
-require 'su2radlib/radiance_entities.rb'
+require 'radiance_entities.rb'
 
 module JSONUtils
     
@@ -8,6 +8,12 @@ module JSONUtils
         s.gsub('"','\\\\\\"').gsub("'","\\\\'")
     end
 
+    def myEscape(string)
+        string.gsub(/([^ a-zA-Z0-9_.-]+)/n) do
+            '%' + $1.unpack('H2' * $1.size).join('%').upcase
+        end.tr(' ', '+')
+    end
+    
     def getJSONDictionary(dict)
         if(dict == nil)
             return "{}"
@@ -87,6 +93,9 @@ class ExportOptions
 
     include JSONUtils
 
+    attr_reader :sceneName
+    attr_reader :scenePath
+    
     def initialize
         @scenePath = $export_dir
         @sceneName = $scene_name
@@ -109,7 +118,7 @@ class ExportOptions
         end
     end
     
-    def setOptionsFromString(params)
+    def setOptionsFromString(dlg, params)
         ## set export options from string <p>
         pairs = params.split("&")
         pairs.each { |pair|
@@ -122,7 +131,7 @@ class ExportOptions
         }
         #pprintJSON(toJSON(), "\nnew values:")
     end
-    
+
     def toJSON
         ## collect export options and return JSON string
         dict = Hash.new()
@@ -144,7 +153,7 @@ class RenderOptions
 
     include JSONUtils
 
-    def setOptionsFromString(params)
+    def setOptionsFromString(dlg, params)
         ## set export options from string <p>
         pairs = params.split("&")
         printf "\nnew RenderOptions:\n"
@@ -159,7 +168,13 @@ class RenderOptions
         }
         printf "\n"
     end
-
+    
+    def loaded?(path)
+        ## return true if <path> is already loaded
+        printf "TODO: RenderOptions.loaded?()\n"
+        return false
+    end
+    
     def toJSON
         return ''
     end
@@ -192,6 +207,15 @@ class ExportDialogWeb
         printf " done\n"
     end 
     
+    def loadTextFile(dlg, filepath)
+        text = ''
+        if File.exists?(filepath)
+            f = File.open(filepath, 'r')
+            text = f.read()
+            text = myEscape(text)
+        end
+        dlg.execute_script("loadFileCallback('%s')" % text)
+    end
     
     def getViewsList(dlg,p='')
         ## build and return JSON string of views (scenes)
@@ -283,12 +307,22 @@ class ExportDialogWeb
             printf "TODO: starting export ...\n"
         }
         
+        dlg.add_action_callback("loadTextFile") {|d,p|
+            loadTextFile(d,p);
+        }
+        
         ## update of ...Options objects
         dlg.add_action_callback("applyExportOptions") { |d,p|
-            @exportOptions.setOptionsFromString(p)
+            @exportOptions.setOptionsFromString(d,p)
+            ## check if selected file path exists and enable 'load' button
+            filepath = File.join(@exportOptions.scenePath,@exportOptions.sceneName)
+            if File.exists?(filepath) && (@renderOptions.loaded?(filepath) == false)
+                printf "enableing 'load' ...\n"
+                d.execute_script("enableLoadSceneFile('%s')" % filepath)
+            end
         }
         dlg.add_action_callback("applyRenderOptions") { |d,p|
-            @renderOptions.setOptionsFromString(p)
+            @renderOptions.setOptionsFromString(d,p)
         }
         
         ## shadow_info (location and sky)

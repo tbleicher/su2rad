@@ -1,7 +1,21 @@
 
+// set environment
+if (navigator.userAgent.indexOf("Windows") != -1) {
+    // this is Windows
+    var PATHSEP = "\\";
+    var PLATFORM = "Windows";
+} else {
+    var PATHSEP = "/";
+    var PLATFORM = "Mac";
+}
+
+
+// flag for backend 
+var SKETCHUP = false;
+var _currentStatusDiv = "statusTabExport"
+
 var map, marker, lastPoint;
 
-var _currentStatusDiv = "statusTabExport"
 
 function ExportSettingsObject() {
     this.scenePath = '.';
@@ -76,6 +90,10 @@ var exportSettings = new ExportSettingsObject();
 function initPage() {
     log.toggle();
     window.resizeTo(640,800);
+    // hide file selectors if FF3
+    if (navigator.userAgent.indexOf('Firefox/3') != -1) {
+        document.getElementById("sceneFileSelection").style.display='none';
+    }
     if (SKETCHUP == false) {
         // fill dialog with test data
         getExportOptions();
@@ -192,26 +210,104 @@ function reverseData(val) {
     return d;
 }
 
-
-function onSelectExportPath() {
-    var val=document.getElementById("fileselection").value;
-    val=escape(val);
-    var reversedsrc=reverseData(val);
-    var nameEnd=reversedsrc.indexOf('/');
-    // TODO: onSelectExportPath: path manipulation in Windows
-    var name=reversedsrc.substring(nameEnd,reversedsrc.length)
-    name=reverseData(name);
-    name=unescape(name);
-    var path=reversedsrc.substring(0,nameEnd);
-    path=reverseData(path);
-    path=unescape(path);
-    // apply to exportSettings first
-    exportSettings.scenePath = path;
-    exportSettings.sceneName = name;
-    exportSettings.updateDisplay();
-    applyExportOptions();
+function _getExportPath() {
+    var p = document.getElementById("scenePath").value;
+    var f = document.getElementById("sceneName").value;
+    if (p[p.length-1] == PATHSEP) {
+        var path = p + f;
+    } else {
+        var path = p + PATHSEP + f;
+    }
+    return path;
 }
 
+function setExportPath(path) {
+    if (path == null) {
+        path = _getExportPath();
+    }
+    var pf = splitPath(path);
+    // apply to exportSettings first
+    exportSettings.scenePath = pf[0];
+    exportSettings.sceneName = pf[1];
+    exportSettings.updateDisplay();
+    applyExportOptions();
+} 
+
+function onSelectExportPath() {
+    if (navigator.userAgent.indexOf('Firefox/3') != -1) {
+        // FireFox 3 does not provide full path
+        log.error('Firefox 3 can not be used to set export path. Sorry');
+        alert('Firefox 3 can not be used to set export path. Sorry');
+        // TODO: hide file selection
+        setExportPath();
+    } else {
+        var val=document.getElementById("fileselection").value;
+        setExportPath(val);
+    }
+}
+
+function splitPath(val) {
+    var text="fileselection: '" + val + "'<br/>";
+    setStatusMsg(text);
+    val=encodeURI(val);
+    var reversedsrc=reverseData(val);
+    text += "reversedsrc: " + reversedsrc + "<br/>";
+    setStatusMsg(text);
+    var nameEnd=reversedsrc.indexOf(PATHSEP);
+    var name=reversedsrc.substring(0,nameEnd);
+    text += "name rev: '" + name + "'<br/>";
+    name=reverseData(name);
+    text += "name esc: '" + name + "'<br/>";
+    name=decodeURI(name);
+    text += "name: '" + name + "'<br/>";
+    setStatusMsg(text);
+    var path=reversedsrc.substring(nameEnd, reversedsrc.length);
+    text += "path rev: '" + path + "'<br/>";
+    path=reverseData(path);
+    text += "path esc: '" + path + "'<br/>";
+    path=decodeURI(path);
+    text += "path: '" + path + "'<br/>";
+    setStatusMsg(text);
+    return [path,name];
+}
+
+function onLoadSceneFile() {
+    // open scene file
+    try {
+        // access file contents via nsIDOMFileList (FireFox, Mozilla)
+        var files = document.getElementById("fileselection").files;
+        var text = files.item(0).getAsText('UTF-8');
+        _loadSceneFile(text);
+    } catch (e) {
+        // asigne callback for file access via Sketchup
+        loadFileCallback = loadSceneFile;
+        var path = _getExportPath();
+        loadTextFile(path);
+    }
+}
+
+function loadSceneFile(text) {
+    // loadTextFile callback to read scene (*.rif) files
+    text = text.replace(/\+/g," ");
+    text = unescape(text);
+    setStatusMsg("<b>file contents:</b><br/><code>" + text.replace(/\n/g,'<br/>') + "</code>");
+    _loadSceneFile(text);
+}
+
+function _loadSceneFile(text) {
+    if (radOpts.getOptionsFromFileText(text)) {
+        document.getElementById("loadSceneButton").value='reload';
+        radOpts.loadedFile = _getExportPath();
+    }
+    //document.getElementById("loadSceneButton").style.display='none';
+}
+
+function enableLoadSceneFile(path) {
+    document.getElementById("loadSceneButton").style.display='';
+    if (radOpts.loadedFile == path) {
+        document.getElementById("loadSceneButton").value='reload';
+    }
+}
 
 function setExportOptionsJSON(msg) {
     var json = msg.replace(/#COMMA#/g,",");
