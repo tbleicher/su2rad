@@ -8,6 +8,9 @@
 
         <title>Radiance Export</title>
         
+        <!-- log panel for debugging -->
+        <script type="text/javascript" src="./blackbirdjs/blackbird.js"></script>
+        
         <!-- google map and jsr_class for geonames.org requests -->
         <!-- XXX REMOVE
         <script type="text/javascript" src="http://maps.google.com/maps?file=api&amp;v=2&amp;key=ABQIAAAAVkCvvMxWS6sy1KKSLvN3URTDis0fJxnS-wzgwKhlyWVJxXLRhxQq9kdL_d2nO8XPOQO2xIrAWCmccw"></script>
@@ -28,9 +31,6 @@
         <script type="text/javascript" src="./js/su2rad_sky.js"></script>
         <script type="text/javascript" src="./js/su2rad_location.js"></script>
         <script type="text/javascript" src="./js/su2rad_radopts.js"></script>
-        
-        <!-- log panel for debugging -->
-        <script type="text/javascript" src="./blackbirdjs/blackbird.js"></script>
         
         <script type="text/javascript">
             /* create tabs */
@@ -76,19 +76,22 @@
                     <div class="gridRow">
                         <div class="gridLabel">path:</div>
                         <div class="gridCell" style="width:305px;">
-                            <div class="fileinputs">
+                            <div class="fileinputs" id="sceneFileSelection">
                                 <input type="file" class="file" id="fileselection" onchange="onSelectExportPath()" />
                                 <div class="fakefile">
                                     <img src="./css/24-zoom.png" />
                                 </div>
                             </div>
-                            <input type="text" style="width:275px;" name="scenePath" id="scenePath" value="-p-"/>
+                            <input type="text" style="width:275px;" name="scenePath" id="scenePath" value="-p-"
+                            onchange="setExportPath()"/>
                         </div>
                     </div>
                     <div class="gridRow">
                         <div class="gridLabel">scene:</div>
-                        <div class="gridCell" style="width:305px;">
-                            <input type="text" class="fileNameInput" style="width:275px;" name="sceneName" id="sceneName" value="-"/>
+                        <div class="gridCell" style="width:385px;">
+                            <input type="text" class="fileNameInput" style="width:275px;" name="sceneName" id="sceneName" value="-"
+                            onchange="setExportPath()"/>
+                            <input type="button" id="loadSceneButton" class="loadbutton" style="display:none;" value="load" onclick="onLoadSceneFile()"/>
                         </div>
                     </div>
                     <div class="gridRow" style="margin-top:5px;">

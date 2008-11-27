@@ -44,6 +44,11 @@ else
     $OS = 'WIN'
 end
 
+## extend search path to subdirectories
+basedir = File.dirname(__FILE__)
+$:.push(File.join(basedir, 'su2radlib'))
+$:.push(File.join(basedir, 'su2radlib', 'rubylib'))
+
 require "sketchup.rb"
 require "su2radlib/preferences.rb"
 require "su2radlib/exportbase.rb"
