@@ -1,4 +1,4 @@
-require "su2radlib/exportbase.rb"
+require "exportbase.rb"
 
 
 class MaterialDefinition < ExportBase

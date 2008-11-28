@@ -389,7 +389,7 @@
             <div id="tab-sky">
                 <h3>
                     <input type="button" id="applyLocationValues" value="apply" class="floatright" onclick="onApplyLocation()" disabled=true />
-                    <input type="button" id="reloadShadowInfo" value="reload" class="floatright" onclick="getShadowInfo()">
+                    <input type="button" id="reloadShadowInfo" value="reload" class="floatright" onclick="getSkySettings()">
                     SketchUp model settings
                 </h3>
                 
@@ -516,9 +516,15 @@
                         <input type="text" class="locationOptionInput" name="Latitude" id="Latitude" value="56.7" tabindex="4" onchange="onLatLongChange()" />
                     </div>
                     <div class="optionsRow" style="width:160px;">
-                        <span class=gridLabel>Longitude:</span>
+                        <span class="gridLabel">Longitude:</span>
                         <input type="text" class="locationOptionInput" name="Longitude" id="Longitude" value="0.12" tabindex="5" onchange="onLatLongChange()"/>
                     </div>
+                    <div class="optionsRow" style="width:160px;height:14px;min-height:14px;">
+                        <div class="gridLabel">
+                            <span class="controlValue">Radiance:</span>
+                        </div>
+                        <span class="controlValue" id="radianceLongitude">-o </span>
+                    </div>    
                     <div class="optionsRow" style="width:160px;height:14px;min-height:14px;">
                         <span class="controlValue" id="meridianWarning"></span>
                     </div>
@@ -531,7 +537,8 @@
                     </div>
                     <div class="optionsRow" style="width: 170px;">
                         <span class=gridLabel style="width:60px;" id="TZOffsetLable">tzone:</span>
-                        <select name="TZOffset" id="TZOffset" tabindex="7" style="width:110px;" onchange="selectTZ()">
+                        <select name="TZOffset" id="TZOffset" tabindex="7" style="width:110px;"
+                            onchange="onSelectTZ()" onmousedown="clearTZWarning()">
                             <option value="13"  >NZDT +13</option>
                             <option value="12"  >NZST +12</option>
                             <option value="11"  >AEDT +11</option>

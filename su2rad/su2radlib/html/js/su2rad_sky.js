@@ -31,7 +31,7 @@ SkyOptionsObject.prototype.setSkyType = function (stype) {
     }
     var s = stype[1];
     if ( s == 'u' || s == 'c' || s == 'i' || s == 's' ) {
-        if (stype[0] == '+' || stype[0] != '-') {
+        if (stype[0] == '+' || stype[0] == '-') {
             this.skytype = stype;
             return true;
         }
@@ -157,7 +157,6 @@ SkyOptionsObject.prototype.toString = function() {
     return text;
 }
 
-var skyOptions = new SkyOptionsObject();
 
 function SkyDateTimeObject() {
     this.skyDateMonth = 3;
@@ -165,6 +164,7 @@ function SkyDateTimeObject() {
     this.skyTimeHour = 12;
     this.skyTimeMinute = 00;
     this._maxDays = [31,28,31,30,31,30,31,31,30,31,30,31];
+    this.changed = false;
 }
 
 SkyDateTimeObject.prototype.getValueString = function (id) {
@@ -175,17 +175,20 @@ SkyDateTimeObject.prototype.getValueString = function (id) {
     return s;
 }
 
-SkyDateTimeObject.prototype.set = function (id,val) {
+SkyDateTimeObject.prototype.setValue = function (id,val) {
     if (this._checkLimit(id,val) == false) {
+        log.warn("value out of range: id='" + id + "' val='" + val + "'");
         return false;
     }
     this[id] = val;
+    this.changed = true;
     if (id == 'skyDateMonth') {
         var maxdays = this._maxDays[val-1];
         if (this.skyDateDay > maxdays) {
             this.skyDateDay = maxdays;
         }
-    } 
+    }
+    return true;
 }
 
 SkyDateTimeObject.prototype.setFromShadowTime = function (stime) {
@@ -195,6 +198,7 @@ SkyDateTimeObject.prototype.setFromShadowTime = function (stime) {
     this.skyDateDay    = sdate.getUTCDate();
     this.skyTimeHour   = sdate.getUTCHours();
     this.skyTimeMinute = sdate.getUTCMinutes();
+    this.changed = false;
     /*XXX
     var text = "stime='" + stime + "'<br/> ";
     text += "msec=" + msec + "<br/>";
@@ -235,79 +239,24 @@ SkyDateTimeObject.prototype.toGenskyString = function () {
     return text;
 }
 
+
+
+
+var skyOptions = new SkyOptionsObject();
 var skyDateTime = new SkyDateTimeObject();
 
-function onSkyGenChange() {
-    var sel = document.getElementById('skyGenerator');
-    skyOptions.setGenerator(sel.value);
-    for (i=0; i<sel.options.length; i++) {
-        if (sel.options[i].value == skyOptions.generator) {
-            sel.selectedIndex = i;
-        }
-    }
-    updateSkyOptionsDisplay()
-}
-
-function onSkyDateTimeChange(id) {
+function onGenskyInputChanged(opt) {
+    var id = "genskyOptionInput" + opt;
     var val = document.getElementById(id).value;
-    if (val.indexOf('0') == 0 && val.length == 2) {
-        val = val.substring(1,2);
+    var v = parseFloat(val);
+    if (isNaN(v)) {
+        alert("value is not a number: '" + val + "'");
+        document.getElementById(id).value = skyOptions[opt];;
+    } else {
+        skyOptions[opt] = v;
     }
-    val = parseInt(val);
-    skyDateTime.set(id, val);
-    document.getElementById(id).value = skyDateTime.getValueString(id);
-    if (id == 'skyDateMonth') {
-        document.getElementById('skyDateDay').value = skyDateTime.getValueString('skyDateDay');
-    }
-}
-
-function updateSkyDateTimeDisplay() {
-    document.getElementById('skyDateMonth').value = skyDateTime.getValueString('skyDateMonth');
-    document.getElementById('skyDateDay').value = skyDateTime.getValueString('skyDateDay');
-    document.getElementById('skyTimeHour').value = skyDateTime.getValueString('skyTimeHour');
-    document.getElementById('skyTimeMinute').value = skyDateTime.getValueString('skyTimeMinute');
-}
-
-function updateGenskyOptions() {
-    var opts = ["general","-g","-t","zenith","-b","-B","solar","-r","-R"];
-    var text = "<div class=\"optionsHeader\" style=\"width:280px;\">";
-    text += "<span class=\"gridLabel\" style=\"width:240px;\">gensky options:</span>";
-    for (var i=0; i<opts.length; i++) {
-        opt = opts[i];
-        if (opt[0] != '-') {
-            text += "</div><div class=\"optionsColumn\">";
-            text += "<div class=\"rpictOverrideHeader\">" + opt + "</div>";
-        } else {
-            text += _getGenskyOptionDiv(opt[1]);
-        }
-    }
-    text += "</div>";
-    document.getElementById("skyOptsGensky").innerHTML = text;
-    $('.skyOptionInput').numeric({allow:"."});
-}
-
-function _getGenskyOptionDiv(opt) {
-    var text = "";
-    var style = "rpictOverride";
-    var state = "";
-    if (skyOptions.isActive(opt) == true) {
-        style = "rpictOverrideSelected";
-        state = "checked";
-    }
-    var text = "<div class=\"" + style + "\" style=\"width:85px;\">";
-    text += "<input type=\"checkbox\" class=\"rpictCB\" id=\"genskyOptionCB_" + opt + "\"";
-    text += " onchange=\"onGenskyOptionCB('" + opt + "')\" " + state + "/>"
-    text += "<span class=\"gridLabel\" style=\"width:20px;padding-left:5px;\">-" + opt + ":</span>";
-    if (skyOptions.isActive(opt) == true) {
-        text += "<input type=\"text\" class=\"skyOptionInput\"";
-        text += " id=\"genskyOptionInput" + opt + "\"";
-        text += " value=\"" + skyOptions[opt] + "\"";
-        text += " onchange=\"onGenskyInputChanged('" + opt + "')\" />";
-    } else if (opt == 'g' || opt == 't') {
-        text += "<span class=\"gridLabel\" style=\"width:40px\">" + skyOptions[opt] + "</span>";
-    }
-    text += "</div>"
-    return text;
+    //document.getElementById('skyCommandLine').innerHTML = skyOptions.toString();
+    updateSkyPage();
 }
 
 function onGenskyOptionCB(opt) {
@@ -332,32 +281,71 @@ function onGenskyOptionCB(opt) {
         log.error(e.name + " opt=" + opt + " cbid=" + cbid);
     }
     skyOptions.setActive(opt, checked);
-    updateGenskyOptions();
-    setSkySummary();
+    _updateGenskyOptions();
+    updateSkyPage();
 }
 
-function onGenskyInputChanged(opt) {
-    var id = "genskyOptionInput" + opt;
+function onSkyDateTimeChange(id) {
     var val = document.getElementById(id).value;
-    var v = parseFloat(val);
-    if (isNaN(v)) {
-        alert("value is not a number: '" + val + "'");
-        document.getElementById(id).value = skyOptions[opt];;
-    } else {
-        skyOptions[opt] = v;
+    if (val.indexOf('0') == 0 && val.length == 2) {
+        val = val.substring(1,2);
     }
+    val = parseInt(val);
+    if (skyDateTime.setValue(id, val) == true) {
+        log.info("new value for '" + id + "': '" + val + "'");
+    } else {
+        alert("value out of range:\nid='" + id + "'\nvalue='" + val + "'");
+    }
+    document.getElementById(id).value = skyDateTime.getValueString(id);
+    if (id == 'skyDateMonth') {
+        document.getElementById('skyDateDay').value = skyDateTime.getValueString('skyDateDay');
+    }
+    updateSkyPage()
+}
+
+function onSkyGenChange() {
+    var sel = document.getElementById('skyGenerator');
+    skyOptions.setGenerator(sel.value);
+    for (i=0; i<sel.options.length; i++) {
+        if (sel.options[i].value == skyOptions.generator) {
+            sel.selectedIndex = i;
+        }
+    }
+    updateSkyOptionsDisplay()
+    updateSkyPage()
+}
+
+function onSkyTypeChange() {
+    var stype = document.getElementById('genskySkyType').value;
+    if (stype == 'c' || stype == 'u') {
+        document.getElementById('sunOptionCB').checked = false;
+        document.getElementById('genskySunOption').style.display='none';
+    } else {
+        document.getElementById('genskySunOption').style.display='';
+    }
+    var sun = '-';
+    if (document.getElementById('sunOptionCB').checked == true) {
+        sun = '+';
+    }
+    stype = sun+stype;
+    if (skyOptions.setSkyType(stype)) {
+        log.info("new sky type: '" + stype + "'");
+    } else {
+        log.error("onSkyTypeChange(): error setting sky type '" + stype + "'");
+    }
+    updateSkyPage()
     //document.getElementById('skyCommandLine').innerHTML = skyOptions.toString();
-    setSkySummary();
 }
 
 function updateSkyOptionsDisplay() {
     if (skyOptions.generator == 'gensky') {
-        updateGenskyOptions();
+        _updateGenskyOptions();
     }
     setOptionsVisibility(skyOptions.generator); 
 }
 
 function setOptionsVisibility(generator) {
+    //log.debug("setOptbionsVisibility('" + generator + "')");
     if (generator == 'gendaylit') {
         document.getElementById('genskyTypeOptions').style.display='none';
         document.getElementById('gendaylitTypeOptions').style.display='';
@@ -380,6 +368,8 @@ function setOptionsVisibility(generator) {
 }
 
 function setSkySummary() {
+    // update command line showing sky generator options
+    log.debug(">> setSkySummary() - apply values to SU?");
     var loc = modelLocation.City + ", "+ modelLocation.Country;
     document.getElementById("skySummaryLocation").innerHTML = loc;
     document.getElementById("skySummaryNorth").innerHTML = modelLocation.NorthAngle.toFixed(2);
@@ -393,27 +383,69 @@ function setSkySummary() {
     var mer = modelLocation.TZOffset * -15.0;
     latlng = " -a " + lat.toFixed(4) + " -o " + lng.toFixed(4) + " -m " + mer.toFixed(1);
     var sky = skyOptions.toString() + " " + latlng + rot;
+    modelLocation.SkyCommand = sky;
     setStatusMsg(sky);
     document.getElementById("skySummaryOptions").innerHTML = sky;
+    //applySkySettings();
 }
 
-function onSkyTypeChange() {
-    var stype = document.getElementById('genskySkyType').value;
-    if (stype == 'c' || stype == 'u') {
-        document.getElementById('sunOptionCB').checked = false;
-        document.getElementById('genskySunOption').style.display='none';
-    } else {
-        document.getElementById('genskySunOption').style.display='';
+function updateSkyDateTimeDisplay() {
+    document.getElementById('skyDateMonth').value = skyDateTime.getValueString('skyDateMonth');
+    document.getElementById('skyDateDay').value = skyDateTime.getValueString('skyDateDay');
+    document.getElementById('skyTimeHour').value = skyDateTime.getValueString('skyTimeHour');
+    document.getElementById('skyTimeMinute').value = skyDateTime.getValueString('skyTimeMinute');
+}
+
+function updateSkyFormValues (noSummary) {
+    // update sky related dialog elements
+    log.error("> updateSkyFormValues()");
+    updateSkyOptionsDisplay();
+    updateSkyDateTimeDisplay();
+    if (noSummary == true) {
+        return;
     }
-    var sun = '-';
-    if (document.getElementById('sunOptionCB').checked == true) {
-        sun = '+';
-    }
-    skyOptions.setSkyType(sun + stype);
     setSkySummary()
-    //document.getElementById('skyCommandLine').innerHTML = skyOptions.toString();
 }
 
-function _updateSkyFormValues () {
-    
+function _updateGenskyOptions() {
+    var opts = ["general","-g","-t","zenith","-b","-B","solar","-r","-R"];
+    var text = "<div class=\"optionsHeader\" style=\"width:280px;\">";
+    text += "<span class=\"gridLabel\" style=\"width:240px;\">gensky options:</span>";
+    for (var i=0; i<opts.length; i++) {
+        opt = opts[i];
+        if (opt[0] != '-') {
+            text += "</div><div class=\"optionsColumn\">";
+            text += "<div class=\"rpictOverrideHeader\">" + opt + "</div>";
+        } else {
+            text += _updateGenskyOptionsDiv(opt[1]);
+        }
+    }
+    text += "</div>";
+    document.getElementById("skyOptsGensky").innerHTML = text;
+    $('.skyOptionInput').numeric({allow:"."});
 }
+
+function _updateGenskyOptionsDiv(opt) {
+    var text = "";
+    var style = "rpictOverride";
+    var state = "";
+    if (skyOptions.isActive(opt) == true) {
+        style = "rpictOverrideSelected";
+        state = "checked";
+    }
+    var text = "<div class=\"" + style + "\" style=\"width:85px;\">";
+    text += "<input type=\"checkbox\" class=\"rpictCB\" id=\"genskyOptionCB_" + opt + "\"";
+    text += " onchange=\"onGenskyOptionCB('" + opt + "')\" " + state + "/>"
+    text += "<span class=\"gridLabel\" style=\"width:20px;padding-left:5px;\">-" + opt + ":</span>";
+    if (skyOptions.isActive(opt) == true) {
+        text += "<input type=\"text\" class=\"skyOptionInput\"";
+        text += " id=\"genskyOptionInput" + opt + "\"";
+        text += " value=\"" + skyOptions[opt] + "\"";
+        text += " onchange=\"onGenskyInputChanged('" + opt + "')\" />";
+    } else if (opt == 'g' || opt == 't') {
+        text += "<span class=\"gridLabel\" style=\"width:40px\">" + skyOptions[opt] + "</span>";
+    }
+    text += "</div>"
+    return text;
+}
+

@@ -1,6 +1,6 @@
-require "su2radlib/exportbase.rb"
-require "su2radlib/context.rb"
-require "su2radlib/webdialog.rb"
+require "exportbase.rb"
+require "context.rb"
+require "webdialog.rb"
 
 class RadianceScene < ExportBase
 

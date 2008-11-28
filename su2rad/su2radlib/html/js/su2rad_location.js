@@ -70,6 +70,7 @@ ModelLocationObject.prototype.toParamString = function () {
     text += '&Longitude=' + this.Longitude.toFixed(4);
     text += '&TZOffset=' + this.TZOffset.toFixed(1);
     text += '&NorthAngle=' + this.NorthAngle.toFixed(4);
+    text += '&SkyCommand=' + this.SkyCommand;
     return text;
 }
 
@@ -77,7 +78,7 @@ var modelLocation = new ModelLocationObject();
 
 
 function calculateTZOffset(long) {
-    log.debug("calculateTZOffset(" + long + ")");
+    //log.debug("calculateTZOffset(" + long + ")");
     var west = false;
     var offset = +1.0;
     var mer = 0.0;
@@ -98,7 +99,6 @@ function calculateTZOffset(long) {
         mer *= -1;
         offset *= -1;
     }
-    log.debug("long=" + long + " mer=" + mer + " offset=" + offset);
     setTZHighlight(true); 
     return offset;
 }
@@ -131,7 +131,7 @@ function centerCity(city, country, lat, lng) {
     modelLocation.setValue('Longitude', lng);
     googleMapSetCenter(parseFloat(lat),parseFloat(lng),11);
     setStatusMsg('');
-    updateSkyLocFormValues()
+    updateSkyPage()
 }
 
 
@@ -157,7 +157,6 @@ function formatCity(city) {
 function onCityCountryChanged() {
     var city = document.getElementById("City").value;
     if (city != modelLocation.City) {
-        log.info("new city: " + city);
         modelLocation.setValue('City', city);
         document.getElementById("googleMapLookup").disabled = false;
     }
@@ -166,7 +165,7 @@ function onCityCountryChanged() {
         modelLocation.setValue('Country', country);
         document.getElementById("googleMapLookup").disabled = false;
     }
-    updateSkyLocFormValues()
+    updateSkyPage()
 }
 
 function onNorthAngleChange() {
@@ -175,7 +174,7 @@ function onNorthAngleChange() {
     }
     var north = parseFloat(document.getElementById("NorthAngle").value);
     modelLocation.setValue('NorthAngle', north);
-    updateSkyLocFormValues()
+    updateSkyPage();
 } 
 
 function onLatLongChange() {
@@ -204,42 +203,52 @@ function resetCityCountry() {
     modelLocation.changed = true;
 }
 
+function clearTZWarning() {
+    setTZHighlight(false);
+    setLocationWarning("");
+}
 
-function selectTZ() {
+function onSelectTZ() {
     var offset = document.getElementById('TZOffset').value;
-    log.debug("selectTZ(" + offset + ")");
     modelLocation.setValue('TZOffset', offset);
     setTZHighlight(false);
+    setLocationWarning("");
     setTZWarning(parseFloat(offset));
-    updateSkyLocFormValues();
+    updateSkyPage();
 }
 
 
 function setLatLong(lat,lng) {
-    log.debug("setLatLong(lat=" + lat.toFixed(4) + ", lng=" + lng.toFixed(4));
     modelLocation.setValue('Latitude', lat);
     if (modelLocation.Longitude != parseFloat(lng)) {
         modelLocation.setValue('Longitude', lng);
         var offset = calculateTZOffset(lng);
         modelLocation.setValue('TZOffset', offset);
         setTZOffsetSelection(offset);
+        setLocationWarning("<input type=\"button\" value=\"confirm TZ\" onclick=\"javascript:clearTZWarning()\" />");
     }
-    updateSkyLocFormValues()
+    updateSkyPage();
 }
 
 
-function setShadowInfoJSON(msg) {
-    // parse and apply shadow_info settings in JSON string 'msg'
-    log.debug("setShadowInfoJSON() (" + msg.length + " bytes)");
-    var json = msg.replace(/#COMMA#/g,",");
+function decodeJSON(text) {
+    var json = text.replace(/#COMMA#/g,",");
     try {
-        eval("var shadowinfo = " + json);
+        eval("var array = " + json);
     } catch (e) {
         log.error(e.name);
         setStatusMsg("error in shadow_info array: " + e.name + "<br/>" + json);
         return
-        var shadowinfo = new Array();
+        var array = new Array();
     }
+    return array;
+}
+    
+
+function setShadowInfoJSON(msg) {
+    // parse and apply shadow_info settings in JSON string 'msg'
+    log.debug("setShadowInfoJSON() (" + msg.length + " bytes)");
+    shadowinfo = decodeJSON(msg);
     var text = '<b>shadow info settings:</b><br/>';
     modelLocation.logging = false;
     for(var j=0; j<shadowinfo.length; j++) {
@@ -256,9 +265,9 @@ function setShadowInfoJSON(msg) {
     setStatusMsg(text);
     skyOptions.parseSkyCommand(modelLocation.SkyCommand);
     skyDateTime.setFromShadowTime(modelLocation.ShadowTime);
-    updateSkyDateTimeDisplay();
-    updateSkyLocFormValues();
     googleMapInitialize(modelLocation.Latitude, modelLocation.Longitude);
+    updateSkyPage();
+    log.error("modelLocation.changed=" + modelLocation.changed)
 }
 
 
@@ -276,58 +285,49 @@ function setTZHighlight(set) {
 
 
 function setTZOffsetSelection(offset) {    
-    log.debug("setTZOffsetSelection(offset=" + offset + ")");
+    //log.debug("setTZOffsetSelection(offset=" + offset + ")");
     offset = parseFloat(offset);
     var tz = document.getElementById('TZOffset');
     for (var i=0; i < tz.length; i++) {
         if (parseFloat(tz[i].value) == offset) {
             tz[i].selected = true;
-            log.debug("   selection=" + tz[i].text);
+            //log.debug("   selection=" + tz[i].text);
         }
     }
     setTZWarning(offset);
 }
 
+function setLocationWarning(msg) {
+    document.getElementById("meridianWarning").innerHTML = msg;
+}
 
 function setTZWarning(offset) {
     var mer = offset*15.0;
     var diff = parseFloat(document.getElementById('Longitude').value) - mer;
     if (diff > 25 || diff < -25) {
-        document.getElementById("meridianWarning").innerHTML="diff to meridian: " + diff.toFixed(1);
-    } else {
-        document.getElementById("meridianWarning").innerHTML="";
+        setLocationWarning("diff to meridian: " + diff.toFixed(1));
     }
 }
 
-function updateSkyLocFormValues() {
-    _updateLocationFormValues();
-    _updateSkyFormValues();
-    setSkySummary()
-    // make 'apply' button visible if values have changed
-    if (modelLocation.changed == true) {
-        document.getElementById("applyLocationValues").disabled=false;
-        document.getElementById("reloadShadowInfo").disabled=false;
-    } else {
-        document.getElementById("applyLocationValues").disabled=true;
-        document.getElementById("reloadShadowInfo").disabled=true;
-    }
-    updateSkyOptionsDisplay()
-}
-
-function _updateLocationFormValues() {
-    log.debug("_updateLocationFormValues");
+function updateLocationFormValues(noSummary) {
     document.getElementById('City').value       = modelLocation.City;
     document.getElementById('Country').value    = modelLocation.Country;
     document.getElementById('Latitude').value   = modelLocation.Latitude.toFixed(4);
     document.getElementById('Longitude').value  = modelLocation.Longitude.toFixed(4);
     document.getElementById('NorthAngle').value = modelLocation.NorthAngle.toFixed(2);
+    var radLng = modelLocation.Longitude*-1
+    document.getElementById('radianceLongitude').innerHTML = "-o " + radLng.toFixed(4);
     setTZOffsetSelection(modelLocation.TZOffset);
     // set meridian display
-    var mer = parseFloat(document.getElementById('TZOffset').value)*15.0;
+    var mer = parseFloat(document.getElementById('TZOffset').value)*-15.0;
     document.getElementById('meridianDisplay').innerHTML = "-m " + mer.toFixed(1);
     // check values
     //checkValueLatLong("Latitude", 90);
     //checkValueLatLong("Longitude", 190);
     //checkValueLatLong("NorthAngle", 360);
+    if (noSummary == true) {
+        return;
+    }
+    setSkySummary();
 }
 

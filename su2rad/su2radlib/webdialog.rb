@@ -8,10 +8,18 @@ module JSONUtils
         s.gsub('"','\\\\\\"').gsub("'","\\\\'")
     end
 
-    def myEscape(string)
+    def urlEncode(string)
+        ## URL-encode from Ruby::CGI
         string.gsub(/([^ a-zA-Z0-9_.-]+)/n) do
             '%' + $1.unpack('H2' * $1.size).join('%').upcase
         end.tr(' ', '+')
+    end
+    
+    def urlDecode(string)
+        ## URL-decode from Ruby::CGI
+        string.tr('+', ' ').gsub(/((?:%[0-9a-fA-F]{2})+)/n) do
+            [$1.delete('%')].pack('H*')
+        end
     end
     
     def getJSONDictionary(dict)
@@ -182,6 +190,93 @@ class RenderOptions
 end
 
 
+class SkyOptions
+    
+    include JSONUtils
+
+    def initialize
+        @_settings = Hash.new()
+        @_sinfo_unused = ['DisplayNorth', 'EdgesCastShadows', 'Light', 'Dark', 
+                          'SunRise', 'SunRise_time_t',
+                          'SunSet', 'SunSet_time_t',
+                          'DisplayOnAllFaces', 'DisplayOnGroundPlane']
+        _syncSettings()
+    end
+    
+    def getSkyCommand()
+        rsky = RadianceSky.new()
+        txt = rsky.getGenSkyOptions()
+        #TODO: update from attributes
+        return txt
+    end
+    
+    def getShadowInfo(d,p='')
+        ## get shadow_info dict and apply to dialog
+        printf "\ngetShadowInfo() ... "
+        _syncSettings()
+        json = getJSONDictionary(@_settings)
+        d.execute_script( "setShadowInfoJSON('%s')" % json )
+        printf "done\n"
+        printf "SkyCommand: %s\n" % getSkyCommand()
+    end
+
+    def _syncSettings() 
+        sinfo = Sketchup.active_model.shadow_info
+        dict = {}
+        sinfo.each { |k,v| dict[k] = v }
+        @_sinfo_unused.each { |k| dict.delete(k) }
+        dict['SkyCommand'] = getSkyCommand()
+        @_settings.update(dict)
+    end
+        
+    def toJSON
+        json = getJSONDictionary(@_settings)
+        return json
+    end
+    
+    def _evalParams(param)
+        ## evaluate string <param> to [k,v] pairs
+        pairs = param.split("&")
+        newpairs = []
+        pairs.each { |pair| 
+            k,v = pair.split("=")
+            begin
+                v = Float(v)
+            rescue => e
+                v = v
+            end
+            newpairs.push([k,v])
+        }
+        return newpairs
+    end 
+    
+    def setShadowInfoValues(d,p)
+        ## set shadow_info values from dialog
+        pairs = _evalParams(p)
+        pairs.each { |k,v|
+            printf "setSIV  k='%s'  v='%s'\n" % [k,v]
+            if (@_settings.has_key?(k) == false) || @_settings[k] != v
+                printf "skySettings: new value for '%s': '%s'\n" % [k,v]
+                @_settings[k] = v
+            end
+        }
+    end
+
+    def apply
+        ## apply values in _settings to shadow_info
+        sinfo = Sketchup.active_model.shadow_info
+        @_settings.each_pair { |k,v|
+            begin
+                sinfo[k] = v
+            rescue => e
+                # attribute error
+                printf "error: %s\n" % e
+            end
+        }
+    end
+        
+end
+
 class ExportDialogWeb
     
     include JSONUtils
@@ -191,11 +286,7 @@ class ExportDialogWeb
         @selectedViews = {}
         @exportOptions = ExportOptions.new()
         @renderOptions = RenderOptions.new()
-        
-        @sinfo_unused = ['DisplayNorth', 'EdgesCastShadows', 'Light', 'Dark', 
-                         'SunRise', 'SunRise_time_t',
-                         'SunSet', 'SunSet_time_t',
-                         'DisplayOnAllFaces', 'DisplayOnGroundPlane']
+        @skyOptions = SkyOptions.new()
     end
 
     def _initExportOptions(dlg, p='')
@@ -212,7 +303,7 @@ class ExportDialogWeb
         if File.exists?(filepath)
             f = File.open(filepath, 'r')
             text = f.read()
-            text = myEscape(text)
+            text = urlEncode(text)
         end
         dlg.execute_script("loadFileCallback('%s')" % text)
     end
@@ -259,40 +350,7 @@ class ExportDialogWeb
         }
     end
 
-    def getSkyCommand()
-        rsky = RadianceSky.new()
-        txt = rsky.getGenSkyOptions()
-        #TODO: update from attributes
-        return txt
-    end
-    
-    def getShadowInfo(d,p='')
-        ## get shadow_info dict and apply to dialog
-        printf "\ngetShadowInfo() ... "
-        sinfo = Sketchup.active_model.shadow_info
-        dict = {}
-        sinfo.each { |k,v| dict[k] = v }
-        @sinfo_unused.each { |k| dict.delete(k) }
-        dict['SkyCommand'] = getSkyCommand()
-        json = getJSONDictionary(dict)
-        d.execute_script( "setShadowInfoJSON('%s')" % json )
-        printf "done\n"
-        printf "SkyCommand: %s\n" % getSkyCommand()
-    end
 
-    def setShadowInfoValues(d,p)
-        ## set shadow_info values from dialog
-        sinfo = Sketchup.active_model.shadow_info
-        pairs = p.split("&")
-        pairs.each { |pair|
-            k,v = pair.split("=")
-            begin
-                sinfo[k] = Float(v)
-            rescue => e
-                sinfo[k] = v
-            end
-        }
-    end
         
     def show(title="dialog_TEST")
         ## create and show WebDialog
@@ -317,7 +375,7 @@ class ExportDialogWeb
             ## check if selected file path exists and enable 'load' button
             filepath = File.join(@exportOptions.scenePath,@exportOptions.sceneName)
             if File.exists?(filepath) && (@renderOptions.loaded?(filepath) == false)
-                printf "enableing 'load' ...\n"
+                printf "enabling 'load' ...\n"
                 d.execute_script("enableLoadSceneFile('%s')" % filepath)
             end
         }
@@ -326,13 +384,17 @@ class ExportDialogWeb
         }
         
         ## shadow_info (location and sky)
-        dlg.add_action_callback("getShadowInfo") { |d,p|
+        dlg.add_action_callback("getSkySettinge") { |d,p|
             ## get shadow_info dict and apply to dialog
-            getShadowInfo(d,p)
+            d.execute_script("setShadowInfoJSON('%s')" % @skyOptions.toJSON() )
         }
         dlg.add_action_callback("setShadowInfo") { |d,p|
             ## set shadow_info values from dialog
-            setShadowInfoValues(d,p)
+            @skyOptions.setShadowInfoValues(d,p)
+        }
+        dlg.add_action_callback("applySkySettings") { |d,p|
+            ## set shadow_info values from dialog
+            @skyOptions.apply() 
         }
         
         ## views
@@ -357,7 +419,7 @@ class ExportDialogWeb
             dlg.execute_script("setSketchup()")
             _initExportOptions(dlg, '')
             getViewsList(dlg, '')
-            getShadowInfo(dlg, '')
+            dlg.execute_script( "setShadowInfoJSON('%s')" % @skyOptions.toJSON() )
             dlg.execute_script("updateExportPage()")
         }
     end ## end def show

@@ -1,5 +1,5 @@
-require "su2radlib/exportbase.rb"
-require "su2radlib/delauney_mod.rb"
+require "exportbase.rb"
+require "delauney_mod.rb"
 
 class NumericImport < ExportBase
     

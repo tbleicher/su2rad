@@ -14,6 +14,7 @@
 	var bbird;
 	var outputList;
 	var cache = [];
+        var counter = 0;
 	
 	var state = getState();
 	var classes = {};
@@ -84,9 +85,10 @@
 	function addMessage( type, content ) { //adds a message to the output list
 		content = ( content.constructor == Array ) ? content.join( '' ) : content;
 		if ( outputList ) {
+                        counter += 1;
 			var newMsg = document.createElement( 'LI' );
 			newMsg.className = type;
-			newMsg.innerHTML = [ '<span class="icon"></span>', content ].join( '' );
+			newMsg.innerHTML = [ '<span class="icon"></span>', counter + " " + content ].join( '' );
 			outputList.appendChild( newMsg );
 			scrollToBottom();
 		} else {
