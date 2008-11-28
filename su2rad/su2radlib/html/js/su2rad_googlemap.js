@@ -13,11 +13,11 @@ function checkGoogleMap() {
         return true;
     } catch (e) {
         if (e.name == "ReferenceError") {
-            log.debug("google map not available: " + e);
+            log.debug("checkGoogleMap(): map API not available ('" + e.name + "')");
         } else {
             log.warn("google map API: " + e);
         }
-        googleMapEnable(false);
+        googleMapDisable();
         onlineLookup = false;
         return false;
     }
@@ -94,7 +94,12 @@ function googleMapInitialize(lat,long) {
     try {
         var isCompatible = GBrowserIsCompatible()
     } catch (e) {
-        log.warn("google map API not available (" + e.name + ")")
+        if (e.name == "ReferenceError") {
+            log.info("google map API not available ('" + e.name + "': not online?)")
+        } else {
+            log.error("google map API not available ('" + e.name + "')")
+        }
+        googleMapDisable();
         return;
     }
     if (GBrowserIsCompatible()) {
@@ -146,6 +151,9 @@ function googleMapInitialize(lat,long) {
     }
 }  
 
+function googleMapDisable() {
+    googleMapEnable(false);
+}
 
 function googleMapEnable(enable) {
     if (enable == false) {
