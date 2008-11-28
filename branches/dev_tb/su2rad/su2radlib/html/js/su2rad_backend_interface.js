@@ -27,6 +27,15 @@ function applyModelLocation(params) {
     }
 }
 
+function applySkySettings(skycmd) {
+    var params = modelLocation.toParamString();
+    if (skycmd) {
+        params += "&SkyCommand=" + skycmd
+    }
+    applyModelLocation(params)
+    log.error("TEST: setSkySummary() - apply values to SU?");
+}
+    
 
 function getExportOptions() {
     // collect and set export option values
@@ -46,20 +55,20 @@ function getExportOptions() {
 }
 
 
-function getShadowInfo() {
+function getSkySettings() {
     // get SketchUp shadow_info settings and apply to modelLocation
     if (SKETCHUP == true) {
         log.info("getting shadowInfo from SketchUp ...");
-        window.location = 'skp:getShadowInfo@';
+        window.location = 'skp:getSkySettings@';
         // setShadowInfoJSON() called by Sketchup
     } else {
-        log.debug("getShadowInfo(): 'skp:' not available");
-        msg = _getShadowInfoTest();
+        log.debug("getSkySettings(): 'skp:' not available");
+        msg = _getSkySettingsTest();
         setShadowInfoJSON(msg);
     }
 }
 
-function _getShadowInfoTest() {
+function _getSkySettingsTest() {
     // return dummy JSON string of SketchUp.shadow_info
     var msg =    "[{\"name\":\"City\"#COMMA#\"value\":\"foo_Boulder (CO)\"}";
     msg += "#COMMA#{\"name\":\"Country\"#COMMA#\"value\":\"foo_USA\"}";

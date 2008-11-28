@@ -69,7 +69,6 @@ function googleMapDrag() {
 }
 
 function googleMapDragend() {
-    log.debug("googleMapDragend()")
     googleMapCenterMarker();
     var point = marker.getPoint();
     var zoom = map.getZoom(); 
@@ -191,4 +190,28 @@ function googleMapLookupLocation(location) {
     });
 }
 
-
+function updateGoogleMapLocation() {
+    // google map initiation
+    if (checkGoogleMap() == false) {
+        return;
+    }
+    var lat = modelLocation.Latitude;
+    var lng = modelLocation.Longitude; 
+    var mLat = marker.getPoint().lat()
+    var mLng = marker.getPoint().lng()
+    if (lat.toFixed(4) != mLat.toFixed(4) || lng.toFixed(4) != mLng.toFixed(4)) {
+        log.debug("updating map: lat='" + lat.toFixed(4) + "' mLat='" + mLat.toFixed(4) + "' lng='" + lng.toFixed(4) + "' mLng='" + mLng.toFixed(4) + "'")
+        try {
+            var latlng = new GLatLng(lat, lng);
+            map.setCenter(latlng, map.getZoom());
+        } catch (e) {
+            // there may not be a map yet
+            if (e.name == "TypeError") {
+                log.debug(e + " - no map yet?");
+            } else {
+                log.error(e);
+            }
+        }
+    }
+    // googleMapInitialize(lat,lng);
+}

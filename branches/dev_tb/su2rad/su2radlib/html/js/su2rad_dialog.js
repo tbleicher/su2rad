@@ -98,7 +98,7 @@ function initPage() {
         // fill dialog with test data
         getExportOptions();
         getViewsList();
-        getShadowInfo();
+        getSkySettings();
     }
 }
     
@@ -433,10 +433,12 @@ function setViewsListJSON(msg) {
 
 
 function onApplyLocation() {
+    log.error("DEBUG: onApplyLocation")
     var params = modelLocation.toParamString();
     applyModelLocation(params);
     modelLocation.changed = false;
-    updateSkyLocFormValues()
+    log.error("modelLocation.changed=" + modelLocation.changed)
+    updateSkyPage()
 }
 
 
@@ -485,29 +487,18 @@ function updateRenderPage() {
 }
 
 function updateSkyPage() {
-    log.debug("updateSkyPage()");
-    onSkyTypeChange(); // triggers update of sky command line; 
-    // google map initiation
-    if (checkGoogleMap() == true) {
-        log.debug("  updating map ...");
-        var lat = modelLocation.Latitude;
-        var lng = modelLocation.Longitude; 
-        try {
-            var latlng = new GLatLng(lat, lng);
-            map.setCenter(latlng, map.getZoom());
-        } catch (e) {
-            // there may not be a map yet
-            if (e.name == "TypeError") {
-                log.debug(e);
-            } else {
-                log.error(e);
-            }
-        }
-        // googleMapInitialize(lat,lng);
+    updateLocationFormValues(true);
+    updateSkyFormValues(true);
+    updateGoogleMapLocation();
+    // enable 'apply' if location or time has changed
+    if (modelLocation.changed == true || skyDateTime.changed == true) {
+        document.getElementById("applyLocationValues").disabled=false;
+        document.getElementById("reloadShadowInfo").disabled=false;
+    } else {
+        document.getElementById("applyLocationValues").disabled=true;
+        document.getElementById("reloadShadowInfo").disabled=true;
     }
-    // window.resizeBy(-10,0);
-    updateSkyLocFormValues()
-    // window.resizeBy(10,0);
+    setSkySummary();
 }
 
 function updateFieldsPage() {

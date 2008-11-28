@@ -135,7 +135,7 @@ td {
 .column_lable_highlight {
     font-weight: bold;
     width: 60px;
-    color: #ff0000;
+    color: #cc0000;
 }
 input[type=button] {
     position: relative;
@@ -162,6 +162,7 @@ input[type=checkbox] {
 }
 .controlValue {
     font-size: 12px;
+    color: #27537a; /* blue-grey */
     line-height: 1;
     height: 12px;
     min-height: 12px;
@@ -169,8 +170,19 @@ input[type=checkbox] {
     top: -2px;
 }
 #meridianWarning {
+    width: 155px;
     color:#cc0000;
     font-weight:bold;
+    /*border: solid;
+    border-width: 1px;
+    border-color: red;*/
+}
+#meridianWarning input {
+    font-size: 10px;
+    color:#cc0000;
+    width: 65px;
+    height: 14px;
+    margin-left: 75px;
 }
 p {
     padding: 0.2;
@@ -209,7 +221,7 @@ input.file {
     margin: 0;
 }
 
-listing {
+.listing {
     font-family: "Monaco", "Courier New", Courier, monospace;
     font-size: 12px;
     line-height: 1.0;
@@ -218,6 +230,7 @@ listing {
     color: #27537a;
     background-color: #cbe6f4;
     padding-left: 0.5em;
+    clear: both;
 }
 
 .locationOption {

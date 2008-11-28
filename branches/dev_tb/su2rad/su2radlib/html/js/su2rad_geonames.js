@@ -130,6 +130,6 @@ function setLocationFromGeonames(geoLoc) {
     //    modelLocation.Longitude  = parseFloat(geoLoc.lng);
     //    googleMapSetCenter(modelLocation.Latitude, modelLocation.Longitude);
     // }
-    updateSkyLocFormValues()
+    updateLocationFormValues()
 }
 
