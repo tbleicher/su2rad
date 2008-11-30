@@ -433,12 +433,11 @@ function setViewsListJSON(msg) {
 
 
 function onApplyLocation() {
-    log.error("DEBUG: onApplyLocation")
     var params = modelLocation.toParamString();
     applyModelLocation(params);
+    log.error("TEST: never get here!");
     modelLocation.changed = false;
-    log.error("modelLocation.changed=" + modelLocation.changed)
-    updateSkyPage()
+    updateSkyPage();
 }
 
 
@@ -476,7 +475,7 @@ function onTabShow(link,div_show,div_hide) {
 
 function updateExportPage() {
     log.debug("updating 'Export' page ...");
-    setSkySummary();
+    setSkyCmdLine();
 }
 
 function updateRenderPage() {
@@ -487,8 +486,8 @@ function updateRenderPage() {
 }
 
 function updateSkyPage() {
-    updateLocationFormValues(true);
-    updateSkyFormValues(true);
+    updateLocationFormValues();
+    updateSkyFormValues();
     updateGoogleMapLocation();
     // enable 'apply' if location or time has changed
     if (modelLocation.changed == true || skyDateTime.changed == true) {
@@ -498,7 +497,7 @@ function updateSkyPage() {
         document.getElementById("applyLocationValues").disabled=true;
         document.getElementById("reloadShadowInfo").disabled=true;
     }
-    setSkySummary();
+    setSkyCmdLine();
 }
 
 function updateFieldsPage() {

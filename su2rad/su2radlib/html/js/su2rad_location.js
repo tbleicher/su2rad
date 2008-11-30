@@ -122,7 +122,14 @@ function checkValueLatLong(id, minmax) {
 }
 
 
-function centerCity(city, country, lat, lng) {
+function clearTZWarning() {
+    // reset warning message 
+    setTZHighlight(false);
+    setLocationWarning("");
+}
+
+
+function onClickCity(city, country, lat, lng) {
     // center map on lat/lng of city from geonames
     log.info("new city selected: " + city);
     modelLocation.setValue('City', city);
@@ -131,7 +138,8 @@ function centerCity(city, country, lat, lng) {
     modelLocation.setValue('Longitude', lng);
     googleMapSetCenter(parseFloat(lat),parseFloat(lng),11);
     setStatusMsg('');
-    updateSkyPage()
+    updateSkyPage();
+    applySkySettings();
 }
 
 
@@ -140,7 +148,7 @@ function formatCity(city) {
     var lat = parseFloat(city.lat).toFixed(4);
     var lng = parseFloat(city.lng).toFixed(4);
     var args = [city.name, city.countryName, lat, lng].join("','");
-    var text = "<a onClick=\"centerCity('" + args + "')\"><b>" + cityLong + "</b></a>"
+    var text = "<a onClick=\"onClickCity('" + args + "')\"><b>" + cityLong + "</b></a>"
     text += " [lat=" + lat + ", lng=" + lng;
     try {
         text += ", tzone=" + city.timezone.gmtOffset;
@@ -166,6 +174,7 @@ function onCityCountryChanged() {
         document.getElementById("googleMapLookup").disabled = false;
     }
     updateSkyPage()
+    applySkySettings();
 }
 
 function onNorthAngleChange() {
@@ -175,6 +184,7 @@ function onNorthAngleChange() {
     var north = parseFloat(document.getElementById("NorthAngle").value);
     modelLocation.setValue('NorthAngle', north);
     updateSkyPage();
+    applySkySettings();
 } 
 
 function onLatLongChange() {
@@ -188,10 +198,12 @@ function onLatLongChange() {
     var lng = parseFloat(document.getElementById("Longitude").value);
     setLatLong(lat,lng);
     if (document.getElementById("useGoogleMap").checked == true) {
+        googleMapSetCenter(lat,lng);
         geonamesTimeZone(lat,lng);
         geonamesLookup(parseFloat(lat), parseFloat(lng), map.getZoom());
-        googleMapSetCenter(lat,lng);
     }
+    log.error("DEBUG: onLatLongChange() applySkySettings ...");
+    applySkySettings();
 }
 
 
@@ -203,10 +215,6 @@ function resetCityCountry() {
     modelLocation.changed = true;
 }
 
-function clearTZWarning() {
-    setTZHighlight(false);
-    setLocationWarning("");
-}
 
 function onSelectTZ() {
     var offset = document.getElementById('TZOffset').value;
@@ -215,6 +223,7 @@ function onSelectTZ() {
     setLocationWarning("");
     setTZWarning(parseFloat(offset));
     updateSkyPage();
+    applySkySettings();
 }
 
 
@@ -227,11 +236,17 @@ function setLatLong(lat,lng) {
         setTZOffsetSelection(offset);
         setLocationWarning("<input type=\"button\" value=\"confirm TZ\" onclick=\"javascript:clearTZWarning()\" />");
     }
-    updateSkyPage();
+    //updateSkyPage();
+}
+
+
+function setLocationWarning(msg) {
+    document.getElementById("meridianWarning").innerHTML = msg;
 }
 
 
 function decodeJSON(text) {
+    // convert JSON response string into javascript array
     var json = text.replace(/#COMMA#/g,",");
     try {
         eval("var array = " + json);
@@ -247,7 +262,7 @@ function decodeJSON(text) {
 
 function setShadowInfoJSON(msg) {
     // parse and apply shadow_info settings in JSON string 'msg'
-    log.debug("setShadowInfoJSON() (" + msg.length + " bytes)");
+    //log.debug("setShadowInfoJSON() (" + msg.length + " bytes)");
     shadowinfo = decodeJSON(msg);
     var text = '<b>shadow info settings:</b><br/>';
     modelLocation.logging = false;
@@ -267,7 +282,6 @@ function setShadowInfoJSON(msg) {
     skyDateTime.setFromShadowTime(modelLocation.ShadowTime);
     googleMapInitialize(modelLocation.Latitude, modelLocation.Longitude);
     updateSkyPage();
-    log.error("modelLocation.changed=" + modelLocation.changed)
 }
 
 
@@ -291,14 +305,9 @@ function setTZOffsetSelection(offset) {
     for (var i=0; i < tz.length; i++) {
         if (parseFloat(tz[i].value) == offset) {
             tz[i].selected = true;
-            //log.debug("   selection=" + tz[i].text);
         }
     }
     setTZWarning(offset);
-}
-
-function setLocationWarning(msg) {
-    document.getElementById("meridianWarning").innerHTML = msg;
 }
 
 function setTZWarning(offset) {
@@ -309,7 +318,7 @@ function setTZWarning(offset) {
     }
 }
 
-function updateLocationFormValues(noSummary) {
+function updateLocationFormValues() {
     document.getElementById('City').value       = modelLocation.City;
     document.getElementById('Country').value    = modelLocation.Country;
     document.getElementById('Latitude').value   = modelLocation.Latitude.toFixed(4);
@@ -325,9 +334,6 @@ function updateLocationFormValues(noSummary) {
     //checkValueLatLong("Latitude", 90);
     //checkValueLatLong("Longitude", 190);
     //checkValueLatLong("NorthAngle", 360);
-    if (noSummary == true) {
-        return;
-    }
-    setSkySummary();
+    setSkyCmdLine();
 }
 

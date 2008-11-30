@@ -27,13 +27,9 @@ function applyModelLocation(params) {
     }
 }
 
-function applySkySettings(skycmd) {
+function applySkySettings() {
     var params = modelLocation.toParamString();
-    if (skycmd) {
-        params += "&SkyCommand=" + skycmd
-    }
     applyModelLocation(params)
-    log.error("TEST: setSkySummary() - apply values to SU?");
 }
     
 

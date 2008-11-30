@@ -28,14 +28,14 @@ function geonamesLookup(lat,long,zoom) {
 function geonamesCallback(jData) {
     // restore cursor
     document.body.style.cursor='auto';
-    // log.debug("geonamesCallback() jData=" + jData);
     // check if there was a problem parsing search results
     if (jData == null) {
+        log.warn("geonames: no data object received");
         return;
     }
     // test if 'jData.geonames' exists
     try {
-        log.info("jData.geonames.length: " + jData.geonames.length);
+        log.info("jData.geonames [length=" + jData.geonames.length + "]");
     }
     catch (e) {
         log.error("ERROR for 'jData.geonames.length': " + e.name);
@@ -60,12 +60,13 @@ function geonamesCallback(jData) {
                 }
             }
         }
-        setStatusMsg(text); 
         // set closest city
         city = jData.geonames[minDistIdx];
-        setLocationFromGeonames(city);
+        _setLocationFromGeonames(city);
+        updateSkyPage()
+        setStatusMsg(text); 
     } else {
-        log.info("no location found");
+        log.info("geonames: no locations found");
     }
 }
 
@@ -97,7 +98,7 @@ function geonamesTimeZoneCallback(jData) {
         log.info("jData.gmtOffset: " + jData.gmtOffset);
         modelLocation.setValue('TZOffset', jData.gmtOffset);
         setTZOffsetSelection(jData.gmtOffset);
-        setTZHighlight(false);
+        clearTZWarning();
     }
     catch (e) {
         log.error("ERROR for 'jData.gmtOffset': " + e.name);
@@ -108,18 +109,17 @@ function geonamesTimeZoneCallback(jData) {
 }
 
 
-function setLocationFromGeonames(geoLoc) {
+function _setLocationFromGeonames(geoLoc) {
     log.info("new location: " + formatCity(geoLoc))
     var offset = 0;
     try {
         offset = geoLoc.timezone.gmtOffset;
         // unset TZHighlight
-        setTZHighlight(false);
+        clearTZWarning();
     } catch (e) {
         log.warn("location has no timezone info (" + e.name + ")");
         offset = calculateTZOffset(parseFloat(geoLoc.lng));
     }
-    
     modelLocation.setValue('City', geoLoc.name);
     modelLocation.setValue('Country', geoLoc.countryName);
     modelLocation.setValue('TZOffset', offset);
@@ -130,6 +130,5 @@ function setLocationFromGeonames(geoLoc) {
     //    modelLocation.Longitude  = parseFloat(geoLoc.lng);
     //    googleMapSetCenter(modelLocation.Latitude, modelLocation.Longitude);
     // }
-    updateLocationFormValues()
 }
 

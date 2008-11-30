@@ -447,7 +447,7 @@ input.file {
     padding: 0;
     margin: 0;
     float: left;
-    width: 375px;
+    width: 350px;
 }
 .skyGeneratorOptions div.optionsColumn {
     width: 100px;
@@ -481,7 +481,7 @@ input.file {
 
 .gridColumn {
     float:left;
-    width: 200px;
+    width: 190px;
     margin: 0;
     padding: 0;
 }
