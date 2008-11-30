@@ -388,7 +388,7 @@
             
             <div id="tab-sky">
                 <h3>
-                    <input type="button" id="applyLocationValues" value="apply" class="floatright" onclick="onApplyLocation()" disabled=true />
+                    <input type="button" id="applyLocationValues" value="apply" class="floatright" onclick="onApplySkySettingsToModel()" disabled=true />
                     <input type="button" id="reloadShadowInfo" value="reload" class="floatright" onclick="getSkySettings()">
                     SketchUp model settings
                 </h3>
@@ -601,6 +601,11 @@
                 <div class="statusMessage" id="statusTabSky">
                     msg
                 </div>
+                <h3>
+                    <input type="button" value="apply" class="floatright" onclick="onApplySkySettingsToModel()" />
+                    <input type="button" value="reload" class="floatright" onclick="getSkySettings()">
+                    test buttons
+                </h3>
             
             </div>
             

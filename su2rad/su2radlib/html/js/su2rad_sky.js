@@ -175,6 +175,7 @@ function SkyDateTimeObject() {
     this.skyTimeHour = 12;
     this.skyTimeMinute = 00;
     this._maxDays = [31,28,31,30,31,30,31,31,30,31,30,31];
+    this._time_t = 0; //XXX should be correct for 12:00 Mar 21st
     this.changed = false;
 }
 
@@ -203,6 +204,7 @@ SkyDateTimeObject.prototype.setValue = function (id,val) {
 }
 
 SkyDateTimeObject.prototype.setFromShadowTime = function (stime) {
+    this._time_t = stime
     var msec = Date.parse(stime);
     var sdate = new Date(msec);
     this.skyDateMonth  = sdate.getUTCMonth()+1;
@@ -219,6 +221,23 @@ SkyDateTimeObject.prototype.setFromShadowTime = function (stime) {
     text += "gensky=" + this.toGenskyString() + "<br/>";
     setStatusMsg(text);
     */
+}
+
+SkyDateTimeObject.prototype.getShadowTime = function () {
+    var mm = parseInt(this.skyDateMonth-1)
+    var dd = parseInt(this.skyDateDay)
+    var HH = parseInt(this.skyTimeHour)
+    var MM = parseInt(this.skyTimeMinute)
+    var newDate = new Date();
+    newDate.setUTCFullYear(2002);
+    newDate.setUTCMonth(mm);
+    newDate.setUTCDate(dd);
+    newDate.setUTCHours(HH);
+    newDate.setUTCMinutes(MM);
+    newDate.setUTCSeconds(0);
+    newDate.setUTCMilliseconds(0);
+    //var text = "new_t: " + Date.parse(newDate.toUTCString())/1000 + "<br/>";
+    return Date.parse(newDate.toUTCString()) / 1000
 }
 
 SkyDateTimeObject.prototype._checkLimit = function (id,val) {
@@ -268,7 +287,7 @@ function onGenskyInputChanged(opt) {
     }
     //document.getElementById('skyCommandLine').innerHTML = skyOptions.toString();
     updateSkyPage();
-    applySkySettings();
+    writeSkySettings();
 }
 
 function onGenskyOptionCB(opt) {
@@ -295,7 +314,7 @@ function onGenskyOptionCB(opt) {
     skyOptions.setActive(opt, checked);
     _updateGenskyOptions();
     updateSkyPage();
-    applySkySettings();
+    writeSkySettings();
 }
 
 function onSkyDateTimeChange(id) {
@@ -313,8 +332,9 @@ function onSkyDateTimeChange(id) {
     if (id == 'skyDateMonth') {
         document.getElementById('skyDateDay').value = skyDateTime.getValueString('skyDateDay');
     }
+    modelLocation.setValue('ShadowTime_time_t', skyDateTime.getShadowTime()); 
     updateSkyPage()
-    applySkySettings();
+    writeSkySettings();
 }
 
 function onSkyGenChange() {
@@ -327,7 +347,7 @@ function onSkyGenChange() {
     }
     updateSkyOptionsDisplay()
     updateSkyPage()
-    applySkySettings();
+    writeSkySettings();
 }
 
 function onSkyTypeChange() {
@@ -350,12 +370,13 @@ function onSkyTypeChange() {
     }
     //document.getElementById('skyCommandLine').innerHTML = skyOptions.toString();
     updateSkyPage()
-    applySkySettings();
+    writeSkySettings();
 }
 
 function updateSkyOptionsDisplay() {
     if (skyOptions.generator == 'gensky') {
         _updateGenskyOptions();
+        updateSkyTypeDisplay();
     }
     setOptionsVisibility(skyOptions.generator); 
 }
@@ -417,6 +438,36 @@ function updateSkyFormValues () {
     setSkyCmdLine()
 }
 
+function updateSkyOptionsDisplay() {
+    if (skyOptions.generator == 'gensky') {
+        _updateGenskyOptions();
+        updateSkyTypeDisplay();
+    }
+    setOptionsVisibility(skyOptions.generator); 
+}
+
+function updateSkyTypeDisplay() {
+    // set sky type selector and sun check box
+    if (skyOptions.generator == 'gensky') {
+        if (skyOptions.skytype[0] == "+") {
+            document.getElementById('sunOptionCB').checked = true;
+        } else {
+            document.getElementById('sunOptionCB').checked = false;
+        }
+        var sel = document.getElementById('genskySkyType');
+        for (i=0; i<sel.options.length; i++) {
+            if (sel.options[i].value == skyOptions.skytype[1]) {
+                sel.selectedIndex = i;
+            }
+        }
+        if (skyOptions.skytype[1] == 'i' || skyOptions.skytype[1] == 's') {
+            document.getElementById('genskySunOption').style.display = '';
+        } else {
+            document.getElementById('genskySunOption').style.display = 'none';
+        }
+    }
+}
+    
 function _updateGenskyOptions() {
     var opts = ["general","-g","-t","zenith","-b","-B","solar","-r","-R"];
     var text = "<div class=\"optionsHeader\" style=\"width:280px;\">";

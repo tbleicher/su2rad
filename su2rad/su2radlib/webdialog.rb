@@ -217,7 +217,6 @@ class SkyOptions
         json = getJSONDictionary(@_settings)
         d.execute_script( "setShadowInfoJSON('%s')" % json )
         printf "done\n"
-        printf "SkyCommand: %s\n" % getSkyCommand()
     end
 
     def _syncSettings() 
@@ -250,11 +249,11 @@ class SkyOptions
         return newpairs
     end 
     
-    def setShadowInfoValues(d,p)
+    def writeSkySettings(d,p)
         ## set shadow_info values from dialog
         pairs = _evalParams(p)
         pairs.each { |k,v|
-            printf "setSIV  k='%s'  v='%s'\n" % [k,v]
+            #printf "writeSkySettings: k='%s'  v='%s'\n" % [k,v]
             if (@_settings.has_key?(k) == false) || @_settings[k] != v
                 printf "skySettings: new value for '%s': '%s'\n" % [k,v]
                 @_settings[k] = v
@@ -262,17 +261,27 @@ class SkyOptions
         }
     end
 
-    def apply
+    def applySkySettingsToShadowInfo(d,p) 
         ## apply values in _settings to shadow_info
+        printf "\n"
         sinfo = Sketchup.active_model.shadow_info
         @_settings.each_pair { |k,v|
-            begin
-                sinfo[k] = v
-            rescue => e
-                # attribute error
-                printf "error: %s\n" % e
+            if k == 'ShadowTime_time_t'
+                printf "> old sinfo[%s] : %d\n" % [k,sinfo[k]]
+                sinfo[k] = v.to_i
+                printf "> new sinfo[%s] : %d\n" % [k,v.to_i]
+            else
+                begin
+                    sinfo[k] = v
+                    printf "> sinfo[%s] : %s\n" % [k,v]
+                rescue => e
+                    # attribute error
+                    printf "  TEST - error: %s (k=%s)\n" % [e,k] 
+                end
             end
         }
+        @_settings['ShadowTime'] = sinfo['ShadowTime']
+        d.execute_script("setShadowInfoJSON('%s')" % toJSON() )
     end
         
 end
@@ -388,13 +397,13 @@ class ExportDialogWeb
             ## get shadow_info dict and apply to dialog
             d.execute_script("setShadowInfoJSON('%s')" % @skyOptions.toJSON() )
         }
-        dlg.add_action_callback("setShadowInfo") { |d,p|
+        dlg.add_action_callback("writeSkySettings") { |d,p|
             ## set shadow_info values from dialog
-            @skyOptions.setShadowInfoValues(d,p)
+            @skyOptions.writeSkySettings(d,p)
         }
-        dlg.add_action_callback("applySkySettings") { |d,p|
+        dlg.add_action_callback("applySkySettingsToShadowInfo") { |d,p|
             ## set shadow_info values from dialog
-            @skyOptions.apply() 
+            @skyOptions.applySkySettingsToShadowInfo(d,p) 
         }
         
         ## views
