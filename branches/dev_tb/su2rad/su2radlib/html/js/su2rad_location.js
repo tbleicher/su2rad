@@ -70,6 +70,7 @@ ModelLocationObject.prototype.toParamString = function () {
     text += '&Longitude=' + this.Longitude.toFixed(4);
     text += '&TZOffset=' + this.TZOffset.toFixed(1);
     text += '&NorthAngle=' + this.NorthAngle.toFixed(4);
+    text += '&ShadowTime_time_t=' + this.ShadowTime_time_t;
     text += '&SkyCommand=' + this.SkyCommand;
     return text;
 }
@@ -139,7 +140,7 @@ function onClickCity(city, country, lat, lng) {
     googleMapSetCenter(parseFloat(lat),parseFloat(lng),11);
     setStatusMsg('');
     updateSkyPage();
-    applySkySettings();
+    writeSkySettings();
 }
 
 
@@ -174,7 +175,7 @@ function onCityCountryChanged() {
         document.getElementById("googleMapLookup").disabled = false;
     }
     updateSkyPage()
-    applySkySettings();
+    writeSkySettings();
 }
 
 function onNorthAngleChange() {
@@ -184,7 +185,7 @@ function onNorthAngleChange() {
     var north = parseFloat(document.getElementById("NorthAngle").value);
     modelLocation.setValue('NorthAngle', north);
     updateSkyPage();
-    applySkySettings();
+    writeSkySettings();
 } 
 
 function onLatLongChange() {
@@ -197,13 +198,13 @@ function onLatLongChange() {
     var lat = parseFloat(document.getElementById("Latitude").value);
     var lng = parseFloat(document.getElementById("Longitude").value);
     setLatLong(lat,lng);
+    updateSkyPage();
     if (document.getElementById("useGoogleMap").checked == true) {
         googleMapSetCenter(lat,lng);
         geonamesTimeZone(lat,lng);
         geonamesLookup(parseFloat(lat), parseFloat(lng), map.getZoom());
     }
-    log.error("DEBUG: onLatLongChange() applySkySettings ...");
-    applySkySettings();
+    writeSkySettings();
 }
 
 
@@ -223,7 +224,7 @@ function onSelectTZ() {
     setLocationWarning("");
     setTZWarning(parseFloat(offset));
     updateSkyPage();
-    applySkySettings();
+    writeSkySettings();
 }
 
 
@@ -236,7 +237,6 @@ function setLatLong(lat,lng) {
         setTZOffsetSelection(offset);
         setLocationWarning("<input type=\"button\" value=\"confirm TZ\" onclick=\"javascript:clearTZWarning()\" />");
     }
-    //updateSkyPage();
 }
 
 
@@ -276,7 +276,7 @@ function setShadowInfoJSON(msg) {
     modelLocation.parseSkyCmd();
     modelLocation.changed = false;
     modelLocation.logging = true;
-    setTZHighlight(false);
+    clearTZWarning();
     setStatusMsg(text);
     skyOptions.parseSkyCommand(modelLocation.SkyCommand);
     skyDateTime.setFromShadowTime(modelLocation.ShadowTime);

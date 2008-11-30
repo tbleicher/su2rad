@@ -402,42 +402,23 @@ function setViewsListJSON(msg) {
         log.error(e.name);
         var viewsList = new Array();
     }
-    //var text = '<table><tr><td class="column_lable"></td>';
     var text = '<div class="gridRow">';
     var col = 0;
     for(var i=0; i<viewsList.length; i++) {
         var view = viewsList[i];
         if(view != null) {
             log.info("view = '" + view.name + "'");
-            //text += _getViewTD(view);
             text += _getViewDiv(view);
             col += 1;
         }
         // reset column counter except for last row
         if (col == 3 && i != (viewsList.length-1)) {
-            //text += '</tr><tr><td class="column_lable"></td>';
             text += '</div><div class="gridRow">';
             col = 0;
         }
     }
-    // fill row with empty cells
-    //if (col != 0) {
-    //    for(var i=0; i<(3-col); i++) {
-    //        text += "<td></td>";
-    //    }
-    //}
-    //text += "</tr></table>";
     text += "</div>";
     document.getElementById("viewsSelection").innerHTML = text;
-}
-
-
-function onApplyLocation() {
-    var params = modelLocation.toParamString();
-    applyModelLocation(params);
-    log.error("TEST: never get here!");
-    modelLocation.changed = false;
-    updateSkyPage();
 }
 
 
@@ -498,6 +479,7 @@ function updateSkyPage() {
         document.getElementById("reloadShadowInfo").disabled=true;
     }
     setSkyCmdLine();
+    skyDateTime.getShadowTime();
 }
 
 function updateFieldsPage() {

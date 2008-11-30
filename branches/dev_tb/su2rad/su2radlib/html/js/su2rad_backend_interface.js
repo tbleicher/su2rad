@@ -17,19 +17,32 @@ function setTest() {
 }
 
 
-function applyModelLocation(params) {
-    // apply modelLocation settings to Sketchup.shadow_info
+function writeSkySettings() {
+    // send back location and sky settings
+    var params = modelLocation.toParamString();
     if (SKETCHUP == true) {
-        log.info("setting Sketchup.shadow_info ...");
-        window.location = 'skp:setShadowInfo@' + params;
+        log.debug("writeSkySettings(): " + params);
+        window.location = 'skp:writeSkySettings@' + params;
     } else {
-        log.debug("applyModelLocation(): no need to set shadow_info");
+        log.debug("writeSkySettings(): no need to set shadow_info");
     }
 }
 
-function applySkySettings() {
-    var params = modelLocation.toParamString();
-    applyModelLocation(params)
+
+function onApplySkySettingsToModel() {
+    // apply settings to Sketchup shadow_info
+    if (SKETCHUP == true) {
+        log.info("applying settings to Sketchup model ...");
+        window.location = 'skp:applySkySettingsToShadowInfo@';
+    } else {
+        log.debug("onApplySkySettingsToModel() ...");
+        modelLocation.changed = false;
+        // TODO:
+        // msg = modelLocation.toJSON();
+        // setShadowInfoFromJSON(msg);
+        clearTZWarning();
+        updateSkyPage();
+    }
 }
     
 
