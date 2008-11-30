@@ -64,14 +64,20 @@ function googleMapCenterMarker() {
 }
 
 function googleMapDrag() {
+    // provide feedback via lat/lng display
     var point = marker.getPoint();
-    setLatLong(point.lat(), point.lng());
+    document.getElementById('Latitude').value   = point.lat().toFixed(4);
+    document.getElementById('Longitude').value  = point.lng().toFixed(4);
+    //var loc = "loc=(" + point.lat().toFixed(4) + "," + point.lng().toFixed(4) + ")"
+    //document.getElementById("message").innerHTML = loc;
 }
 
 function googleMapDragend() {
     googleMapCenterMarker();
     var point = marker.getPoint();
+    setLatLong(point.lat(), point.lng());
     var zoom = map.getZoom(); 
+    updateSkyPage();
     geonamesLookup(point.lat(), point.lng(), zoom);
 }
 
@@ -89,6 +95,9 @@ function googleMapSetCenter(lat,long,zoom) {
 }
 
 function googleMapInitialize(lat,long) {
+    if (checkGoogleMap() == false) {
+        return;
+    }
     log.debug("googleMapInitialize");
     /* initialize map stuff */
     try {
@@ -125,12 +134,12 @@ function googleMapInitialize(lat,long) {
         GEvent.addListener(marker, "dragend", googleMapDragend);
         // GEvent.addListener(map, "zoomend", function() {
         //     document.getElementById("zoom").value=map.getZoom();
-        //    googleMapDrag();
-        //    });
-        GEvent.addListener(map, "moveend", function() {
-            var center = map.getCenter();
-            document.getElementById("message").innerHTML = "loc=" + center.toString();
-        });
+        //     googleMapDrag();
+        // });
+        // GEvent.addListener(map, "moveend", function() {
+        //     var center = map.getCenter();
+        //     document.getElementById("message").innerHTML = "loc=" + center.toString();
+        // });
         // GEvent.addListener(marker, "dragend", googleMapCenterMarker);
         googleMapCenterMarker();
 
@@ -176,11 +185,11 @@ function googleMapLookup() {
     var city = document.getElementById("City").value;
     var country = document.getElementById("Country").value;
     var location = city + ', ' + country;
-    googleMapLookupLocation(location);
+    _googleMapLookupLocation(location);
 }
 
 
-function googleMapLookupLocation(location) {
+function _googleMapLookupLocation(location) {
     log.info("googleMapLookup(): '" + location + "'");
     var geocoder = new GClientGeocoder();
     geocoder.getLatLng(location, function(point) {

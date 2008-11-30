@@ -14,6 +14,7 @@ function SkyOptionsObject() {
     this._activeOptions.B = false;
     this._activeOptions.r = false;
     this._activeOptions.R = false;
+    this.logging = true;
 }
 
 SkyOptionsObject.prototype.isActive = function (opt) {
@@ -44,6 +45,8 @@ SkyOptionsObject.prototype.parseSkyCommand = function (cmdline) {
     if (cmdline == '') {
         return
     }
+    this.logging = false; // stop info level logging
+    log.info("parsing sky command: '" + cmdline + "'");
     if (cmdline[0] == '!') {
         cmdline = cmdline.substring(1,cmdline.length);
     }
@@ -51,11 +54,11 @@ SkyOptionsObject.prototype.parseSkyCommand = function (cmdline) {
     for (i=0; i<parts.length; i++) {
         var opt = parts[i];
         if (this.setGenerator(opt) == true) {
-            log.info("new generator: '" + opt + "'");
+            log.debug("new generator: '" + opt + "'");
         } else if (this.setSkyType(opt) == true) {
-            log.info("new skytype: '" + opt + "'");
+            log.debug("new skytype: '" + opt + "'");
         } else if (opt == '-ang') {
-            log.warn("sky option '-ang' ignored")
+            log.debug("sky option '-ang' ignored")
             if (i < parts.length-2) {
                 var alt = parts[i+1];
                 var azi = parts[i+2];
@@ -75,7 +78,7 @@ SkyOptionsObject.prototype.parseSkyCommand = function (cmdline) {
             if (i < parts.length-1) {
                 var arg = parts[i+1];
                 if (this.setValue(opt, arg) == true) {
-                    log.info("new value for option '" + opt + "': '" + arg + "'");
+                    log.debug("new value for option '" + opt + "': '" + arg + "'");
                     i += 1;
                 } else {
                     log.error("value for option '" + opt + "' is not a number: '" + arg + "'" );
@@ -85,6 +88,8 @@ SkyOptionsObject.prototype.parseSkyCommand = function (cmdline) {
             }
         }
     }
+    this.logging = true; // resume info level logging
+    // show sky options?
 }
 
 SkyOptionsObject.prototype.removeOption = function (opt) {
@@ -98,7 +103,6 @@ SkyOptionsObject.prototype.removeOption = function (opt) {
 }
 
 SkyOptionsObject.prototype.setActive = function (opt, checked) {
-    //log.debug("setActive o=" + opt + " checked=" + checked); 
     if (opt == 'g' || opt == 't') {
         this._activeOptions[opt] = checked;
     } else {
@@ -106,6 +110,13 @@ SkyOptionsObject.prototype.setActive = function (opt, checked) {
         this._activeOptions[opt.toUpperCase()] = false;
         this._activeOptions[opt] = checked;
     }
+    if (this.logging) {
+        if (checked) {
+            log.info("new active option '" + opt + "' (value='" + this[opt] + "')");
+        } else {
+            log.info("option '" + opt + "' disabled");
+        }
+    }       
 }
 
 SkyOptionsObject.prototype.setGenerator = function(val) {
@@ -257,6 +268,7 @@ function onGenskyInputChanged(opt) {
     }
     //document.getElementById('skyCommandLine').innerHTML = skyOptions.toString();
     updateSkyPage();
+    applySkySettings();
 }
 
 function onGenskyOptionCB(opt) {
@@ -283,6 +295,7 @@ function onGenskyOptionCB(opt) {
     skyOptions.setActive(opt, checked);
     _updateGenskyOptions();
     updateSkyPage();
+    applySkySettings();
 }
 
 function onSkyDateTimeChange(id) {
@@ -301,6 +314,7 @@ function onSkyDateTimeChange(id) {
         document.getElementById('skyDateDay').value = skyDateTime.getValueString('skyDateDay');
     }
     updateSkyPage()
+    applySkySettings();
 }
 
 function onSkyGenChange() {
@@ -313,6 +327,7 @@ function onSkyGenChange() {
     }
     updateSkyOptionsDisplay()
     updateSkyPage()
+    applySkySettings();
 }
 
 function onSkyTypeChange() {
@@ -333,8 +348,9 @@ function onSkyTypeChange() {
     } else {
         log.error("onSkyTypeChange(): error setting sky type '" + stype + "'");
     }
-    updateSkyPage()
     //document.getElementById('skyCommandLine').innerHTML = skyOptions.toString();
+    updateSkyPage()
+    applySkySettings();
 }
 
 function updateSkyOptionsDisplay() {
@@ -367,26 +383,24 @@ function setOptionsVisibility(generator) {
     }
 }
 
-function setSkySummary() {
+function setSkyCmdLine() {
     // update command line showing sky generator options
-    log.debug(">> setSkySummary() - apply values to SU?");
     var loc = modelLocation.City + ", "+ modelLocation.Country;
     document.getElementById("skySummaryLocation").innerHTML = loc;
     document.getElementById("skySummaryNorth").innerHTML = modelLocation.NorthAngle.toFixed(2);
+    var lat = modelLocation.Latitude * 1.0;
+    var lng = modelLocation.Longitude * -1.0;
+    var mer = modelLocation.TZOffset * -15.0;
+    var loc = " -a " + lat.toFixed(4) + " -o " + lng.toFixed(4) + " -m " + mer.toFixed(1);
     var rot = '';
     if (modelLocation.NorthAngle != 0.0) {
         var gensky_north = modelLocation.NorthAngle*-1;
         rot = " | xform -rz " + gensky_north.toFixed(2);
     }
-    var lat = modelLocation.Latitude * 1.0;
-    var lng = modelLocation.Longitude * -1.0;
-    var mer = modelLocation.TZOffset * -15.0;
-    latlng = " -a " + lat.toFixed(4) + " -o " + lng.toFixed(4) + " -m " + mer.toFixed(1);
-    var sky = skyOptions.toString() + " " + latlng + rot;
+    var sky = skyOptions.toString() + " " + loc + rot;
     modelLocation.SkyCommand = sky;
-    setStatusMsg(sky);
     document.getElementById("skySummaryOptions").innerHTML = sky;
-    //applySkySettings();
+    setStatusMsg(sky);
 }
 
 function updateSkyDateTimeDisplay() {
@@ -396,15 +410,11 @@ function updateSkyDateTimeDisplay() {
     document.getElementById('skyTimeMinute').value = skyDateTime.getValueString('skyTimeMinute');
 }
 
-function updateSkyFormValues (noSummary) {
+function updateSkyFormValues () {
     // update sky related dialog elements
-    log.error("> updateSkyFormValues()");
     updateSkyOptionsDisplay();
     updateSkyDateTimeDisplay();
-    if (noSummary == true) {
-        return;
-    }
-    setSkySummary()
+    setSkyCmdLine()
 }
 
 function _updateGenskyOptions() {
