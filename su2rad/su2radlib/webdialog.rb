@@ -8,6 +8,11 @@ module JSONUtils
         s.gsub('"','\\\\\\"').gsub("'","\\\\'")
     end
 
+    def replaceChars(name)
+        ## TODO: replace characters in name for save html display
+        return name
+    end
+
     def urlEncode(string)
         ## URL-encode from Ruby::CGI
         string.gsub(/([^ a-zA-Z0-9_.-]+)/n) do
@@ -281,6 +286,7 @@ class SkyOptions
             end
         }
         @_settings['ShadowTime'] = sinfo['ShadowTime']
+        @_settings['ShadowTime_time_t'] = sinfo['ShadowTime_time_t']
         d.execute_script("setShadowInfoJSON('%s')" % toJSON() )
     end
         
@@ -328,14 +334,15 @@ class ExportDialogWeb
             nViews = 1
         else 
             pages.each { |page|
+                viewname = replaceChars(page.name)
                 current = "false"
                 if page == pages.selected_page
                     current = "true"
-                    @selectedViews[page.name] = true
+                    @selectedViews[viewname] = true
                 elsif page.use_camera? != true
                     next
                 end
-                json += ",{\"name\":\"%s\",\"selected\":\"false\",\"current\":\"%s\"}" % [page.name, current]
+                json += ",{\"name\":\"%s\",\"selected\":\"false\",\"current\":\"%s\"}" % [viewname, current]
                 nViews += 1
             }
         end
@@ -346,8 +353,9 @@ class ExportDialogWeb
         #pprintJSON(json)
     end
 
-    def setViewsSelection(d,p)
-        printf "\nsetViewsSelection() p='%s'\n" % p 
+    def applyViewSelection(d,p)
+        ## select/deselect individual views
+        printf "\napplyViewSelection() p='%s'\n" % p 
         viewname, state = p.split('&')
         if state == 'selected'
             @selectedViews[viewname] = true
@@ -410,8 +418,8 @@ class ExportDialogWeb
         dlg.add_action_callback("getViewsList") { |d,p|
             getViewsList(d,p)
         }
-        dlg.add_action_callback("setViewsSelection") { |d,p|
-            setViewsSelection(d,p)
+        dlg.add_action_callback("applyViewSelection") { |d,p|
+            applyViewSelection(d,p)
         }
         
         #dlg.set_on_close {
@@ -425,8 +433,11 @@ class ExportDialogWeb
             #if $DEBUG 
             #    dlg.execute_script("log.toggle()")
             #end
+            printf "setSketchup()\n"
             dlg.execute_script("setSketchup()")
+            printf "_initExportOptions()\n"
             _initExportOptions(dlg, '')
+            printf "getViewsList()\n"
             getViewsList(dlg, '')
             dlg.execute_script( "setShadowInfoJSON('%s')" % @skyOptions.toJSON() )
             dlg.execute_script("updateExportPage()")

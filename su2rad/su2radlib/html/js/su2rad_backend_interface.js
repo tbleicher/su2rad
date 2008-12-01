@@ -111,7 +111,6 @@ function loadTextFile(fname) {
 function applyExportOptions() {
     var param = exportSettings.toString();
     if (SKETCHUP == true) {
-        log.debug("param=" + param);
         window.location = 'skp:applyExportOptions@' + param;
     } else {
         log.debug("no options to apply");
@@ -121,7 +120,6 @@ function applyExportOptions() {
 }
 
 function applyRenderOptions() {
-    log.debug('applyRenderOptions()');
     param = radOpts.toString();
     if (SKETCHUP == true) {
         log.debug("param=" + param);
@@ -131,6 +129,18 @@ function applyRenderOptions() {
     }
 }
 
+function setViewsListJSON(text) {
+    // eval JSON views string from SketchUp
+    var json = text.replace(/#COMMA#/g,",");
+    try {
+        eval("var newViews = " + json);
+    } catch (e) {
+        log.error("setViewsListJSON: error in eval() '" + e.name + "'");
+        log.error("json= " + json)
+        var newViews = new Array();
+    }
+    viewsList.setViewsList(newViews);
+}
 
 function getViewsList() {
     if (SKETCHUP == true) {
@@ -157,12 +167,11 @@ function _getViewsListTest() {
     return msg;
 }
 
-function setViewsSelection(param) {
+function applyViewSelection(param) {
     if (SKETCHUP == true) {
-        log.debug("setViewsSelection(param='" + param + "')"); 
-        window.location = 'skp:setViewsSelection@' + param;
+        window.location = 'skp:applyViewSelection@' + param;
     } else {
-        log.debug("no action for setViewsSelection() [" + param + "]"); 
+        log.debug("no action for applyViewSelection() [" + param + "]"); 
     }
 }
 
