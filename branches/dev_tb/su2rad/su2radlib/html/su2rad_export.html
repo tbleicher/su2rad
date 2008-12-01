@@ -25,12 +25,14 @@
         
         <!-- su2rad specific javascript files -->
         <script type="text/javascript" src="./js/su2rad_backend_interface.js"></script>
-        <script type="text/javascript" src="./js/su2rad_dialog.js"></script>
+        <script type="text/javascript" src="./js/su2rad_export.js"></script>
+        <script type="text/javascript" src="./js/su2rad_views.js"></script>
         <script type="text/javascript" src="./js/su2rad_googlemap.js"></script>
         <script type="text/javascript" src="./js/su2rad_geonames.js"></script>
         <script type="text/javascript" src="./js/su2rad_sky.js"></script>
         <script type="text/javascript" src="./js/su2rad_location.js"></script>
         <script type="text/javascript" src="./js/su2rad_radopts.js"></script>
+        <script type="text/javascript" src="./js/su2rad_dialog.js"></script>
         
         <script type="text/javascript">
             /* create tabs */
@@ -98,27 +100,27 @@
                         <div class="gridLabel">mode:</div>
                         <div class="gridCell">
                             <select id="exportMode" name="exportMode" onchange="onExportModeChange()">
-                                <option value="by_group" selected>by group</option>
-                                <option value="by_layer">by layer</option>
-                                <option value="by_color">by color</option>
+                                <option value="by group">by group</option>
+                                <option value="by layer">by layer</option>
+                                <option value="by color" selected>by color</option>
                             </select>
                         </div>
                         <div class="gridCell">
                             <input id="triangulate" type="checkbox"
-                            onchange="onToggleOption('triangulate')"> triangulate<br/>
+                            onchange="onExportBoolOption('triangulate')"> triangulate<br/>
                         </div>
                     </div>
                     <div class="gridRow">
                         <div class="gridLabel"></div>
                         <div class="gridCell">
-                            <span id="global_coords_display">
+                            <span id="global_coords_display" style="display:none;">
                                 <input id="global_coords" type="checkbox" 
-                                onchange="onToggleOption('global_coords')"> global coords
+                                onchange="onExportBoolOption('global_coords')"> global coords
                             </span>
                         </div>
                         <div class="gridCell">
                             <input id="textures" type="checkbox"
-                            onchange="onToggleOption('textures')"> textures
+                            onchange="onExportBoolOption('textures')"> textures
                         </div>
                     </div>
                 </div>

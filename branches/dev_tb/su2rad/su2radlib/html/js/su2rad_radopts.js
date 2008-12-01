@@ -25,7 +25,7 @@ function RadOptsObject() {
 }
 
 RadOptsObject.prototype.getOptionsFromFileText = function (text) {
-    log.debug("TODO: getOtionsFromFileText()")
+    log.debug("TODO: getOptionsFromFileText()")
     return true;
 }
 
@@ -360,16 +360,11 @@ function _sortOverrides(a,b) {
 }
 
 
-
-// object instances
-var radOpts = new RadOptsObject();
-
 // arrays to look up option types and defaults
 var rpictBoolOptions  = ["bv", "dv", "u", "w"];
 var rpictBoolComments = ["backface", "direct", "monte carlo", "warnings"];
 var rpictBoolDefaults = [true, true, false, true];
 var rpictIntOptions   = ["ab","ad","ar","as","aw","dp", "dr","lr","ps"];
-
 
 
 function isInList(list, element) {
@@ -464,13 +459,14 @@ function syncRadOption(id) {
     }
     // set selection for 'other' element
     var opt = id.slice(3,-2);
-    select = document.getElementById(other); 
-    for (i=0; i<select.options.length; i++) {
-        if (select.options[i].text == radOpts[opt]) {
-            select.selectedIndex = i;
-            log.debug("found index for value '" + radOpts[opt] + "'");
-        }
-    }
+    setSelectionValue(other, radOpts[opt]);
+    //select = document.getElementById(other); 
+    //for (i=0; i<select.options.length; i++) {
+    //    if (select.options[i].text == radOpts[opt]) {
+    //        select.selectedIndex = i;
+    //        log.debug("found index for value '" + radOpts[opt] + "'");
+    //    }
+    //}
 }
 
 function onRadOptionChange(id) {

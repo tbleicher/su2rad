@@ -203,10 +203,9 @@ SkyDateTimeObject.prototype.setValue = function (id,val) {
     return true;
 }
 
-SkyDateTimeObject.prototype.setFromShadowTime = function (stime) {
-    this._time_t = stime
-    var msec = Date.parse(stime);
-    var sdate = new Date(msec);
+SkyDateTimeObject.prototype.setFromShadowTime_time_t = function (time_t) {
+    this._time_t = time_t;
+    var sdate = new Date(time_t*1000);
     this.skyDateMonth  = sdate.getUTCMonth()+1;
     this.skyDateDay    = sdate.getUTCDate();
     this.skyTimeHour   = sdate.getUTCHours();
@@ -224,16 +223,12 @@ SkyDateTimeObject.prototype.setFromShadowTime = function (stime) {
 }
 
 SkyDateTimeObject.prototype.getShadowTime = function () {
-    var mm = parseInt(this.skyDateMonth-1)
-    var dd = parseInt(this.skyDateDay)
-    var HH = parseInt(this.skyTimeHour)
-    var MM = parseInt(this.skyTimeMinute)
     var newDate = new Date();
     newDate.setUTCFullYear(2002);
-    newDate.setUTCMonth(mm);
-    newDate.setUTCDate(dd);
-    newDate.setUTCHours(HH);
-    newDate.setUTCMinutes(MM);
+    newDate.setUTCMonth(this.skyDateMonth-1);
+    newDate.setUTCDate(this.skyDateDay);
+    newDate.setUTCHours(this.skyTimeHour);
+    newDate.setUTCMinutes(this.skyTimeMinute);
     newDate.setUTCSeconds(0);
     newDate.setUTCMilliseconds(0);
     //var text = "new_t: " + Date.parse(newDate.toUTCString())/1000 + "<br/>";
@@ -271,9 +266,6 @@ SkyDateTimeObject.prototype.toGenskyString = function () {
 
 
 
-
-var skyOptions = new SkyOptionsObject();
-var skyDateTime = new SkyDateTimeObject();
 
 function onGenskyInputChanged(opt) {
     var id = "genskyOptionInput" + opt;
@@ -338,13 +330,8 @@ function onSkyDateTimeChange(id) {
 }
 
 function onSkyGenChange() {
-    var sel = document.getElementById('skyGenerator');
-    skyOptions.setGenerator(sel.value);
-    for (i=0; i<sel.options.length; i++) {
-        if (sel.options[i].value == skyOptions.generator) {
-            sel.selectedIndex = i;
-        }
-    }
+    var generator = document.getElementById('skyGenerator').value;
+    skyOptions.setGenerator(generator);
     updateSkyOptionsDisplay()
     updateSkyPage()
     writeSkySettings();
@@ -439,6 +426,7 @@ function updateSkyFormValues () {
 }
 
 function updateSkyOptionsDisplay() {
+    setSelectionValue('skyGenerator', skyOptions.generator);
     if (skyOptions.generator == 'gensky') {
         _updateGenskyOptions();
         updateSkyTypeDisplay();
@@ -454,12 +442,13 @@ function updateSkyTypeDisplay() {
         } else {
             document.getElementById('sunOptionCB').checked = false;
         }
-        var sel = document.getElementById('genskySkyType');
-        for (i=0; i<sel.options.length; i++) {
-            if (sel.options[i].value == skyOptions.skytype[1]) {
-                sel.selectedIndex = i;
-            }
-        }
+        setSelectionValue('genskySkyType', skyOptions.skytype[1]);
+        //var sel = document.getElementById('genskySkyType');
+        //for (i=0; i<sel.options.length; i++) {
+        //    if (sel.options[i].value == skyOptions.skytype[1]) {
+        //        sel.selectedIndex = i;
+        //    }
+        //}
         if (skyOptions.skytype[1] == 'i' || skyOptions.skytype[1] == 's') {
             document.getElementById('genskySunOption').style.display = '';
         } else {

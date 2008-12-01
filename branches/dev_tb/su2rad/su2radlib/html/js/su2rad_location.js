@@ -75,7 +75,6 @@ ModelLocationObject.prototype.toParamString = function () {
     return text;
 }
 
-var modelLocation = new ModelLocationObject();
 
 
 function calculateTZOffset(long) {
@@ -279,7 +278,7 @@ function setShadowInfoJSON(msg) {
     clearTZWarning();
     setStatusMsg(text);
     skyOptions.parseSkyCommand(modelLocation.SkyCommand);
-    skyDateTime.setFromShadowTime(modelLocation.ShadowTime);
+    skyDateTime.setFromShadowTime_time_t(modelLocation.ShadowTime_time_t);
     googleMapInitialize(modelLocation.Latitude, modelLocation.Longitude);
     updateSkyPage();
 }
