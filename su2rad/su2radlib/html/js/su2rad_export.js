@@ -119,7 +119,6 @@ function onSelectExportPath() {
     applyExportOptions();
 }
 
-
 function onLoadSceneFile() {
     // open scene file
     try {
@@ -137,8 +136,9 @@ function onLoadSceneFile() {
 
 function loadSceneFile(text) {
     // loadTextFile callback to read scene (*.rif) files
-    text = text.replace(/\+/g," ");
+    // text file is encoded via urlEncode - replace '+'
     text = unescape(text);
+    text = text.replace(/\+/g,' ');
     setStatusMsg("<b>file contents:</b><br/><code>" + text.replace(/\n/g,'<br/>') + "</code>");
     _loadSceneFile(text);
 }
