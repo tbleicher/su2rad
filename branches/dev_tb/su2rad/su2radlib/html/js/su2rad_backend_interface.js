@@ -129,15 +129,22 @@ function applyRenderOptions() {
     }
 }
 
+function encodeJSON(json) {
+    var text = escape(json);
+    return text;
+}
+
+
 function setViewsListJSON(text) {
     // eval JSON views string from SketchUp
-    var json = text.replace(/#COMMA#/g,",");
+    var json = unescape(text);
+    var newViews = new Array();
     try {
-        eval("var newViews = " + json);
+        eval("newViews = " + json);
+        //log.debug("eval(): newViews.length=" + newViews.length); 
     } catch (e) {
         log.error("setViewsListJSON: error in eval() '" + e.name + "'");
         log.error("json= " + json)
-        var newViews = new Array();
     }
     viewsList.setViewsList(newViews);
 }
@@ -150,28 +157,30 @@ function getViewsList() {
     } else {
         log.debug("getViewsList(): 'skp:' not available");
         var msg = _getViewsListTest();
-        setViewsListJSON(msg);
+        setViewsListJSON( encodeJSON(msg) );
     }    
 }
 
 function _getViewsListTest() {
     // return dummy JSON string of SketchUp views
-    var msg =   "[{\"name\":\"view_1\"#COMMA#\"selected\":\"false\"#COMMA#\"current\":\"false\"}";
-    msg += "#COMMA#{\"name\":\"front (1)\"#COMMA#\"selected\":\"false\"#COMMA#\"current\":\"false\"}";
-    msg += "#COMMA#{\"name\":\"current view\"#COMMA#\"selected\":\"false\"#COMMA#\"current\":\"true\"}";
-    msg += "#COMMA#{\"name\":\"sel_view\"#COMMA#\"selected\":\"true\"#COMMA#\"current\":\"false\"}";
-    msg += "#COMMA#{\"name\":\"scene (2)\"#COMMA#\"selected\":\"true\"#COMMA#\"current\":\"false\"}";
-    msg += "#COMMA#{\"name\":\"next to last\"#COMMA#\"selected\":\"false\"#COMMA#\"current\":\"false\"}";
-    msg += "#COMMA#{\"name\":\"last\"#COMMA#\"selected\":\"false\"#COMMA#\"current\":\"false\"}";
-    msg += "]";
+    var msg = "[{\"name\":\"view_1\",\"selected\":\"false\",\"current\":\"false\"}";
+    msg +=    ",{\"name\":\"front (1)\",\"selected\":\"false\",\"current\":\"false\"}";
+    msg +=    ",{\"name\":\"current view\",\"selected\":\"false\",\"current\":\"true\"}";
+    msg +=    ",{\"name\":\"sel_view\",\"selected\":\"true\",\"current\":\"false\"}";
+    msg +=    ",{\"name\":\"scene (2)\",\"selected\":\"true\",\"current\":\"false\"}";
+    msg +=    ",{\"name\":\"next to last\",\"selected\":\"false\",\"current\":\"false\"}";
+    msg +=    ",{\"name\":\"last\",\"selected\":\"false\",\"current\":\"false\"}]";
     return msg;
 }
 
-function applyViewSelection(param) {
+function applyViews() {
+    var text = viewsList.toString();
+    var param = encodeURI(text);
+    //log.error("TEST: escape(text)=</br>" + param);
     if (SKETCHUP == true) {
-        window.location = 'skp:applyViewSelection@' + param;
+        window.location = 'skp:applyViews@' + param;
     } else {
-        log.debug("no action for applyViewSelection() [" + param + "]"); 
+        log.debug("no action for applyViews()"); 
     }
 }
 

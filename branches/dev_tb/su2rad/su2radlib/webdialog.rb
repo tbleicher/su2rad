@@ -13,6 +13,20 @@ module JSONUtils
         return name
     end
 
+    def decodeJSON(string)
+        string.gsub(/((?:%[0-9a-fA-F]{2})+)/n) do
+            [$1.delete('%')].pack('H*')
+        end
+        return string
+    end
+    
+    def encodeJSON(string)
+        string.gsub(/([^ a-zA-Z0-9_.-]+)/n) do
+            '%' + $1.unpack('H2' * $1.size).join('%').upcase
+        end
+        return string
+    end
+    
     def urlEncode(string)
         ## URL-encode from Ruby::CGI
         string.gsub(/([^ a-zA-Z0-9_.-]+)/n) do
@@ -47,6 +61,12 @@ module JSONUtils
         return json
     end
 
+    def getObjectFromJSON(json)
+        ## covert string to ruby object (Array or Hash)
+        
+
+    end
+    
     def toStringJSON(obj, level=0)
         if obj.class == Array
             str = '['
@@ -292,16 +312,148 @@ class SkyOptions
         
 end
 
+
+class SketchupView
+    
+    attr_reader :name
+    attr_reader :selected
+    attr_reader :current
+    attr_writer :selected
+    
+    include JSONUtils
+    
+    def initialize (name, current=false)
+        @name = name
+        @current = current
+        @options = "-vtv -vp 0 0 1 -vd 0 1 0 -vh 60 -vv 60"
+        if current == true
+            @selected = true
+        else
+            @selected = false
+        end
+    end
+
+    def getOptions
+        return @options
+    end 
+    
+    def toJSON
+        text = "{\"name\":\"%s\", " % @name
+        text += "\"selected\":\"%s\", \"current\":\"%s\", " % [@selected, @current]
+        text += "\"options\":\"%s\"}" % getOptions()
+        return text
+    end
+    
+    def update(dict)
+        dict.each_pair { |k,v|
+            begin
+                if v == 'true'
+                    v = true
+                elsif v == 'false'
+                    v = false
+                end
+                value = eval("@%s" % k)
+                #printf "TEST: k='%s'  eval(@%s)=%s\n" % [k,k,value]
+                if v != value
+                    printf "view '%s': new value for '%s' = '%s'\n" % [@name,k,v]
+                    if (v == 'true' || v == 'false')
+                        eval("@%s = %s" % [k,v])
+                    elsif (v.class == TrueClass || v.class == FalseClass)
+                        eval("@%s = %s" % [k,v])
+                    else
+                        eval("@%s = '%s'" % [k,v])
+                    end
+                end
+            rescue => e
+                printf "view '%s':\n%s\n" % [@name,$!.message]
+            end
+        }       
+    end
+end
+
+class ViewsList
+    
+    include JSONUtils
+
+    def initialize
+        @_views = {}
+        initViews()
+    end
+
+    def initViews
+        pages = Sketchup.active_model.pages
+        if pages.count == 0
+            view = SketchupView.new("unnamed_view", true)
+            @_views[view.name] = view
+        else
+            pages.each { |page|
+                viewname = replaceChars(page.name)
+                if page == pages.selected_page
+                    view = SketchupView.new(viewname, true)
+                    @_views[view.name] = view
+                elsif page.use_camera? == true
+                    view = SketchupView.new(viewname)
+                    @_views[view.name] = view
+                end
+            }
+        end
+    end
+    
+    def getViewsList(dlg,p='')
+        ## build and return JSON string of views (scenes)
+        printf ("\ngetViewsList() ... ")
+        json = "["
+        @_views.each_value { |v|
+            json += "%s, " % v.toJSON()
+        }
+        json += "]"
+        dlg.execute_script("setViewsListJSON('%s')" % encodeJSON(json) )
+        #pprintJSON(json)
+    end
+
+    def showViews(indent="")
+        @_views.each_value { |v|
+            printf "%sname='%s' - selected=%s\n" % [indent,v.name, v.selected]
+        }
+    end
+
+    def updateViews(a)
+        a.each { |d|
+            if not d.has_key?('name')
+                printf "ERROR: no 'name' for view\n"
+                next
+            end
+            viewname = d['name']
+            if @_views.has_key?(viewname)
+                view = @_views[viewname]
+                begin
+                    view.update(d)
+                rescue => e
+                    printf "%s\n\n%s\n" % [$!.message,e.backtrace.join("\n")]
+                    return false 
+                end
+            else
+                printf "ERROR: unknown view '%s'\n" % viewname
+                printf "views=\n"
+                showViews("   ")
+            end
+        }
+        #showViews()
+    end
+    
+end
+
+
 class ExportDialogWeb
     
     include JSONUtils
 
     def initialize
-        printf "ExportDialogWeb.intiialize()\n"
-        @selectedViews = {}
+        printf "ExportDialogWeb.initialize()\n"
         @exportOptions = ExportOptions.new()
         @renderOptions = RenderOptions.new()
         @skyOptions = SkyOptions.new()
+        @viewsList = ViewsList.new()
     end
 
     def _initExportOptions(dlg, p='')
@@ -323,39 +475,20 @@ class ExportDialogWeb
         dlg.execute_script("loadFileCallback('%s')" % text)
     end
     
-    def getViewsList(dlg,p='')
-        ## build and return JSON string of views (scenes)
-        printf ("\ngetViewsList() ... ")
-        json = "["
-        pages = Sketchup.active_model.pages
-        nViews = 0
-        if pages.count == 0
-            json += "{\"name\":\"%s\",\"selected\":\"false\",\"current\":\"%s\"}" % ['unnamed_view', true]
-            nViews = 1
-        else 
-            pages.each { |page|
-                viewname = replaceChars(page.name)
-                current = "false"
-                if page == pages.selected_page
-                    current = "true"
-                    @selectedViews[viewname] = true
-                elsif page.use_camera? != true
-                    next
-                end
-                json += ",{\"name\":\"%s\",\"selected\":\"false\",\"current\":\"%s\"}" % [viewname, current]
-                nViews += 1
-            }
-        end
-        json += "]"
-        json.gsub!(/,/,"#COMMA#")
-        dlg.execute_script("setViewsListJSON('%s')" % json )
-        printf "done [%d views]\n" % nViews
-        #pprintJSON(json)
-    end
 
-    def applyViewSelection(d,p)
+    def applyViews(d,p)
         ## select/deselect individual views
-        printf "\napplyViewSelection() p='%s'\n" % p 
+        printf "\napplyViews() p=\n'%s'\n\n" % p
+        begin
+            views = eval(p)
+        rescue => e 
+            printf "%s\n\n%s\n" % [$!.message,e.backtrace.join("\n")]
+            return
+        end
+        ## apply info to views
+        @viewsList.updateViews(views)
+        return
+        
         viewname, state = p.split('&')
         if state == 'selected'
             @selectedViews[viewname] = true
@@ -416,10 +549,10 @@ class ExportDialogWeb
         
         ## views
         dlg.add_action_callback("getViewsList") { |d,p|
-            getViewsList(d,p)
+            @viewsList.getViewsList(d,p)
         }
-        dlg.add_action_callback("applyViewSelection") { |d,p|
-            applyViewSelection(d,p)
+        dlg.add_action_callback("applyViews") { |d,p|
+            applyViews(d,p)
         }
         
         #dlg.set_on_close {
@@ -438,7 +571,7 @@ class ExportDialogWeb
             printf "_initExportOptions()\n"
             _initExportOptions(dlg, '')
             printf "getViewsList()\n"
-            getViewsList(dlg, '')
+            @viewsList.getViewsList(dlg, '')
             dlg.execute_script( "setShadowInfoJSON('%s')" % @skyOptions.toJSON() )
             dlg.execute_script("updateExportPage()")
         }
