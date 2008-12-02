@@ -136,9 +136,7 @@ function onLoadSceneFile() {
 
 function loadSceneFile(text) {
     // loadTextFile callback to read scene (*.rif) files
-    // text file is encoded via urlEncode - replace '+'
-    text = unescape(text);
-    text = text.replace(/\+/g,' ');
+    text = decodeText(text);
     setStatusMsg("<b>file contents:</b><br/><code>" + text.replace(/\n/g,'<br/>') + "</code>");
     _loadSceneFile(text);
 }
@@ -165,7 +163,7 @@ function setExportModeSelection() {
 }
 
 function setExportOptionsJSON(msg) {
-    var json = msg.replace(/#COMMA#/g,",");
+    var json = decodeJSON(msg);
     try {
         eval("var exportOpts = " + json);
     } catch (e) {
