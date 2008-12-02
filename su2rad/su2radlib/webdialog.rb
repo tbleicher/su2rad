@@ -5,7 +5,8 @@ require 'radiance_entities.rb'
 module JSONUtils
     
     def escapeCharsJSON(s)
-        s.gsub('"','\\\\\\"').gsub("'","\\\\'")
+        #s.gsub('"','\\\\\\"').gsub("'","\\\\'")
+        return s
     end
 
     def replaceChars(name)
@@ -43,21 +44,21 @@ module JSONUtils
     
     def getJSONDictionary(dict)
         if(dict == nil)
-            return "{}"
+            return "[]"
         else
             json = "["
             dict.each_key { |k|
                 json += '{'
                 json += '"name":"' + k + '",'
                 if(dict[k].class != Geom::Transformation)
-                    json += '"value":"' + escapeCharsJSON(dict[k].to_s) + '"},'
+                    json += '"value":"' + dict[k].to_s + '"},'
                 else
-                    json += '"value":"' + escapeCharsJSON(dict[k].to_a.to_s) + '"},'
+                    json += '"value":"' + dict[k].to_a.to_s + '"},'
                 end
             }
             json += ']'
         end
-        json.gsub!(/,/,"#COMMA#")
+        #json.gsub!(/,/,"#COMMA#")
         return json
     end
 
@@ -240,7 +241,7 @@ class SkyOptions
         printf "\ngetShadowInfo() ... "
         _syncSettings()
         json = getJSONDictionary(@_settings)
-        d.execute_script( "setShadowInfoJSON('%s')" % json )
+        d.execute_script( "setShadowInfoJSON('%s')" % encodeJSON(json) )
         printf "done\n"
     end
 
@@ -307,7 +308,7 @@ class SkyOptions
         }
         @_settings['ShadowTime'] = sinfo['ShadowTime']
         @_settings['ShadowTime_time_t'] = sinfo['ShadowTime_time_t']
-        d.execute_script("setShadowInfoJSON('%s')" % toJSON() )
+        d.execute_script("setShadowInfoJSON('%s')" % encodeJSON(toJSON()) )
     end
         
 end
@@ -325,7 +326,14 @@ class SketchupView
     def initialize (name, current=false)
         @name = name
         @current = current
-        @options = "-vtv -vp 0 0 1 -vd 0 1 0 -vh 60 -vv 60"
+        @vt = "v";
+        @vp = "0 0 1";
+        @vd = "0 1 0";
+        @vu = "0 0 1";
+        @va = 0.0;
+        @vo = 0.0;
+        @vv = 60.0;
+        @vh = 60.0;
         if current == true
             @selected = true
         else
@@ -334,40 +342,107 @@ class SketchupView
     end
 
     def getOptions
-        return @options
+        text = "rvu -vt#{@vt} -vp #{@vp} -vd #{@vd} -vu #{@vu}"
+        text +=  " -vv #{@vv} -vh #{@vh} -vo #{@vo} -va #{@va}"
+        return text
     end 
     
     def toJSON
         text = "{\"name\":\"%s\", " % @name
         text += "\"selected\":\"%s\", \"current\":\"%s\", " % [@selected, @current]
+        text += "\"vt\":\"#{@vt}\", \"vp\":\"#{@vp}\", \"vd\":\"#{@vd}\", \"vu\":\"#{@vu}\", " 
+        text += "\"vv\":\"#{@vv}\", \"vh\":\"#{@vh}\", \"vo\":\"#{@vo}\", \"va\":\"#{@va}\", "
         text += "\"options\":\"%s\"}" % getOptions()
         return text
     end
     
+    def _setFloatValue(k, v)
+        begin
+            #val = parseFloat(v)
+            eval("@%s = %s" % [k,v])
+        rescue
+            printf "Error: value for '#{k}' not a float value [v='#{v}']\n"
+        end
+            
+    end
+    
+    def _setViewVector(k, value)
+        ## parse v as x,y,z tripple
+        begin
+            x,y,z = value.split().collect { |v| v.to_f }
+            s = "%.3f %.3f %.3f" % [x,y,z]
+            eval("@%s = '%s'" % [k,s])
+        rescue
+            printf "Error: value for '#{k}' not a view vector [v='#{value}']\n"
+        end
+    end
+   
+    def _setViewOption(k,v)
+        #printf "#{@name}: _setViewOption('%s', '%s')\n" % [k,v] 
+        if v == 'true'
+            v = true
+        elsif v == 'false'
+            v = false
+        end
+        value = eval("@%s" % k)
+        #printf "TEST: k='%s'  eval(@%s)=%s\n" % [k,k,value]
+        if v != value
+            printf "view '%s': new value for '%s' = '%s'\n" % [@name,k,v]
+            if (v == 'true' || v == 'false')
+                eval("@%s = %s" % [k,v])
+            elsif (v.class == TrueClass || v.class == FalseClass)
+                eval("@%s = %s" % [k,v])
+            else
+                eval("@%s = '%s'" % [k,v])
+            end
+        end
+    end
+    
     def update(dict)
         dict.each_pair { |k,v|
-            begin
-                if v == 'true'
-                    v = true
-                elsif v == 'false'
-                    v = false
+            if (k == 'vp' || k == 'vd' || k == 'vu')
+                _setViewVector(k, v)
+            elsif (k == 'vo' || k == 'va' || k == 'vv' || k == 'vh')
+                _setFloatValue(k, v)
+            else
+                begin
+                    _setViewOption(k,v)
+                rescue => e
+                    printf "view '%s':\n%s\n" % [@name,$!.message]
                 end
-                value = eval("@%s" % k)
-                #printf "TEST: k='%s'  eval(@%s)=%s\n" % [k,k,value]
-                if v != value
-                    printf "view '%s': new value for '%s' = '%s'\n" % [@name,k,v]
-                    if (v == 'true' || v == 'false')
-                        eval("@%s = %s" % [k,v])
-                    elsif (v.class == TrueClass || v.class == FalseClass)
-                        eval("@%s = %s" % [k,v])
-                    else
-                        eval("@%s = '%s'" % [k,v])
-                    end
-                end
-            rescue => e
-                printf "view '%s':\n%s\n" % [@name,$!.message]
             end
         }       
+    end
+    
+    def setViewParameters(camera)
+        @vp = "%.3f %.3f %.3f" % [camera.eye.x*$UNIT, camera.eye.y*$UNIT, camera.eye.z*$UNIT]
+        @vd = "%.3f %.3f %.3f" % [camera.zaxis.x, camera.zaxis.y, camera.zaxis.z]
+        @vu = "%.3f %.3f %.3f" % [camera.up.x, camera.up.y, camera.up.z]
+        imgW = Sketchup.active_model.active_view.vpwidth.to_f
+        imgH = Sketchup.active_model.active_view.vpheight.to_f
+        aspect = imgW/imgH
+        if camera.perspective?
+            @vt = 'v'
+            if aspect > 1.0
+                @vv = camera.fov
+                @vh = _getFoVAngle(@vv, imgH, imgW)
+            else
+                @vh = camera.fov
+                @vv = _getFoVAngle(@vh, imgW, imgH)
+            end
+        else
+            @vt = 'v'
+            @vv = camera.height*$UNIT
+            @vh = @vv*aspect
+        end
+    end
+    
+    def _getFoVAngle(ang1, side1, side2)
+        ang1_rad = ang1*Math::PI/180.0
+        dist = side1 / (2.0*Math::tan(ang1_rad/2.0))
+        ang2_rad = 2 * Math::atan2(side2/(2*dist), 1)
+        ang2 = (ang2_rad*180.0)/Math::PI
+        return ang2
     end
 end
 
@@ -390,9 +465,11 @@ class ViewsList
                 viewname = replaceChars(page.name)
                 if page == pages.selected_page
                     view = SketchupView.new(viewname, true)
+                    view.setViewParameters(page.camera)
                     @_views[view.name] = view
                 elsif page.use_camera? == true
                     view = SketchupView.new(viewname)
+                    view.setViewParameters(page.camera)
                     @_views[view.name] = view
                 end
             }
@@ -408,7 +485,7 @@ class ViewsList
         }
         json += "]"
         dlg.execute_script("setViewsListJSON('%s')" % encodeJSON(json) )
-        #pprintJSON(json)
+        printf " done\n"
     end
 
     def showViews(indent="")
@@ -461,7 +538,7 @@ class ExportDialogWeb
         printf "\n_initExportOptions() ... "
         @exportOptions.setDialogOptions(dlg)
         json = @exportOptions.toJSON()
-        dlg.execute_script("setExportOptionsJSON('%s')" % json )
+        dlg.execute_script("setExportOptionsJSON('%s')" % encodeJSON(json) )
         printf " done\n"
     end 
     
@@ -478,7 +555,7 @@ class ExportDialogWeb
 
     def applyViews(d,p)
         ## select/deselect individual views
-        printf "\napplyViews() p=\n'%s'\n\n" % p
+        #printf "\napplyViews() p=\n'%s'\n\n" % p
         begin
             views = eval(p)
         rescue => e 
@@ -487,17 +564,6 @@ class ExportDialogWeb
         end
         ## apply info to views
         @viewsList.updateViews(views)
-        return
-        
-        viewname, state = p.split('&')
-        if state == 'selected'
-            @selectedViews[viewname] = true
-        else
-            @selectedViews.delete(viewname) {|v| printf "error: view '%s' not found\n" % v}
-        end 
-        @selectedViews.each_key { |k|
-            printf "    %s\n" % k
-        }
     end
 
 
@@ -536,7 +602,7 @@ class ExportDialogWeb
         ## shadow_info (location and sky)
         dlg.add_action_callback("getSkySettinge") { |d,p|
             ## get shadow_info dict and apply to dialog
-            d.execute_script("setShadowInfoJSON('%s')" % @skyOptions.toJSON() )
+            d.execute_script("setShadowInfoJSON('%s')" % encodeJSON(@skyOptions.toJSON()) )
         }
         dlg.add_action_callback("writeSkySettings") { |d,p|
             ## set shadow_info values from dialog
@@ -572,7 +638,7 @@ class ExportDialogWeb
             _initExportOptions(dlg, '')
             printf "getViewsList()\n"
             @viewsList.getViewsList(dlg, '')
-            dlg.execute_script( "setShadowInfoJSON('%s')" % @skyOptions.toJSON() )
+            dlg.execute_script( "setShadowInfoJSON('%s')" % encodeJSON(@skyOptions.toJSON()) )
             dlg.execute_script("updateExportPage()")
         }
     end ## end def show
