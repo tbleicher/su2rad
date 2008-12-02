@@ -244,9 +244,9 @@ function setLocationWarning(msg) {
 }
 
 
-function decodeJSON(text) {
+function _getShadowInfoArrayFromJSON(text) {
     // convert JSON response string into javascript array
-    var json = text.replace(/#COMMA#/g,",");
+    var json = decodeJSON(text);
     try {
         eval("var array = " + json);
     } catch (e) {
@@ -262,7 +262,7 @@ function decodeJSON(text) {
 function setShadowInfoJSON(msg) {
     // parse and apply shadow_info settings in JSON string 'msg'
     //log.debug("setShadowInfoJSON() (" + msg.length + " bytes)");
-    shadowinfo = decodeJSON(msg);
+    shadowinfo = _getShadowInfoArrayFromJSON(msg);
     var text = '<b>shadow info settings:</b><br/>';
     modelLocation.logging = false;
     for(var j=0; j<shadowinfo.length; j++) {

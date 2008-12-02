@@ -53,16 +53,20 @@ function getExportOptions() {
         window.location = 'skp:getExportOptions@';
         // setExportOptionsJSON() called by Sketchup
     } else {
-        var s =    "[{\"name\":\"sceneName\"#COMMA#\"value\":\"Scene_Dummy1\"}";
-        s += "#COMMA#{\"name\":\"scenePath\"#COMMA#\"value\":\"/home/user/tmp/testfile\"}";
-        s += "#COMMA#{\"name\":\"exportMode\"#COMMA#\"value\":\"by color\"}";
-        s += "#COMMA#{\"name\":\"triangulate\"#COMMA#\"value\":\"false\"}";
-        s += "#COMMA#{\"name\":\"textures\"#COMMA#\"value\":\"true\"}";
-        s += "#COMMA#{\"name\":\"global_coords\"#COMMA#\"value\":\"false\"}#COMMA#]";
-        setExportOptionsJSON(s);
+        var json = _getExportOptionsTest();
+        setExportOptionsJSON( encodeJSON(json) );
     }
 }
 
+function _getExportOptionsTest() {
+    var json = "[{\"name\":\"sceneName\",\"value\":\"Scene_Dummy1\"}";
+    json +=    ",{\"name\":\"scenePath\",\"value\":\"/home/user/tmp/testfile\"}";
+    json +=    ",{\"name\":\"exportMode\",\"value\":\"by color\"}";
+    json +=    ",{\"name\":\"triangulate\",\"value\":\"false\"}";
+    json +=    ",{\"name\":\"textures\",\"value\":\"true\"}";
+    json +=    ",{\"name\":\"global_coords\",\"value\":\"false\"},]";
+    return json;
+}
 
 function getSkySettings() {
     // get SketchUp shadow_info settings and apply to modelLocation
@@ -72,26 +76,26 @@ function getSkySettings() {
         // setShadowInfoJSON() called by Sketchup
     } else {
         log.debug("getSkySettings(): 'skp:' not available");
-        msg = _getSkySettingsTest();
-        setShadowInfoJSON(msg);
+        var json = _getSkySettingsTest();
+        setShadowInfoJSON( encodeJSON(json) );
     }
 }
 
 function _getSkySettingsTest() {
     // return dummy JSON string of SketchUp.shadow_info
-    var msg =    "[{\"name\":\"City\"#COMMA#\"value\":\"foo_Boulder (CO)\"}";
-    msg += "#COMMA#{\"name\":\"Country\"#COMMA#\"value\":\"foo_USA\"}";
-    msg += "#COMMA#{\"name\":\"Latitude\"#COMMA#\"value\":\"40.017\"}";
-    msg += "#COMMA#{\"name\":\"Longitude\"#COMMA#\"value\":\"-105.283\"}";
-    msg += "#COMMA#{\"name\":\"TZOffset\"#COMMA#\"value\":\"-7.0\"}";
-    msg += "#COMMA#{\"name\":\"NorthAngle\"#COMMA#\"value\":\"0.0\"}";
-    msg += "#COMMA#{\"name\":\"DaylightSavings\"#COMMA#\"value\":\"false\"}";
-    msg += "#COMMA#{\"name\":\"DisplayShadows\"#COMMA#\"value\":\"false\"}";
-    msg += "#COMMA#{\"name\":\"ShadowTime\"#COMMA#\"value\":\"Fri Nov 08 13:30:00 +0000 2002\"}";
-    msg += "#COMMA#{\"name\":\"ShadowTime_time_t\"#COMMA#\"value\":\"1036762200\"}";
-    msg += "#COMMA#{\"name\":\"UseSunForAllShading\"#COMMA#\"value\":\"false\"}";
-    msg += "#COMMA#{\"name\":\"SkyCommand\"#COMMA#\"value\":\"!gensky +i 03 21 12:34 -a 40.017 -o 105.283 -m 105.0 -g 0.22 -t 1.8\"}]";
-    return msg;
+    var json = "[{\"name\":\"City\",\"value\":\"foo_Boulder (CO)\"}";
+    json +=    ",{\"name\":\"Country\",\"value\":\"foo_USA\"}";
+    json +=    ",{\"name\":\"Latitude\",\"value\":\"40.017\"}";
+    json +=    ",{\"name\":\"Longitude\",\"value\":\"-105.283\"}";
+    json +=    ",{\"name\":\"TZOffset\",\"value\":\"-7.0\"}";
+    json +=    ",{\"name\":\"NorthAngle\",\"value\":\"0.0\"}";
+    json +=    ",{\"name\":\"DaylightSavings\",\"value\":\"false\"}";
+    json +=    ",{\"name\":\"DisplayShadows\",\"value\":\"false\"}";
+    json +=    ",{\"name\":\"ShadowTime\",\"value\":\"Fri Nov 08 13:30:00 +0000 2002\"}";
+    json +=    ",{\"name\":\"ShadowTime_time_t\",\"value\":\"1036762200\"}";
+    json +=    ",{\"name\":\"UseSunForAllShading\",\"value\":\"false\"}";
+    json +=    ",{\"name\":\"SkyCommand\",\"value\":\"!gensky +i 03 21 12:34 -a 40.017 -o 105.283 -m 105.0 -g 0.22 -t 1.8\"}]";
+    return json;
 }
 
 function loadFileCallback(text) {
@@ -129,6 +133,19 @@ function applyRenderOptions() {
     }
 }
 
+
+function decodeJSON(text) {
+    var json = unescape(text)
+    return json;
+}
+
+function decodeText(encText) {
+    // text file is encoded via urlEncode - replace '+'
+    var text = unescape(encText)
+    text = text.replace(/\+/g,' ');
+    return json;
+}
+
 function encodeJSON(json) {
     var text = escape(json);
     return text;
@@ -137,7 +154,7 @@ function encodeJSON(json) {
 
 function setViewsListJSON(text) {
     // eval JSON views string from SketchUp
-    var json = unescape(text);
+    var json = decodeJSON(text);
     var newViews = new Array();
     try {
         eval("newViews = " + json);
