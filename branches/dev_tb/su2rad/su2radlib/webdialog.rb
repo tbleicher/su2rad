@@ -1,11 +1,14 @@
 
 require 'sketchup.rb'
 require 'radiance_entities.rb'
+require 'radiancescene.rb'
+
+
 
 module JSONUtils
     
     def escapeCharsJSON(s)
-        #s.gsub('"','\\\\\\"').gsub("'","\\\\'")
+        s.gsub('"','\\\\\\"').gsub("'","\\\\'")
         return s
     end
 
@@ -62,12 +65,6 @@ module JSONUtils
         return json
     end
 
-    def getObjectFromJSON(json)
-        ## covert string to ruby object (Array or Hash)
-        
-
-    end
-    
     def toStringJSON(obj, level=0)
         if obj.class == Array
             str = '['
@@ -107,7 +104,6 @@ module JSONUtils
         printf "#{text}\n"
         printf json.gsub!(/#COMMA#\{/,"\n\{")
         printf "\n"
-        
     end
     
     def test_toStringJSON()
@@ -133,22 +129,33 @@ class ExportOptions
     def initialize
         @scenePath = $export_dir
         @sceneName = $scene_name
-        @triangulate = $TRIANGULATE
-        @textures = $TEXTURES
-        @exportMode = $MODE
-        @global_coords = $MAKEGLOBAL
+        @triangulate = $SU2RAD_CONFIG.get('TRIANGULATE')
+        @textures = $SU2RAD_CONFIG.get('TEXTURES')
+        @exportMode = $SU2RAD_CONFIG.get('MODE')
+        @global_coords = $SU2RAD_CONFIG.get('MAKEGLOBAL')
+    end
+    
+    def applyExportOptions(dlg,params='')
+        ## apply export options to global config
+        $SU2RAD_CONFIG['TRIANGULATE'] = @triangulate
+        $SU2RAD_CONFIG['TEXTURES']    = @textures 
+        $SU2RAD_CONFIG['MODE']        = @exportMode 
+        $SU2RAD_CONFIG['MAKEGLOBAL']  = @global_coords
+        $SU2RAD_CONFIG['export_dir']  = @scenePath 
+        $SU2RAD_CONFIG['scene_name']  = @sceneName 
     end
 
     def setDialogOptions(dlg)
         ## disable 'global_coords' option in dialog if not available
-        if $REPLMARKS != '' and File.exists?($REPLMARKS)
+        replmarks = @textures = $SU2RAD_CONFIG.get('REPLMARKS')
+        if replmarks != '' and File.exists?(replmarks)
             dlg.execute_script('enableGlobalOption()')
         else
             dlg.execute_script('disableGlobalOption()')
-            if $MODE == 'by group'
-                $MODE = 'by color'
+            if @exportMode == 'by group'
+                @exportMode = 'by color'
             end
-            $MAKEGLOBAL = true
+            @global_coords = true
         end
     end
     
@@ -521,12 +528,18 @@ class ViewsList
 end
 
 
+
 class ExportDialogWeb
     
     include JSONUtils
 
-    def initialize
+    def initialize(scene=nil)
         printf "ExportDialogWeb.initialize()\n"
+        if scene == nil
+            @scene = RadianceScene.new()
+        else
+            @scene = scene
+        end
         @exportOptions = ExportOptions.new()
         @renderOptions = RenderOptions.new()
         @skyOptions = SkyOptions.new()
@@ -565,9 +578,7 @@ class ExportDialogWeb
         ## apply info to views
         @viewsList.updateViews(views)
     end
-
-
-        
+ 
     def show(title="dialog_TEST")
         ## create and show WebDialog
         dlg = UI::WebDialog.new(title, true, nil, 600, 750, 50, 50, true);
@@ -578,7 +589,9 @@ class ExportDialogWeb
             d.close();
         }
         dlg.add_action_callback("onExport") {|d,p|
-            printf "TODO: starting export ...\n"
+            @exportOptions.applyExportOptions(d,p)
+            printf "TODO: setOptions()\n"
+            printf "TODO: @scene.export() ...\n"
         }
         
         dlg.add_action_callback("loadTextFile") {|d,p|
@@ -651,16 +664,3 @@ def test_showWebDialog()
     edw.show()
 end
 
-
-
-begin 
-    if (not file_loaded?("dialog_TEST.rb"))
-        dmenu = UI.menu("Plugins")
-        dmenu.add_item("dialog_TEST") { test_showWebDialog }
-    end
-rescue => e 
-    msg = "%s\n\n%s" % [$!.message,e.backtrace.join("\n")]
-    UI.messagebox msg            
-    printf "dialog_TEST: entry to menu 'Plugin' failed:\n\n%s\n" % msg
-end 
-file_loaded("dialog_TEST.rb")

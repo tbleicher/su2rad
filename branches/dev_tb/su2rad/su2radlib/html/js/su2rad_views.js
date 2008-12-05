@@ -94,7 +94,7 @@ ViewsListObject.prototype.setViewsList = function (newViews) {
         }
     }
     log.info("viewsList: " + this.views.length + " views");
-    updateViews();
+    updateViewsSummary();
 }
 
 ViewsListObject.prototype.toString = function () {
@@ -129,14 +129,14 @@ function onViewSelectionChange(viewname) {
 }
 
 
-function updateViews() {
+function updateViewsSummary() {
     var text = '<div class="gridRow">';
     var col = 0;
     for(var i=0; i<viewsList.views.length; i++) {
         var view = viewsList[viewsList.views[i]];
         if(view != null) {
             log.debug("view = '" + view.name + "'");
-            text += _getViewDiv(view);
+            text += _getViewSummaryDiv(view);
             col += 1;
         }
         // start new row after 3 views (except for end)
@@ -149,7 +149,7 @@ function updateViews() {
     document.getElementById("viewsSelection").innerHTML = text;
 }
 
-function _getViewDiv(view) {
+function _getViewSummaryDiv(view) {
     // return <td> for view line (lable and checkbox)
     var text = '<div class="gridCell">';
     text += '<input id="' + view.id + '"' 

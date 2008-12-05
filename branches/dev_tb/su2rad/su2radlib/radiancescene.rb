@@ -1,6 +1,5 @@
 require "exportbase.rb"
 require "context.rb"
-require "webdialog.rb"
 
 class RadianceScene < ExportBase
 
@@ -26,7 +25,6 @@ class RadianceScene < ExportBase
         $componentNames = {}
         $uniqueFileNames = {}
         $skyfile = ''
-        $log = []
         $facecount = 0
         $filecount = 0
         $createdFiles = Hash.new()
@@ -37,6 +35,11 @@ class RadianceScene < ExportBase
         $matrixstack = Stack.new()
         $groupstack = Stack.new() 
         
+        @@materialstack = MaterialStack.new()
+        @@layerstack =LayerStack.new()
+        @@matrixstack = Stack.new()
+        @@groupstack = Stack.new()
+        
         ## add 'Layer0' as default for faces without group
         $layerstack.push(Sketchup.active_model.layers['Layer0'])
     end
@@ -46,19 +49,24 @@ class RadianceScene < ExportBase
         $byLayer = {}
         $meshStartIndex = {}
         $visibleLayers = {}
+        setConfig('byColor', Hash.new)
+        setConfig('byLayer', Hash.new)
+        setConfig('meshStartIndex', Hash.new)
+        setConfig('visibleLayers', Hash.new)
         @model.layers.each { |l|
             $byLayer[remove_spaces(l.name)] = []
+            getConfig('byLayer')[remove_spaces(l.name)] = []
             if l.visible?
                 $visibleLayers[l] = 1
+                getConfig('visibleLayers')[l] = 1
             end
         }
     end
     
     def initLog
-        super
         line1 = "###  su2rad.rb export  ###" 
         line2 = "###  %s  ###" % Time.now.asctime
-        $log = [line1,line2]
+        super([line1,line2])
         printf "\n\n%s\n" % line1
         Sketchup.set_status_text(line1)
     end
@@ -73,6 +81,7 @@ class RadianceScene < ExportBase
         if path != '' and path.length > 5:
             $export_dir = path[0..-5]
         end
+        
     end
   
 
@@ -173,20 +182,13 @@ class RadianceScene < ExportBase
     end
     
 
-    def showWebDialog(selected_only=0)
-        printf "$scene_name=#{$scene_name}\n"
-        edw = ExportDialogWeb.new()
-        edw.show("Radiance Export")
-    end 
-   
-    
-    def export(selected_only=0)
-        scene_dir = "#{$export_dir}/#{$scene_name}"
+    def startExport(selected_only=0)
+        scene_dir = File.join($export_dir,$scene_name)
         if not confirmExportDirectory or not removeExisting(scene_dir)
             return
         end
-        sky = RadianceSky.new()
-        @radOpts.skytype = sky.skytype
+        @sky = RadianceSky.new()
+        @radOpts.skytype = @sky.skytype
         if $SHOWRADOPTS == true
             @radOpts.showDialog
         end
@@ -202,10 +204,16 @@ class RadianceScene < ExportBase
                 $MAKEGLOBAL = true
             end
         end
+        export(selected_only)
+    end
+
+
+    
+    def export(selected_only=0)
         
         ## write sky first for <scene>.rad file
-        sky.skytype = @radOpts.skytype
-        $skyfile = sky.export()
+        @sky.skytype = @radOpts.skytype
+        $skyfile = @sky.export()
         
         ## export geometry
         if selected_only != 0
@@ -312,25 +320,6 @@ class RadianceScene < ExportBase
         #cmd = "%s -o x11 %s" % [$RAD, riffile]
     end
     
-    def writeLogFile
-        line = "###  finished: %s  ###" % Time.new()
-        $log.push(line)
-        line2 = "### success: #{$export_dir}/#{$scene_name})  ###"
-        $log.push(line2)
-        logname = getFilename("%s.log" % $scene_name)
-        if not createFile(logname, $log.join("\n"))
-            uimessage("Error: Could not create log file '#{logname}'")
-            line = "### export failed: %s  ###" % Time.new()
-            printf "%s\n" % line
-            Sketchup.set_status_text(line)
-        else
-            printf "%s\n" % line
-            Sketchup.set_status_text(line)
-            printf "%s\n" % line2
-            Sketchup.set_status_text(line2)
-        end
-    end
-   
     def getRifObjects
         text = ''
         if $skyfile != ''
