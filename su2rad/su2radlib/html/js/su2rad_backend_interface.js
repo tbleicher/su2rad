@@ -161,7 +161,7 @@ function setViewsListJSON(text) {
         //log.debug("eval(): newViews.length=" + newViews.length); 
     } catch (e) {
         log.error("setViewsListJSON: error in eval() '" + e.name + "'");
-        log.error("json= " + json)
+        log.error("json= " + json.replace(/,/g,',<br/>'));
     }
     viewsList.setViewsList(newViews);
 }
@@ -182,25 +182,25 @@ function _getViewsListTest() {
     // return dummy JSON string of SketchUp views
     var msg = "[{\"name\":\"view_1\",\"selected\":\"false\",\"current\":\"false\",";
     msg +=      "\"vt\":\"v\",\"vp\":\"0 0 1\",\"vd\":\"0 1 0\",\"vu\":\"0 0 1\",";
-    msg +=      "\"vo\":\"0.0,\"va\":\"0.0\",\"vv\":\"30.0\",\"vh\":\"60.0\"}";
+    msg +=      "\"vo\":\"0.0\",\"va\":\"0.0\",\"vv\":\"30.0\",\"vh\":\"60.0\"}";
     msg +=    ",{\"name\":\"front (1)\",\"selected\":\"false\",\"current\":\"false\",";
     msg +=      "\"vt\":\"v\",\"vp\":\"0 0 1\",\"vd\":\"0 1 0\",\"vu\":\"0 0 1\",";
-    msg +=      "\"vo\":\"0.0,\"va\":\"0.0\",\"vv\":\"30.0\",\"vh\":\"60.0\"}";
+    msg +=      "\"vo\":\"0.0\",\"va\":\"0.0\",\"vv\":\"30.0\",\"vh\":\"60.0\"}";
     msg +=    ",{\"name\":\"current view\",\"selected\":\"false\",\"current\":\"true\",";
     msg +=      "\"vt\":\"v\",\"vp\":\"0 0 1\",\"vd\":\"0 1 0\",\"vu\":\"0 0 1\",";
-    msg +=      "\"vo\":\"0.0,\"va\":\"0.0\",\"vv\":\"30.0\",\"vh\":\"60.0\"}";
+    msg +=      "\"vo\":\"0.0\",\"va\":\"0.0\",\"vv\":\"30.0\",\"vh\":\"60.0\"}";
     msg +=    ",{\"name\":\"sel_view\",\"selected\":\"true\",\"current\":\"false\",";
     msg +=      "\"vt\":\"v\",\"vp\":\"0 0 1\",\"vd\":\"0 1 0\",\"vu\":\"0 0 1\",";
-    msg +=      "\"vo\":\"0.0,\"va\":\"0.0\",\"vv\":\"30.0\",\"vh\":\"60.0\"}";
+    msg +=      "\"vo\":\"0.0\",\"va\":\"0.0\",\"vv\":\"30.0\",\"vh\":\"60.0\"}";
     msg +=    ",{\"name\":\"scene (2)\",\"selected\":\"true\",\"current\":\"false\",";
     msg +=      "\"vt\":\"v\",\"vp\":\"0 0 1\",\"vd\":\"0 1 0\",\"vu\":\"0 0 1\",";
-    msg +=      "\"vo\":\"0.0,\"va\":\"0.0\",\"vv\":\"30.0\",\"vh\":\"60.0\"}";
+    msg +=      "\"vo\":\"0.0\",\"va\":\"0.0\",\"vv\":\"30.0\",\"vh\":\"60.0\"}";
     msg +=    ",{\"name\":\"next to last\",\"selected\":\"false\",\"current\":\"false\",";
     msg +=      "\"vt\":\"v\",\"vp\":\"0 0 1\",\"vd\":\"0 1 0\",\"vu\":\"0 0 1\",";
-    msg +=      "\"vo\":\"0.0,\"va\":\"0.0\",\"vv\":\"30.0\",\"vh\":\"60.0\"}";
+    msg +=      "\"vo\":\"0.0\",\"va\":\"0.0\",\"vv\":\"30.0\",\"vh\":\"60.0\"}";
     msg +=    ",{\"name\":\"last\",\"selected\":\"false\",\"current\":\"false\",";
     msg +=      "\"vt\":\"v\",\"vp\":\"0 0 1\",\"vd\":\"0 1 0\",\"vu\":\"0 0 1\",";
-    msg +=      "\"vo\":\"0.0,\"va\":\"0.0\",\"vv\":\"30.0\",\"vh\":\"60.0\"}]";
+    msg +=      "\"vo\":\"0.0\",\"va\":\"0.0\",\"vv\":\"30.0\",\"vh\":\"60.0\"}]";
     return msg;
 }
 
