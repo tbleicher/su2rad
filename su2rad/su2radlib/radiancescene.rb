@@ -5,63 +5,21 @@ class RadianceScene < ExportBase
 
     def initialize
         @model = Sketchup.active_model
-        initGlobals() 
-        initGlobalHashes()
-        initLog()
-        @radOpts = RadianceOptions.new()
         
-        $ecene_name = "unnamed_scene"
+        $inComponent = [false]
+        @@materialContext = MaterialContext.new()
+        
+        resetState()
+        initLog()
+        
+        @radOpts = RadianceOptions.new()
+        @sky = RadianceSky.new()
+        
+        $scene_name = "unnamed_scene"
         $export_dir = Dir.pwd()
         setExportDirectory()
     end
 
-    def initGlobals
-        $materialNames = {}
-        $materialDescriptions = {}
-        $usedMaterials = {}
-        $materialContext = MaterialContext.new()
-        $nameContext = []
-        $components = []
-        $componentNames = {}
-        $uniqueFileNames = {}
-        $skyfile = ''
-        $facecount = 0
-        $filecount = 0
-        $createdFiles = Hash.new()
-        $inComponent = [false]
-        
-        $materialstack = MaterialStack.new()
-        $layerstack = LayerStack.new()
-        $matrixstack = Stack.new()
-        $groupstack = Stack.new() 
-        
-        @@materialstack = MaterialStack.new()
-        @@layerstack =LayerStack.new()
-        @@matrixstack = Stack.new()
-        @@groupstack = Stack.new()
-        
-        ## add 'Layer0' as default for faces without group
-        $layerstack.push(Sketchup.active_model.layers['Layer0'])
-    end
-    
-    def initGlobalHashes
-        $byColor = {}
-        $byLayer = {}
-        $meshStartIndex = {}
-        $visibleLayers = {}
-        setConfig('byColor', Hash.new)
-        setConfig('byLayer', Hash.new)
-        setConfig('meshStartIndex', Hash.new)
-        setConfig('visibleLayers', Hash.new)
-        @model.layers.each { |l|
-            $byLayer[remove_spaces(l.name)] = []
-            getConfig('byLayer')[remove_spaces(l.name)] = []
-            if l.visible?
-                $visibleLayers[l] = 1
-                getConfig('visibleLayers')[l] = 1
-            end
-        }
-    end
     
     def initLog
         line1 = "###  su2rad.rb export  ###" 
@@ -150,7 +108,7 @@ class RadianceScene < ExportBase
         ## top level scene split in references (*.rad) and faces ('objects/*_faces.rad')
         if $MODE != 'by group'
             ## start with replacement files for components
-            ref_text = $components.join("\n")
+            ref_text = @@components.join("\n")
             ref_text += "\n"
         else
             ref_text = ""
@@ -170,8 +128,8 @@ class RadianceScene < ExportBase
         ref_text += references.join("\n")
         ## add materials and sky at top of file
         ref_text = "!xform ./materials.rad\n" + ref_text
-        if $skyfile != ''
-            ref_text = "!xform #{$skyfile} \n" + ref_text
+        if @sky.filename != ''
+            ref_text = "!xform #{@sky.filename} \n" + ref_text
         end
         ref_filename = getFilename("#{$scene_name}.rad")
         if not createFile(ref_filename, ref_text)
@@ -187,7 +145,6 @@ class RadianceScene < ExportBase
         if not confirmExportDirectory or not removeExisting(scene_dir)
             return
         end
-        @sky = RadianceSky.new()
         @radOpts.skytype = @sky.skytype
         if $SHOWRADOPTS == true
             @radOpts.showDialog
@@ -213,7 +170,7 @@ class RadianceScene < ExportBase
         
         ## write sky first for <scene>.rad file
         @sky.skytype = @radOpts.skytype
-        $skyfile = @sky.export()
+        @sky.export()
         
         ## export geometry
         if selected_only != 0
@@ -223,14 +180,13 @@ class RadianceScene < ExportBase
             entities = Sketchup.active_model.entities
         end
         $globaltrans = Geom::Transformation.new
-        $nameContext.push($scene_name) 
+        @@nameContext.push($scene_name) 
         sceneref = exportByGroup(entities, Geom::Transformation.new)
         saveFilesByColor()
         saveFilesByLayer()
-        $nameContext.pop()
-        $materialContext.export()
+        @@nameContext.pop()
+        @@materialContext.export()
         createRifFile()
-        #runPreview()
         writeLogFile()
     end
    
@@ -240,11 +196,11 @@ class RadianceScene < ExportBase
             return
         end
         references = []
-        $byColor.each_pair { |name,lines|
+        @@byColor.each_pair { |name,lines|
             if lines.length == 0
                 next
             end
-            skm = $materialContext.getByName(name)
+            skm = @@materialContext.getByName(name)
             name = remove_spaces(name)
             if doTextures(skm)
                 uimessage("material='#{skm}' texture='#{skm.texture}'", 2)
@@ -295,7 +251,7 @@ class RadianceScene < ExportBase
             return
         end
         references = []
-        $byLayer.each_pair { |name,lines|
+        @@byLayer.each_pair { |name,lines|
             if lines.length == 0
                 next
             end
@@ -322,8 +278,8 @@ class RadianceScene < ExportBase
     
     def getRifObjects
         text = ''
-        if $skyfile != ''
-            text += "objects=\t#{$skyfile}\n"
+        if @sky.filename != ''
+            text += "objects=\t#{@sky.filename}\n"
         end
         i = 0
         j = 0

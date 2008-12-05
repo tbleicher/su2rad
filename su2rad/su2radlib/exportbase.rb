@@ -1,176 +1,7 @@
 require 'config_class.rb'
+require 'export_modules.rb'
 
-module InterfaceBase
-
-    def initLog(lines=[])
-        @@_log = lines
-    end
-    
-    def uimessage(msg, loglevel=0)
-        if $groupstack
-            n = $groupstack.length
-        else
-            n = 0
-        end
-        if n+loglevel > 0
-            prefix = "  " * (n+loglevel)
-        else
-            prefix = ""
-        end
-        line = "%s[%d] %s" % [prefix, n, msg]
-        begin
-            Sketchup.set_status_text(line.strip())
-            if loglevel <= $LOGLEVEL
-                printf "#{line}\n"
-                @@_log.push(line)
-            end
-        rescue
-            printf "#{line}\n"
-        end
-    end
-    
-    def writeLogFile
-        line = "###  finished: %s  ###" % Time.new()
-        @@_log.push(line)
-        line2 = "### success: #{$export_dir}/#{$scene_name})  ###"
-        @@_log.push(line2)
-        logname = getFilename("%s.log" % $scene_name)
-        if not createFile(logname, @@_log.join("\n"))
-            uimessage("Error: Could not create log file '#{logname}'")
-            line = "### export failed: %s  ###" % Time.new()
-            printf "%s\n" % line
-            Sketchup.set_status_text(line)
-        else
-            printf "%s\n" % line
-            Sketchup.set_status_text(line)
-            printf "%s\n" % line2
-            Sketchup.set_status_text(line2)
-        end
-    end
-end
-
-
-module RadiancePath
-    
-    def append_paths(p,f)
-        if p[-1,1] == "\\" or p[-1,1] == "/"
-            p+f
-        else
-            p+"\\"+f
-        end
-    end
-    
-    def clearDirectory(scene_dir)
-        uimessage("clearing directory '#{scene_dir}'",1)
-        if not File.exists?(scene_dir)
-            return
-        end
-        Dir.foreach(scene_dir) { |f|
-            fpath = File.join(scene_dir, f)
-	    if f == '.' or f == '..'
-		next
-            elsif f[0,1] == '.'
-                next
-            elsif f == 'textures'
-                uimessage("skipping directory 'textures'", 2)
-                next
-            elsif FileTest.directory?(fpath) == true
-                clearDirectory(fpath)
-                begin
-                    Dir.delete(fpath)
-                    uimessage("deleted directory '#{fpath}'", 2)
-                rescue
-                    uimessage("directory '#{fpath}' not empty")
-                end
-            elsif FileTest.file?(fpath) == true
-		File.delete(fpath)
-                uimessage("deleted file '#{fpath}'", 3)
-            else
-                uimessage("unexpected entry in file system: '#{fpath}'")
-            end
-        }
-    end
-
-    def remove_spaces(s)
-        ## remove spaces and other funny chars from names
-        for i in (0..s.length)
-            if s[i,1] == " " 
-                s[i] = "_" 
-            end 
-        end
-        return s.gsub(/\W/, '')
-    end
-    
-    def removeExisting(scene_dir)
-        if FileTest.exists?(scene_dir)
-            scene_name = File.basename(scene_dir)
-            if $CONFIRM_REPLACE == false
-                uimessage("removing scene directory #{scene_name}")
-                clearDirectory(scene_dir)
-                prepareSceneDir(scene_dir)
-                return true
-            end
-            ui_result = (UI.messagebox "Remove existing directory\n'#{scene_name}'?", MB_OKCANCEL, "Remove directory?")
-            if ui_result == 1
-                uimessage("removing scene directory #{scene_name}")
-                clearDirectory(scene_dir)
-                prepareSceneDir(scene_dir)
-                return true
-            else
-                uimessage('export canceled')
-                return false
-            end
-        else
-            prepareSceneDir(scene_dir)
-        end
-        return true
-    end
-
-    def createDirectory(path)
-        if File.exists?(path) and FileTest.directory?(path)
-            return true
-        else
-            uimessage("Creating directory '%s'" % path)
-        end
-        dirs = []
-        while not File.exists?(path)
-            dirs.push(path)
-            path = File.dirname(path)
-        end
-        dirs.reverse!
-        dirs.each { |p|
-            begin 
-                #uimessage("creating '%s'" % p)
-                Dir.mkdir(p)
-            rescue
-                uimessage("ERROR creating directory '%s'" %  p)
-                return false
-            end
-        }
-    end
-   
-    def createFile(filename, text)
-        ## write 'text' to 'filename' in a save way
-        path = File.dirname(filename)
-        createDirectory(path)
-        if not FileTest.directory?(path)
-            return false
-        end
-        f = File.new(filename, 'w')
-        f.write(text)
-        f.close()
-        $createdFiles[filename] = 1
-        
-        uimessage("created file '%s'" % filename, 1)
-        $filecount += 1
-        Sketchup.set_status_text "files:", SB_VCB_LABEL
-        Sketchup.set_status_text "%d" % $filecount, SB_VCB_VALUE
-        return true
-    end 
-    
-
-    
-end
+require 'context.rb'
 
 
 
@@ -184,6 +15,56 @@ class ExportBase
     @@_config = RunTimeConfig.new()
     @@_log = []
     
+    @@materialContext = nil
+    
+    @@materialstack = MaterialStack.new()
+    @@layerstack = LayerStack.new()
+    @@matrixstack = Stack.new()
+    @@groupstack = Stack.new()
+
+    @@components = []
+    
+    @@facecount = 0
+    @@uniqueFileNames = Hash.new()
+    @@componentNames = Hash.new()
+        
+    @@byColor = Hash.new()
+    @@byLayer = Hash.new()
+    @@meshStartIndex = Hash.new()
+    @@visibleLayers = Hash.new()
+   
+    def resetState
+        @@materialContext.clear()
+        
+        @@materialstack.clear()
+        @@layerstack.clear()
+        @@matrixstack.clear()
+        @@groupstack.clear()
+
+        @@components = []
+        @@nameContext = []
+        
+        @@facecount = 0
+        @@uniqueFileNames = Hash.new()
+        @@componentNames = Hash.new()
+        
+        @@byColor = Hash.new()
+        @@meshStartIndex = Hash.new()
+        
+        ## create hash of visible layers
+        @@byLayer = Hash.new()
+        @@visibleLayers = Hash.new()
+        Sketchup.active_model.layers.each { |l|
+            @@byLayer[remove_spaces(l.name)] = []
+            if l.visible?
+                @@visibleLayers[l] = 1
+            end
+        }
+        
+        $filecount = 0
+        $createdFiles = Hash.new()
+    end
+    
     def getConfig(key)
         return @@_config.get(key)
     end
@@ -192,39 +73,16 @@ class ExportBase
         @@_config.set(key,value)
     end
    
-    
-    def find_support_files(filename, subdir="")
-        ## replacement for Sketchup.find_support_files
-        if subdir == ""
-            subdir = $SUPPORTDIR
-        elsif subdir[0] != '/'[0]
-            #XXX: platform! 
-            subdir = File.join($SUPPORTDIR, subdir)
-        end
-        if FileTest.directory?(subdir) == false
-            return []
-        end
-        paths = []
-        Dir.foreach(subdir) { |p|
-            path = File.join(subdir, p)
-            if p[0,1] == '.'[0,1]
-                next
-            elsif FileTest.directory?(path) == true
-                lst = find_support_files(filename, path)
-                lst.each { |f| paths.push(f) }
-            elsif p.downcase == filename.downcase
-                paths.push(path)
-            end
-        }
-        return paths
+    def getNestingLevel
+        return @@groupstack.length
     end
-        
+    
     def isVisible(e)
         if $inComponent[-1] == true and e.layer.name == 'Layer0'
             return true
         elsif e.hidden?
             return false
-        elsif not $visibleLayers.has_key?(e.layer)
+        elsif not @@visibleLayers.has_key?(e.layer)
             return false
         end
         return true
@@ -232,7 +90,7 @@ class ExportBase
     
     def exportByCL(entity_list, mat, globaltrans)
         ## unused?
-        $materialContext.push(mat)
+        @@materialContext.push(mat)
         lines = []
         entity_list.each { |e|
             if not isVisible(e)
@@ -246,8 +104,8 @@ class ExportBase
                 lines += exportByCL(e.definition.entities, e.material, gtrans)
                 $inComponent.pop()
             elsif e.class == Sketchup::Face
-                $facecount += 1
-                rp = RadiancePolygon.new(e, $facecount)
+                @@facecount += 1
+                rp = RadiancePolygon.new(e, @@facecount)
                 if rp.material == nil or rp.material.texture == nil
                     face = rp.getText(globaltrans)
                 else
@@ -256,7 +114,7 @@ class ExportBase
                 lines.push([rp.material, rp.layer.name, face])
             end
         }
-        $materialContext.pop()
+        @@materialContext.pop()
         return lines
     end
         
@@ -319,7 +177,7 @@ class ExportBase
         ## create 'by group' files or stop here
         if $MODE == 'by layer' or $MODE == 'by color'
             return "## mode = '#{$MODE}' -> no export"
-        elsif $nameContext.length <= 1
+        elsif @@nameContext.length <= 1
             return createMainScene(references, faces_text, parenttrans)
         else
             ref_text = references.join("\n")
@@ -342,18 +200,18 @@ class ExportBase
     end
 
     def push
-        uimessage("begin export #{@entity.class} name='#{@entity.name}' id='#{@entity.id}'")
-        $materialstack.push(@entity.material)
-        $matrixstack.push(@entity.transformation)
-        $layerstack.push(@entity.layer)
-        $groupstack.push(@entity)
+        uimessage("begin export #{@entity.class} name='#{@entity.name}' id='#{@entity.object_id}'")
+        @@materialstack.push(@entity.material)
+        @@matrixstack.push(@entity.transformation)
+        @@layerstack.push(@entity.layer)
+        @@groupstack.push(@entity)
     end
     
     def pop
-        $materialstack.pop()
-        $matrixstack.pop()
-        $layerstack.pop()
-        $groupstack.pop()
+        @@materialstack.pop()
+        @@matrixstack.pop()
+        @@layerstack.pop()
+        @@groupstack.pop()
         uimessage("end export #{@entity.class} name='#{@entity.name}'")
     end 
     
@@ -414,7 +272,7 @@ class ExportBase
     
     def createNumericFile(points)
         ## write points to file in a save way; if file exists merge points
-        name = $nameContext[-1]
+        name = @@nameContext[-1]
         filename = getFilename("numeric/#{name}.fld")
         if FileTest.exists?(filename)
             uimessage("updating field '%s'" % filename)
@@ -450,7 +308,7 @@ class ExportBase
     
     def getFilename(name=nil)
         if name == nil
-            name = File.join("objects", remove_spaces($nameContext[-1]))
+            name = File.join("objects", remove_spaces(@@nameContext[-1]))
         end
         return File.join($export_dir, $scene_name, name)
     end
@@ -464,7 +322,7 @@ class ExportBase
         if entity.class == Sketchup::Face
             if entity.material == entity.back_material
                 if entity.material == nil
-                    m = $materialstack.get()
+                    m = @@materialstack.get()
                 else
                     m = entity.material
                 end
@@ -485,11 +343,10 @@ class ExportBase
             m = entity.material
         end 
         if not m
-            m = $materialstack.get()
+            m = @@materialstack.get()
         end
         if m != nil
-            $materialContext.loadTexture(m, entity, frontface)
-            $usedMaterials[m] = 1
+            @@materialContext.addMaterial(m, entity, frontface)
         end
         return m
     end
@@ -514,19 +371,19 @@ class ExportBase
             end
         end
         if entity != nil and material != nil
-            $materialContext.loadTexture(material, entity, frontface)
+            @@materialContext.addMaterial(material, entity, frontface)
         end
         return material
     end
     
     def getMaterialName(mat)
         if mat == nil
-            return $materialContext.getCurrentMaterialName()
+            return @@materialContext.getCurrentMaterialName()
         end
         if mat.class != Sketchup::Material
             mat = getEntityMaterial(mat)
         end
-        return $materialContext.getSaveMaterialName(mat)
+        return @@materialContext.getSaveMaterialName(mat)
     end
     
     def point_to_vector(p)
@@ -534,7 +391,7 @@ class ExportBase
     end
         
     def getXform(filename, trans)
-        if $nameContext.length <= 2     #XXX ugly hack
+        if @@nameContext.length <= 2     #XXX ugly hack
             ## for main scene file
             path = "%s/%s/" % [$export_dir, $scene_name]
         else
@@ -542,7 +399,7 @@ class ExportBase
         end 
         filename.sub!(path, '')
         suffix = filename[filename.length-4,4].downcase()
-        objname = $nameContext[-1]
+        objname = @@nameContext[-1]
         if $MAKEGLOBAL
             xform = "!xform -n #{objname} #{filename}"
         else
@@ -598,11 +455,11 @@ class ExportBase
             pattern = "group"
         end
         pattern = remove_spaces(pattern)
-        if not $uniqueFileNames.has_key?(pattern)
-            $uniqueFileNames[pattern] = nil
+        if not @@uniqueFileNames.has_key?(pattern)
+            @@uniqueFileNames[pattern] = nil
             return pattern
         else
-            all = $uniqueFileNames.keys
+            all = @@uniqueFileNames.keys
             count = 0
             all.each { |name|
                 if name.index(pattern) == 0
@@ -610,7 +467,7 @@ class ExportBase
                 end
             }
             newname = "%s%02d" % [pattern, count]
-            $uniqueFileNames[newname] = nil
+            @@uniqueFileNames[newname] = nil
             return newname
         end
     end
