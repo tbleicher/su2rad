@@ -1,7 +1,9 @@
-require 'exportbase.rb'
+require 'export_modules.rb'
 
 
-class Stack < ExportBase
+class Stack
+
+    include RadiancePath
 
     def initialize(default=nil)
         @stack = []
@@ -9,6 +11,10 @@ class Stack < ExportBase
         if default != nil
             @stack.push(default)
         end
+    end
+
+    def clear
+        @stack = []
     end
 
     def get
@@ -50,7 +56,7 @@ class LayerStack < Stack
     def initialize
         super
         @default = Sketchup.active_model.layers['Layer0']
-        @stack.push()
+        @stack.push(@default)
     end
 
     def push(layer)
@@ -61,13 +67,23 @@ class LayerStack < Stack
             @stack.push(layer)
         end
     end
-
 end 
+
+
 
 class MaterialStack < Stack
 
     def initialize
         super
+        _init()
+    end
+
+    def clear
+        super
+        _init()
+    end
+    
+    def _init    
         name = 'sketchup_default_material'
         m = Sketchup.active_model.materials[name]
         if m == nil

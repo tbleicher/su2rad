@@ -401,13 +401,9 @@ class MaterialContext < ExportBase
     attr_reader :texturewriter
     
     def initialize
-        @nameStack = ['sketchup_default_material']
-        @materialsByName = {}
-        @materialHash = Hash[nil => 'sketchup_default_material']
-        @aliasHash = {}
         @texturewriter = Sketchup.create_texture_writer
-        @textureHash = {}
-
+        clear()
+        
         ## matrix for sRGB color space transformation
         ## TODO: Apple RGB?
         red     = [0.412424, 0.212656, 0.0193324]
@@ -415,6 +411,23 @@ class MaterialContext < ExportBase
         blue    = [0.180464, 0.0721856, 0.950444]
         @matrix = [red,green,blue]
     end
+
+    def clear
+        @nameStack = ['sketchup_default_material']
+        @materialsByName = Hash.new()
+        @materialHash = Hash[nil => 'sketchup_default_material']
+        @materialDescriptions = Hash.new()
+        @usedMaterials = Hash.new()
+        @aliasHash = Hash.new()
+        @textureHash = Hash.new()
+    end
+
+    def addMaterial(material, entity, frontface)
+        @usedMaterials[material] = 1
+        if material.texture != nil
+            loadTexture(material, entity, frontface)
+        end
+    end 
     
     def export(filename='')
         if filename == ''
@@ -426,7 +439,7 @@ class MaterialContext < ExportBase
         if $MODE == 'by layer'
             ## 'by layer' creates alias to default material if no
             ## definition is provided in library (TODO)
-            $byLayer.each_pair { |lname,lines|
+            @@byLayer.each_pair { |lname,lines|
                 if lines.length == 0
                     ## empty layer
                     next
@@ -440,7 +453,7 @@ class MaterialContext < ExportBase
             #@materialHash.each_pair { |mat,mname|
             #    defined[mname] = getMaterialDescription(mat)
             #}
-            $usedMaterials.each_pair { |mat,foo|
+            @usedMaterials.each_pair { |mat,foo|
                 mname = getMaterialName(mat)
                 defined[mname] = getMaterialDescription(mat)
             }
@@ -549,9 +562,6 @@ class MaterialContext < ExportBase
     end
 
     def loadTexture(material, entity, frontface)
-        if material.texture == nil
-            return
-        end
         if not @textureHash.has_key?(material)
             #printf ("texture material '%s'\n" % material.display_name)
             printf ("texture='%s'\n" % material.texture.filename)
@@ -667,7 +677,7 @@ class MaterialContext < ExportBase
             end
         end
         name = getSaveMaterialName(material)
-        text = $materialDescriptions[name]
+        text = @materialDescriptions[name]
         if text != nil
             return text
         end
@@ -680,7 +690,7 @@ class MaterialContext < ExportBase
         else
             text = m.getText()
         end
-        $materialDescriptions[name] = text
+        @materialDescriptions[name] = text
         return text
     end
     
@@ -874,10 +884,10 @@ class MaterialConflicts < ExportBase
     end
 
     def getVisibleLayers
-        $visibleLayers = {}
+        @@visibleLayers = {}
         @model.layers.each { |l|
             if l.visible?
-                $visibleLayers[l] = 1
+                @@visibleLayers[l] = 1
             end
         }
     end

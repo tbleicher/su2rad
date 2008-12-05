@@ -15,14 +15,17 @@ class RadianceGroup < ExportBase
         resetglobal = checkTransformation()
         parenttrans = setTransformation(parenttrans, resetglobal)
         
-        $nameContext.push(name)
-        $materialContext.push(getMaterial(@entity))
+        @@nameContext.push(name)
+        @@materialContext.push(getMaterial(@entity))
+        
         oldglobal = $globaltrans
         $globaltrans *= @entity.transformation
         ref = exportByGroup(entities, parenttrans)
         $globaltrans = oldglobal
-        $materialContext.pop()
-        $nameContext.pop()
+        
+        @@materialContext.pop()
+        @@nameContext.pop()
+        
         if resetglobal == true
             $MAKEGLOBAL = false
         end
@@ -161,8 +164,8 @@ class RadianceComponent < ExportBase
         mat = getMaterial(@entity)
         matname = getMaterialName(mat)
         alias_name = "%s_material" % defname
-        $materialContext.setAlias(mat, alias_name)
-        $materialContext.push(alias_name)
+        @@materialContext.setAlias(mat, alias_name)
+        @@materialContext.push(alias_name)
         
         ## force export to global coords if transformation
         ## can't be reproduced with xform
@@ -176,10 +179,10 @@ class RadianceComponent < ExportBase
                 uimessage("file 'objects/#{defname}.rad' exists -> skipping export")
                 uimessage("creating new ref for instance '#{iname}'")
             end
-            $nameContext.push(defname)  ## use definition name for file
+            @@nameContext.push(defname)  ## use definition name for file
         else
             filename = getFilename("objects/#{iname}.rad")
-            $nameContext.push(iname)    ## use instance name for file
+            @@nameContext.push(iname)    ## use instance name for file
         end
         
         parenttrans = setTransformation(parenttrans, resetglobal)
@@ -200,8 +203,8 @@ class RadianceComponent < ExportBase
             $globaltrans = oldglobal
         end
         
-        $materialContext.pop()
-        $nameContext.pop()
+        @@materialContext.pop()
+        @@nameContext.pop()
         pop()
         if resetglobal == true
             $MAKEGLOBAL = false
@@ -209,7 +212,7 @@ class RadianceComponent < ExportBase
         if @replacement != '' or @iesdata != ''
             ## no alias for replacement files
             ## add to scene level components list
-            $components.push(ref)
+            @@components.push(ref)
             return ref
         else
             ref = ref.sub(defname, iname)
@@ -220,15 +223,15 @@ class RadianceComponent < ExportBase
     def getComponentName(e)
         ## find name for component instance
         d = e.definition
-        if $componentNames.has_key?(d)
-            return $componentNames[d]
+        if @@componentNames.has_key?(d)
+            return @@componentNames[d]
         elsif d.name != '' and d.name != nil
             name = remove_spaces(d.name)
-            $componentNames[d] = name
+            @@componentNames[d] = name
             return name
         else
             name = getUniqueName('component')
-            $componentNames[d] = name
+            @@componentNames[d] = name
             return name
         end
     end
@@ -387,7 +390,7 @@ class RadiancePolygon < ExportBase
         layer = entity.layer
         if layer.name == 'Layer0'
             ## use layer of parent group (on stack)
-            layer_s = $layerstack.get()
+            layer_s = @@layerstack.get()
             if layer_s != nil
                 layer = layer_s
             else
@@ -411,8 +414,8 @@ class RadiancePolygon < ExportBase
         if $RADPRIMITIVES.has_key?(layername)
             layername = "layer_" + layername
         end
-        if not $byLayer.has_key?(layername)
-            $byLayer[layername] = []
+        if not @@byLayer.has_key?(layername)
+            @@byLayer[layername] = []
         end
         return layername
     end
@@ -435,19 +438,19 @@ class RadiancePolygon < ExportBase
 
         ## 'by layer': replace material in text name with layer name
         layername = getEffectiveLayerName(@face) 
-        if not $byLayer.has_key?(layername)
-            $byLayer[layername] = []
+        if not @@byLayer.has_key?(layername)
+            @@byLayer[layername] = []
         end
-        $byLayer[layername].push(wpoly.sub(matname, layername))
+        @@byLayer[layername].push(wpoly.sub(matname, layername))
             
         ## 'by color' export: if material has texture create obj format
-        if not $byColor.has_key?(matname)
-            $byColor[matname] = []
+        if not @@byColor.has_key?(matname)
+            @@byColor[matname] = []
         end
         if doTextures(skm)
-            $byColor[matname].push(getTexturePolygon(trans, matname,skm)) #XXX $globaltrans?
+            @@byColor[matname].push(getTexturePolygon(trans, matname,skm)) #XXX $globaltrans?
         else
-            $byColor[matname].push(wpoly)
+            @@byColor[matname].push(wpoly)
         end
         
         ## 'by group': create polygon text with coords in local space
@@ -464,15 +467,15 @@ class RadiancePolygon < ExportBase
 
     def getTexturePolygon(trans, matname,skm)
         ## create '.obj' format description of face with uv-coordinates
-        #uvHelp = @face.get_UVHelper(true,true,$materialContext.texturewriter)
-        if not $meshStartIndex.has_key?(matname)
-            $meshStartIndex[matname] = 1
+        if not @@meshStartIndex.has_key?(matname)
+            @@meshStartIndex[matname] = 1
         end
         imgx = skm.texture.width
         imgy = skm.texture.height
         m = getPolyMesh(trans)
-        si = $meshStartIndex[matname]
+        si = @@meshStartIndex[matname]
         text = ''
+        
         m.polygons.each { |p|
             [0,1,2].each { |i|
                 idx = p[i]
@@ -480,11 +483,23 @@ class RadiancePolygon < ExportBase
                     idx *= -1
                 end
                 v = m.point_at(idx)
-                if @face.material != nil
-                    ## textures applied to face work with uv_at
-                    t = m.uv_at(idx,1)
-                    tx = t.x
-                    ty = t.y
+                if @face.material == skm || @face.back_material == skm
+                    ## textures applied to face need UVHelper
+                    if @face.material == skm
+                        uvHelp = @face.get_UVHelper(true, false, @@materialContext.texturewriter)
+                    else
+                        uvHelp = @face.get_UVHelper(false, true, @@materialContext.texturewriter)
+                    end 
+                    uvq = uvHelp.get_back_UVQ(v)
+                    tx = uvq.x
+                    ty = uvq.y
+                    if (tx > 20 || ty > 20)
+                        ## something's probably not working right
+                        ## TODO: find better criterium for use of uv_at
+                        t = m.uv_at(idx,1)
+                        tx = t.x
+                        ty = t.y
+                    end
                 else
                     ## textures applied to group have to be scaled
                     t = m.uv_at(idx,1)
@@ -497,7 +512,7 @@ class RadiancePolygon < ExportBase
             text += "f   %d/%d  %d/%d  %d/%d\n" % [si,si, si+1,si+1, si+2,si+2]
             si += 3
         }
-        $meshStartIndex[matname] = si
+        @@meshStartIndex[matname] = si
         return text
     end
     
@@ -561,11 +576,13 @@ end
 
 class RadianceSky < ExportBase
     
+    attr_reader :filename
     attr_reader :skytype
     attr_writer :skytype 
     
     def initialize
         @skytype = getSkyType()
+        @filename = ''
         @comments = ''
     end
     
@@ -593,14 +610,16 @@ class RadianceSky < ExportBase
 
         city = remove_spaces(sinfo['City'])
         timestamp = sinfo['ShadowTime'].strftime("%m%d_%H%M")
-        filename = getFilename("skies/%s_%s.sky" % [city, timestamp])
+        rpath = "skies/%s_%s.sky" % [city, timestamp]
+        filename = getFilename(rpath)
         filetext = @comments + "\n" + text
         if not createFile(filename, filetext)
             uimessage("Error: Could not create sky file '#{filename}'")
-            return ''
+            @filename = ''
         else
-            return "skies/%s_%s.sky" % [city, timestamp]
+            @filename = rpath
         end
+        return @filename
     end
     
     def getGenSkyOptions(sinfo=nil)
@@ -655,7 +674,7 @@ class RadianceSky < ExportBase
         end
         return text
     end
-    
+   
     def getTimeZone(country, city, long)
         ## unused
         meridian = ''

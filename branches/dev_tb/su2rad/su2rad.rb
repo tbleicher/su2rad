@@ -59,6 +59,7 @@ require "su2radlib/material.rb"
 require "su2radlib/radiance_entities.rb"
 require "su2radlib/radiancescene.rb"
 require "su2radlib/webdialog.rb"
+require "su2radlib/config_class.rb"
 
 $RADPRIMITIVES = {  "plastic"    => 1,
                     "glass"      => 1,
@@ -77,6 +78,7 @@ $testdir = ""
 if $DEBUG
     printf "reloading modules ...\n"
     load "su2radlib/preferences.rb"
+    load "su2radlib/export_modules.rb"
     load "su2radlib/exportbase.rb"
     load "su2radlib/context.rb"
     load "su2radlib/interface.rb"
@@ -85,6 +87,7 @@ if $DEBUG
     load "su2radlib/radiance_entities.rb"
     load "su2radlib/radiancescene.rb"
     load "su2radlib/webdialog.rb"
+    load "su2radlib/config_class.rb"
 end
 
 
@@ -114,16 +117,18 @@ $CONVERT            = '/usr/local/bin/convert'
 
 ## load configuration from file
 loadPreferences()
+$SU2RAD_CONFIG = RunTimeConfig.new()
 
 ## define scale matrix for unit conversion
-$SCALETRANS = Geom::Transformation.new(1/$UNIT)
-
+scaleunit = $SU2RAD_CONFIG.get('UNIT')
+$SCALETRANS = Geom::Transformation.new(1/scaleunit)
+$SU2RAD_CONFIG['SCALETRANS'] = Geom::Transformation.new(1/scaleunit)
 
 def startExport(selected_only=0)
     begin
         $MatLib = MaterialLibrary.new()
         rs = RadianceScene.new()
-        rs.export(selected_only)
+        rs.startExport(selected_only)
     rescue => e 
         msg = "%s\n\n%s" % [$!.message,e.backtrace.join("\n")]
         UI.messagebox msg            
@@ -134,8 +139,10 @@ end
 def startWebExport(selected_only=0)
     begin
         $MatLib = MaterialLibrary.new()
-        rs = RadianceScene.new()
-        rs.showWebDialog(selected_only)
+        scene = RadianceScene.new()
+        #scene.showWebDialog(selected_only)
+        ewd = ExportDialogWeb.new(scene)
+        ewd.show()
     rescue => e 
         msg = "%s\n\n%s" % [$!.message,e.backtrace.join("\n")]
         UI.messagebox msg            
