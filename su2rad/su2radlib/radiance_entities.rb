@@ -448,7 +448,8 @@ class RadiancePolygon < ExportBase
             @@byColor[matname] = []
         end
         if doTextures(skm)
-            @@byColor[matname].push(getTexturePolygon(trans, matname,skm)) #XXX $globaltrans?
+            #XXX $globaltrans or trans?
+            @@byColor[matname].push(getTexturePolygon($globaltrans, matname,skm))
         else
             @@byColor[matname].push(wpoly)
         end
@@ -465,7 +466,7 @@ class RadiancePolygon < ExportBase
         return text
     end
 
-    def getTexturePolygon(trans, matname,skm)
+    def getTexturePolygon(trans, matname, skm)
         ## create '.obj' format description of face with uv-coordinates
         if not @@meshStartIndex.has_key?(matname)
             @@meshStartIndex[matname] = 1
@@ -493,7 +494,7 @@ class RadiancePolygon < ExportBase
                     uvq = uvHelp.get_back_UVQ(v)
                     tx = uvq.x
                     ty = uvq.y
-                    if (tx > 20 || ty > 20)
+                    if (tx > 10 || ty > 10)
                         ## something's probably not working right
                         ## TODO: find better criterium for use of uv_at
                         t = m.uv_at(idx,1)
@@ -556,19 +557,20 @@ class RadiancePolygon < ExportBase
     end
     
     def getbbox(p1,p2,p3)
+        ## return bbox for 0.25m grid
         xs = [p1.x,p2.x,p3.x]
         ys = [p1.y,p2.y,p3.y]
         xs.sort!
         ys.sort!
         d = 0.25
         xmin = xs[0]*$UNIT - d
-        xmin = ((xmin*4).to_i-1) / 4.0
+        xmin = ((xmin/d).to_i-1) * d
         xmax = xs[2]*$UNIT + d
-        xmax = ((xmax*4).to_i+1) / 4.0
+        xmax = ((xmax/d).to_i+1) * d
         ymin = ys[0]*$UNIT - d
-        ymin = ((ymin*4).to_i-1) / 4.0
+        ymin = ((ymin/d).to_i-1) * d
         ymax = ys[2]*$UNIT + d
-        ymax = ((ymax*4).to_i+1) / 4.0
+        ymax = ((ymax/d).to_i+1) * d
         return [xmin/$UNIT, ymin/$UNIT, xmax/$UNIT, ymax/$UNIT]
     end
 end 
