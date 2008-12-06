@@ -89,6 +89,12 @@ function _setGlobalCoordsDisplay(val) {
     else {
         document.getElementById("global_coords_display").style.display='none';
     }
+    if (val == 'by color') {
+        document.getElementById("textures_display").style.display='';
+    }
+    else {
+        document.getElementById("textures_display").style.display='none';
+    }
 }
 
 
