@@ -322,6 +322,10 @@ class RadiancePolygon < ExportBase
         end
         return verts
     end
+
+    def getCenter(l)
+        return getCentre(l)
+    end 
     
     def getCentre(l)
         verts = l.vertices
@@ -517,7 +521,7 @@ class RadiancePolygon < ExportBase
         return text
     end
     
-    def isNumeric 
+    def isNumeric
         if @face.layer.name.downcase == 'numeric'
             return true
         end

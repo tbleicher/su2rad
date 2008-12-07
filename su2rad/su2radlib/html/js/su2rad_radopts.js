@@ -72,7 +72,7 @@ RadOptsObject.prototype.getRpictOverride = function (opt) {
 RadOptsObject.prototype.toString = function () {
     text  =  "Quality=" + this.Quality;
     text += "&Detail=" + this.Detail;
-    text += "&Variability=" + this.Detail;
+    text += "&Variability=" + this.Variability;
     text += "&Indirect=" + this.Indirect;
     text += "&Penumbras=" + this.Penumbras;
     text += "&ImageType=" + this.ImageType;
@@ -316,6 +316,26 @@ RadOptsObject.prototype._setRpictOverrideBool = function (opt) {
     }
 }
 
+RadOptsObject.prototype.setValue = function (name, value) {
+    if (name == 'render' && value != '') {
+        parseRenderLine(value)
+    } else if (name == 'ImageSizeX' || name == 'ImageSizeY') {
+        this[name] = parseInt(value);
+    } else if (name == 'Indirect' || name == 'Report') {
+        this[name] = parseInt(value);
+    } else if (name == 'ZoneSize') {
+        this[name] = parseFloat(value);
+    } else if (name == 'Penumbras') {
+        if (value == 'false' || value == false) {
+            this[name] = false;
+        } else {
+            this[name] = true;
+        }
+    } else {
+        this[name] = value;
+    }
+}
+
 RadOptsObject.prototype.removeAllOverrides = function () {
     while (this._rpictOverrides.length > 0) {
         var opt = this._rpictOverrides[0][0];
@@ -445,6 +465,29 @@ function getRpictOptionSpansBool() {
     return text;
 }
 
+function setRenderOptionsJSON(text) {
+    var json = decodeJSON(text);
+    try {
+        eval("var renderOpts = " + json);
+    } catch (e) {
+        log.error("setRenderOptionsJSON:" + e.name);
+        var renderOpts = new Array();
+    }
+    var text = '<b>render settings:</b><br/>';
+    for(var j=0; j<renderOpts.length; j++) {
+        var attrib = renderOpts[j];
+        if(attrib != null) {
+            radOpts.setValue(attrib.name, attrib.value);
+            var line = '&nbsp;&nbsp;<b>' + attrib.name + ':</b> ' + attrib.value + '<br/>';
+            //log.debug(line);
+            text = text + line;
+        }
+    }
+    updateRenderFormValues();
+    updateRpictValues();
+    updateRenderLine();
+    setStatusMsg(text);
+}
 
 function syncRadOption(id) {
     var suffix = id.slice(-2);
@@ -520,12 +563,12 @@ function onRpictOverride(opt) {
     applyRenderOptions();
 }
 
-function parseRenderLine(suffix) {
+function parseRenderLine(inText) {
     // validate render line input and set overrides
-    log.debug("+++")
-    log.debug("parseRenderLine(" + suffix + ")");
-    var id="radRenderLine_2" 
-    var inText = document.getElementById(id).value;
+    log.debug("parseRenderLine('" + inText + "')");
+    if (inText == '') {
+        inText = document.getElementById('radRenderLine_2').value;
+    }
     var tokens = inText.split(" ");
     var parts = new Array();
     for (var i=0; i<tokens.length; i++) {
@@ -666,6 +709,30 @@ function setOverride(opt, newValue) {
     } catch(e) {
         log.error("check box for '-" + opt + "' not found");
     }
+}
+
+function updateRenderFormValues() {
+    // set dialog options to values of radOpts
+    setSelectionValue('radQuality_1', radOpts.Quality);
+    setSelectionValue('radQuality_2', radOpts.Quality);
+    setSelectionValue('radDetail_1', radOpts.Detail);
+    setSelectionValue('radDetail_2', radOpts.Detail);
+    setSelectionValue('radVariability_1', radOpts.Variability);
+    setSelectionValue('radVariability_2', radOpts.Variability);
+    
+    setSelectionValue('radImageType_1',  radOpts.ImageType);
+    setSelectionValue('radImageType_2',  radOpts.ImageType);
+    
+    document.getElementById('radImageSizeX_1').value = radOpts.ImageSizeX;
+    document.getElementById('radImageSizeX_2').value = radOpts.ImageSizeX;
+    document.getElementById('radImageSizeY_1').value = radOpts.ImageSizeY;
+    document.getElementById('radImageSizeY_2').value = radOpts.ImageSizeY;
+    
+    document.getElementById('radPenumbras').checked = radOpts.Penumbras;
+    setSelectionValue('radReport', radOpts.Report);
+    document.getElementById('radZoneSize').value = radOpts.ZoneSize; 
+    setSelectionValue('radZoneType', radOpts.ZoneType);
+    document.getElementById('radReportFile').value = radOpts.ReportFile;
 }
 
 function updateRenderLine() {

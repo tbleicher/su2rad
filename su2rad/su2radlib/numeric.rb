@@ -228,7 +228,8 @@ class NumericImport < ExportBase
         tris.each { |v|
             mesh.add_polygon(suPoints[v[0]], suPoints[v[1]], suPoints[v[2]])
         }
-        mesh.transform!($SCALETRANS)
+        scaletrans = Geom::Transformation.new(1/@@_config.get('UNIT'))
+        mesh.transform!(scaletrans)
         uimessage("created mesh") 
         @surface = Sketchup.active_model.entities.add_group
         @surface.entities.add_faces_from_mesh(mesh)

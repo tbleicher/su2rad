@@ -15,8 +15,6 @@ class RadianceScene < ExportBase
         @radOpts = RadianceOptions.new()
         @sky = RadianceSky.new()
         
-        $scene_name = "unnamed_scene"
-        $export_dir = Dir.pwd()
         setExportDirectory()
     end
 
@@ -29,19 +27,6 @@ class RadianceScene < ExportBase
         Sketchup.set_status_text(line1)
     end
     
-    def setExportDirectory
-        ## get name of subdir for Radiance file structure
-        page = @model.pages.selected_page
-        if page != nil
-            $scene_name = remove_spaces(page.name)
-        end
-        path = Sketchup.active_model.path
-        if path != '' and path.length > 5:
-            $export_dir = path[0..-5]
-        end
-        
-    end
-  
 
     def confirmExportDirectory
         ## show user dialog for export options
@@ -55,16 +40,7 @@ class RadianceScene < ExportBase
         end
         ## use test directory in debug mode
         if $DEBUG 
-            if $testdir and $testdir != ''
-                $export_dir = $testdir
-                scene_dir = "#{$export_dir}/#{$scene_name}"
-                if FileTest.exists?(scene_dir)
-                    system("rm -rf #{scene_dir}")
-                end
-            end
-        end
-        if $export_dir[-1,1] == '/'
-            $export_dir = $export_dir[0,$export_dir.length-1]
+            setTestDirectory()
         end
         return true
     end
@@ -86,7 +62,7 @@ class RadianceScene < ExportBase
     end
     
     def _applyDialogResults(ud)
-        $export_dir = ud.results[0] 
+        $export_dir = cleanPath(ud.results[0])
         $scene_name = ud.results[1] 
         $SHOWRADOPTS = ud.results[2] 
         $EXPORTALLVIEWS = ud.results[3] 
@@ -330,8 +306,8 @@ class RadianceScene < ExportBase
     end
         
     def exportViews
-        views = []
-        views.push(createViewFile(@model.active_view.camera, $scene_name))
+        viewLines = []
+        viewLines.push(createViewFile(@model.active_view.camera, $scene_name))
         if $EXPORTALLVIEWS == true
             pages = @model.pages
             pages.each { |page|
@@ -339,19 +315,19 @@ class RadianceScene < ExportBase
                     next
                 elsif page.use_camera? == true
                     name = remove_spaces(page.name)
-                    views.push(createViewFile(page.camera, name))
+                    viewLines.push(createViewFile(page.camera, name))
                 end
             }
         end
-        return views.join("\n")
+        return viewLines.join("\n")
     end
 
-    def createViewFile(c, viewname)
+    def _getViewLine(c)
         text =  "-vp %.3f %.3f %.3f  " % [c.eye.x*$UNIT,c.eye.y*$UNIT,c.eye.z*$UNIT]
         text += "-vd %.3f %.3f %.3f  " % [c.zaxis.x,c.zaxis.y,c.zaxis.z]
         text += "-vu %.3f %.3f %.3f  " % [c.up.x,c.up.y,c.up.z]
-        imgW = @model.active_view.vpwidth.to_f
-        imgH = @model.active_view.vpheight.to_f
+        imgW = Sketchup.active_model.active_view.vpwidth.to_f
+        imgH = Sketchup.active_model.active_view.vpheight.to_f
         aspect = imgW/imgH
         if c.perspective?
             type = '-vtv'
@@ -369,9 +345,12 @@ class RadianceScene < ExportBase
         end
         text += "-vv %.3f -vh %.3f" % [vv, vh]
         text = "rvu #{type} " + text
-        
+        return text
+    end
+    
+    def createViewFile(c, viewname)
         filename = getFilename("views/%s.vf" % viewname)
-        if not createFile(filename, text)
+        if not createFile(filename, getViewLine(c))
             msg = "## Error: Could not create view file '#{filename}'"
             uimessage(msg)
             return msg

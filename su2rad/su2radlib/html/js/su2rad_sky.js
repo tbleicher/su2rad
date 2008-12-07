@@ -279,7 +279,7 @@ function onGenskyInputChanged(opt) {
     }
     //document.getElementById('skyCommandLine').innerHTML = skyOptions.toString();
     updateSkyPage();
-    writeSkySettings();
+    applySkySettings();
 }
 
 function onGenskyOptionCB(opt) {
@@ -306,7 +306,7 @@ function onGenskyOptionCB(opt) {
     skyOptions.setActive(opt, checked);
     _updateGenskyOptions();
     updateSkyPage();
-    writeSkySettings();
+    applySkySettings();
 }
 
 function onSkyDateTimeChange(id) {
@@ -326,7 +326,7 @@ function onSkyDateTimeChange(id) {
     }
     modelLocation.setValue('ShadowTime_time_t', skyDateTime.getShadowTime()); 
     updateSkyPage()
-    writeSkySettings();
+    applySkySettings();
 }
 
 function onSkyGenChange() {
@@ -334,7 +334,7 @@ function onSkyGenChange() {
     skyOptions.setGenerator(generator);
     updateSkyOptionsDisplay()
     updateSkyPage()
-    writeSkySettings();
+    applySkySettings();
 }
 
 function onSkyTypeChange() {
@@ -357,7 +357,7 @@ function onSkyTypeChange() {
     }
     //document.getElementById('skyCommandLine').innerHTML = skyOptions.toString();
     updateSkyPage()
-    writeSkySettings();
+    applySkySettings();
 }
 
 function updateSkyOptionsDisplay() {

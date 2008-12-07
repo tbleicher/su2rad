@@ -4,6 +4,18 @@ module InterfaceBase
     def initLog(lines=[])
         @@_log = lines
     end
+   
+    def getConfig(key)
+        return $SU2RAD_CONFIG.get(key)
+    end
+    
+    def getNestingLevel
+        return 0
+    end
+    
+    def setConfig(key,value)
+        $SU2RAD_CONFIG.set(key, value)
+    end
     
     def uimessage(msg, loglevel=0)
         n = getNestingLevel()
@@ -43,6 +55,141 @@ module InterfaceBase
         end
     end
 end
+
+
+
+module JSONUtils
+    
+    def escapeCharsJSON(s)
+        s.gsub('"','\\\\\\"').gsub("'","\\\\'")
+        return s
+    end
+
+    def replaceChars(name)
+        ## TODO: replace characters in name for save html display
+        return name
+    end
+
+    def decodeJSON(string)
+        string.gsub(/((?:%[0-9a-fA-F]{2})+)/n) do
+            [$1.delete('%')].pack('H*')
+        end
+        return string
+    end
+    
+    def encodeJSON(string)
+        string.gsub(/([^ a-zA-Z0-9_.-]+)/n) do
+            '%' + $1.unpack('H2' * $1.size).join('%').upcase
+        end
+        return string
+    end
+    
+    def urlEncode(string)
+        ## URL-encode from Ruby::CGI
+        string.gsub(/([^ a-zA-Z0-9_.-]+)/n) do
+            '%' + $1.unpack('H2' * $1.size).join('%').upcase
+        end.tr(' ', '+')
+    end
+    
+    def urlDecode(string)
+        ## URL-decode from Ruby::CGI
+        string.tr('+', ' ').gsub(/((?:%[0-9a-fA-F]{2})+)/n) do
+            [$1.delete('%')].pack('H*')
+        end
+    end
+    
+    def getJSONDictionary(dict)
+        if(dict == nil)
+            return "[]"
+        else
+            json = "["
+            dict.each_key { |k|
+                json += '{'
+                json += '"name":"' + k + '",'
+                if(dict[k].class != Geom::Transformation)
+                    json += '"value":"' + dict[k].to_s + '"},'
+                else
+                    json += '"value":"' + dict[k].to_a.to_s + '"},'
+                end
+            }
+            json += ']'
+        end
+        #json.gsub!(/,/,"#COMMA#")
+        return json
+    end
+
+    def toStringJSON(obj, level=0)
+        if obj.class == Array
+            str = '['
+            obj.each { |e|
+                str += " %s," % toStringJSON(e,1)
+            }
+            str = str.chop()
+            str += ' ]'
+            if level == 0 
+                str = "{ %s }" % str
+            end
+        elsif obj.class == FalseClass
+            str = 'false'
+        elsif obj.class == Fixnum or obj.class == Bignum
+            str = "%s" % obj
+        elsif obj.class == Float
+            str = "%f" % obj
+        elsif obj.class == Hash
+            str = '{'
+            obj.each_pair { |k,v|
+                str += " %s : %s," % [toStringJSON(k,1),toStringJSON(v,1)]
+            }
+            str = str.chop()
+            str += ' }' 
+        elsif obj.class == String
+            str = "'%s'" % obj
+        elsif obj.class == TrueClass
+            str = 'true'
+        else
+            str = "'%s'" % obj
+        end
+        return str
+    end
+
+    def pprintJSON(json, text="\njson string:")
+        ## prettyprint JSON string
+        printf "#{text}\n"
+        printf json.gsub!(/#COMMA#\{/,"\n\{")
+        printf "\n"
+    end
+    
+    def setOptionsFromString(dlg, params)
+        ## set export options from string <p>
+        pairs = params.split("&")
+        pairs.each { |pair|
+            k,v = pair.split("=")
+            old = eval("@%s" % k)
+            if (v == 'true' || v == 'false' || v =~ /\A[+-]?\d+\z/ || v =~ /\A[+-]?\d+\.\d+\z/)
+                val = eval("%s" % v)
+            else
+                val = v
+                v = "'%s'" % v
+            end
+            if val != old
+                eval("@%s = %s" % [k,v])
+                uimessage("#{self.class} new value for @%s: %s" % [k,v])
+            end
+        }
+    end
+
+    def test_toStringJSON()
+        i = 17
+        f = 3.14
+        s = "string"
+        a = [1, 2.3, "four"]
+        h = { "one" => 1, "two" => 2, "three" => [1,2,3], "nested" => { "n1" => 11, "n2" => 22 } }
+        obj = { "int" => i, "float" => f, "string" => s, "array" => a, "hash" => h }
+        printf toStringJSON(obj) + "\n"
+    end 
+
+end
+
 
 
 module RadiancePath
@@ -86,6 +233,47 @@ module RadiancePath
         }
     end
 
+    def createDirectory(path)
+        if File.exists?(path) and FileTest.directory?(path)
+            return true
+        else
+            uimessage("Creating directory '%s'" % path)
+        end
+        dirs = []
+        while not File.exists?(path)
+            dirs.push(path)
+            path = File.dirname(path)
+        end
+        dirs.reverse!
+        dirs.each { |p|
+            begin 
+                Dir.mkdir(p)
+            rescue
+                uimessage("ERROR creating directory '%s'" %  p, -2)
+                return false
+            end
+        }
+    end
+   
+    def createFile(filename, text)
+        ## write 'text' to 'filename' in a save way
+        path = File.dirname(filename)
+        createDirectory(path)
+        if not FileTest.directory?(path)
+            return false
+        end
+        f = File.new(filename, 'w')
+        f.write(text)
+        f.close()
+        uimessage("created file '%s'" % filename, 1)
+        $createdFiles[filename] = 1
+        
+        $filecount += 1
+        Sketchup.set_status_text "files:", SB_VCB_LABEL
+        Sketchup.set_status_text "%d" % $filecount, SB_VCB_VALUE
+        return true
+    end 
+    
     def find_support_files(filename, subdir="")
         ## replacement for Sketchup.find_support_files
         if subdir == ""
@@ -150,47 +338,57 @@ module RadiancePath
         return true
     end
 
-    def createDirectory(path)
-        if File.exists?(path) and FileTest.directory?(path)
-            return true
+    def setExportDirectory
+        ## get name of subdir for Radiance file structure
+        page = Sketchup.active_model.pages.selected_page
+        if page != nil
+            $scene_name = remove_spaces(page.name)
         else
-            uimessage("Creating directory '%s'" % path)
+            $scene_name = "unnamed_scene"
         end
-        dirs = []
-        while not File.exists?(path)
-            dirs.push(path)
-            path = File.dirname(path)
-        end
-        dirs.reverse!
-        dirs.each { |p|
-            begin 
-                Dir.mkdir(p)
-            rescue
-                uimessage("ERROR creating directory '%s'" %  p, -2)
-                return false
+        path = Sketchup.active_model.path
+        if path == '':
+            ## use user home directory or temp
+            if ENV.has_key?('HOME')
+                path = ENV['HOME']
+            elsif ENV.has_key?('USERPROFILE')
+                path = ENV['USERPROFILE']
+            elsif ENV.has_key?('HOMEPATH')
+                ## home path missing drive letter!?
+                path = ENV['HOMEPATH']
+            elsif ENV.has_key?('TEMP')
+                path = ENV['TEMP']
             end
-        }
-    end
-   
-    def createFile(filename, text)
-        ## write 'text' to 'filename' in a save way
-        path = File.dirname(filename)
-        createDirectory(path)
-        if not FileTest.directory?(path)
-            return false
+        else
+            ## remove '.skp' and use as directory
+            path = path.downcase()
+            idx = path.rindex('.skp')
+            if idx != nil
+                path = path.slice(0,idx)
+            end
         end
-        f = File.new(filename, 'w')
-        f.write(text)
-        f.close()
-        uimessage("created file '%s'" % filename, 1)
-        $createdFiles[filename] = 1
+        $export_dir = path
+        $SU2RAD_CONFIG['SCENEPATH'] = $export_dir
+        $SU2RAD_CONFIG['SCENENAME'] = $scene_name
+    end
+
+    def cleanPath(path)
+        if path.slice(-1,1) == File.SEPARATOR
+            path = path.slice(0,path.length-1)
+        end
+        return path
+    end
         
-        $filecount += 1
-        Sketchup.set_status_text "files:", SB_VCB_LABEL
-        Sketchup.set_status_text "%d" % $filecount, SB_VCB_VALUE
-        return true
-    end 
-     
+    def setTestDirectory
+        if $testdir and $testdir != ''
+            $export_dir = $testdir
+            scene_dir = "#{$export_dir}/#{$scene_name}"
+            if FileTest.exists?(scene_dir)
+                system("rm -rf #{scene_dir}")
+            end
+        end
+    end
+    
 end
 
 

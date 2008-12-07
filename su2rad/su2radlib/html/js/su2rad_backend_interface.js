@@ -17,14 +17,14 @@ function setTest() {
 }
 
 
-function writeSkySettings() {
+function applySkySettings() {
     // send back location and sky settings
     var params = modelLocation.toParamString();
     if (SKETCHUP == true) {
-        log.debug("writeSkySettings(): " + params);
-        window.location = 'skp:writeSkySettings@' + params;
+        log.debug("applySkySettings(): " + params);
+        window.location = 'skp:applySkySettings@' + params;
     } else {
-        log.debug("writeSkySettings(): no need to set shadow_info");
+        log.debug("applySkySettings(): no need to set shadow_info");
     }
 }
 
@@ -33,7 +33,7 @@ function onApplySkySettingsToModel() {
     // apply settings to Sketchup shadow_info
     if (SKETCHUP == true) {
         log.info("applying settings to Sketchup model ...");
-        window.location = 'skp:applySkySettingsToShadowInfo@';
+        window.location = 'skp:writeSkySettingsToShadowInfo@';
     } else {
         log.debug("onApplySkySettingsToModel() ...");
         modelLocation.changed = false;
@@ -169,7 +169,7 @@ function setViewsListJSON(text) {
 function getViewsList() {
     if (SKETCHUP == true) {
         log.info("getting views from SketchUp ...");
-        window.location = 'skp:getViewsList@'; 
+        window.location = 'skp:setViewsList@'; 
         // setViewsListJSON() called by Sketchup
     } else {
         log.debug("getViewsList(): 'skp:' not available");
