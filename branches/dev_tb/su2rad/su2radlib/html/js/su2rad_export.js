@@ -176,7 +176,7 @@ function setExportOptionsJSON(msg) {
         log.error("setExportOptionsJSON:" + e.name);
         var exportOpts = new Array();
     }
-    var text = '<b>render settings:</b><br/>';
+    var text = '<b>export settings:</b><br/>';
     for(var j=0; j<exportOpts.length; j++) {
         var attrib = exportOpts[j];
         if(attrib != null) {

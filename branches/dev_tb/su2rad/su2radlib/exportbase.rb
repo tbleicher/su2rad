@@ -1,10 +1,6 @@
 require 'config_class.rb'
 require 'export_modules.rb'
-
 require 'context.rb'
-
-
-
 
 
 class ExportBase
@@ -415,7 +411,8 @@ class ExportBase
             end
             
             ## transformation
-            trans = trans * $SCALETRANS
+            scaletrans = Geom::Transformation.new(1/@@_config.get('UNIT'))
+            trans = trans * scaletrans
             a = trans.to_a
             o = a[12..14]
             vx = [o[0]+a[0], o[1]+a[1], o[2]+a[2]]

@@ -15,6 +15,9 @@ class RunTimeConfig
         'UNIT'           => 0.0254,
         'UTC_OFFSET'     => nil,
 
+        ## paths template
+        'EXPORT PATH' => '$FILE/radiance/$PAGE.rif',
+        
         ## paths to utility programs
         'REPLMARKS' => '/usr/local/bin/replmarks',
         'CONVERT'   => '/usr/local/bin/convert',

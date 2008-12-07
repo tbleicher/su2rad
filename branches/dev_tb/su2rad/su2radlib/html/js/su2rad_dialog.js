@@ -136,12 +136,17 @@ function setValue(id, val) {
 
 function setSelectionValue(id, value) {
     // set selection <id> to option <value>
-    var select = document.getElementById(id); 
-    for (i=0; i<select.options.length; i++) {
-        if (select.options[i].value == value) {
-            select.selectedIndex = i;
-            return true;
+    try {
+        var select = document.getElementById(id); 
+        for (i=0; i<select.options.length; i++) {
+            if (select.options[i].value == value) {
+                select.selectedIndex = i;
+                return true;
+            }
         }
+    } catch (e) {
+        log.error("setSelectionValue('" + id + "'): " + e.name)
+        return false;
     }
     log.error("selection '" + id + "' has no value '" + value + "'");
     return false;
@@ -200,6 +205,7 @@ function updateExportPage() {
 function updateRenderPage() {
     log.debug("updating 'Render' page ...");
     // setRpictOptions();
+    updateRenderFormValues();
     updateRpictValues();
     updateRenderLine();
 }
