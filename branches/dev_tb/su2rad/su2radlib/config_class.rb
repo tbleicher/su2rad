@@ -37,8 +37,41 @@ class RunTimeConfig
         
     def initialize
         @filename = File.expand_path('_config.rb', File.dirname(__FILE__))
+        initPaths
     end
 
+    def initPaths
+        keys = ['REPLMARKS', 'CONVERT', 'RA_TIFF', 'OBJ2MESH']
+        bindir = File.join(File.dirname(__FILE__), 'bin', $OS)
+        keys.each { |k|
+            app = k.downcase()
+            binpath = File.join(bindir, app)
+            if File.exists?(binpath)
+                set(k, binpath)
+                uimessage("found '#{app}' in '#{bindir}'") 
+            elsif $OS == 'MAC'
+                p = IO.popen('which %s' % app)
+                lines = p.readlines()
+                p.close()
+                if lines != []
+                    path = lines[0].strip()
+                    if File.exists?(path)
+                        set(k, path)
+                        uimessage("found '#{app}' in '#{path}'")
+                    end
+                end
+            elsif ENV.has_key?('Path')
+                ENV['Path'].split(File::PATH_SEPARATOR).each { |p|
+                    path = File.join(p, app)
+                    if File.exists?(path)
+                        set(k, path)
+                        uimessage("found '#{app}' in '#{path}'")
+                    end
+                }
+            end 
+        }
+    end
+    
     def [](key)
         get(key)
     end
@@ -137,6 +170,10 @@ class RunTimeConfig
             end
         }
         return "%s\n" % pairs.join(sep) 
+    end
+    
+    def uimessage(msg)
+        printf "%s\n" % msg.rstrip()
     end
     
     def write(filename='')
