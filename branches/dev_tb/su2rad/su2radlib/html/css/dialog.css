@@ -57,11 +57,28 @@ code {
     position: relative;
     top: 0px;
 }
+
+#testDataButton {
+    width: 120px;
+    color: red;
+    margin-left: 80px;
+}
+
+#showLogButton {
+    position: relative;
+    float: right;
+    width: 50px;
+    height: 20px;
+    margin: 0;
+    margin-top: 8px;
+    margin-right: 18px;
+}
 .exportbutton {
     float: right;
     width: 100px;
     height: 24px;
-    margin: 14px;
+    margin: 10px;
+    margin-top: 20px;
 }
 
 .floatright {

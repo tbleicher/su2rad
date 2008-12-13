@@ -2,7 +2,7 @@
 // switches to call right functions for context
 function setSketchup() {
     // switch to actions for Sketchup (skp:...)
-    log.debug('switching to Sketchup functions ...'); 
+    log.error('DEBUG: switching to Sketchup functions ...'); 
     SKETCHUP = true;
 }
 
@@ -59,7 +59,7 @@ function getExportOptions() {
 }
 
 function _getExportOptionsTest() {
-    var json = "[{\"name\":\"sceneName\",\"value\":\"Scene_Dummy1\"}";
+    var json = "[{\"name\":\"sceneName\",\"value\":\"testscene_1\"}";
     json +=    ",{\"name\":\"scenePath\",\"value\":\"/home/user/tmp/testfile\"}";
     json +=    ",{\"name\":\"exportMode\",\"value\":\"by color\"}";
     json +=    ",{\"name\":\"triangulate\",\"value\":\"false\"}";
@@ -83,8 +83,8 @@ function getSkySettings() {
 
 function _getSkySettingsTest() {
     // return dummy JSON string of SketchUp.shadow_info
-    var json = "[{\"name\":\"City\",\"value\":\"foo_Boulder (CO)\"}";
-    json +=    ",{\"name\":\"Country\",\"value\":\"foo_USA\"}";
+    var json = "[{\"name\":\"City\",\"value\":\"Boulder (CO)\"}";
+    json +=    ",{\"name\":\"Country\",\"value\":\"USA\"}";
     json +=    ",{\"name\":\"Latitude\",\"value\":\"40.017\"}";
     json +=    ",{\"name\":\"Longitude\",\"value\":\"-105.283\"}";
     json +=    ",{\"name\":\"TZOffset\",\"value\":\"-7.0\"}";

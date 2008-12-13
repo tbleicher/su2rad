@@ -46,7 +46,7 @@ SkyOptionsObject.prototype.parseSkyCommand = function (cmdline) {
         return
     }
     this.logging = false; // stop info level logging
-    log.info("parsing sky command: '" + cmdline + "'");
+    log.info("parsing '" + cmdline + "'");
     if (cmdline[0] == '!') {
         cmdline = cmdline.substring(1,cmdline.length);
     }

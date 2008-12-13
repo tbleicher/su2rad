@@ -169,11 +169,12 @@ function setExportModeSelection() {
 }
 
 function setExportOptionsJSON(msg) {
+    log.debug("setExportOptionsJSON()")
     var json = decodeJSON(msg);
     try {
         eval("var exportOpts = " + json);
     } catch (e) {
-        log.error("setExportOptionsJSON:" + e.name);
+        logError(e);
         var exportOpts = new Array();
     }
     var text = '<b>export settings:</b><br/>';

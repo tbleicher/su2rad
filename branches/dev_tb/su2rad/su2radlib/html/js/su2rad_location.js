@@ -250,7 +250,7 @@ function _getShadowInfoArrayFromJSON(text) {
     try {
         eval("var array = " + json);
     } catch (e) {
-        log.error(e.name);
+        logError(e);
         setStatusMsg("error in shadow_info array: " + e.name + "<br/>" + json);
         return
         var array = new Array();
@@ -261,7 +261,7 @@ function _getShadowInfoArrayFromJSON(text) {
 
 function setShadowInfoJSON(msg) {
     // parse and apply shadow_info settings in JSON string 'msg'
-    //log.debug("setShadowInfoJSON() (" + msg.length + " bytes)");
+    log.debug("setShadowInfoJSON()")
     shadowinfo = _getShadowInfoArrayFromJSON(msg);
     var text = '<b>shadow info settings:</b><br/>';
     modelLocation.logging = false;

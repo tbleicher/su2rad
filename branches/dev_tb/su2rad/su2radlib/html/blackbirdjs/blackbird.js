@@ -88,7 +88,7 @@
                         counter += 1;
 			var newMsg = document.createElement( 'LI' );
 			newMsg.className = type;
-			newMsg.innerHTML = [ '<span class="icon"></span>', counter + " " + content ].join( '' );
+			newMsg.innerHTML = [ '<span class="icon"></span>', formatCounter(counter) + " " + content ].join( '' );
 			outputList.appendChild( newMsg );
 			scrollToBottom();
 		} else {
@@ -162,7 +162,17 @@
 		setState();
 	}
 	
-	
+        function formatCounter(cnt) {
+                var sCnt = cnt.toString()
+                if (sCnt.length == 1) {
+                    return "[00" + sCnt + "]"
+                } else if (sCnt.length == 2) {
+                    return "[0" + sCnt + "]"
+                } else {
+                    return "[" + sCnt + "]"
+                }
+        }
+
 	function scrollToBottom() { //scroll list output to the bottom
 		outputList.scrollTop = outputList.scrollHeight;
 	}
