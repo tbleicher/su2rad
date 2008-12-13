@@ -55,8 +55,7 @@ class ExportOptions
         json = toJSON()
         dlg.execute_script( "setExportOptionsJSON('%s')" % encodeJSON(json) )
     end 
-    
-    
+     
     def toJSON
         ## collect export options and return JSON string
         dict = Hash.new()
@@ -143,14 +142,16 @@ class RenderOptions
         @ImageType = 'normal'
         @ImageSizeX = 512
         @ImageSizeY = 512
+        @ImageAspect = 1.0
         @ZoneSize = 10.0
         @ZoneType = 'exterior'
         @Report = 0
         @ReportFile = getConfig('SCENENAME') + '.log'
         @render = '' 
-        @filename = '' 
+        @filename = ''
+        update()
     end
-
+    
     def applyRenderOptions(dlg,params)
         setOptionsFromString(dlg, params)
     end
@@ -197,6 +198,7 @@ class RenderOptions
     def setRenderOptions(dlg, p='')
         ## set general export options
         uimessage("setRenderOptions() ...", 2)
+        uimessage("DEBUG: imgx=#{@ImageSizeX} imgy=#{@ImageSizeY}")
         dlg.execute_script( "setRenderOptionsJSON('%s')" % encodeJSON(toJSON()) )
     end 
     
@@ -208,6 +210,7 @@ class RenderOptions
         dict['Indirect'] = @Indirect
         dict['Penumbras'] = @Penumbras
         dict['ImageType'] = @ImageType
+        dict['ImageAspect'] = @ImageAspect
         dict['ImageSizeX'] = @ImageSizeX
         dict['ImageSizeY'] = @ImageSizeY
         dict['ZoneSize'] = @ZoneSize
@@ -219,6 +222,13 @@ class RenderOptions
         return json
     end
 
+    def update
+        @ImageSizeX = Sketchup.active_model.active_view.vpwidth
+        @ImageSizeY = Sketchup.active_model.active_view.vpheight
+        @ImageAspect = @ImageSizeX.to_f/@ImageSizeY.to_f
+        @ZoneSize = Sketchup.active_model.bounds.diagonal*getConfig('UNIT')
+    end 
+    
     def updateFromDict(dict)
         dict.each_pair { |k,v|
             old = eval("@%s" % k)
@@ -587,8 +597,8 @@ class ExportDialogWeb < ExportBase
     include JSONUtils
     include InterfaceBase
     
-    def initialize(scene)
-        @scene = scene
+    def initialize()
+        @scene = RadianceScene.new()
         @exportOptions = ExportOptions.new()
         @renderOptions = RenderOptions.new()
         @skyOptions = SkyOptions.new()
