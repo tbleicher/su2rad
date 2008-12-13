@@ -18,13 +18,9 @@ module InterfaceBase
     end
     
     def uimessage(msg, loglevel=0)
-        n = getNestingLevel()
-        if n+loglevel > 0
-            prefix = "  " * (n+loglevel)
-        else
-            prefix = ""
-        end
-        line = "%s[%d] %s" % [prefix, n, msg]
+        prefix = "  " * getNestingLevel()
+        levels = ["N", "I", "D", "E", "W"]  ## [0,1,2,-2,-1]
+        line = "%s[%s] %s" % [prefix, levels[loglevel], msg]
         begin
             Sketchup.set_status_text(line.strip())
             if loglevel <= $LOGLEVEL
@@ -38,10 +34,10 @@ module InterfaceBase
     
     def writeLogFile
         line  = "###  finished: %s  ###" % Time.new()
-        line2 = "###  success:  #{$export_dir}/#{$scene_name})  ###"
+        line2 = "###  success:  %s  ###" % File.join(getConfig('SCENEPATH'), getConfig('SCENENAME'))
         @@_log.push(line)
         @@_log.push(line2)
-        logname = getFilename("%s.log" % $scene_name)
+        logname = getFilename("%s.log" % getConfig('SCENENAME'))
         if not createFile(logname, @@_log.join("\n"))
             uimessage("Error: Could not create log file '#{logname}'")
             line = "### export failed: %s  ###" % Time.new()
@@ -103,32 +99,22 @@ module JSONUtils
             return "[]"
         else
             json = "["
-            dict.each_key { |k|
-                json += '{'
-                json += '"name":"' + k + '",'
-                if(dict[k].class != Geom::Transformation)
-                    json += '"value":"' + dict[k].to_s + '"},'
-                else
-                    json += '"value":"' + dict[k].to_a.to_s + '"},'
-                end
+            dict.each_pair { |k,v|
+                json += "{\"name\":%s,\"value\":%s}," % [toStringJSON(k),toStringJSON(v)]
             }
             json += ']'
         end
-        #json.gsub!(/,/,"#COMMA#")
         return json
     end
 
-    def toStringJSON(obj, level=0)
+    def toStringJSON(obj)
         if obj.class == Array
             str = '['
             obj.each { |e|
-                str += " %s," % toStringJSON(e,1)
+                str += " %s," % toStringJSON(e)
             }
             str = str.chop()
             str += ' ]'
-            if level == 0 
-                str = "{ %s }" % str
-            end
         elsif obj.class == FalseClass
             str = 'false'
         elsif obj.class == Fixnum or obj.class == Bignum
@@ -138,16 +124,18 @@ module JSONUtils
         elsif obj.class == Hash
             str = '{'
             obj.each_pair { |k,v|
-                str += " %s : %s," % [toStringJSON(k,1),toStringJSON(v,1)]
+                str += " %s : %s," % [toStringJSON(k),toStringJSON(v)]
             }
             str = str.chop()
             str += ' }' 
         elsif obj.class == String
-            str = "'%s'" % obj
+            str = "\"%s\"" % obj.to_s
         elsif obj.class == TrueClass
             str = 'true'
+        elsif obj.class == Geom::Transformation
+            str = obj.to_a.to_s
         else
-            str = "'%s'" % obj
+            str = "\"%s\"" % obj
         end
         return str
     end
@@ -303,6 +291,10 @@ module RadiancePath
         return paths
     end
         
+    def getFilename(name)
+        return File.join(getConfig('SCENEPATH'), name)
+    end
+    
     def remove_spaces(s)
         ## remove spaces and other funny chars from names
         for i in (0..s.length)
@@ -340,11 +332,12 @@ module RadiancePath
 
     def setExportDirectory
         ## get name of subdir for Radiance file structure
+        printf "DEBUG: setExportDirectory()\n"
         page = Sketchup.active_model.pages.selected_page
         if page != nil
-            $scene_name = remove_spaces(page.name)
+            name = remove_spaces(page.name)
         else
-            $scene_name = "unnamed_scene"
+            name = "unnamed_scene"
         end
         path = Sketchup.active_model.path
         if path == '':
@@ -359,17 +352,21 @@ module RadiancePath
             elsif ENV.has_key?('TEMP')
                 path = ENV['TEMP']
             end
+            printf "DEBUG: path=%s\n" % path
+            path = path.downcase()
+            path = File.join(File.dirname(path), 'unnamed_project')
         else
             ## remove '.skp' and use as directory
             path = path.downcase()
-            idx = path.rindex('.skp')
-            if idx != nil
-                path = path.slice(0,idx)
-            end
+            fname = File.basename(path,'.skp')
+            path = File.join(File.dirname(path), fname)
         end
-        $export_dir = path
-        $SU2RAD_CONFIG['SCENEPATH'] = $export_dir
-        $SU2RAD_CONFIG['SCENENAME'] = $scene_name
+        ## apply to PATHTMPL
+        tmpl = getConfig('PATHTMPL')
+        tmpl.gsub!('$FILE', path)
+        tmpl.gsub!('$PAGE', name)
+        setConfig('SCENEPATH', File.dirname(tmpl))
+        setConfig('SCENENAME', File.basename(tmpl,'.rif'))
     end
 
     def cleanPath(path)
@@ -381,8 +378,8 @@ module RadiancePath
         
     def setTestDirectory
         if $testdir and $testdir != ''
-            $export_dir = $testdir
-            scene_dir = "#{$export_dir}/#{$scene_name}"
+            setConfig('SCENEPATH', $testdir)
+            scene_dir = File.join(getConfig('SCENEPATH'), getConfig('SCENENAME'))
             if FileTest.exists?(scene_dir)
                 system("rm -rf #{scene_dir}")
             end

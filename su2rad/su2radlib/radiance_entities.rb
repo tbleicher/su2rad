@@ -27,7 +27,7 @@ class RadianceGroup < ExportBase
         @@nameContext.pop()
         
         if resetglobal == true
-            $MAKEGLOBAL = false
+            setConfig('MAKEGLOBAL', false)
         end
         pop()
         return ref
@@ -47,7 +47,7 @@ class RadianceComponent < ExportBase
         @iesdata = ''
         @lampMF = 0.8
         @lampType = 'default'
-        if $REPLMARKS != ''
+        if getConfig('REPLMARKS') != ''
             searchReplFile()
         end
     end
@@ -172,7 +172,7 @@ class RadianceComponent < ExportBase
         resetglobal = checkTransformation()
         
         skip_export = false
-        if $MAKEGLOBAL == false
+        if makeGlobal?() == false
             filename = getFilename("objects/#{defname}.rad")
             if $createdFiles[filename] == 1
                 skip_export = true
@@ -207,7 +207,7 @@ class RadianceComponent < ExportBase
         @@nameContext.pop()
         pop()
         if resetglobal == true
-            $MAKEGLOBAL = false
+            setConfig('MAKEGLOBAL', false)
         end
         if @replacement != '' or @iesdata != ''
             ## no alias for replacement files
@@ -249,7 +249,7 @@ class RadiancePolygon < ExportBase
         @index = index
         @verts = []
         @triangles = []
-        if $TRIANGULATE == true
+        if getConfig('TRIANGULATE') == true
             polymesh = @face.mesh 7 
             polymesh.polygons.each { |p|
                 verts = []
@@ -274,6 +274,7 @@ class RadiancePolygon < ExportBase
                 end
             }
         end
+        @@progressCounter.add("%s" % @face.class)
     end
             
     def addLoop(l)
@@ -372,7 +373,7 @@ class RadiancePolygon < ExportBase
             uimessage("face.area == 0! skipping face", 1)
             return ''
         end 
-        if $TRIANGULATE == true
+        if getConfig('TRIANGULATE') == true
             if @triangles.length == 0
                 uimessage("WARNING: no triangles found for polygon")
                 return ""
@@ -433,11 +434,12 @@ class RadiancePolygon < ExportBase
         matname = getMaterialName(skm)
         
         ## create text of polygon in world coords for byColor/byLayer
+        scale = getConfig('UNIT')
         worldpoints = points.collect { |p| p.transform($globaltrans) }
         wpoly = "\n%s polygon f_%d_%d\n" % [matname, @index, count]
         wpoly += "0\n0\n%d\n" % [worldpoints.length*3]
         worldpoints.each { |wp|
-            wpoly += "    %f  %f  %f\n" % [wp.x*$UNIT,wp.y*$UNIT,wp.z*$UNIT]
+            wpoly += "    %f  %f  %f\n" % [wp.x*scale,wp.y*scale,wp.z*scale]
         }
 
         ## 'by layer': replace material in text name with layer name
@@ -465,7 +467,7 @@ class RadiancePolygon < ExportBase
             if trans != nil
                 p.transform!(trans)
             end
-            text += "    %f  %f  %f\n" % [p.x*$UNIT,p.y*$UNIT,p.z*$UNIT]
+            text += "    %f  %f  %f\n" % [p.x*scale,p.y*scale,p.z*scale]
         }
         return text
     end
@@ -479,6 +481,7 @@ class RadiancePolygon < ExportBase
         imgy = skm.texture.height
         m = getPolyMesh(trans)
         si = @@meshStartIndex[matname]
+        unit = getConfig('UNIT')
         text = ''
         
         m.polygons.each { |p|
@@ -511,7 +514,7 @@ class RadiancePolygon < ExportBase
                     tx = t.x/imgx
                     ty = t.y/imgy
                 end
-                text += "v    %f  %f  %f\n" % [v.x*$UNIT,v.y*$UNIT,v.z*$UNIT]
+                text += "v    %f  %f  %f\n" % [v.x*unit, v.y*unit, v.z*unit]
                 text += "vt   %f  %f\n"     % [tx,ty]
             }
             text += "f   %d/%d  %d/%d  %d/%d\n" % [si,si, si+1,si+1, si+2,si+2]
@@ -532,6 +535,7 @@ class RadiancePolygon < ExportBase
         polymesh = @face.mesh 7 
         polymesh.transform!($globaltrans)
         points = []
+        unit = getConfig('UNIT')
         polymesh.polygons.each { |p|
             verts = []
             [0,1,2].each { |i|
@@ -543,14 +547,14 @@ class RadiancePolygon < ExportBase
             }
             bbox = getbbox(*verts)
             z = (verts[0].z + verts[1].z + verts[2].z) / 3.0
-            d = 0.25/$UNIT 
+            d = 0.25/unit 
             x = bbox[0]
             while x <= bbox[2]
                 y = bbox[1] 
                 while y <= bbox[3]
                     p = Geom::Point3d.new(x,y,z)
                     if Geom::point_in_polygon_2D p, verts, true
-                        points.push("%.2f %.2f %.2f 0 0 1" % [p.x*$UNIT, p.y*$UNIT, p.z*$UNIT])
+                        points.push("%.2f %.2f %.2f 0 0 1" % [p.x*unit, p.y*unit, p.z*unit])
                     end
                     y += d
                 end
@@ -567,15 +571,16 @@ class RadiancePolygon < ExportBase
         xs.sort!
         ys.sort!
         d = 0.25
-        xmin = xs[0]*$UNIT - d
+        unit = getConfig('UNIT')
+        xmin = xs[0]*unit - d
         xmin = ((xmin/d).to_i-1) * d
-        xmax = xs[2]*$UNIT + d
+        xmax = xs[2]*unit + d
         xmax = ((xmax/d).to_i+1) * d
-        ymin = ys[0]*$UNIT - d
+        ymin = ys[0]*unit - d
         ymin = ((ymin/d).to_i-1) * d
-        ymax = ys[2]*$UNIT + d
+        ymax = ys[2]*unit + d
         ymax = ((ymax/d).to_i+1) * d
-        return [xmin/$UNIT, ymin/$UNIT, xmax/$UNIT, ymax/$UNIT]
+        return [xmin/unit, ymin/unit, xmax/unit, ymax/unit]
     end
 end 
 
@@ -727,6 +732,7 @@ class RadianceSky < ExportBase
             rescue
                 uimessage("Could not use location line '#{l}'")
             end
+        @@progressCounter.add("%s" % @entity.class)
         }
         if meridian == ''
             ## not found in locations
