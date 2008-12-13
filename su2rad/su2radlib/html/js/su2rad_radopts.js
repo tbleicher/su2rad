@@ -422,6 +422,7 @@ function getRpictOptionSpan(opt) {
         text += " value=\"" + radOpts.getOption(opt) + "\" onchange=\"validateRpictOverride('" + opt + "')\" />";
     } else {
         text += radOpts.getOption(opt);
+        
     }
     text += "</div>"
     return text;
@@ -466,11 +467,12 @@ function getRpictOptionSpansBool() {
 }
 
 function setRenderOptionsJSON(text) {
+    log.debug("setRenderOptionsJSON()")
     var json = decodeJSON(text);
     try {
         eval("var renderOpts = " + json);
     } catch (e) {
-        log.error("setRenderOptionsJSON:" + e.name);
+        logError(e)
         var renderOpts = new Array();
     }
     var text = '<b>render settings:</b><br/>';

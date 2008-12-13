@@ -22,6 +22,7 @@
         <script type="text/javascript" src="./js/jquery.history_remote.pack.js"></script>
         <script type="text/javascript" src="./js/jquery.tabs.pack.js"></script>
         <script type="text/javascript" src="./js/jquery.alphanumeric.js"></script>
+        <script type="text/javascript" src="./js/jqModal.js"></script>
         
         <!-- su2rad specific javascript files -->
         <script type="text/javascript" src="./js/su2rad_backend_interface.js"></script>
@@ -44,6 +45,10 @@
                     onShow:  function(a,s,h) { onTabShow(a,s,h); }
                 } );
             });
+            $().ready(function() {
+                $('#progressWindow').jqm();
+                $('#progressWindow').jqmAddTrigger('.showProgress');
+            });
 
         </script>
 
@@ -54,11 +59,14 @@
         <![endif]-->
         <!-- style sheet for the rest of the dialog -->
         <link rel="stylesheet" href="./css/dialog.css" type="text/css" media="print, projection, screen">
+        <link rel="stylesheet" href="./css/jqModal.css" type="text/css" media="screen">
         <link rel="stylesheet" href="./blackbirdjs/blackbird.css" type="text/css" media="screen">
     
     </head>
     
     <body style="background-color: white" onLoad="initPage()">
+        
+        <input type="button" id="showLogButton" name="showLogButton" value="log" onclick="log.toggle()">
     
         <div id="tab-container">
             <ul class="tabs-nav">
@@ -84,14 +92,14 @@
                                     <img src="./css/24-zoom.png" />
                                 </div>
                             </div>
-                            <input type="text" style="width:275px;" name="scenePath" id="scenePath" value="-p-"
+                            <input type="text" style="width:275px;" name="scenePath" id="scenePath" value="."
                             onchange="setExportPath()"/>
                         </div>
                     </div>
                     <div class="gridRow">
                         <div class="gridLabel">scene:</div>
                         <div class="gridCell" style="width:385px;">
-                            <input type="text" class="fileNameInput" style="width:275px;" name="sceneName" id="sceneName" value="-"
+                            <input type="text" class="fileNameInput" style="width:275px;" name="sceneName" id="sceneName" value="unnamed"
                             onchange="setExportPath()"/>
                             <input type="button" id="loadSceneButton" class="loadbutton" style="display:none;" value="load" onclick="onLoadSceneFile()"/>
                         </div>
@@ -129,7 +137,12 @@
                     
                 <!-- ###   VIEWS   ### --> 
                 <h3>Views</h3>
-                <div id="viewsSelection"></div>
+                <div id="viewsSelection">
+                <!-- use this space for test data button --> 
+                <input type="button" id="testDataButton" name="testDataButton" value="load test data" onclick="loadTestData()">
+            
+                </div>
+                
                 
                 
                 <!-- ###   RENDER   ### --> 
@@ -241,6 +254,7 @@
                 </div>
 
 
+                <span class=".showProgress">show Progress</span>
                 <h2>
                     <input class="exportbutton" type="button" name="export" value="export" onclick="onExportButton()">
                     <input class="exportbutton" type="button" name="cancel" value="cancel" onclick="onCancelButton()">
@@ -248,6 +262,12 @@
             
                 <div class="statusMessage" id="statusTabExport">
                     msg
+                </div>
+                <div class="jqmWindow" id="progressWindow">
+                    <img src="./css/ajax-loader.gif" />
+                    <div id="progressStatus">
+                        export in progress
+                    </div>
                 </div>
             
             </div>

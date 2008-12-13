@@ -28,20 +28,25 @@ var viewsList = new ViewsListObject();
 
 
 function initPage() {
-    log.toggle();
+    //log.toggle();
     window.resizeTo(640,800);
     // hide file selectors if FF3
     if (navigator.userAgent.indexOf('Firefox/3') != -1) {
         document.getElementById("sceneFileSelection").style.display='none';
     }
+}
+
+function loadTestData() {
     if (SKETCHUP == false) {
         // fill dialog with test data
         getExportOptions();
         getViewsList();
         getSkySettings();
+    } else {
+        alert("no testdata within Sketchup!")
     }
 }
-    
+
 function disableGlobalOption() {
     // remove 'by group' option from selection
     select = document.getElementById('exportMode'); 
@@ -67,29 +72,80 @@ function toggleClimateTab() {
     }
 }
 
+function setProgressMsg (msg) {
+    log.debug("progress: " + msg);
+    document.getElementById("progressStatus").innerHTML = msg;
+}
+
 function setStatusMsg (msg) {
     document.getElementById(_currentStatusDiv).innerHTML = msg;
 }
 
-function onExportButton() {
+function logError(e) {
+    log.error(e.toString())
+    log.error("e.name " + e.name)
+    log.error("e.message " + e.message)
+    log.error("e.fileName " + e.fileName)
+    log.error("e.lineNumber " + e.lineNumber)
+}
+
+function showProgressWindow() {
     try {
-        //log.info("export canceled by user")
-        window.location = 'skp:onExport@';
+        $('#progressWindow').jqmShow();
     } catch (e) {
-        // do something
+        logError(e)
+    }
+}
+
+function hideProgressWindow() {
+    try {
+        $('#progressWindow').jqmHide();
+    } catch (e) {
+        log.error(e.toString())
+        log.error("e.name " + e.name)
+        log.error("e.message " + e.message)
+        log.error("e.fileName " + e.fileName)
+        log.error("e.lineNumber " + e.lineNumber)
+    }
+}
+
+function onExportButton() {
+    log.debug("onExportButton()...")
+    if (SKETCHUP != false) {
+        try {
+            log.info("starting export ...")
+            window.location = 'skp:onExport@';
+        } catch (e) {
+            log.error(e.toString())
+            alert(e.toString())
+        }
+    } else {
+        showBusy()
+        log.warn('Sketchup not available; no export action');
+        msg  = '{"status"  :"success"';
+        msg += ',"messages":"0"';
+        msg += ',"files"   :"31"';
+        msg += ',"groups"  :"345"';
+        msg += ',"faces"   :"45678"}';
+        showResults(encodeJSON(msg));
     }
 }
 
 function onCancelButton() {
     try {
-        //log.info("export canceled by user")
-        window.location = 'skp:onCancel@';
+        if (SKETCHUP != false) {
+                //log.info("export canceled by user")
+                window.location = 'skp:onCancel@';
+        } else {
+            hideProgressWindow();
+            document.body.innerHTML = "";
+            //window.opener='x';
+            window.close();
+        }
     } catch (e) {
-        window.opener='x';
-        window.close();
+        logError(e)
     }
 }
-
 
 function switch_to_tab(pos) {
     $('#tab-container').triggerTab(pos);
@@ -163,7 +219,51 @@ function replaceChars(text) {
     return text;
 }
 
+function JSON2HTML (obj, title, level) {
+    // show JSON object with HTML markup
+    if (level == null) {
+        level = 3;
+    }
+    var text = "<H"+level+">" + title + "</H"+level+">";
+    if (obj.constructor.toString().match(/Array/i)) { 
+        for (var i=0; i<obj.length; i++) {
+            text += JSON2HTML(obj[i], "element "+i, level+1);
+        }
+    } else {
+        log.debug("obj=" + obj);
+        for (var property in obj) {
+            try {
+                text += "<b>" + property.toString() + "</b> = " + obj[property] + "<br/>";
+                log.debug(property.toString() + "=" + obj[property]);
+            } catch (e) {
+                logError(e)
+            }
+        }
+    }
+    return text;
+}
+    
+function showBusy() {
+    log.error("TODO: showBusy()")
+    showProgressWindow()
+}
 
+function showResults(msg) {
+    log.error("TODO: showResult()")
+    log.error("TEST: msg=" + msg)
+    json = decodeJSON(msg)
+    var obj = new Array();
+    try { 
+        eval("obj = " + json)
+        //hideProgressWindow()
+        //showResultsWindow()
+    } catch (e) {
+        logError(e)
+    }
+    html = JSON2HTML(obj, 'export results')
+    html += '<div><input class="exportbutton" type="button" value="close" onclick="onCancelButton()"></div>';
+    document.getElementById("progressStatus").innerHTML = html;
+}
 
 function onTabClick(link,div_show,div_hide) {
     log.debug("switching to tab '" + div_show.id + "'");

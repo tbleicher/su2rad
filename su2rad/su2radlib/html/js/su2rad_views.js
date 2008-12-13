@@ -83,6 +83,7 @@ function ViewsListObject() {
 
 ViewsListObject.prototype.setViewsList = function (newViews) {
     // create new view objects from array <newViews>
+    log.debug("setViewsList()")
     this.views = new Array();
     for(var i=0; i<newViews.length; i++) {
         if (newViews[i] != null) {
