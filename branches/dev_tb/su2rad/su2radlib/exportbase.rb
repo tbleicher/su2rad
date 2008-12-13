@@ -3,14 +3,63 @@ require 'export_modules.rb'
 require 'context.rb'
 
 
+class ProgressCounter
+    
+    def initialize
+        @elements = {'Sketchup::Face' => 0}
+        @dialog = nil
+    end
+
+    def add(eclass)
+        eclass.strip!()
+        if @elements.has_key?(eclass)
+            @elements[eclass] += 1
+        else
+            @elements[eclass] = 1
+        end
+        modulo = @elements['Sketchup::Face'].divmod(1000)[1]
+        if (eclass != 'Sketchup::Face' || modulo == 0)
+            report()
+        end
+    end
+
+    def report
+        pprint()
+        if @dialog != nil
+            #@dialog.execute_script("setProgressMsg('%s')" % formatHTML)
+            printf "@dialog.exec...('setProgressMsg')\n"
+            @dialog.execute_script("setProgressMsg('foo')")
+            #% @elements['Sketchup::Face'])
+        end
+    end
+    
+    def setDialog(dlg)
+        @dialog = dlg
+    end
+    
+    def formatHTML
+        text = "<b>progress:</b><br/>"
+        @elements.each_pair { |k,v|
+            text += "<span class=\"label\">%s</span><span>%s</span>" % [k,v]
+        }
+        return text
+    end
+    
+    def pprint()
+        printf "progress:\n"
+        @elements.each_pair { |k,v|
+            printf "%15s - %d\n" %  [k,v]
+        }
+    end
+end
+
+
 class ExportBase
 
     include InterfaceBase
     include RadiancePath
     
-    @@_config = RunTimeConfig.new()
     @@_log = []
-    
     @@materialContext = nil
     
     @@materialstack = MaterialStack.new()
@@ -21,6 +70,8 @@ class ExportBase
     @@components = []
     
     @@facecount = 0
+    @@progressCounter = ProgressCounter.new()
+    
     @@uniqueFileNames = Hash.new()
     @@componentNames = Hash.new()
         
@@ -61,14 +112,6 @@ class ExportBase
         $createdFiles = Hash.new()
     end
     
-    def getConfig(key)
-        return @@_config.get(key)
-    end
-
-    def setConfig(key,value)
-        @@_config.set(key,value)
-    end
-   
     def getNestingLevel
         return @@groupstack.length
     end
@@ -155,7 +198,7 @@ class ExportBase
             rp = RadiancePolygon.new(f,i)
             if rp.isNumeric
                 numpoints += rp.getNumericPoints()
-            elsif $MAKEGLOBAL
+            elsif makeGlobal?()
                 faces_text += rp.getText(parenttrans)
             else
                 faces_text += rp.getText()
@@ -171,14 +214,14 @@ class ExportBase
         uimessage("exported entities [refs=%d, faces=%d]" % [references.length, faces.length], 1)
 
         ## create 'by group' files or stop here
-        if $MODE == 'by layer' or $MODE == 'by color'
-            return "## mode = '#{$MODE}' -> no export"
+        if getConfig('MODE') == 'by layer' or getConfig('MODE') == 'by color'
+            return "## mode = '%s' -> no export" % getConfig('MODE')
         elsif @@nameContext.length <= 1
             return createMainScene(references, faces_text, parenttrans)
         else
             ref_text = references.join("\n")
             text = ref_text + "\n\n" + faces_text
-            filename = getFilename()
+            filename = getFilename( File.join('objects', getNameContext()) )
             if not createFile(filename, text)
                 msg = "\n## ERROR: error creating file '%s'\n" % filename
                 uimessage(msg)
@@ -201,6 +244,7 @@ class ExportBase
         @@matrixstack.push(@entity.transformation)
         @@layerstack.push(@entity.layer)
         @@groupstack.push(@entity)
+        @@progressCounter.add("%s" % @entity.class)
     end
     
     def pop
@@ -240,8 +284,8 @@ class ExportBase
     def checkTransformation
         resetglobal = false
         if isMirror(@entity.transformation)
-            if $MAKEGLOBAL == false
-                $MAKEGLOBAL = true
+            if makeGlobal?() == false
+                setConfig('MAKEGLOBAL', true)
                 resetglobal = true
                 if @entity.class == Sketchup::ComponentInstance
                     name = getUniqueName(@entity.name)
@@ -257,7 +301,7 @@ class ExportBase
     end
     
     def setTransformation(parenttrans, resetglobal)
-        if $MAKEGLOBAL == true and not resetglobal == true
+        if makeGlobal?() == true and not resetglobal == true
             parenttrans *= @entity.transformation
         else
             uimessage('parenttrans = entity.transformation')
@@ -293,7 +337,7 @@ class ExportBase
             return false
         elsif skm.texture == nil
             return false
-        elsif $TEXTURES == false
+        elsif getConfig('TEXTURES') == false
             return false
         elsif $OBJ2MESH == ''
             return false
@@ -302,17 +346,23 @@ class ExportBase
         end
     end
     
-    def getFilename(name=nil)
-        if name == nil
-            name = File.join("objects", remove_spaces(@@nameContext[-1]))
-        end
-        return File.join($export_dir, $scene_name, name)
-    end
-    
     def getMaterial(entity)
         return getEntityMaterial(entity)
     end
-   
+ 
+    def getNameContext
+        return remove_spaces(@@nameContext[-1])
+    end
+    
+    def getProjectName
+        path = Sketchup.active_model.path
+        if path == '':
+            return 'unnamed'
+        else
+            return File.basename(path.downcase(), '.skp')
+        end
+    end 
+    
     def getEffectiveMaterial(entity)
         frontface = true
         if entity.class == Sketchup::Face
@@ -381,6 +431,10 @@ class ExportBase
         end
         return @@materialContext.getSaveMaterialName(mat)
     end
+   
+    def makeGlobal?
+        return getConfig('MAKEGLOBAL')
+    end
     
     def point_to_vector(p)
         Geom::Vector3d.new(p.x,p.y,p.z)
@@ -389,14 +443,14 @@ class ExportBase
     def getXform(filename, trans)
         if @@nameContext.length <= 2     #XXX ugly hack
             ## for main scene file
-            path = "%s/%s/" % [$export_dir, $scene_name]
+            path = File.join(getConfig('SCENEPATH'),getConfig('SCENENAME'),"")
         else
-            path = "%s/%s/objects/" % [$export_dir, $scene_name]
+            path = File.join(getConfig('SCENEPATH'),getConfig('SCENENAME'),"objects","")
         end 
         filename.sub!(path, '')
         suffix = filename[filename.length-4,4].downcase()
         objname = @@nameContext[-1]
-        if $MAKEGLOBAL
+        if makeGlobal?()
             xform = "!xform -n #{objname} #{filename}"
         else
             #TODO: mirror 
@@ -411,7 +465,7 @@ class ExportBase
             end
             
             ## transformation
-            scaletrans = Geom::Transformation.new(1/@@_config.get('UNIT'))
+            scaletrans = Geom::Transformation.new(1/getConfig('UNIT'))
             trans = trans * scaletrans
             a = trans.to_a
             o = a[12..14]
@@ -486,11 +540,12 @@ class ExportBase
     end
     
     def showTransformation(trans)
+        s = getConfig('UNIT')
         a = trans.to_a
         printf "  %5.2f  %5.2f  %5.2f  %5.2f\n" % a[0..3]
         printf "  %5.2f  %5.2f  %5.2f  %5.2f\n" % a[4..7]
         printf "  %5.2f  %5.2f  %5.2f  %5.2f\n" % a[8..11]
-        printf "  %5.2f  %5.2f  %5.2f  %5.2f\n" % [a[12]*$UNIT, a[13]*$UNIT, a[14]*$UNIT, a[15]]
+        printf "  %5.2f  %5.2f  %5.2f  %5.2f\n" % [a[12]*s, a[13]*s, a[14]*s, a[15]]
     end
 
 end 

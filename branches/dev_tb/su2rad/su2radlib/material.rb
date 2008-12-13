@@ -436,7 +436,7 @@ class MaterialContext < ExportBase
         defined = {}
         text = "## materials.rad\n"
         text += getMaterialDescription(nil)
-        if $MODE == 'by layer'
+        if getConfig('MODE') == 'by layer'
             ## 'by layer' creates alias to default material if no
             ## definition is provided in library (TODO)
             @@byLayer.each_pair { |lname,lines|
@@ -462,7 +462,7 @@ class MaterialContext < ExportBase
         marray.each { |a|
             text += a[1]
         }
-        if $MODE != 'by group'
+        if getConfig('MODE') != 'by group'
             ## check against list of files in 'objects' directory
             reg_obj = Regexp.new('objects')
             $createdFiles.each_pair { |fpath, value|
@@ -483,7 +483,7 @@ class MaterialContext < ExportBase
         end
         
         ## textures
-        if $TEXTURES == true 
+        if getConfig('TEXTURES') == true 
             if @texturewriter.count > 0
                 exportTextures()
             end

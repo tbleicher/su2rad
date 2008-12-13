@@ -16,6 +16,7 @@ class ExportOptions
     attr_reader :scenePath
     
     def initialize
+        printf "DEBUG: ExportOptions.new()\n"
         setExportDirectory()
         @scenePath     = getConfig('SCENEPATH')
         @sceneName     = getConfig('SCENENAME')
@@ -32,7 +33,7 @@ class ExportOptions
     
     def _setDialogOptions(dlg)
         ## disable 'global_coords' option in dialog if not available
-        replmarks = $SU2RAD_CONFIG.get('REPLMARKS')
+        replmarks = getConfig('REPLMARKS')
         if replmarks != '' and File.exists?(replmarks)
             dlg.execute_script('enableGlobalOption()')
         else
@@ -42,14 +43,17 @@ class ExportOptions
             end
             @global_coords = true
         end
-        print "TODO: texture option\n"
+        if @exportMode != 'by color'
+            @textures = false
+        end
     end
     
     def setExportOptions(dlg, p='')
         ## set general export options
         uimessage("setExportOptions() ...", 2)
         _setDialogOptions(dlg)
-        dlg.execute_script( "setExportOptionsJSON('%s')" % encodeJSON(toJSON()) )
+        json = toJSON()
+        dlg.execute_script( "setExportOptionsJSON('%s')" % encodeJSON(json) )
     end 
     
     
@@ -67,7 +71,7 @@ class ExportOptions
         return json
     end
         
-    def writeOptionsToConfig(dlg,params='')
+    def writeOptionsToConfig()
         ## apply export options to global config
         setConfig('TRIANGULATE', @triangulate)
         setConfig('TEXTURES', @textures)
@@ -79,6 +83,50 @@ class ExportOptions
 
 end
 
+
+class RifFile
+
+    attr_reader :settings, :filename
+        
+    def initialize(path='')
+        @filename = ''
+        @_isValid = true
+        @settings = getDefaults()
+        if path != ''
+            readFile(path)
+        end
+    end
+
+    def isValid?
+        ## return true if file is a correct rif file
+        return false
+    end
+    
+    def getDefaults
+        d = Hash.new()
+        d["Quality"] = 'medium'
+        d["Detail"] = 'medium'
+        d["Variability"] = 'high'
+        d["Indirect"] = 2
+        d["Penumbras"] = true
+        d["ImageType"] = 'normal'
+        d["ImageSizeX"] = 512
+        d["ImageSizeY"] = 512
+        d["ZoneSize"] = 10.0
+        d["ZoneType"] = 'exterior'
+        d["Report"] = 0
+        d["ReportFile"] = getConfig('SCENENAME') + '.log'
+        d["render"] = '' 
+        return d
+    end
+    
+    def readFile(path)
+        @_isValid = false
+        printf "TODO: RifFile.parseFile('%s')\n" % path
+        #@_isValid = true
+        @filename = path
+    end
+end
 
 
 class RenderOptions
@@ -93,10 +141,10 @@ class RenderOptions
         @Indirect = 2
         @Penumbras = true
         @ImageType = 'normal'
-        @ImageSizeX = 345
+        @ImageSizeX = 512
         @ImageSizeY = 512
         @ZoneSize = 10.0
-        @ZoneType = 'interior'
+        @ZoneType = 'exterior'
         @Report = 0
         @ReportFile = getConfig('SCENENAME') + '.log'
         @render = '' 
@@ -106,7 +154,23 @@ class RenderOptions
     def applyRenderOptions(dlg,params)
         setOptionsFromString(dlg, params)
     end
-   
+  
+    def getRifOptionsText
+        zone = "%s 0 %.1f 0 %.1f 0 %.1f" % [@ZoneType, @ZoneSize, @ZoneSize, @ZoneSize]
+        lines = ["QUALITY=     %s" % @Quality,
+                "DETAIL=      %s" % @Detail,
+                "VARIABILITY= %s" % @Variability,
+                "INDIRECT=    %s" % @Indirect,
+                "PENUMBRAS=   %s" % @Penumbras,
+                "",
+                "RESOLUTION=  %s %s" % [@ImageSizeX, @ImageSizeY],
+                "ZONE=        %s\n" % zone,
+                "REPORT=      %s logfiles/%s" % [@Report, @ReportFile],
+                "",
+                "render=      %s\n" % @render]
+        return lines.join("\n")
+    end
+    
     def loadSceneFile(path='')
         if path == ''
             scenePath = getConfig('SCENEPATH')
@@ -114,20 +178,11 @@ class RenderOptions
             path = File.join(scenePath, sceneName + '.rif')
         end
         if File.exists?(path)
-            begin
-                f = File.new(path, 'r')
-                text = f.read()
-                f.close()
-            rescue => e
-                uimessage("#{self.class}: error reading file '#{path}'", -2)
-                uimessage("\n%s\n\n%s\n" % [$!.message,e.backtrace.join("\n")],-2)
-                return
+            rif = RifFile(path)
+            if rif.isValid? == true
+                updateFromDict(rif.settings)
+                @filename = rif.filename
             end
-        end
-        settings = parseRifFile(text)
-        update(settings)
-        if settings != {}
-            @filename = path
         end
     end
     
@@ -137,14 +192,6 @@ class RenderOptions
             return true
         end
         return false
-    end
-    
-    def parseRifFile(text)
-        if text == ''
-            return false
-        end
-        printf "TODO: parseRifFile()\n"
-        return true
     end
     
     def setRenderOptions(dlg, p='')
@@ -172,8 +219,22 @@ class RenderOptions
         return json
     end
 
-    def update(dict)
-        printf "\nTODO: #{self.class}.update()\n"
+    def updateFromDict(dict)
+        dict.each_pair { |k,v|
+            old = eval("@%s" % k)
+            if old != v
+                uimessage("new Value for %s: %s")
+            end
+            if v.class == String
+                v = "'%s'" % v
+            end
+            begin
+                eval("@%s = %s" % [k,v])
+            rescue => e
+                uimessage("RenderOptions.updateFromDict -  error in eval():", -2)
+                uimessage("%s\n[k='%s'  v='%s'\n" % [$!.message, k, v], -2)
+            end
+        }
     end
 
 end
@@ -200,7 +261,7 @@ class SkyOptions
         pairs = _evalParams(p)
         pairs.each { |k,v|
             if (@_settings.has_key?(k) == false) || @_settings[k] != v
-                uimessage("#{self.class} new value for '%s': '%s'\n" % [k,v])
+                uimessage("SkyOptions: new value for '%s': '%s'\n" % [k,v])
                 @_settings[k] = v
             end
         }
@@ -220,7 +281,7 @@ class SkyOptions
                     newpairs.push([k,v])
                 rescue ArgumentError => e
                     v = v
-                    uimessage("#{self.class}: ArgumentError for key '%s' (v='%s')" % [k,v], -2)
+                    uimessage("SkyOptions: ArgumentError for key '%s' (v='%s')" % [k,v], -2)
                 end
             end
         }
@@ -258,7 +319,7 @@ class SkyOptions
     def writeSkySettingsToShadowInfo(d,p) 
         ## apply values in _settings to shadow_info
         sinfo = Sketchup.active_model.shadow_info
-        uimessage("#{self.class} writeing new sky settings ...", 1)
+        uimessage("SkyOptions writing new sky settings ...", 1)
         @_settings.each_pair { |k,v|
             if k == 'ShadowTime_time_t'
                 printf "> old sinfo[%s] : %d\n" % [k,sinfo[k]]
@@ -270,7 +331,7 @@ class SkyOptions
                     sinfo[k] = v
                     uimessage(" -> %s: '%s'" % [k,v], 1)
                 rescue AttributeError => e
-                    uimessage("#{self.class} AttributeError at '%s' (v='%s')" % [k,v], -2)
+                    uimessage("SkyOptions AttributeError at '%s' (v='%s')" % [k,v], -2)
                 end
             end
         }
@@ -292,6 +353,7 @@ class SketchupView
     
     include JSONUtils
     include InterfaceBase
+    include RadiancePath
     
     ## TODO:
     ## parse and format vectors
@@ -314,11 +376,30 @@ class SketchupView
         end
     end
 
+    def createViewFile
+        name = remove_spaces(@name)
+        viewpath = File.join("views", "%s.vf" % name)
+        filename = getFilename(viewpath)
+        if not createFile(filename, getViewLine())
+            msg = "Error: could not create view file '#{filename}'"
+            uimessage(msg)
+            return "## %s" % msg
+        elsif @selected == true
+            return "view=  #{name} -vf #{viewpath}"
+        else
+            return "# view=  #{name} -vf #{viewpath}"
+        end
+    end
+    
     def getOptions
         text = "rvu -vt#{@vt} -vp #{@vp} -vd #{@vd} -vu #{@vu}"
         text +=  " -vv #{@vv} -vh #{@vh} -vo #{@vo} -va #{@va}"
         return text
     end 
+    
+    def getViewLine
+        return getOptions()
+    end
     
     def toJSON
         text = "{\"name\":\"%s\", " % @name
@@ -388,7 +469,8 @@ class SketchupView
     end
     
     def setViewParameters(camera)
-        @vp = "%.3f %.3f %.3f" % [camera.eye.x*$UNIT, camera.eye.y*$UNIT, camera.eye.z*$UNIT]
+        unit = getConfig('UNIT')
+        @vp = "%.3f %.3f %.3f" % [camera.eye.x*unit, camera.eye.y*unit, camera.eye.z*unit]
         @vd = "%.3f %.3f %.3f" % [camera.zaxis.x, camera.zaxis.y, camera.zaxis.z]
         @vu = "%.3f %.3f %.3f" % [camera.up.x, camera.up.y, camera.up.z]
         imgW = Sketchup.active_model.active_view.vpwidth.to_f
@@ -405,7 +487,7 @@ class SketchupView
             end
         else
             @vt = 'v'
-            @vv = camera.height*$UNIT
+            @vv = camera.height*unit
             @vh = @vv*aspect
         end
     end
@@ -431,6 +513,11 @@ class ViewsList
         initViews()
     end
 
+    def getViewLines
+        lines = @_views.values.collect { |v| v.createViewFile() }
+        return lines.join("\n")
+    end
+    
     def initViews
         pages = Sketchup.active_model.pages
         if pages.count == 0
@@ -454,15 +541,13 @@ class ViewsList
     
     def setViewsList(dlg,p='')
         ## build and return JSON string of views (scenes)
-        printf ("\nsetViewsList() ... ")
-        uimessage("#{self.class} setting views list ...", 2)
+        uimessage("ViewsList: setting views list ...", 2)
         json = "["
         @_views.each_value { |v|
             json += "%s, " % v.toJSON()
         }
         json += "]"
         dlg.execute_script("setViewsListJSON('%s')" % encodeJSON(json) )
-        printf " done\n"
     end
 
     def showViews(indent="",loglevel=1)
@@ -474,7 +559,7 @@ class ViewsList
     def updateViews(a)
         a.each { |d|
             if not d.has_key?('name')
-                uimessage("#{self.class} error: no 'name' for view", -2)
+                uimessage("ViewsList error: no 'name' for view", -2)
                 next
             end
             viewname = d['name']
@@ -483,11 +568,11 @@ class ViewsList
                 begin
                     view.update(d)
                 rescue => e
-                    uimessage("#{self.class} error:\n%s\n\n%s\n" % [$!.message,e.backtrace.join("\n")],-2)
+                    uimessage("ViewsList error:\n%s\n\n%s\n" % [$!.message,e.backtrace.join("\n")],-2)
                     return false 
                 end
             else
-                uimessage("#{self.class} error: unknown view '%s'\n" % viewname, -2)
+                uimessage("ViewsList error: unknown view '%s'\n" % viewname, -2)
                 showViews("   ", -2)
             end
         }
@@ -502,9 +587,8 @@ class ExportDialogWeb < ExportBase
     include JSONUtils
     include InterfaceBase
     
-    def initialize()
-        printf "ExportDialogWeb.initialize()\n"
-        @scene = RadianceScene.new()
+    def initialize(scene)
+        @scene = scene
         @exportOptions = ExportOptions.new()
         @renderOptions = RenderOptions.new()
         @skyOptions = SkyOptions.new()
@@ -515,7 +599,7 @@ class ExportDialogWeb < ExportBase
         @exportOptions.applyExportOptions(dlg,params)
         filepath = File.join(@exportOptions.scenePath,@exportOptions.sceneName)
         if File.exists?(filepath) && (@renderOptions.loaded?(filepath) == false)
-            printf "enabling 'load' ...\n"
+            printf "DEBUG: enabling 'load' ...\n"
             dlg.execute_script("enableLoadSceneFile('%s')" % filepath)
         end
     end
@@ -545,17 +629,15 @@ class ExportDialogWeb < ExportBase
     def show(title="dialog_TEST")
         ## create and show WebDialog
         dlg = UI::WebDialog.new(title, true, nil, 600, 750, 50, 50, true);
+        dlg.set_background_color("0000ff")
             
         ## export and cancel actions
         dlg.add_action_callback("onCancel") { |d,p|
-            printf "closing dialog ...\n"
+            uimessage("closing dialog ...")
             d.close();
         }
         dlg.add_action_callback("onExport") {|d,p|
-            @exportOptions.writeOptionsToConfig(d,p)
-            d.execute_script('applyRenderOptions()')
-            printf "TODO: writeRenderOptions()\n"
-            printf "TODO: @scene.export() ...\n"
+            startExport(d,p)
         }
         
         dlg.add_action_callback("loadTextFile") {|d,p|
@@ -603,18 +685,43 @@ class ExportDialogWeb < ExportBase
             #if $DEBUG 
             #    dlg.execute_script("log.toggle()")
             #end
-            printf "setSketchup()\n"
+            uimessage("setSketchup()", 2)
             dlg.execute_script("setSketchup()")
-            printf "setExportOptions()\n"
             @exportOptions.setExportOptions(dlg, '')
-            printf "setRenderOptions()\n"
             @renderOptions.setRenderOptions(dlg, '')
-            printf "setViewsList()\n"
             @viewsList.setViewsList(dlg, '')
             @skyOptions.setSkyOptions(dlg, '')
             dlg.execute_script("updateExportPage()")
         }
     end ## end def show
+        
+    def startExport(dlg,params)
+        puts "starting export ...\n"
+        #dlg.execute_script('applyRenderOptions()')
+        @scene.setExportOptions(@exportOptions)
+        @scene.setRenderOptions(@renderOptions)
+        @scene.setViewsList(@viewsList)
+        dlg.execute_script('showBusy()')
+        @scene.startExportWeb()
+        status = @scene.getExportStatus()
+        json = getJSONDictionary(status)
+        dlg.execute_script("showResults('%s')" % encodeJSON(json))
+    end
+
+    def setExportStatus(dict)
+        printf "final status:\n"
+        dict.each_pair { |k,v|
+            printf "%12s : %d\n" % [k,v]
+        }
+        printf "\n"
+    end
+    
+    def progressCallback(dict)
+        printf "====  progress:  ====\n"
+        dict.each_pair { |k,v|
+            printf "== %15s - %d\n" %  [k,v]
+        }
+    end
 
 end ## end class exportDialogWeb
 

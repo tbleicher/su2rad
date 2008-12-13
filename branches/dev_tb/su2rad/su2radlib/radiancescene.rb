@@ -1,7 +1,56 @@
 require "exportbase.rb"
 require "context.rb"
 
+
+class UserDialogOptions < ExportBase
+    
+    def initialize
+        @ud = UserDialog.new()
+        setDialogOptions()
+    end
+    
+    def applyDialogResults
+        setConfig('SCENEPATH', cleanPath(@ud.results[0]))
+        setConfig('SCENENAME', remove_spaces(@ud.results[1]))
+        $SHOWRADOPTS = @ud.results[2] 
+        $EXPORTALLVIEWS = @ud.results[3] 
+        setConfig('MODE',        @ud.results[4])
+        setConfig('TEXTURES',    @ud.results[5])
+        setConfig('TRIANGULATE', @ud.results[6])
+        if getConfig('REPLMARKS') != '' and File.exists?(getConfig('REPLMARKS'))
+            setConfig('MAKEGLOBAL', @ud.results[7])
+        end
+    end
+
+    def setDialogOptions
+        @ud.addOption("export path", getConfig('SCENEPATH'))
+        @ud.addOption("scene name", getConfig('SCENENAME'))
+        @ud.addOption("show options", $SHOWRADOPTS) 
+        @ud.addOption("all views", $EXPORTALLVIEWS) 
+        @ud.addOption("mode", getConfig('MODE'), "by group|by layer|by color")
+        @ud.addOption("textures", getConfig('TEXTURES'))
+        @ud.addOption("triangulate", getConfig('TRIANGULATE'))
+        if getConfig('REPLMARKS') != '' and File.exists?(getConfig('REPLMARKS'))
+            @ud.addOption("global coords", getConfig('MAKEGLOBAL')) 
+        end
+    end
+
+    def show(title='export options')
+        if @ud.show(title) == true
+            applyDialogResults()
+            return true
+        else
+            return false
+        end
+    end
+    
+end 
+
+
 class RadianceScene < ExportBase
+        
+    attr_reader :exportLock, :pollCounter
+    attr_writer :exportLock
 
     def initialize
         @model = Sketchup.active_model
@@ -13,9 +62,12 @@ class RadianceScene < ExportBase
         initLog()
         
         @radOpts = RadianceOptions.new()
-        @sky = RadianceSky.new()
         
+        @sky = RadianceSky.new()
         setExportDirectory()
+        
+        @viewsList = nil
+        @renderOptions = nil
     end
 
     
@@ -30,11 +82,8 @@ class RadianceScene < ExportBase
 
     def confirmExportDirectory
         ## show user dialog for export options
-        ud = UserDialog.new()
-        _setDialogOptions(ud)
-        if ud.show('export options') == true
-            _applyDialogResults(ud)
-        else
+        ud = UserDialogOptions.new()    
+        if ud.show('export options') == false
             uimessage('export canceled')
             return false
         end
@@ -45,44 +94,11 @@ class RadianceScene < ExportBase
         return true
     end
    
-    def _setDialogOptions(ud)
-        ud.addOption("export path", $export_dir)
-        ud.addOption("scene name", $scene_name)
-        ud.addOption("show options", $SHOWRADOPTS) 
-        ud.addOption("all views", $EXPORTALLVIEWS) 
-        ud.addOption("mode", $MODE, "by group|by layer|by color")
-        ud.addOption("textures", $TEXTURES)
-        ud.addOption("triangulate", $TRIANGULATE)
-        if $REPLMARKS != '' and File.exists?($REPLMARKS)
-            ud.addOption("global coords", $MAKEGLOBAL) 
-        end
-        #if $RAD != ''
-        #    ud.addOption("run preview", $PREVIEW)
-        #end
-    end
-    
-    def _applyDialogResults(ud)
-        $export_dir = cleanPath(ud.results[0])
-        $scene_name = ud.results[1] 
-        $SHOWRADOPTS = ud.results[2] 
-        $EXPORTALLVIEWS = ud.results[3] 
-        ## TODO: fill views_to_export list
-        
-        $MODE = ud.results[4]
-        $TEXTURES = ud.results[5]
-        $TRIANGULATE = ud.results[6]
-        if $REPLMARKS != '' and File.exists?($REPLMARKS)
-            $MAKEGLOBAL = ud.results[7]
-        end
-        #if $RAD != ''
-        #    $PREVIEW = ud.result[7]
-        #end
-    end
 
     
     def createMainScene(references, faces_text, parenttrans=nil)
         ## top level scene split in references (*.rad) and faces ('objects/*_faces.rad')
-        if $MODE != 'by group'
+        if getConfig('MODE') != 'by group'
             ## start with replacement files for components
             ref_text = @@components.join("\n")
             ref_text += "\n"
@@ -91,9 +107,10 @@ class RadianceScene < ExportBase
         end
         ## create 'objects/*_faces.rad' file
         if faces_text != ''
-            faces_filename = getFilename("objects/#{$scene_name}_faces.rad")
+            fpath = File.join('objects', getConfig('SCENENAME') + '_faces.rad')
+            faces_filename = getFilename(fpath)
             if createFile(faces_filename, faces_text)
-                xform = "!xform objects/#{$scene_name}_faces.rad"
+                xform = "!xform %s" % fpath
             else
                 msg = "ERROR creating file '#{faces_filename}'"
                 uimessage(msg)
@@ -107,7 +124,7 @@ class RadianceScene < ExportBase
         if @sky.filename != ''
             ref_text = "!xform #{@sky.filename} \n" + ref_text
         end
-        ref_filename = getFilename("#{$scene_name}.rad")
+        ref_filename = getFilename(getConfig('SCENENAME') + ".rad")
         if not createFile(ref_filename, ref_text)
             msg = "\n## ERROR: error creating file '%s'\n" % filename
             uimessage(msg)
@@ -117,8 +134,11 @@ class RadianceScene < ExportBase
     
 
     def startExport(selected_only=0)
-        scene_dir = File.join($export_dir,$scene_name)
-        if not confirmExportDirectory or not removeExisting(scene_dir)
+        if confirmExportDirectory() == false
+            return
+        end
+        scene_dir = File.join(getConfig('SCENEPATH'),getConfig('SCENENAME'))
+        if removeExisting(scene_dir) == false
             return
         end
         @radOpts.skytype = @sky.skytype
@@ -127,23 +147,64 @@ class RadianceScene < ExportBase
         end
         
         ## check if global coord system is required
-        if $MODE != 'by group'
-            uimessage("export mode '#{$MODE}' requires global coordinates")
-            $MAKEGLOBAL = true
-        elsif $REPLMARKS == '' or not File.exists?($REPLMARKS)
-            if $MAKEGLOBAL == false
+        if getConfig('MODE') != 'by group'
+            uimessage("export mode '%s' requires global coordinates" % getConfig('MODE'))
+            setConfig('MAKEGLOBAL', true)
+        elsif getConfig('REPLMARKS') == '' || File.exists?(getConfig('REPLMARKS')) == false
+            if makeGlobal?() == false
                 uimessage("WARNING: 'replmarks' not found.")
                 uimessage("=> global coordinates will be used in files")
-                $MAKEGLOBAL = true
+                setConfig('MAKEGLOBAL', true)
             end
         end
         export(selected_only)
     end
 
-
+    def getExportStatus
+        return {"groups"     => 345,
+                "components" => 56,
+                "faces"      => 45678,
+                "files"      => 31,
+                "status"     => 'success',
+                "messages"   => [],
+                "time"       => 17.3}
+    end 
+    
+    def startExportWebTest(selected_only=0)
+        puts "startExportWebTest\n"
+        sleep(0.3)
+        puts "export update 1\n"
+        sleep(0.3)
+        puts "export update 2\n"
+        sleep(0.3)
+        puts "export update 3\n"
+        sleep(0.3)
+        puts "export update 4\n" 
+    end
+    
+    def startExportWeb(selected_only=0)
+        #puts "\nTODO: start real export action\n"
+        #startExportWebTest(selected_only)
+        #return
+        printf "\n\n"
+        sceneDir = getConfig('SCENEPATH')
+        if File.exists?(sceneDir)
+            t = Time.new()
+            newname = sceneDir + t.strftime("_%y%m%d_%H%M")
+            begin
+                File.rename(sceneDir, newname)
+                uimessage("renamed scene directory to '%s'" % newname)
+            rescue => e
+                uimessage("could not rename directory '%s':\n%s" % [sceneDir, $!.message])
+                return false
+            end
+        end
+        prepareSceneDir(sceneDir)
+        return export(selected_only)
+    end 
     
     def export(selected_only=0)
-        
+       
         ## write sky first for <scene>.rad file
         @sky.skytype = @radOpts.skytype
         @sky.export()
@@ -156,7 +217,7 @@ class RadianceScene < ExportBase
             entities = Sketchup.active_model.entities
         end
         $globaltrans = Geom::Transformation.new
-        @@nameContext.push($scene_name) 
+        @@nameContext.push(getConfig('SCENENAME')) 
         sceneref = exportByGroup(entities, Geom::Transformation.new)
         saveFilesByColor()
         saveFilesByLayer()
@@ -164,11 +225,12 @@ class RadianceScene < ExportBase
         @@materialContext.export()
         createRifFile()
         writeLogFile()
+        return true
     end
    
-    
+   
     def saveFilesByColor
-        if $MODE != 'by color'
+        if getConfig('MODE') != 'by color'
             return
         end
         references = []
@@ -223,7 +285,7 @@ class RadianceScene < ExportBase
     end
     
     def saveFilesByLayer
-        if $MODE != 'by layer'
+        if getConfig('MODE') != 'by layer'
             return
         end
         references = []
@@ -241,15 +303,12 @@ class RadianceScene < ExportBase
         }
         createMainScene(references, '')
     end
-    
+
     def runPreview
         ##TODO: preview
         if $RAD == '' or $PREVIEW != true
             return
         end
-        dir, riffile = File.split(getFilename("%s.rif" % $scene_name))
-        #Dir.chdir("#{$export_dir}/#{$scene_name}")
-        #cmd = "%s -o x11 %s" % [$RAD, riffile]
     end
     
     def getRifObjects
@@ -285,21 +344,43 @@ class RadianceScene < ExportBase
     end
     
     def createRifFile
-        text =  "# scene input file for rad\n"
-        text += @radOpts.getRadOptions
+        sceneName = getConfig('SCENENAME')
+        text =  "# scene options file for rad\n"
+        if @renderOptions != nil
+            opts = @renderOptions.getRifOptionsText()
+        else
+            opts = @radOpts.getRadOptions
+        end
+        if $DEBUG
+            newopts = ["# test settings for DEBUG option",
+                       "QUALITY=     low",
+                       "DETAIL=      low",
+                       "VARIABILITY= medium",
+                       "INDIRECT=    1",
+                       "PENUMBRAS=   true"]
+            lines = opts.split("\n")
+            lines.each { |line|
+                if (line.slice(0,1).upcase == 'R' || line.slice(0,1).upcase == 'Z')
+                    newopts.push(line)
+                else
+                    newopts.push('#' + line)
+                end
+            }
+            opts = newopts.join("\n")
+        end
+        text += opts
         text += "\n"
-        project = remove_spaces(File.basename($export_dir))
-        text += "PICTURE=      images/#{project}\n" 
-        text += "OCTREE=       octrees/#{$scene_name}.oct\n"
-        text += "AMBFILE=      ambfiles/#{$scene_name}.amb\n"
-        text += "REPORT=       3 logfiles/#{$scene_name}.log\n"
-        text += "scene=        #{$scene_name}.rad\n"
+        text += "PICTURE=      images/%s\n" % getProjectName() 
+        text += "OCTREE=       octrees/#{sceneName}.oct\n"
+        text += "AMBFILE=      ambfiles/#{sceneName}.amb\n"
+        #text += "REPORT=       3 logfiles/#{sceneName}.log\n"
+        text += "scene=        #{sceneName}.rad\n"
         text += "materials=    materials.rad\n\n"
         text += "%s\n\n" % exportViews()
         text += getRifObjects
         text += "\n"
         
-        filename = getFilename("%s.rif" % $scene_name)
+        filename = getFilename("%s.rif" % sceneName)
         if not createFile(filename, text)
             uimessage("Error: Could not create rif file '#{filename}'")
         end
@@ -307,23 +388,42 @@ class RadianceScene < ExportBase
         
     def exportViews
         viewLines = []
-        viewLines.push(createViewFile(@model.active_view.camera, $scene_name))
-        if $EXPORTALLVIEWS == true
-            pages = @model.pages
-            pages.each { |page|
-                if page == @model.pages.selected_page
-                    next
-                elsif page.use_camera? == true
-                    name = remove_spaces(page.name)
-                    viewLines.push(createViewFile(page.camera, name))
-                end
-            }
+        if @viewsList != nil
+            return @viewsList.getViewLines()
+        else
+            viewLines.push( createViewFile(@model.active_view.camera, getConfig('SCENENAME')) )
+            if $EXPORTALLVIEWS == true
+                pages = @model.pages
+                pages.each { |page|
+                    if page == @model.pages.selected_page
+                        next
+                    elsif page.use_camera? == true
+                        name = remove_spaces(page.name)
+                        viewLines.push(createViewFile(page.camera, name))
+                    end
+                }
+            end
         end
         return viewLines.join("\n")
     end
+    
+    def setExportOptions(exOpts)
+        @exportOptions = exOpts
+        exOpts.writeOptionsToConfig()
+    end
+    
+    def setRenderOptions(optsObject)
+        @renderOptions = optsObject
+    end
+    
+    def setViewsList(viewsList)
+        @viewsList = viewsList
+    end
+    
 
     def _getViewLine(c)
-        text =  "-vp %.3f %.3f %.3f  " % [c.eye.x*$UNIT,c.eye.y*$UNIT,c.eye.z*$UNIT]
+        unit = getConfig('UNIT')
+        text =  "-vp %.3f %.3f %.3f  " % [c.eye.x*unit,c.eye.y*unit,c.eye.z*unit]
         text += "-vd %.3f %.3f %.3f  " % [c.zaxis.x,c.zaxis.y,c.zaxis.z]
         text += "-vu %.3f %.3f %.3f  " % [c.up.x,c.up.y,c.up.z]
         imgW = Sketchup.active_model.active_view.vpwidth.to_f
@@ -340,7 +440,7 @@ class RadianceScene < ExportBase
             end
         else
             type = '-vtl'
-            vv = c.height*$UNIT
+            vv = c.height*unit
             vh = vv*aspect
         end
         text += "-vv %.3f -vh %.3f" % [vv, vh]
