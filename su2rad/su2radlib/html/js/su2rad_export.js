@@ -1,7 +1,7 @@
 
 function ExportSettingsObject() {
     this.scenePath = '.';
-    this.sceneName = 'unnamed';
+    this.sceneName = 'unnamed.rif';
     this.exportMode = 'by color';
     this.global_coords = true;
     this.textures = false;
@@ -19,7 +19,11 @@ ExportSettingsObject.prototype._setBool = function(name,value) {
 ExportSettingsObject.prototype.setExportPath = function(path) {
     var pf = splitPath(path);
     this.scenePath = pf[0];
-    this.sceneName = pf[1];
+    if (pf[1].match(/.rif$/i)) {
+        this.sceneName = pf[1].slice(0,-4);
+    } else {
+        this.sceneName = pf[1];
+    }
 } 
 
 ExportSettingsObject.prototype.setMode = function(val) {
@@ -97,6 +101,11 @@ function _setGlobalCoordsDisplay(val) {
     }
 }
 
+function setExportPath() {
+    exportSettings.setExportPath(_getExportPath());
+    updateExportFormValues();
+    applyExportOptions();
+}
 
 function _getExportPath() {
     var p = document.getElementById("scenePath").value;
@@ -193,7 +202,7 @@ function setExportOptionsJSON(msg) {
 
 function updateExportFormValues() {
     document.getElementById("scenePath").value = exportSettings.scenePath;
-    document.getElementById("sceneName").value = exportSettings.sceneName;
+    document.getElementById("sceneName").value = exportSettings.sceneName + ".rif";
     document.getElementById("triangulate").checked = exportSettings.triangulate;
     document.getElementById("textures").checked = exportSettings.textures;
     setExportModeSelection();

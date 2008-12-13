@@ -332,7 +332,6 @@ module RadiancePath
 
     def setExportDirectory
         ## get name of subdir for Radiance file structure
-        printf "DEBUG: setExportDirectory()\n"
         page = Sketchup.active_model.pages.selected_page
         if page != nil
             name = remove_spaces(page.name)
@@ -352,7 +351,6 @@ module RadiancePath
             elsif ENV.has_key?('TEMP')
                 path = ENV['TEMP']
             end
-            printf "DEBUG: path=%s\n" % path
             path = path.downcase()
             path = File.join(File.dirname(path), 'unnamed_project')
         else
@@ -363,8 +361,8 @@ module RadiancePath
         end
         ## apply to PATHTMPL
         tmpl = getConfig('PATHTMPL')
-        tmpl.gsub!('$FILE', path)
-        tmpl.gsub!('$PAGE', name)
+        tmpl = tmpl.gsub('$FILE', path)
+        tmpl = tmpl.gsub('$PAGE', name)
         setConfig('SCENEPATH', File.dirname(tmpl))
         setConfig('SCENENAME', File.basename(tmpl,'.rif'))
     end
