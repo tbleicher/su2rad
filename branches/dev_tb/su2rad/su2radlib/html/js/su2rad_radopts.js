@@ -6,6 +6,7 @@ function RadOptsObject() {
     this.Indirect = 2;
     this.Penumbras = true;
     // Image group
+    this.ImageAspect = 1.0;  // XXX
     this.ImageSizeX = 512;  // XXX
     this.ImageSizeY = 512;  // XXX
     this.ImageType = "normal";
@@ -76,6 +77,7 @@ RadOptsObject.prototype.toString = function () {
     text += "&Indirect=" + this.Indirect;
     text += "&Penumbras=" + this.Penumbras;
     text += "&ImageType=" + this.ImageType;
+    text += "&ImageAspect=" + this.ImageAspect;
     text += "&ImageSizeX=" + this.ImageSizeX;
     text += "&ImageSizeY=" + this.ImageSizeY;
     text += "&ZoneSize=" + this.ZoneSize;
@@ -319,8 +321,22 @@ RadOptsObject.prototype._setRpictOverrideBool = function (opt) {
 RadOptsObject.prototype.setValue = function (name, value) {
     if (name == 'render' && value != '') {
         parseRenderLine(value)
-    } else if (name == 'ImageSizeX' || name == 'ImageSizeY') {
-        this[name] = parseInt(value);
+    } else if (name == 'ImageSizeX') {
+        var val = parseInt(value);
+        if (val == 0) {
+            alert(name + " can not be 0!");
+        } else {
+            this[name] = val;
+            this.ImageSizeY = parseInt(this.ImageSizeX/this.ImageAspect);
+        }
+    } else if (name == 'ImageSizeY') {
+        var val = parseInt(value);
+        if (val == 0) {
+            alert(name + " can not be 0!");
+        } else {
+            this[name] = val;
+            this.ImageAspect = parseFloat(this.ImageSizeX) / parseFloat(this.ImageSizeY);
+        }
     } else if (name == 'Indirect' || name == 'Report') {
         this[name] = parseInt(value);
     } else if (name == 'ZoneSize') {
@@ -504,14 +520,11 @@ function syncRadOption(id) {
     }
     // set selection for 'other' element
     var opt = id.slice(3,-2);
-    setSelectionValue(other, radOpts[opt]);
-    //select = document.getElementById(other); 
-    //for (i=0; i<select.options.length; i++) {
-    //    if (select.options[i].text == radOpts[opt]) {
-    //        select.selectedIndex = i;
-    //        log.debug("found index for value '" + radOpts[opt] + "'");
-    //    }
-    //}
+    if (opt.match(/ImageSize/)) {
+        updateImageSizeDisplay();
+    } else {
+        setSelectionValue(other, radOpts[opt]);
+    }
 }
 
 function onRadOptionChange(id) {
@@ -521,14 +534,14 @@ function onRadOptionChange(id) {
         radOpts[opt] = document.getElementById(id).checked;
     } else if (opt == "ZoneSize") {
         radOpts[opt] = parseFloat(document.getElementById(id).value);
-    } else if (opt == "Indirect" || opt == "ImageSizeX" || opt == "ImageSizeY") {
+    } else if (opt == "Indirect") {
         radOpts[opt] = parseInt(document.getElementById(id).value);
     } else {
         var suffix = id.slice(-2);
         if (suffix == "_1" || suffix == "_2") {
             opt = opt.slice(0,-2)
         }
-        radOpts[opt] = document.getElementById(id).value;
+        radOpts.setValue(opt, document.getElementById(id).value);
         if (suffix == "_1" || suffix == "_2") {
             syncRadOption(id);
         }
@@ -536,20 +549,6 @@ function onRadOptionChange(id) {
     updateRpictValues();
     updateRenderLine();
     applyRenderOptions();
-}
-
-function onRadOptionImageSize(id) {
-    var opt=id.slice(3,-2);    
-    var newVal=parseInt(document.getElementById(id).value);
-    if (isNaN(newVal)) {
-        alert("ImageSize: Please enter a number!");
-        document.getElementById(id).value = radOpts[opt];
-    } else {
-        radOpts[opt] = newVal;
-        document.getElementById("rad" + opt + "_1").value = radOpts[opt];
-        document.getElementById("rad" + opt + "_2").value = radOpts[opt];
-        applyRenderOptions();
-    }
 }
 
 function onRpictOverride(opt) {
@@ -785,8 +784,18 @@ function _updateRpictOptionDisplay() {
 
 function updateRpictValues() {
     log.debug("updateRpictValues()");
-    radOpts.setRpictOptions()
+    radOpts.setRpictOptions();
+    updateImageSizeDisplay();
     _updateRpictOptionDisplay();
+}
+
+function updateImageSizeDisplay() {
+    var opt = "ImageSizeX";
+    document.getElementById("rad" + opt + "_1").value = radOpts[opt];
+    document.getElementById("rad" + opt + "_2").value = radOpts[opt];
+    var opt = "ImageSizeY";
+    document.getElementById("rad" + opt + "_1").value = radOpts[opt];
+    document.getElementById("rad" + opt + "_2").value = radOpts[opt];
 }
 
 function validateRpictOverride(opt) {
