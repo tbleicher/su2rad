@@ -111,10 +111,10 @@ module JSONUtils
         if obj.class == Array
             str = '['
             obj.each { |e|
-                str += " %s," % toStringJSON(e)
+                str += "%s," % toStringJSON(e)
             }
             str = str.chop()
-            str += ' ]'
+            str += ']'
         elsif obj.class == FalseClass
             str = 'false'
         elsif obj.class == Fixnum or obj.class == Bignum
@@ -124,10 +124,10 @@ module JSONUtils
         elsif obj.class == Hash
             str = '{'
             obj.each_pair { |k,v|
-                str += " %s : %s," % [toStringJSON(k),toStringJSON(v)]
+                str += "%s:%s," % [toStringJSON(k),toStringJSON(v)]
             }
             str = str.chop()
-            str += ' }' 
+            str += '}' 
         elsif obj.class == String
             str = "\"%s\"" % obj.to_s
         elsif obj.class == TrueClass
@@ -143,7 +143,18 @@ module JSONUtils
     def pprintJSON(json, text="\njson string:")
         ## prettyprint JSON string
         printf "#{text}\n"
-        printf json.gsub!(/#COMMA#\{/,"\n\{")
+        json = json.gsub(/#COMMA#\{/,",\{")
+        json = json.gsub(/,/,"\n")
+        lines = json.split("\n")
+        indent = ""
+        lines.each { |line|
+            print "%s%s\n" % [indent,line]
+            if line.index('{') != nil
+                indent += "  "
+            elsif line.index('}') != nil
+                indent = indent.slice(0..-3)
+            end
+        }
         printf "\n"
     end
     
@@ -359,6 +370,7 @@ module RadiancePath
                 fname = fname.slice(0..-5)
             end
             path = File.join(File.dirname(path), fname)
+            setConfig('PROJECT', remove_spaces(fname))
         end
         ## apply to PATHTMPL
         tmpl = getConfig('PATHTMPL')

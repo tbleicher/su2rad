@@ -158,17 +158,37 @@ class RenderOptions
   
     def getRifOptionsText
         zone = "%s 0 %.1f 0 %.1f 0 %.1f" % [@ZoneType, @ZoneSize, @ZoneSize, @ZoneSize]
-        lines = ["QUALITY=     %s" % @Quality,
-                "DETAIL=      %s" % @Detail,
-                "VARIABILITY= %s" % @Variability,
-                "INDIRECT=    %s" % @Indirect,
-                "PENUMBRAS=   %s" % @Penumbras,
-                "",
-                "RESOLUTION=  %s %s" % [@ImageSizeX, @ImageSizeY],
-                "ZONE=        %s\n" % zone,
-                "REPORT=      %s logfiles/%s" % [@Report, @ReportFile],
-                "",
-                "render=      %s\n" % @render]
+        lines = ["# scene options file for rad\n",
+            "QUALITY=     %s" % @Quality,
+            "DETAIL=      %s" % @Detail,
+            "VARIABILITY= %s" % @Variability,
+            "INDIRECT=    %s" % @Indirect,
+            "PENUMBRAS=   %s" % @Penumbras]
+        if $SU2RAD_DEBUG == true
+            lines = lines.collect { |l| "#%s" % l }
+            lines += ["\n# test settings for DEBUG option",
+                "QUALITY=     low",
+                "DETAIL=      low",
+                "VARIABILITY= medium",
+                "INDIRECT=    1",
+                "PENUMBRAS=   true"]
+        end
+        lines += ["",
+            "PICTURE=     images/%s" % getConfig('PROJECT'),
+            "RESOLUTION=  %s %s" % [@ImageSizeX, @ImageSizeY],
+            "ZONE=        %s" % zone,
+            "EXPOSURE=    %s" % "-2",
+            "",
+            "REPORT=      %s logfiles/%s" % [@Report, @ReportFile],
+            "AMBFILE=     ambfiles/#{getConfig('SCENENAME')}.amb",
+            "OCTREE=      octrees/#{getConfig('SCENENAME')}.oct",
+            "scene=       #{getConfig('SCENENAME')}.rad",
+            "",]
+        if $SU2RAD_DEBUG == true
+            lines.push("#render=      %s\n" % @render)
+        else
+            lines.push("render=      %s\n" % @render)
+        end
         return lines.join("\n")
     end
     
@@ -198,7 +218,8 @@ class RenderOptions
     def setRenderOptions(dlg, p='')
         ## set general export options
         uimessage("setRenderOptions() ...", 2)
-        dlg.execute_script( "setRenderOptionsJSON('%s')" % encodeJSON(toJSON()) )
+        json = toJSON()
+        dlg.execute_script( "setRenderOptionsJSON('%s')" % encodeJSON(json) )
     end 
     
     def toJSON
@@ -297,18 +318,22 @@ class SkyOptions
         return newpairs
     end 
     
-    def getSkyCommand()
+    def getSkyCommand
         txt = @rsky.getGenSkyOptions()
         #TODO: update from attributes
         return txt
     end
+   
+    def getSettings
+        return @_settings
+    end
     
     def setSkyOptions(dlg, params='')
         ## get shadow_info dict and apply to dialog
-        printf "\nsetSkyOptions() ... "
+        uimessage("setSkyOptions() ...\n", 2)
         _syncSettings()
-        dlg.execute_script( "setShadowInfoJSON('%s')" % encodeJSON(toJSON) )
-        printf "done\n"
+        json = toJSON()
+        dlg.execute_script( "setShadowInfoJSON('%s')" % encodeJSON(json) )
     end
     
     def _syncSettings() 
@@ -553,7 +578,7 @@ class ViewsList
         uimessage("ViewsList: setting views list ...", 2)
         json = "["
         @_views.each_value { |v|
-            json += "%s, " % v.toJSON()
+            json += "%s," % v.toJSON()
         }
         json += "]"
         dlg.execute_script("setViewsListJSON('%s')" % encodeJSON(json) )
@@ -686,7 +711,7 @@ class ExportDialogWeb < ExportBase
         #dlg.set_on_close {
         #}
         
-        html = File.dirname(__FILE__) + "/html/su2rad_export.html";
+        html = File.join(File.dirname(__FILE__), "html","su2rad_export.html")
         dlg.set_file(html, nil)
         
         ## show dialog
@@ -704,9 +729,7 @@ class ExportDialogWeb < ExportBase
     def startExport(dlg,params)
         puts "starting export ...\n"
         #dlg.execute_script('applyRenderOptions()')
-        @scene.setExportOptions(@exportOptions)
-        @scene.setRenderOptions(@renderOptions)
-        @scene.setViewsList(@viewsList)
+        @scene.setOptionsFromDialog(@exportOptions,@renderOptions,@skyOptions,@viewsList)
         dlg.execute_script('showBusy()')
         @scene.startExportWeb()
         status = @scene.getExportStatus()
