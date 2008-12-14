@@ -517,7 +517,7 @@ class MaterialContext < ExportBase
 
     def convertTextures(texdir, filename='')
         ## convert sketchup textures to *.pic
-        if $CONVERT == '' or $RA_TIFF == ''
+        if getConfig('CONVERT') == '' or getConfig('RA_TIFF') == ''
             uimessage("texture converters not available; no conversion", -1)
             return false
         end
@@ -540,13 +540,13 @@ class MaterialContext < ExportBase
                     if File.exists?(pic)
                         uimessage("using existing texture ('#{pic}')", 1)
                     else
-                        cmd = "#{$CONVERT} -format tif -compress None #{img} #{tif}"
+                        cmd = "#{getConfig('CONVERT')} -format tif -compress None #{img} #{tif}"
                         uimessage("convert command: '#{cmd}'", 3)
                         f = IO.popen(cmd)
                         f.close()
                         uimessage("texture converted to *.tif ('#{tif}')", 2)
                         
-                        cmd = "#{$RA_TIFF} -r #{tif} #{pic}"
+                        cmd = "#{getConfig('RA_TIFF')} -r #{tif} #{pic}"
                         uimessage("ra_tiff command: '#{cmd}'", 3)
                         f = IO.popen(cmd)
                         f.close()
@@ -571,11 +571,11 @@ class MaterialContext < ExportBase
             texdir = getFilename('textures')
             if createDirectory(texdir)
                 filename = material.texture.filename
-                printf "TEXTURE: '%s'\n" % filename
-                printf "  entity='%s'\n" % entity
-                printf "  handle='%s'\n" % handle
+                #printf "TEXTURE: '%s'\n" % filename
+                #printf "  entity='%s'\n" % entity
+                #printf "  handle='%s'\n" % handle
                 filename = _cleanTextureFilename(filename)
-                printf "  fname2='%s'\n" % filename
+                #printf "  fname2='%s'\n" % filename
                 if entity.class == Sketchup::Face
                     @texturewriter.write(entity, frontface, File.join(texdir, filename)) 
                 else

@@ -19,11 +19,11 @@ module InterfaceBase
     
     def uimessage(msg, loglevel=0)
         prefix = "  " * getNestingLevel()
-        levels = ["N", "I", "D", "E", "W"]  ## [0,1,2,-2,-1]
+        levels = ["I", "V", "D", "D", "D", "D", "E", "W"]  ## [0,1,2,-2,-1]
         line = "%s[%s] %s" % [prefix, levels[loglevel], msg]
         begin
             Sketchup.set_status_text(line.strip())
-            if loglevel <= $LOGLEVEL
+            if loglevel <= $SU2RAD_LOGLEVEL
                 printf "#{line}\n"
                 @@_log.push(line)
             end
@@ -351,12 +351,13 @@ module RadiancePath
             elsif ENV.has_key?('TEMP')
                 path = ENV['TEMP']
             end
-            path = path.downcase()
-            path = File.join(File.dirname(path), 'unnamed_project')
+            path = File.join(path, 'unnamed_project')
         else
             ## remove '.skp' and use as directory
-            path = path.downcase()
-            fname = File.basename(path,'.skp')
+            fname = File.basename(path)
+            if fname =~ /\.skp\z/i
+                fname = fname.slice(0..-5)
+            end
             path = File.join(File.dirname(path), fname)
         end
         ## apply to PATHTMPL

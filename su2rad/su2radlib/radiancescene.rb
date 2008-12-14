@@ -49,9 +49,6 @@ end
 
 class RadianceScene < ExportBase
         
-    attr_reader :exportLock, :pollCounter
-    attr_writer :exportLock
-
     def initialize
         @model = Sketchup.active_model
         
@@ -61,7 +58,7 @@ class RadianceScene < ExportBase
         resetState()
         initLog()
         
-        @radOpts = RadianceOptions.new()
+        #@radOpts = RadianceOptions.new()
         
         @sky = RadianceSky.new()
         setExportDirectory()
@@ -88,7 +85,7 @@ class RadianceScene < ExportBase
             return false
         end
         ## use test directory in debug mode
-        if $DEBUG 
+        if $SU2RAD_DEBUG 
             setTestDirectory()
         end
         return true
@@ -141,10 +138,10 @@ class RadianceScene < ExportBase
         if removeExisting(scene_dir) == false
             return
         end
-        @radOpts.skytype = @sky.skytype
-        if $SHOWRADOPTS == true
-            @radOpts.showDialog
-        end
+        #@radOpts.skytype = @sky.skytype
+        #if $SHOWRADOPTS == true
+        #    @radOpts.showDialog
+        #end
         
         ## check if global coord system is required
         if getConfig('MODE') != 'by group'
@@ -206,7 +203,7 @@ class RadianceScene < ExportBase
     def export(selected_only=0)
        
         ## write sky first for <scene>.rad file
-        @sky.skytype = @radOpts.skytype
+        #@sky.skytype = @radOpts.skytype
         @sky.export()
         
         ## export geometry
@@ -265,7 +262,7 @@ class RadianceScene < ExportBase
         else
             begin
                 rtmfile = getFilename("objects/#{name}.rtm")
-                cmd = "#{$OBJ2MESH} #{objfile} #{rtmfile}"
+                cmd = "%s '#{objfile}' '#{rtmfile}'" % getConfig('OBJ2MESH')
                 uimessage("converting obj to rtm (cmd='#{cmd}')", 2)
                 f = IO.popen(cmd)
                 f.close()
@@ -316,42 +313,31 @@ class RadianceScene < ExportBase
         if @sky.filename != ''
             text += "objects=\t#{@sky.filename}\n"
         end
-        i = 0
-        j = 0
-        line = ""
+        files = []
         Dir.foreach(getFilename("objects")) { |f|
-            if f[0,1] == '.'
-                next
-            elsif f[-4,4] == '.rad'
-                line += "\tobjects/#{f}"
-                i += 1
-                j += 1
-                if i == 3
-                    text += "objects=#{line}\n"
-                    i = 0
-                    line = ""
-                end
-                if j == 63
-                    uimessage("too many objects for rif file")
-                    break
-                end
+            if f =~ /\.rad\z/i
+                files.push("objects/#{f}")
             end
         }
-        if line != ""
-            text += "objects=#{line}\n"
+        i=0
+        lines = []
+        while i < files.length()
+            lines.push("objects=\t%s" % files.slice(i,3).join("\t"))
+            i += 3
         end
+        text += lines.slice(0,22).join("\n")
         return text
     end
     
     def createRifFile
         sceneName = getConfig('SCENENAME')
         text =  "# scene options file for rad\n"
-        if @renderOptions != nil
-            opts = @renderOptions.getRifOptionsText()
-        else
-            opts = @radOpts.getRadOptions
-        end
-        if $DEBUG
+        opts = @renderOptions.getRifOptionsText()
+        #if @renderOptions != nil
+        #else
+        #    opts = @radOpts.getRadOptions
+        #end
+        if $SU2RAD_DEBUG
             newopts = ["# test settings for DEBUG option",
                        "QUALITY=     low",
                        "DETAIL=      low",

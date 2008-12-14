@@ -16,7 +16,7 @@ class ExportOptions
     attr_reader :scenePath
     
     def initialize
-        printf "DEBUG: ExportOptions.new()\n"
+        uimessage("ExportOptions.initialize()", 2)
         setExportDirectory()
         @scenePath     = getConfig('SCENEPATH')
         @sceneName     = getConfig('SCENENAME')
@@ -198,7 +198,6 @@ class RenderOptions
     def setRenderOptions(dlg, p='')
         ## set general export options
         uimessage("setRenderOptions() ...", 2)
-        uimessage("DEBUG: imgx=#{@ImageSizeX} imgy=#{@ImageSizeY}")
         dlg.execute_script( "setRenderOptionsJSON('%s')" % encodeJSON(toJSON()) )
     end 
     
@@ -692,9 +691,6 @@ class ExportDialogWeb < ExportBase
         
         ## show dialog
         dlg.show_modal {
-            #if $DEBUG 
-            #    dlg.execute_script("log.toggle()")
-            #end
             uimessage("setSketchup()", 2)
             dlg.execute_script("setSketchup()")
             @exportOptions.setExportOptions(dlg, '')
