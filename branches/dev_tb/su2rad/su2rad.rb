@@ -47,13 +47,13 @@ end
 ## extend search path to subdirectories
 basedir = File.dirname(__FILE__)
 $:.push(File.join(basedir, 'su2radlib'))
-$:.push(File.join(basedir, 'su2radlib', 'rubylib'))
+#$:.push(File.join(basedir, 'su2radlib', 'rubylib'))
 
 require "sketchup.rb"
-require "su2radlib/preferences.rb"
+#require "su2radlib/preferences.rb"
 require "su2radlib/exportbase.rb"
 require "su2radlib/context.rb"
-require "su2radlib/interface.rb"
+#require "su2radlib/interface.rb"
 require "su2radlib/numeric.rb"
 require "su2radlib/material.rb"
 require "su2radlib/radiance_entities.rb"
@@ -74,55 +74,34 @@ $RADPRIMITIVES = {  "plastic"    => 1,
 
 $testdir = ""
 
-## reload all script files for debugging
-if $DEBUG
-    printf "reloading modules ...\n"
-    load "su2radlib/preferences.rb"
-    load "su2radlib/export_modules.rb"
-    load "su2radlib/exportbase.rb"
-    load "su2radlib/context.rb"
-    load "su2radlib/interface.rb"
-    load "su2radlib/numeric.rb"
-    load "su2radlib/material.rb"
-    load "su2radlib/radiance_entities.rb"
-    load "su2radlib/radiancescene.rb"
-    load "su2radlib/webdialog.rb"
-    load "su2radlib/config_class.rb"
-end
-
-
 ## define defaults if config file is messed up
 $BUILD_MATERIAL_LIB = false
 $EXPORTALLVIEWS     = false 
-$MAKEGLOBAL         = false     
-$LOGLEVEL           = 0                ## don't report details
-$MODE               = 'by group'       ## "by group"|"by layer"|"by color"
+# $MAKEGLOBAL         = false     
+$SU2RAD_LOGLEVEL    = 0                ## don't report details
+# $MODE               = 'by group'       ## "by group"|"by layer"|"by color"
 $RAD                = ''
-$REPLMARKS          = '/usr/local/bin/replmarks' 
+# $REPLMARKS          = '/usr/local/bin/replmarks' 
 $PREVIEW            = false        
 $SHOWRADOPTS        = true
 $SUPPORTDIR         = '/Library/Application Support/Google Sketchup 6/Sketchup'
 $MATERIALLIB        = '/usr/local/lib/ray/lib/material.rad'
-$TRIANGULATE        = false    
-$UNIT               = 0.0254           ## inch (SU native unit) to meters (Radiance)
-$UTC_OFFSET         = nil
+# $TRIANGULATE        = false    
+# $UNIT               = 0.0254           ## inch (SU native unit) to meters (Radiance)
+# $UTC_OFFSET         = nil
 $ZOFFSET            = nil     
 
 $CONFIRM_REPLACE    = true
 
-$TEXTURES           = true
-$RA_TIFF            = '/usr/local/bin/ra_tiff'
-$CONVERT            = '/usr/local/bin/convert'
+# $TEXTURES           = true
+# $RA_TIFF            = '/usr/local/bin/ra_tiff'
+# $CONVERT            = '/usr/local/bin/convert'
 
 
 ## load configuration from file
-loadPreferences()
-$SU2RAD_CONFIG = RunTimeConfig.new()
+#loadPreferences()
 
-## define scale matrix for unit conversion
-scaleunit = $SU2RAD_CONFIG.get('UNIT')
-$SCALETRANS = Geom::Transformation.new(1/scaleunit)
-$SU2RAD_CONFIG['SCALETRANS'] = Geom::Transformation.new(1/scaleunit)
+$SU2RAD_CONFIG = RunTimeConfig.new()
 
 def startExport(selected_only=0)
     begin
@@ -139,10 +118,8 @@ end
 def startWebExport(selected_only=0)
     begin
         $MatLib = MaterialLibrary.new()
-        scene = RadianceScene.new()
-        #scene.showWebDialog(selected_only)
-        ewd = ExportDialogWeb.new(scene)
-        ewd.show()
+        edw = ExportDialogWeb.new()
+        edw.show()
     rescue => e 
         msg = "%s\n\n%s" % [$!.message,e.backtrace.join("\n")]
         UI.messagebox msg            
@@ -167,11 +144,9 @@ def resolveConflicts
     $matConflicts.resolve()
 end
 
-
-
 def startImport(f='')
     ni = NumericImport.new()
-    if $DEBUG
+    if $SU2RAD_DEBUG
         ni.loadFile(f)
         ni.createMesh
         ni.addContourLines
@@ -182,23 +157,44 @@ def startImport(f='')
     end
 end
 
-
-
+def aboutDialog
+    msg = "su2rad.rb\nSketchUp to Radiance exporter\nversion 1.0 BETA"
+    msg += "\n(c) Thomas Bleicher, 2008\ntbleicher@gmail.com"
+    UI.messagebox(msg, MB_OK, 'su2rad.rb')
+end
+    
 def preferencesDialog
     pd = PreferencesDialog.new()
     pd.showDialog()
 end
-
-
 
 def runTest
     sky = RadianceSky.new()
     sky.test()
 end
 
+def su2rad_reload
+    ## reload all script files for debugging
+    printf "reloading modules ...\n"
+    #    load "su2radlib/preferences.rb"
+    load "su2radlib/export_modules.rb"
+    load "su2radlib/exportbase.rb"
+    load "su2radlib/context.rb"
+    #    load "su2radlib/interface.rb"
+    load "su2radlib/numeric.rb"
+    load "su2radlib/material.rb"
+    load "su2radlib/radiance_entities.rb"
+    load "su2radlib/radiancescene.rb"
+    load "su2radlib/webdialog.rb"
+    load "su2radlib/config_class.rb"
+    $SU2RAD_DEBUG = true
+    load "su2rad.rb"
+end
 
 
-if $DEBUG
+
+
+if $SU2RAD_DEBUG
     printf "debug mode\n"
     startWebExport(0)
 else
@@ -216,6 +212,8 @@ else
             importmenu = radmenu.add_submenu("Import")
             importmenu.add_item("numeric results") { startImport }
             radmenu.add_item("Preferences") { preferencesDialog() }
+            radmenu.add_item("About") { aboutDialog() }
+            radmenu.add_item("reload") { su2rad_reload() }
         end
     rescue => e
         msg = "%s\n\n%s" % [$!.message,e.backtrace.join("\n")]
