@@ -595,6 +595,7 @@ class RadianceSky < ExportBase
         @skytype = getSkyType()
         @filename = ''
         @comments = ''
+        @sinfo = nil
     end
     
     def getSkyType
@@ -610,10 +611,20 @@ class RadianceSky < ExportBase
     end
     
     def export
-        sinfo = Sketchup.active_model.shadow_info
+        if @sinfo == nil
+            sinfo = Sketchup.active_model.shadow_info
+            skycmd = "!%s" % getGenSkyOptions(sinfo)
+            skycmd += " | xform -rz %.1f\n\n" % (-1*sinfo['NorthAngle']) #XXX
+        else
+            sinfo = @sinfo
+            skycmd = "!%s\n\n" % sinfo['SkyCommand']
+        end
         
-        text = "!%s" % getGenSkyOptions(sinfo)
-        text += " | xform -rz %.1f\n\n" % (-1*sinfo['NorthAngle']) 
+        text =  "## sky description for %s, %s\n" % [sinfo['City'], sinfo['Country']]
+        text += "##   latitude:  %.3f\n" % sinfo['Latitude']
+        text += "##   longitude: %.3f\n" % sinfo['Longitude']
+        text += "\n"
+        text += skycmd
         text += "skyfunc glow skyglow\n0\n0\n4 1.000 1.000 1.000 0\n"
         text += "skyglow source sky\n0\n0\n4 0 0 1 180\n\n"
         text += "skyfunc glow groundglow\n0\n0\n4 1.000 1.000 1.000 0\n"
@@ -621,7 +632,7 @@ class RadianceSky < ExportBase
 
         city = remove_spaces(sinfo['City'])
         timestamp = sinfo['ShadowTime'].strftime("%m%d_%H%M")
-        rpath = "skies/%s_%s.sky" % [city, timestamp]
+        rpath = File.join("skies","%s_%s.sky" % [city, timestamp])
         filename = getFilename(rpath)
         filetext = @comments + "\n" + text
         if not createFile(filename, filetext)
@@ -745,7 +756,11 @@ class RadianceSky < ExportBase
         end
         return meridian
     end
-
+    
+    def setSkyOptions(sinfo)
+        @sinfo = sinfo
+    end
+    
     def test
         sinfo = Sketchup.active_model.shadow_info
         lat = sinfo['Latitude']

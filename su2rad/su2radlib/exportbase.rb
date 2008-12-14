@@ -354,15 +354,6 @@ class ExportBase
         return remove_spaces(@@nameContext[-1])
     end
     
-    def getProjectName
-        path = Sketchup.active_model.path
-        if path == '':
-            return 'unnamed'
-        else
-            return File.basename(path.downcase(), '.skp')
-        end
-    end 
-    
     def getEffectiveMaterial(entity)
         frontface = true
         if entity.class == Sketchup::Face

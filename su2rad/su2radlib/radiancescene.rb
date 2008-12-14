@@ -314,53 +314,32 @@ class RadianceScene < ExportBase
             text += "objects=\t#{@sky.filename}\n"
         end
         files = []
+        meshes = []
         Dir.foreach(getFilename("objects")) { |f|
             if f =~ /\.rad\z/i
                 files.push("objects/#{f}")
+            elsif f =~ /\.rtm\z/i
+                meshes.push("objects/#{f}")
             end
         }
+        files += meshes
         i=0
-        lines = []
+        lines = ["## scene object files (total=%d)" % files.length]
         while i < files.length()
             lines.push("objects=\t%s" % files.slice(i,3).join("\t"))
             i += 3
         end
-        text += lines.slice(0,22).join("\n")
+        text += lines.slice(0,51).join("\n")
+        if lines.length > 50
+            text += "\n## total number of objects too large\n"
+        end
         return text
     end
     
     def createRifFile
         sceneName = getConfig('SCENENAME')
-        text =  "# scene options file for rad\n"
-        opts = @renderOptions.getRifOptionsText()
-        #if @renderOptions != nil
-        #else
-        #    opts = @radOpts.getRadOptions
-        #end
-        if $SU2RAD_DEBUG
-            newopts = ["# test settings for DEBUG option",
-                       "QUALITY=     low",
-                       "DETAIL=      low",
-                       "VARIABILITY= medium",
-                       "INDIRECT=    1",
-                       "PENUMBRAS=   true"]
-            lines = opts.split("\n")
-            lines.each { |line|
-                if (line.slice(0,1).upcase == 'R' || line.slice(0,1).upcase == 'Z')
-                    newopts.push(line)
-                else
-                    newopts.push('#' + line)
-                end
-            }
-            opts = newopts.join("\n")
-        end
-        text += opts
+        text = @renderOptions.getRifOptionsText()
         text += "\n"
-        text += "PICTURE=      images/%s\n" % getProjectName() 
-        text += "OCTREE=       octrees/#{sceneName}.oct\n"
-        text += "AMBFILE=      ambfiles/#{sceneName}.amb\n"
-        #text += "REPORT=       3 logfiles/#{sceneName}.log\n"
-        text += "scene=        #{sceneName}.rad\n"
         text += "materials=    materials.rad\n\n"
         text += "%s\n\n" % exportViews()
         text += getRifObjects
@@ -393,19 +372,13 @@ class RadianceScene < ExportBase
         return viewLines.join("\n")
     end
     
-    def setExportOptions(exOpts)
-        @exportOptions = exOpts
-        exOpts.writeOptionsToConfig()
+    def setOptionsFromDialog(export,render,sky,views)
+        @exportOptions = export
+        export.writeOptionsToConfig()
+        @renderOptions = render
+        @sky.setSkyOptions(sky.getSettings())
+        @viewsList = views
     end
-    
-    def setRenderOptions(optsObject)
-        @renderOptions = optsObject
-    end
-    
-    def setViewsList(viewsList)
-        @viewsList = viewsList
-    end
-    
 
     def _getViewLine(c)
         unit = getConfig('UNIT')
