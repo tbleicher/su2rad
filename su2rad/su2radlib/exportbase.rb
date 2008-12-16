@@ -7,7 +7,7 @@ class ProgressCounter
     
     def initialize
         @elements = {'Sketchup::Face' => 0}
-        @dialog = nil
+        @statusPage = nil
     end
 
     def add(eclass)
@@ -17,32 +17,23 @@ class ProgressCounter
         else
             @elements[eclass] = 1
         end
-        modulo = @elements['Sketchup::Face'].divmod(1000)[1]
-        if (eclass != 'Sketchup::Face' || modulo == 0)
-            report()
+        val = @elemnts[eclass]
+        if eclass == 'Sketchup::Face' && val.divmod(1000)[1] == 0
+            updateStatus()
+        elsif val.divmod(10)[1] == 0
+            updateStatus()
         end
     end
 
-    def report
+    def updateStatus
         pprint()
-        if @dialog != nil
-            #@dialog.execute_script("setProgressMsg('%s')" % formatHTML)
-            printf "@dialog.exec...('setProgressMsg')\n"
-            @dialog.execute_script("setProgressMsg('foo')")
-            #% @elements['Sketchup::Face'])
+        if @statusPage != nil
+            @statusPage.update(@elements)
         end
     end
     
-    def setDialog(dlg)
-        @dialog = dlg
-    end
-    
-    def formatHTML
-        text = "<b>progress:</b><br/>"
-        @elements.each_pair { |k,v|
-            text += "<span class=\"label\">%s</span><span>%s</span>" % [k,v]
-        }
-        return text
+    def setStatusPage(page)
+        @statusPage = page
     end
     
     def pprint()
@@ -52,6 +43,7 @@ class ProgressCounter
         }
     end
 end
+
 
 
 class ExportBase
@@ -70,7 +62,6 @@ class ExportBase
     @@components = []
     
     @@facecount = 0
-    @@progressCounter = ProgressCounter.new()
     
     @@uniqueFileNames = Hash.new()
     @@componentNames = Hash.new()
@@ -244,7 +235,7 @@ class ExportBase
         @@matrixstack.push(@entity.transformation)
         @@layerstack.push(@entity.layer)
         @@groupstack.push(@entity)
-        @@progressCounter.add("%s" % @entity.class)
+        $SU2RAD_COUNTER.add("%s" % @entity.class)
     end
     
     def pop

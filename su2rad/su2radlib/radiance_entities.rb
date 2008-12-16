@@ -274,7 +274,7 @@ class RadiancePolygon < ExportBase
                 end
             }
         end
-        @@progressCounter.add("%s" % @face.class)
+        $SU2RAD_COUNTER.add("%s" % @face.class)
     end
             
     def addLoop(l)
@@ -743,7 +743,7 @@ class RadianceSky < ExportBase
             rescue
                 uimessage("Could not use location line '#{l}'")
             end
-        @@progressCounter.add("%s" % @entity.class)
+        $SU2RAD_COUNTER.add("%s" % @entity.class)
         }
         if meridian == ''
             ## not found in locations
