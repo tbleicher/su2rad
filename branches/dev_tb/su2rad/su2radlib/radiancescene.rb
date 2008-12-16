@@ -1,6 +1,6 @@
 require "exportbase.rb"
 require "context.rb"
-
+require "export_modules.rb"
 
 class UserDialogOptions < ExportBase
     
@@ -47,6 +47,113 @@ class UserDialogOptions < ExportBase
 end 
 
 
+class StatusPage 
+   
+    include InterfaceBase
+
+    attr_reader :tmplpath, :htmlpath
+    attr_writer :tmplpath, :htmlpath
+    
+    def initialize
+        @tmplpath = File.join(File.dirname(__FILE__), "html", "progress.html")
+        if $OS == 'MAC'
+            @htmlpath = "/tmp/su2rad_%d_%d.html" % [Process.pid, rand(10000)]
+        else
+            #XXX check availability of Process.pid on Windows
+            @htmlpath = "C:/windows/temp/su2rad_%d_%d.html" % [Process.pid, rand(10000)]
+        end 
+        @statusHash = Hash[ "status" => "initializing",
+                            "faces" => 0,
+                            "groups" => 0,
+                            "components" => 0,
+                            "materials" => 0,
+                            "textures" => 0,
+                            "files" => 0]
+    end
+    
+    def close
+        @template = @template.sub('onload="updateTimeStamp()"', 'onload="window.close()"')
+        update()
+        sleep(3.5)
+        begin
+            File.delete(@htmlpath)
+            return true
+        rescue => e
+            puts $!.message, e.backtrace.join("\n")
+        end
+    end
+    
+    def create
+        abspath = File.join(File.dirname(__FILE__), "html", "css") + File::SEPARATOR
+        begin
+            t = File.open(@tmplpath, 'r')
+            template = t.read()
+            t.close()
+            @template = template.gsub('./css/', abspath)
+            html = @template.sub('<!--STATUS-->', "initializing ...")
+            h = File.open(@htmlpath, 'w')
+            h.write(html)
+            h.close()
+            update()
+            return true
+        rescue => e
+            puts $!.message, e.backtrace.join("\n")
+            @template = ''
+            return false
+        end
+    end
+
+    def getStatusHTML(dict=nil)
+        if dict != nil
+            @statusHash.update(dict)
+        end
+        v = @statusHash['status']
+        #TODO: higlight warnings and errors
+        html = "<div class=\"gridLabel\"><span class=\"highlight\">status:</span></div>"
+        html += "<div class=\"gridCell\"><span class=\"highlight\">%s</span></div>" % v
+        a = @statusHash.to_a
+        a = a.sort()
+        a.each { |k,v|
+            if k != "status"
+                html += "<div class=\"gridLabel\">%s</div><div class=\"gridCell\">%s</div>" % [v,k]
+            end
+        }
+        return html
+    end
+
+    def show
+        if $OS == 'MAC'
+            browser = "open"
+        elsif $OS == 'WIN'
+            browser = "iexplorer.exe"
+        else
+            return false
+        end
+        puts "starting browser thread ..."
+	Thread.new do
+	    system(`#{browser} "#{@htmlpath}"`)
+	end
+    end
+    
+    def update(dict=nil)
+        if @template == ''
+            return false
+        end
+        begin
+            html = @template.sub('<!--STATUS-->', getStatusHTML(dict))
+            h = File.open(@htmlpath, 'w')
+            h.write(html)
+            h.close()
+            return true
+        rescue => e
+            puts $!.message, e.backtrace.join("\n")
+            return false
+        end
+    end 
+end
+
+
+
 class RadianceScene < ExportBase
         
     def initialize
@@ -77,7 +184,7 @@ class RadianceScene < ExportBase
     end
     
 
-    def confirmExportDirectory
+    def confirmExportDirectoryOLD
         ## show user dialog for export options
         ud = UserDialogOptions.new()    
         if ud.show('export options') == false
@@ -90,8 +197,7 @@ class RadianceScene < ExportBase
         end
         return true
     end
-   
-
+  
     
     def createMainScene(references, faces_text, parenttrans=nil)
         ## top level scene split in references (*.rad) and faces ('objects/*_faces.rad')
@@ -130,7 +236,7 @@ class RadianceScene < ExportBase
     end
     
 
-    def startExport(selected_only=0)
+    def startExportOLD(selected_only=0)
         if confirmExportDirectory() == false
             return
         end
@@ -138,10 +244,6 @@ class RadianceScene < ExportBase
         if removeExisting(scene_dir) == false
             return
         end
-        #@radOpts.skytype = @sky.skytype
-        #if $SHOWRADOPTS == true
-        #    @radOpts.showDialog
-        #end
         
         ## check if global coord system is required
         if getConfig('MODE') != 'by group'
@@ -157,34 +259,61 @@ class RadianceScene < ExportBase
         export(selected_only)
     end
 
-    def getExportStatus
-        return {"groups"     => 345,
-                "components" => 56,
-                "faces"      => 45678,
-                "files"      => 31,
-                "status"     => 'success',
-                "messages"   => [],
-                "time"       => 17.3}
-    end 
+    def showStatusPage
+        statusPage = StatusPage.new()
+        if statusPage.create() == true
+            statusPage.show()
+            return statusPage
+        else
+            return false
+        end
+    end
     
     def startExportWebTest(selected_only=0)
         puts "startExportWebTest\n"
-        sleep(0.3)
-        puts "export update 1\n"
-        sleep(0.3)
-        puts "export update 2\n"
-        sleep(0.3)
-        puts "export update 3\n"
-        sleep(0.3)
-        puts "export update 4\n" 
+        if @statusPage
+            updates = 0
+            faces = 0
+            groups = 0
+            while updates < 17
+                sleep(1)
+                faces += Integer(rand()*1000)
+                groups += Integer(rand()*10)
+                updates += 1
+                d = {"status" => "testing",
+                     "faces"  =>  faces,
+                     "groups" =>  groups,
+                     "updates" => updates}
+                @statusPage.update(d)
+            end
+        else
+            printf "no @statusPage!\n"
+        end
+        @statusPage.close()
     end
     
     def startExportWeb(selected_only=0)
-        #puts "\nTODO: start real export action\n"
-        #startExportWebTest(selected_only)
-        #return
-        printf "\n\n"
         sceneDir = getConfig('SCENEPATH')
+        ## TODO: find temporary path and move rename after status page
+        if renameExisting(sceneDir) == false
+            return
+        end
+        @statusPage = showStatusPage()
+        if @statusPage
+            $SU2RAD_COUNTER.setStatusPage(@statusPage)
+        end
+        startExportWebTest(selected_only)
+        puts "\nTODO: start real export action\n"
+        return
+        prepareSceneDir(sceneDir)
+        if export(selected_only) == true
+            $SU2RAD_COUNTER.showSuccess()
+        else
+            $SU2RAD_COUNTER.showError()
+        end    
+    end 
+    
+    def renameExisting(sceneDir)
         if File.exists?(sceneDir)
             t = Time.new()
             newname = sceneDir + t.strftime("_%y%m%d_%H%M")
@@ -196,9 +325,7 @@ class RadianceScene < ExportBase
                 return false
             end
         end
-        prepareSceneDir(sceneDir)
-        return export(selected_only)
-    end 
+    end
     
     def export(selected_only=0)
        
@@ -215,9 +342,16 @@ class RadianceScene < ExportBase
         end
         $globaltrans = Geom::Transformation.new
         @@nameContext.push(getConfig('SCENENAME')) 
+        
         sceneref = exportByGroup(entities, Geom::Transformation.new)
-        saveFilesByColor()
-        saveFilesByLayer()
+        if getConfig('MODE') == 'by color'
+            refs = saveFilesByColor(@@byColor)
+            createMainScene(refs, '')
+        elsif getConfig('MODE') == 'by layer'
+            refs = saveFilesByLayer(@@byLayer)
+            createMainScene(refs, '')
+        end
+        
         @@nameContext.pop()
         @@materialContext.export()
         createRifFile()
@@ -225,13 +359,9 @@ class RadianceScene < ExportBase
         return true
     end
    
-   
-    def saveFilesByColor
-        if getConfig('MODE') != 'by color'
-            return
-        end
+    def saveFilesByColor(byColor)
         references = []
-        @@byColor.each_pair { |name,lines|
+        byColor.each_pair { |name,lines|
             if lines.length == 0
                 next
             end
@@ -249,44 +379,12 @@ class RadianceScene < ExportBase
                 end
             end
         }
-        createMainScene(references, '')
-    end
-
-    def obj2mesh(name, lines)
-        objfile = getFilename("objects/#{name}.obj")
-        uimessage("creating obj file '#{objfile}'")
-        if not createFile(objfile, lines.join("\n"))
-            msg = "Error: could not create file '#{objfile}'"
-            uimessage(msg)
-            return "## #{msg}"
-        else
-            begin
-                rtmfile = getFilename("objects/#{name}.rtm")
-                cmd = "%s '#{objfile}' '#{rtmfile}'" % getConfig('OBJ2MESH')
-                uimessage("converting obj to rtm (cmd='#{cmd}')", 2)
-                f = IO.popen(cmd)
-                f.close()
-                if File.exists?(rtmfile)
-                    return "\n#{name} mesh #{name}_obj\n1 objects/#{name}.rtm\n0\n0"
-                else
-                    msg = "Error: could not convert obj file '#{objfile}'"
-                    uimessage(msg, -2)
-                    return "## #{msg}"
-                end
-            rescue
-                msg = "Error converting obj file '#{name}.obj'"
-                uimessage(msg, -2)
-                return "## #{msg}"
-            end
-        end
+        return references
     end
     
-    def saveFilesByLayer
-        if getConfig('MODE') != 'by layer'
-            return
-        end
+    def saveFilesByLayer(byLayer)
         references = []
-        @@byLayer.each_pair { |name,lines|
+        byLayer.each_pair { |name,lines|
             if lines.length == 0
                 next
             end
@@ -298,14 +396,21 @@ class RadianceScene < ExportBase
                 references.push("\n!xform objects/#{name}.rad")
             end
         }
-        createMainScene(references, '')
+        return references
     end
 
     def runPreview
-        ##TODO: preview
-        if $RAD == '' or $PREVIEW != true
+        if $OS =! 'MAC'
+            uimessage("'rvu' only available on Mac OS X",-1)
             return
         end
+        if getConfig('RAD') == ''
+            uimessage("Radiance not found in search path!",-1) 
+            return
+        end
+        #TODO: set temporary directory
+        #      export to temp directory
+        #      run subshell with 'rad -x 11 ...'
     end
     
     def getRifObjects
@@ -341,7 +446,7 @@ class RadianceScene < ExportBase
         text = @renderOptions.getRifOptionsText()
         text += "\n"
         text += "materials=    materials.rad\n\n"
-        text += "%s\n\n" % exportViews()
+        text += "%s\n\n" % @viewsList.getViewLines()
         text += getRifObjects
         text += "\n"
         
@@ -351,7 +456,7 @@ class RadianceScene < ExportBase
         end
     end
         
-    def exportViews
+    def exportViews_OLD
         viewLines = []
         if @viewsList != nil
             return @viewsList.getViewLines()
@@ -380,7 +485,7 @@ class RadianceScene < ExportBase
         @viewsList = views
     end
 
-    def _getViewLine(c)
+    def _getViewLineOLD(c)
         unit = getConfig('UNIT')
         text =  "-vp %.3f %.3f %.3f  " % [c.eye.x*unit,c.eye.y*unit,c.eye.z*unit]
         text += "-vd %.3f %.3f %.3f  " % [c.zaxis.x,c.zaxis.y,c.zaxis.z]
@@ -407,7 +512,7 @@ class RadianceScene < ExportBase
         return text
     end
     
-    def createViewFile(c, viewname)
+    def createViewFileOLD(c, viewname)
         filename = getFilename("views/%s.vf" % viewname)
         if not createFile(filename, getViewLine(c))
             msg = "## Error: Could not create view file '#{filename}'"
@@ -418,7 +523,7 @@ class RadianceScene < ExportBase
         end
     end
     
-    def getFoVAngle(ang1, side1, side2)
+    def getFoVAngleOLD(ang1, side1, side2)
         ang1_rad = ang1*Math::PI/180.0
         dist = side1 / (2.0*Math::tan(ang1_rad/2.0))
         ang2_rad = 2 * Math::atan2(side2/(2*dist), 1)

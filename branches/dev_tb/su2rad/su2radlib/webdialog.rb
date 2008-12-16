@@ -727,29 +727,9 @@ class ExportDialogWeb < ExportBase
     end ## end def show
         
     def startExport(dlg,params)
-        puts "starting export ...\n"
-        #dlg.execute_script('applyRenderOptions()')
         @scene.setOptionsFromDialog(@exportOptions,@renderOptions,@skyOptions,@viewsList)
-        dlg.execute_script('showBusy()')
+        dlg.close()
         @scene.startExportWeb()
-        status = @scene.getExportStatus()
-        json = getJSONDictionary(status)
-        dlg.execute_script("showResults('%s')" % encodeJSON(json))
-    end
-
-    def setExportStatus(dict)
-        printf "final status:\n"
-        dict.each_pair { |k,v|
-            printf "%12s : %d\n" % [k,v]
-        }
-        printf "\n"
-    end
-    
-    def progressCallback(dict)
-        printf "====  progress:  ====\n"
-        dict.each_pair { |k,v|
-            printf "== %15s - %d\n" %  [k,v]
-        }
     end
 
 end ## end class exportDialogWeb

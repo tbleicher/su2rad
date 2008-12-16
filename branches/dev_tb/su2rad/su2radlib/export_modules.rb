@@ -306,6 +306,35 @@ module RadiancePath
         return File.join(getConfig('SCENEPATH'), name)
     end
     
+    def obj2mesh(name, lines)
+        objfile = getFilename("objects/#{name}.obj")
+        uimessage("creating obj file '#{objfile}'")
+        if not createFile(objfile, lines.join("\n"))
+            msg = "Error: could not create file '#{objfile}'"
+            uimessage(msg)
+            return "## #{msg}"
+        else
+            begin
+                rtmfile = getFilename("objects/#{name}.rtm")
+                cmd = "%s '#{objfile}' '#{rtmfile}'" % getConfig('OBJ2MESH')
+                uimessage("converting obj to rtm (cmd='#{cmd}')", 2)
+                f = IO.popen(cmd)
+                f.close()
+                if File.exists?(rtmfile)
+                    return "\n#{name} mesh #{name}_obj\n1 objects/#{name}.rtm\n0\n0"
+                else
+                    msg = "Error: could not convert obj file '#{objfile}'"
+                    uimessage(msg, -2)
+                    return "## #{msg}"
+                end
+            rescue
+                msg = "Error converting obj file '#{name}.obj'"
+                uimessage(msg, -2)
+                return "## #{msg}"
+            end
+        end
+    end
+    
     def remove_spaces(s)
         ## remove spaces and other funny chars from names
         for i in (0..s.length)

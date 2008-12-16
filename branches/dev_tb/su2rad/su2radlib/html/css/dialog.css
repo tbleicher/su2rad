@@ -15,8 +15,8 @@ span {
     border-width: 1px;
     border-color: blue;
 }
-*/
 
+*/
 
 body {
     font-size: 16px; /* @ EOMB */
@@ -51,19 +51,18 @@ code {
     width: 275px;
     /* background: lightskyblue; */
 }
+
 #loadSceneButton {
     margin-left: 5px;
     width: 50px;
     position: relative;
     top: 0px;
 }
-
 #testDataButton {
     width: 120px;
     color: red;
     margin-left: 80px;
 }
-
 #showLogButton {
     position: relative;
     float: right;
@@ -99,7 +98,6 @@ h2 {
 }
 h3,th {
     margin: 0.8em 0 0.8em;
-*/
     padding: 0.3em;
     padding-left: 0.5em;
     font-weight: bold;
@@ -521,6 +519,29 @@ input.file {
     margin: 1.5px;
 }
 
+
+.exportStatus {
+    float:left;
+    width: 250px;
+    height: 150px;
+}
+.exportStatus img {
+    margin-top: 50px;
+    margin-left: 34px;
+}
+.exportStatus .gridLabel {
+    width: 60px;
+    background-color: #d9eaf4;
+    text-align: right;
+    padding-right: 0.5em;
+}
+.exportStatus .gridCell {
+    width: 165px;
+    padding-left: 0.5em;
+}
+
+
+
 .gridColumn .gridLabel {
     width: 75px;
     padding-left: 5px;
@@ -537,6 +558,11 @@ input.file {
 }
 .gridColumn  .gridCell {
     width: 90px;
+}
+
+.highlight {
+    font-weight: bold;
+    color: #27537a; 
 }
 
 #viewsSelection div.gridRow {
