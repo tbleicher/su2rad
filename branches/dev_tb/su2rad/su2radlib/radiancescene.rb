@@ -63,12 +63,10 @@ class StatusPage
             @htmlpath = "C:/windows/temp/su2rad_%d_%d.html" % [Process.pid, rand(10000)]
         end 
         @statusHash = Hash[ "status" => "initializing",
-                            "faces" => 0,
-                            "groups" => 0,
-                            "components" => 0,
                             "materials" => 0,
                             "textures" => 0,
                             "files" => 0]
+        @timeStart = Time.now()
     end
     
     def close
@@ -109,16 +107,29 @@ class StatusPage
         end
         v = @statusHash['status']
         #TODO: higlight warnings and errors
-        html = "<div class=\"gridLabel\"><span class=\"highlight\">status:</span></div>"
-        html += "<div class=\"gridCell\"><span class=\"highlight\">%s</span></div>" % v
-        a = @statusHash.to_a
+        if v =~ /warn/i
+            style = "highlightWarn"
+        elsif v =~ /err/i
+            style = "highlightError"
+        else
+            style = "highlight"
+        end
+        html = "<div class=\"gridLabel\"><span class=\"%s\">status:</span></div>" % style
+        html += "<div class=\"gridCell\"><span class=\"%s\">%s</span></div>" % [style,v]
+        a = @statusHash.to_a 
         a = a.sort()
         a.each { |k,v|
             if k != "status"
                 html += "<div class=\"gridLabel\">%s</div><div class=\"gridCell\">%s</div>" % [v,k]
             end
         }
+        html += "<div class=\"gridLabel\"><span class=\"highlight\">time:</span></div>"
+        html += "<div class=\"gridCell\"><span class=\"highlight\">%d sec</span></div>" % getTimeDiff()
         return html
+    end
+
+    def getTimeDiff
+        return Integer(Time.now() - @timeStart)
     end
 
     def show
@@ -129,7 +140,7 @@ class StatusPage
         else
             return false
         end
-        puts "starting browser thread ..."
+        @timeStart = Time.now()
 	Thread.new do
 	    system(`#{browser} "#{@htmlpath}"`)
 	end
@@ -302,15 +313,17 @@ class RadianceScene < ExportBase
         if @statusPage
             $SU2RAD_COUNTER.setStatusPage(@statusPage)
         end
-        startExportWebTest(selected_only)
-        puts "\nTODO: start real export action\n"
-        return
+        #startExportWebTest(selected_only)
+        #puts "\nTODO: start real export action\n"
+        #return
         prepareSceneDir(sceneDir)
         if export(selected_only) == true
-            $SU2RAD_COUNTER.showSuccess()
+            @statusPage.close()
+            return true
         else
-            $SU2RAD_COUNTER.showError()
-        end    
+            @statusPage.close()
+            return false
+        end
     end 
     
     def renameExisting(sceneDir)

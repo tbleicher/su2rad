@@ -423,8 +423,12 @@ class MaterialContext < ExportBase
     end
 
     def addMaterial(material, entity, frontface)
+        if @usedMaterials.has_key?(material)
+            return
+        end
         @usedMaterials[material] = 1
-        if material.texture != nil
+        $SU2RAD_COUNTER.add(material.class.to_s)
+        if material.texture
             loadTexture(material, entity, frontface)
         end
     end 
@@ -471,7 +475,7 @@ class MaterialContext < ExportBase
                     ofilename = File.basename(fpath, '.rad')
                     if fpath[-4..-1] != '.obj'
                         if not defined.has_key?(ofilename)
-                            uimessage("WARNING: material #{ofilename} undefined; adding alias")
+                            uimessage("material #{ofilename} undefined; adding alias", -1)
                             text += getAliasDescription(ofilename)
                         end
                     end
@@ -481,108 +485,98 @@ class MaterialContext < ExportBase
         if not createFile(filename, text)
             uimessage("ERROR creating material file '#{filename}'")
         end
-        
-        ## textures
-        if getConfig('TEXTURES') == true 
-            if @texturewriter.count > 0
-                exportTextures()
-            end
-        end
         @texturewriter = nil
         @textureHash = {}
     end
 
-    def exportTextures
-        uimessage("found #{@texturewriter.count} textures")
-        uimessage("skipping 'exportTextures()' ...")
-        return
-        texdir = getFilename('textures')
-        if createDirectory(texdir)
-            @textureHash.each_value { |v|
-                handle,entity = v
-                filename = @texturewriter.filename(handle)
-                printf "TEXTURE: '%s'\n" % filename
-                printf "  entity='%s'\n" % entity
-                printf "  handle='%s'\n" % handle
-                printf "  fname1='%s'\n" % filename
-                filename = _cleanTextureFilename(filename)
-                printf "  fname2='%s'\n" % filename
-                #@texturewriter.write(entity, true, filename)
-            }
-            #@texturewriter.write_all(texdir, false)
-            uimessage("textures written successfully", 1)
-            #convertTextures(texdir)
-        end
-    end
-
-    def convertTextures(texdir, filename='')
+    def convertTextureDir(texdir)
+        filelist = Dir.entries(texdir)
+        filelist.collect! { |p| p.slice(0,1) != '.' }
+        uimessage("converting textures %d ..." % filelist.length, 1)
+        converted = {}
+        filelist.each { |p|
+            img = File.join(texdir, p)
+            pic = convertTexture(img)
+            if pic != false
+                converted[img] = pic
+            end
+        }
+        uimessage("%d textures converted successfully" % converted.length, 1)
+        return converted
+    end     
+        
+    def convertTexture(filepath)
         ## convert sketchup textures to *.pic
         if getConfig('CONVERT') == '' or getConfig('RA_TIFF') == ''
             uimessage("texture converters not available; no conversion", -1)
             return false
         end
-        if filename != ''
-            filelist = [filename]
-            uimessage("converting texture '%s' ..." % filename, 1)
-        else
-            filelist = Dir.entries(texdir)
-            uimessage("converting textures ...", 1)
+        uimessage("converting texture '%s' ..." % File.split(filepath)[1],2)
+        
+        if filepath =~ /\.tif$|tiff$/i
+            tif = filepath 
+        elsif filepath =~ /\.jpg$|\.gif$|\.png$/i
+            tif = filepath.slice(0..-5) + '.tif'
         end
-        filelist.each { |p|
-            img = File.join(texdir, p)
-            if p[0,1] == '.'[0,1]
-                next
+        idx = tif.rindex('.')
+        pic = tif.slice(0..idx-1) + '.pic'
+        
+        begin
+            if File.exists?(pic)
+                uimessage("using existing texture ('#{pic}')", 1)
+                return pic
             else
-                begin
-                    idx = img.rindex('.')
-                    tif = img[0..idx] + 'tif'
-                    pic = img[0..idx] + 'pic'
-                    if File.exists?(pic)
-                        uimessage("using existing texture ('#{pic}')", 1)
-                    else
-                        cmd = "#{getConfig('CONVERT')} -format tif -compress None #{img} #{tif}"
-                        uimessage("convert command: '#{cmd}'", 3)
-                        f = IO.popen(cmd)
-                        f.close()
+                if tif != filepath
+                    cmd = "#{getConfig('CONVERT')} -format tif -alpha Off -compress None '#{filepath}' '#{tif}'"
+                    #uimessage("convert command: '#{cmd}'", 3)
+                    if system(cmd) == true
                         uimessage("texture converted to *.tif ('#{tif}')", 2)
-                        
-                        cmd = "#{getConfig('RA_TIFF')} -r #{tif} #{pic}"
-                        uimessage("ra_tiff command: '#{cmd}'", 3)
-                        f = IO.popen(cmd)
-                        f.close()
-                        uimessage("texture converted to *.pic ('#{pic}')", 2)
+                    else
+                        uimessage("error converting texture #{filepath} to *.tif", -2)
+                        return false
                     end 
-                rescue => e
-                    msg = "%s\n%s" % [$!.message,e.backtrace.join("\n")]
-                    uimessage("Error: conversion to *.pic failed\n\n#{msg}", -2)
+                end 
+                cmd = "#{getConfig('RA_TIFF')} -r '#{tif}' '#{pic}'"
+                #uimessage("ra_tiff command: '#{cmd}'", 3)
+                if system(cmd) == true
+                    uimessage("texture converted to *.pic (path='#{pic}')", 2)
+                    return pic
+                else
+                    uimessage("error converting texture #{tif} to *.pic", -2)
+                    return false
                 end
             end 
-        }
-        uimessage("textures converted successfully", 1)
+        rescue => e
+            msg = "%s\n%s" % [$!.message,e.backtrace.join("\n")]
+            uimessage("Error: conversion to *.pic failed\n\n#{msg}", -2)
+            return false
+        end
     end
 
-    def loadTexture(material, entity, frontface)
-        if not @textureHash.has_key?(material)
-            #printf ("texture material '%s'\n" % material.display_name)
-            printf ("texture='%s'\n" % material.texture.filename)
-            handle = @texturewriter.load(entity, frontface)
-            @textureHash[material] = [handle, entity]
-            ## write image to texture file
-            texdir = getFilename('textures')
-            if createDirectory(texdir)
-                filename = material.texture.filename
-                #printf "TEXTURE: '%s'\n" % filename
-                #printf "  entity='%s'\n" % entity
-                #printf "  handle='%s'\n" % handle
-                filename = _cleanTextureFilename(filename)
-                #printf "  fname2='%s'\n" % filename
-                if entity.class == Sketchup::Face
-                    @texturewriter.write(entity, frontface, File.join(texdir, filename)) 
-                else
-                    @texturewriter.write(entity, File.join(texdir, filename)) 
-                end
-                convertTextures(texdir, filename)
-            end
+    def loadTexture(skm, entity, frontface)
+        if @textureHash.has_key?(skm)
+            return
+        end
+        handle = @texturewriter.load(entity, frontface)
+        ## write image to texture file
+        texdir = getFilename('textures')
+        if createDirectory(texdir) == false
+            @textureHash[skm] = ''
+            return
+        end
+        filename = _cleanTextureFilename(skm.texture.filename)
+        if entity.class == Sketchup::Face
+            @texturewriter.write(entity, frontface, File.join(texdir, filename)) 
+        else
+            @texturewriter.write(entity, File.join(texdir, filename)) 
+        end
+        texture = convertTexture(File.join(texdir, filename))
+        if texture
+            printf "DEBUG: new texture '#{File.basename(texture)}'\n"
+            $SU2RAD_COUNTER.add(skm.texture.class.to_s)
+            @textureHash[skm] = File.basename(texture)
+        else
+            @textureHash[skm] = ''
         end
     end
     
@@ -724,19 +718,21 @@ class MaterialContext < ExportBase
 
     def convertSketchupMaterial(skm, name)
         text = "\n## material conversion from Sketchup rgb color"
-        base = getBaseMaterial(skm, name)
+        text += getBaseMaterial(skm, name)
         if doTextures(skm)
-            uimessage("creating texture for '#{skm}'", 2)
-            filename =  _cleanTextureFilename(skm.texture.filename)
-            img = File.basename(skm.texture.filename)
-            img = img[0..img.rindex('.')-1]
-            tex = [ "\nvoid colorpict #{name}_tex",
-                    "7 red green blue textures/#{img}.pic . frac(Lu) frac(Lv)",
-                    "0\n0",
-                    base.sub("void", "#{name}_tex")]
-            base = tex.join("\n")
+            uimessage("creating texture material for '#{skm}'", 2)
+            if @textureHash.has_key?(skm) && @textureHash[skm] != ''
+                pic = @textureHash[skm]
+                tex = [ "\nvoid colorpict #{name}_tex",
+                        "7 red green blue textures/#{pic} . frac(Lu) frac(Lv)",
+                        "0\n0",
+                        "#{name}_tex"]
+                text.sub!("void", tex.join("\n"))
+            else
+                uimessage("texture image for material '#{skm}' not available", -1)
+            end
         end
-        return text + base
+        return text 
     end
    
     def _cleanTextureFilename(filename)

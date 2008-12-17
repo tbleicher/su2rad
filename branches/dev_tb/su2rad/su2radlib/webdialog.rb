@@ -556,6 +556,7 @@ class ViewsList
         pages = Sketchup.active_model.pages
         if pages.count == 0
             view = SketchupView.new("unnamed_view", true)
+            view.setViewParameters(Sketchup.active_model.active_view.camera)
             @_views[view.name] = view
         else
             pages.each { |page|
