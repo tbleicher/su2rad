@@ -22,13 +22,13 @@ module InterfaceBase
         levels = ["I", "V", "D", "D", "D", "D", "E", "W"]  ## [0,1,2,-2,-1]
         line = "%s[%s] %s" % [prefix, levels[loglevel], msg]
         begin
-            Sketchup.set_status_text(line.strip())
             if loglevel <= $SU2RAD_LOGLEVEL
+                Sketchup.set_status_text(line.strip())
                 printf "#{line}\n"
                 @@_log.push(line)
             end
         rescue
-            printf "#{line}\n"
+            printf "uimessage rescue: #{line}\n"
         end
     end
     

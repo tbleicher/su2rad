@@ -564,6 +564,14 @@ input.file {
     font-weight: bold;
     color: #27537a; 
 }
+.highlightError {
+    font-weight: bold;
+    color: #cc0000;
+}
+.highlightWarn {
+    font-weight: bold;
+    color: #cc9900;; 
+}
 
 #viewsSelection div.gridRow {
     width: 510px;

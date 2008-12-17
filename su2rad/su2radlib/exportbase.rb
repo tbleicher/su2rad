@@ -17,7 +17,7 @@ class ProgressCounter
         else
             @elements[eclass] = 1
         end
-        val = @elemnts[eclass]
+        val = @elements[eclass]
         if eclass == 'Sketchup::Face' && val.divmod(1000)[1] == 0
             updateStatus()
         elsif val.divmod(10)[1] == 0
@@ -26,7 +26,6 @@ class ProgressCounter
     end
 
     def updateStatus
-        pprint()
         if @statusPage != nil
             @statusPage.update(@elements)
         end
