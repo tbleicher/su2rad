@@ -572,7 +572,6 @@ class MaterialContext < ExportBase
         end
         texture = convertTexture(File.join(texdir, filename))
         if texture
-            printf "DEBUG: new texture '#{File.basename(texture)}'\n"
             $SU2RAD_COUNTER.add(skm.texture.class.to_s)
             @textureHash[skm] = File.basename(texture)
         else

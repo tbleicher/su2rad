@@ -27,6 +27,11 @@ module InterfaceBase
                 printf "#{line}\n"
                 @@_log.push(line)
             end
+            if loglevel == -2
+                $SU2RAD_COUNTER.add('errors')
+            elsif loglevel == -1
+                $SU2RAD_COUNTER.add('warnings')
+            end
         rescue
             printf "uimessage rescue: #{line}\n"
         end
@@ -261,15 +266,17 @@ module RadiancePath
         if not FileTest.directory?(path)
             return false
         end
-        f = File.new(filename, 'w')
-        f.write(text)
-        f.close()
-        uimessage("created file '%s'" % filename, 1)
+        begin
+            f = File.new(filename, 'w')
+            f.write(text)
+            f.close()
+            uimessage("created file '%s'" % filename, 1)
+        rescue => e
+            uimessage("could not create file '%s': %s" % [filename, $!.message], -2)
+            return false
+        end
         $createdFiles[filename] = 1
-        
-        $filecount += 1
-        Sketchup.set_status_text "files:", SB_VCB_LABEL
-        Sketchup.set_status_text "%d" % $filecount, SB_VCB_VALUE
+        $SU2RAD_COUNTER.add('files')
         return true
     end 
     

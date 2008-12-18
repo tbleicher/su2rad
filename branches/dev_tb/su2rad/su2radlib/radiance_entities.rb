@@ -242,11 +242,12 @@ class RadiancePolygon < ExportBase
 
     attr_reader :material, :layer
     
-    def initialize(face, index=0)
+    def initialize(face)
+        $SU2RAD_COUNTER.add("faces")
         @face = face
         @layer = face.layer
         @material = getMaterial(face)
-        @index = index
+        @index = $SU2RAD_COUNTER.getCount("faces")
         @verts = []
         @triangles = []
         if getConfig('TRIANGULATE') == true
@@ -274,7 +275,6 @@ class RadiancePolygon < ExportBase
                 end
             }
         end
-        $SU2RAD_COUNTER.add("%s" % @face.class)
     end
             
     def addLoop(l)
@@ -743,7 +743,6 @@ class RadianceSky < ExportBase
             rescue
                 uimessage("Could not use location line '#{l}'")
             end
-        $SU2RAD_COUNTER.add("%s" % @entity.class)
         }
         if meridian == ''
             ## not found in locations

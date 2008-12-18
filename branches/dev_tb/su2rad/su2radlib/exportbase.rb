@@ -6,28 +6,37 @@ require 'context.rb'
 class ProgressCounter
     
     def initialize
-        @elements = {'Sketchup::Face' => 0}
+        @stats = {'status' => 'running'}
+        @stats.default = 0
         @statusPage = nil
     end
 
-    def add(eclass)
-        eclass.strip!()
-        if @elements.has_key?(eclass)
-            @elements[eclass] += 1
-        else
-            @elements[eclass] = 1
+    def add(key)
+        if key.class != String
+            key = key.class.to_s
         end
-        val = @elements[eclass]
-        if eclass == 'Sketchup::Face' && val.divmod(1000)[1] == 0
+        key.strip!()
+        @stats[key] += 1
+        val = @stats[key]
+        if key == 'faces' && val.divmod(1000)[1] == 0
             updateStatus()
         elsif val.divmod(10)[1] == 0
             updateStatus()
         end
     end
-
+    
+    def getCount(key)
+        return @stats[key]
+    end
+    
     def updateStatus
+        if @stats.has_key?('errors')
+            @stats['status'] = 'running (errors)'
+        elsif @stats.has_key?('warnings')
+            @stats['status'] = 'running (warnings)'
+        end
         if @statusPage != nil
-            @statusPage.update(@elements)
+            @statusPage.update(@stats)
         end
     end
     
@@ -37,7 +46,7 @@ class ProgressCounter
     
     def pprint()
         printf "progress:\n"
-        @elements.each_pair { |k,v|
+        @stats.each_pair { |k,v|
             printf "%15s - %d\n" %  [k,v]
         }
     end
@@ -60,8 +69,6 @@ class ExportBase
 
     @@components = []
     
-    @@facecount = 0
-    
     @@uniqueFileNames = Hash.new()
     @@componentNames = Hash.new()
         
@@ -81,7 +88,6 @@ class ExportBase
         @@components = []
         @@nameContext = []
         
-        @@facecount = 0
         @@uniqueFileNames = Hash.new()
         @@componentNames = Hash.new()
         
@@ -97,8 +103,6 @@ class ExportBase
                 @@visibleLayers[l] = 1
             end
         }
-        
-        $filecount = 0
         $createdFiles = Hash.new()
     end
     
@@ -133,8 +137,7 @@ class ExportBase
                 lines += exportByCL(e.definition.entities, e.material, gtrans)
                 $inComponent.pop()
             elsif e.class == Sketchup::Face
-                @@facecount += 1
-                rp = RadiancePolygon.new(e, @@facecount)
+                rp = RadiancePolygon.new(e)
                 if rp.material == nil or rp.material.texture == nil
                     face = rp.getText(globaltrans)
                 else
@@ -185,7 +188,7 @@ class ExportBase
         numpoints = []
         faces.each_index { |i|
             f = faces[i]
-            rp = RadiancePolygon.new(f,i)
+            rp = RadiancePolygon.new(f)
             if rp.isNumeric
                 numpoints += rp.getNumericPoints()
             elsif makeGlobal?()

@@ -54,40 +54,38 @@ class StatusPage
     attr_reader :tmplpath, :htmlpath
     attr_writer :tmplpath, :htmlpath
     
-    def initialize
-        @tmplpath = File.join(File.dirname(__FILE__), "html", "progress.html")
-        if $OS == 'MAC'
-            @htmlpath = "/tmp/su2rad_%d_%d.html" % [Process.pid, rand(10000)]
-        else
-            #XXX check availability of Process.pid on Windows
-            @htmlpath = "C:/windows/temp/su2rad_%d_%d.html" % [Process.pid, rand(10000)]
-        end 
-        @statusHash = Hash[ "status" => "initializing",
-                            "materials" => 0,
-                            "textures" => 0,
-                            "files" => 0]
+    def initialize(htmlpath)
+        @htmlpath = htmlpath
+        @tmplpath = File.join(File.dirname(__FILE__), "html", "exportStatsProgress.html")
+        @statusHash = {"status" => "initializing"}
         @timeStart = Time.now()
+        @abspath = "file://" + File.join(File.dirname(__FILE__), "html", "css") + File::SEPARATOR
+        @shortnames = { "Sketchup::ComponentInstance" => "components",
+                        "Sketchup::Group"    => "groups",
+                        "Sketchup::Material" => "materials",
+                        "Sketchup::Texture"  => "textures" }
     end
     
-    def close
-        @template = @template.sub('onload="updateTimeStamp()"', 'onload="window.close()"')
-        update()
-        sleep(3.5)
+    def showFinal()
+        @statusHash.update({"status" => "finished"})
         begin
-            File.delete(@htmlpath)
-            return true
-        rescue => e
-            puts $!.message, e.backtrace.join("\n")
+            newtmpl = File.join(File.dirname(@tmplpath), 'exportStatsFinal.html')
+            t = File.open(newtmpl, 'r')
+            template = t.read()
+            t.close()
+            @template = template.gsub('./css/', @abspath)
+        rescue
+            @template = @template.sub('onload="updateTimeStamp()"', '')
         end
+        update()
     end
     
     def create
-        abspath = File.join(File.dirname(__FILE__), "html", "css") + File::SEPARATOR
         begin
             t = File.open(@tmplpath, 'r')
             template = t.read()
             t.close()
-            @template = template.gsub('./css/', abspath)
+            @template = template.gsub('./css/', @abspath)
             html = @template.sub('<!--STATUS-->', "initializing ...")
             h = File.open(@htmlpath, 'w')
             h.write(html)
@@ -120,6 +118,7 @@ class StatusPage
         a = a.sort()
         a.each { |k,v|
             if k != "status"
+                k = @shortnames[k] if @shortnames.has_key?(k)
                 html += "<div class=\"gridLabel\">%s</div><div class=\"gridCell\">%s</div>" % [v,k]
             end
         }
@@ -271,59 +270,43 @@ class RadianceScene < ExportBase
     end
 
     def showStatusPage
-        statusPage = StatusPage.new()
+        htmlpath = getFilename(File.join('logfiles', 'status.html'))
+        if not createFile(htmlpath, "foo")
+            return nil
+        end
+        statusPage = StatusPage.new(htmlpath)
         if statusPage.create() == true
             statusPage.show()
+            $SU2RAD_COUNTER.setStatusPage(statusPage)
             return statusPage
         else
-            return false
+            return nil
         end
     end
     
     def startExportWebTest(selected_only=0)
         puts "startExportWebTest\n"
-        if @statusPage
-            updates = 0
-            faces = 0
-            groups = 0
-            while updates < 17
-                sleep(1)
-                faces += Integer(rand()*1000)
-                groups += Integer(rand()*10)
-                updates += 1
-                d = {"status" => "testing",
-                     "faces"  =>  faces,
-                     "groups" =>  groups,
-                     "updates" => updates}
-                @statusPage.update(d)
-            end
-        else
-            printf "no @statusPage!\n"
-        end
-        @statusPage.close()
     end
     
     def startExportWeb(selected_only=0)
         sceneDir = getConfig('SCENEPATH')
-        ## TODO: find temporary path and move rename after status page
         if renameExisting(sceneDir) == false
-            return
-        end
-        @statusPage = showStatusPage()
-        if @statusPage
-            $SU2RAD_COUNTER.setStatusPage(@statusPage)
-        end
-        #startExportWebTest(selected_only)
-        #puts "\nTODO: start real export action\n"
-        #return
-        prepareSceneDir(sceneDir)
-        if export(selected_only) == true
-            @statusPage.close()
-            return true
-        else
-            @statusPage.close()
             return false
         end
+        statusPage = showStatusPage()
+        begin 
+            prepareSceneDir(sceneDir)
+            success = export(selected_only)
+        rescue => e
+            uimessage($!.message, -2)
+            success = false
+        ensure
+            if statusPage
+                $SU2RAD_COUNTER.updateStatus() 
+                statusPage.showFinal()
+            end
+        end
+        return success
     end 
     
     def renameExisting(sceneDir)

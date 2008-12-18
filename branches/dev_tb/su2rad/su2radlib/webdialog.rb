@@ -147,7 +147,8 @@ class RenderOptions
         @ZoneType = 'exterior'
         @Report = 0
         @ReportFile = getConfig('SCENENAME') + '.log'
-        @render = '' 
+        @render = ''
+        @oconv = '-w'
         @filename = ''
         update()
     end
@@ -189,6 +190,7 @@ class RenderOptions
         else
             lines.push("render=      %s\n" % @render)
         end
+        lines.push("oconv=      %s\n" % @oconv)
         return lines.join("\n")
     end
     
@@ -730,7 +732,25 @@ class ExportDialogWeb < ExportBase
     def startExport(dlg,params)
         @scene.setOptionsFromDialog(@exportOptions,@renderOptions,@skyOptions,@viewsList)
         dlg.close()
-        @scene.startExportWeb()
+        status = @scene.startExportWeb()
+        if status 
+            showFinalStatus(status)
+        end
+    end
+
+    def showFinalStatus(status)
+        return
+        tmplpath = File.join(File.dirname(__FILE__), "html", "final.html")
+        abspath = "file://" + File.join(File.dirname(__FILE__), "html", "css") + File::SEPARATOR
+        t = File.open(tmplpath, 'r')
+        template = t.read()
+        t.close()
+        template = template.gsub('./css/', abspath)
+        html = template.sub('<!--STATUS-->', status)
+        printf "\n\n%s\n\n" % html
+        dlg = UI::WebDialog.new("export summary", true, nil, 300, 200, 150, 150, true);
+        dlg.set_html(html)
+        dlg.show_modal { dlg.bring_to_front() }
     end
 
 end ## end class exportDialogWeb
