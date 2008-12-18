@@ -519,7 +519,6 @@ input.file {
     margin: 1.5px;
 }
 
-
 .exportStatus {
     float:left;
     width: 250px;
@@ -540,6 +539,15 @@ input.file {
     padding-left: 0.5em;
 }
 
+.exportStatusFinal {
+    float:left;
+    width: 150px;
+    height: 170px;
+}
+.exportStatusFinal img {
+    margin-top: 25px;
+    margin-left: 10px;
+}
 
 
 .gridColumn .gridLabel {

@@ -77,25 +77,13 @@ $testdir = ""
 ## define defaults if config file is messed up
 $BUILD_MATERIAL_LIB = false
 $EXPORTALLVIEWS     = false 
-# $MAKEGLOBAL         = false     
-$SU2RAD_LOGLEVEL    = 0                ## don't report details
-# $MODE               = 'by group'       ## "by group"|"by layer"|"by color"
-$RAD                = ''
-# $REPLMARKS          = '/usr/local/bin/replmarks' 
-$PREVIEW            = false        
+$SU2RAD_LOGLEVEL    = -1        ## report warnings and errors only
 $SHOWRADOPTS        = true
 $SUPPORTDIR         = '/Library/Application Support/Google Sketchup 6/Sketchup'
 $MATERIALLIB        = '/usr/local/lib/ray/lib/material.rad'
-# $TRIANGULATE        = false    
-# $UNIT               = 0.0254           ## inch (SU native unit) to meters (Radiance)
-# $UTC_OFFSET         = nil
 $ZOFFSET            = nil     
 
 $CONFIRM_REPLACE    = true
-
-# $TEXTURES           = true
-# $RA_TIFF            = '/usr/local/bin/ra_tiff'
-# $CONVERT            = '/usr/local/bin/convert'
 
 
 ## load configuration from file
@@ -106,6 +94,7 @@ $SU2RAD_CONFIG = RunTimeConfig.new()
 def startExport(selected_only=0)
     begin
         $MatLib = MaterialLibrary.new()
+        $SU2RAD_COUNTER = ProgressCounter.new()
         rs = RadianceScene.new()
         rs.startExport(selected_only)
     rescue => e 
@@ -118,6 +107,7 @@ end
 def startWebExport(selected_only=0)
     begin
         $MatLib = MaterialLibrary.new()
+        $SU2RAD_COUNTER = ProgressCounter.new()
         edw = ExportDialogWeb.new()
         edw.show()
     rescue => e 
@@ -190,7 +180,6 @@ def su2rad_reload
     $SU2RAD_DEBUG = true
     load "su2rad.rb"
 end
-
 
 
 
