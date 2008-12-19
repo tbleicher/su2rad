@@ -474,7 +474,7 @@ function getRpictOptionSpansBool() {
         text += "<div class=\"" + style + "\" style=\"width:160px\";>";
         text += "<input type=\"checkbox\" class=\"rpictCB\"";
         text += " id=\"rpictOverrideCB" + opt + "\"";
-        text += " onchange=\"onRpictOverride('" + opt + "')\" " + state + "/> ";
+        text += " onClick=\"onRpictOverride('" + opt + "')\" " + state + "/> ";
         text += "<span class=\"gridLabel\" style=\"width:40px;padding-left:5px;\">-" + opt + flagvalue + ":</span>";
         text += rpictBoolComments[i] + " " + textvalue;
         text += "</div>";

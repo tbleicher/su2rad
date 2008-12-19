@@ -59,7 +59,10 @@ class StatusPage
         @tmplpath = File.join(File.dirname(__FILE__), "html", "exportStatsProgress.html")
         @statusHash = {"status" => "initializing"}
         @timeStart = Time.now()
-        @abspath = "file://" + File.join(File.dirname(__FILE__), "html", "css") + File::SEPARATOR
+        @csspath = "file://" + File.join(File.dirname(__FILE__), "html", "css") + File::SEPARATOR
+        if $OS == 'WIN'
+            @csspath.gsub!(File::SEPARATOR, '/')
+        end
         @shortnames = { "Sketchup::ComponentInstance" => "components",
                         "Sketchup::Group"    => "groups",
                         "Sketchup::Material" => "materials",
@@ -73,7 +76,7 @@ class StatusPage
             t = File.open(newtmpl, 'r')
             template = t.read()
             t.close()
-            @template = template.gsub('./css/', @abspath)
+            @template = template.gsub('./css/', @csspath)
         rescue
             @template = @template.sub('onload="updateTimeStamp()"', '')
         end
@@ -85,8 +88,8 @@ class StatusPage
             t = File.open(@tmplpath, 'r')
             template = t.read()
             t.close()
-            @template = template.gsub('./css/', @abspath)
-            html = @template.sub('<!--STATUS-->', "initializing ...")
+            @template = template.gsub('./css/', @csspath)
+            html = @template.sub('--STATUS--', "initializing ...")
             h = File.open(@htmlpath, 'w')
             h.write(html)
             h.close()
@@ -150,7 +153,7 @@ class StatusPage
             return false
         end
         begin
-            html = @template.sub('<!--STATUS-->', getStatusHTML(dict))
+            html = @template.sub('--STATUS--', getStatusHTML(dict))
             h = File.open(@htmlpath, 'w')
             h.write(html)
             h.close()

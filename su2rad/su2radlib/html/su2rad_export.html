@@ -12,9 +12,7 @@
         <script type="text/javascript" src="./blackbirdjs/blackbird.js"></script>
         
         <!-- google map and jsr_class for geonames.org requests -->
-        <!-- XXX REMOVE COMMENT
         <script type="text/javascript" src="http://maps.google.com/maps?file=api&amp;v=2&amp;key=ABQIAAAAVkCvvMxWS6sy1KKSLvN3URTDis0fJxnS-wzgwKhlyWVJxXLRhxQq9kdL_d2nO8XPOQO2xIrAWCmccw"></script>
-        -->
         <script type="text/javascript" src="./js/jsr_class.js"></script>
         
         <!-- jquery and plugins -->
@@ -73,8 +71,8 @@
                 <li><a href="#tab-export"><span>Export</span></a></li>
                 <li><a href="#tab-render"><span>Render</span></a></li>
                 <li><a href="#tab-sky"><span>Sky</span></a></li>
-                <li><a href="#tab-fields"><span>Fields</span></a></li>
-                <li><a href="#tab-climate"><span>Climate</span></a></li>
+                <!-- <li><a href="#tab-fields"><span>Fields</span></a></li> -->
+                <!-- <li><a href="#tab-climate"><span>Climate</span></a></li> -->
             </ul>
 
             
@@ -193,7 +191,6 @@
                             <select id="radImageType_1" name="radImageType_1" style="width: 90px;" onchange="selectImageType('radImageType_1')">
                                 <option value="normal" selected>normal</option>
                                 <option value="irridiance">irridiance</option>
-                                <option value="falsecolor">falsecolor</option>
                             </select>
                         </div>
                     </div>
@@ -233,7 +230,7 @@
                 </div>
                 
                  
-                <h3>
+                <h3 style="display:none;">
                     <input class="floatright" type="button" id="edit_climate" value="edit" onclick="switch_to_tab(5)" disabled>
                     <input type="checkbox" id="climate_checkbox" value="climate"
                     onchange="toggleClimateTab()"> Climate Data
@@ -254,13 +251,13 @@
                 </div>
 
 
-                <span class=".showProgress">show Progress</span>
+
                 <h2>
                     <input class="exportbutton" type="button" name="export" value="export" onclick="onExportButton()">
                     <input class="exportbutton" type="button" name="cancel" value="cancel" onclick="onCancelButton()">
                 </h2>
             
-                <div class="statusMessage" id="statusTabExport">
+                <div class="statusMessage" id="statusTabExport" style="display:none;">
                     msg
                 </div>
                 <div class="jqmWindow" id="progressWindow">
@@ -346,7 +343,6 @@
                             <select id="radImageType_2" name="radImageType_2" style="width: 90px;" onchange="selectImageType('radImageType_2')">
                                 <option value="normal" selected>normal</option>
                                 <option value="irridiance">irridiance</option>
-                                <option value="falsecolor">falsecolor</option>
                             </select>
                         </div>
                         
@@ -401,7 +397,7 @@
                     <input type="button" value="show details" onclick="updateRpictValues()">
                 </div>
                 
-                <div class="statusMessage" id="statusTabRender">
+                <div class="statusMessage" id="statusTabRender" style="display:none;">
                     msg
                 </div>
             
@@ -413,7 +409,7 @@
             <div id="tab-sky">
                 <h3>
                     <input type="button" id="applyLocationValues" value="apply" class="floatright" onclick="onApplySkySettingsToModel()" disabled=true />
-                    <input type="button" id="reloadShadowInfo" value="reload" class="floatright" onclick="getSkySettings()">
+                    <input type="button" id="reloadShadowInfo" value="reload" class="floatright" style="display:none;" onclick="getSkySettings()">
                     SketchUp model settings
                 </h3>
                 
@@ -426,12 +422,12 @@
                         <span class="gridLabel">generator:</span>
                         <select id="skyGenerator" name="skyGenerator" onchange="onSkyGenChange()">
                             <option value="gensky" selected>gensky</option>
-                            <option value="gendaylit">gendaylit</option>
-                            <option value="hdr-image">hdr-image</option>
+                            <!--<option value="gendaylit">gendaylit</option>-->
+                            <!--<option value="hdr-image">hdr-image</option>-->
                         </select>
                     </div>
                     
-                    <div class="optionsRow" id="genskyTypeOptions">
+                    <div class="optionsRow" id="genskyTypeOptions" style="width:210px">
                         <div class="optionsRow" style="width:160px">
                             <span class="gridLabel">type:</span>
                             <select id="genskySkyType" name="genskySkyType" style="width:80px;" onchange="onSkyTypeChange()">
@@ -441,7 +437,7 @@
                                 <option value="s">clear</option>
                             </select>
                         </div>
-                        <div id="genskySunOption" style="display:none;">
+                        <div id="genskySunOption" style="display:none;width:45px">
                             <input type="checkbox" id="sunOptionCB" value="sunOption" onchange="onSkyTypeChange()">
                             <span style="font-size:12px">sun</span>
                         </div>
@@ -625,7 +621,7 @@
                 <div class="statusMessage" id="statusTabSky">
                     msg
                 </div>
-                <h3>
+                <h3 style="display:none;">
                     <input type="button" value="apply" class="floatright" onclick="onApplySkySettingsToModel()" />
                     <input type="button" value="reload" class="floatright" onclick="getSkySettings()">
                     test buttons
@@ -634,7 +630,7 @@
             </div>
             
             
-            <div id="tab-fields">
+            <div id="tab-fields" style="display:none;">
                 <h3>Numeric Fields</h3>
                 TODO<br/>
                 TODO<br/>
@@ -647,7 +643,7 @@
             </div>
             
             
-            <div id="tab-climate">
+            <div id="tab-climate" style="display:none">
                 <h3>
                     <input class="floatright" type="button" value="done" onclick="switch_to_tab(1)">
                     Climate Data
