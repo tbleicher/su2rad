@@ -30,9 +30,9 @@ SkyOptionsObject.prototype.setSkyType = function (stype) {
     if (stype.length != 2) {
         return false;
     }
-    var s = stype[1];
+    var s = stype.charAt(1);
     if ( s == 'u' || s == 'c' || s == 'i' || s == 's' ) {
-        if (stype[0] == '+' || stype[0] == '-') {
+        if (stype.charAt(0) == '+' || stype.charAt(0) == '-') {
             this.skytype = stype;
             return true;
         }
@@ -47,7 +47,7 @@ SkyOptionsObject.prototype.parseSkyCommand = function (cmdline) {
     }
     this.logging = false; // stop info level logging
     log.info("parsing '" + cmdline + "'");
-    if (cmdline[0] == '!') {
+    if (cmdline.charAt(0) == '!') {
         cmdline = cmdline.substring(1,cmdline.length);
     }
     var parts = cmdline.split(' ');
@@ -74,7 +74,7 @@ SkyOptionsObject.prototype.parseSkyCommand = function (cmdline) {
             }
         } else if (isNaN(parseFloat(opt)) == false) {
             // skip argument to previous option
-        } else if (opt.length == 2 && opt[0] == '-') {
+        } else if (opt.length == 2 && opt.charAt(0) == '-') {
             if (i < parts.length-1) {
                 var arg = parts[i+1];
                 if (this.setValue(opt, arg) == true) {
@@ -141,8 +141,8 @@ SkyOptionsObject.prototype.setGenerator = function(val) {
 }
 
 SkyOptionsObject.prototype.setValue = function(opt, val) {
-    if (opt.length == 2 && opt[0] == '-') {
-        opt = opt[1];
+    if (opt.length == 2 && opt.charAt(0) == '-') {
+        opt = opt.charAt(1);
     }
     var v = parseFloat(val);
     if (isNaN(v)) {
@@ -437,19 +437,13 @@ function updateSkyOptionsDisplay() {
 function updateSkyTypeDisplay() {
     // set sky type selector and sun check box
     if (skyOptions.generator == 'gensky') {
-        if (skyOptions.skytype[0] == "+") {
+        if (skyOptions.skytype.charAt(0) == "+") {
             document.getElementById('sunOptionCB').checked = true;
         } else {
             document.getElementById('sunOptionCB').checked = false;
         }
-        setSelectionValue('genskySkyType', skyOptions.skytype[1]);
-        //var sel = document.getElementById('genskySkyType');
-        //for (i=0; i<sel.options.length; i++) {
-        //    if (sel.options[i].value == skyOptions.skytype[1]) {
-        //        sel.selectedIndex = i;
-        //    }
-        //}
-        if (skyOptions.skytype[1] == 'i' || skyOptions.skytype[1] == 's') {
+        setSelectionValue('genskySkyType', skyOptions.skytype.charAt(1));
+        if (skyOptions.skytype.charAt(1) == 'i' || skyOptions.skytype.charAt(1) == 's') {
             document.getElementById('genskySunOption').style.display = '';
         } else {
             document.getElementById('genskySunOption').style.display = 'none';
@@ -463,11 +457,11 @@ function _updateGenskyOptions() {
     text += "<span class=\"gridLabel\" style=\"width:240px;\">gensky options:</span>";
     for (var i=0; i<opts.length; i++) {
         opt = opts[i];
-        if (opt[0] != '-') {
+        if (opt.charAt(0) != '-') {
             text += "</div><div class=\"optionsColumn\">";
             text += "<div class=\"rpictOverrideHeader\">" + opt + "</div>";
         } else {
-            text += _updateGenskyOptionsDiv(opt[1]);
+            text += _updateGenskyOptionsDiv(opt.charAt(1));
         }
     }
     text += "</div>";
@@ -483,9 +477,9 @@ function _updateGenskyOptionsDiv(opt) {
         style = "rpictOverrideSelected";
         state = "checked";
     }
-    var text = "<div class=\"" + style + "\" style=\"width:85px;\">";
+    var text = "<div class=\"" + style + "\" style=\"width:90px;\">";
     text += "<input type=\"checkbox\" class=\"rpictCB\" id=\"genskyOptionCB_" + opt + "\"";
-    text += " onchange=\"onGenskyOptionCB('" + opt + "')\" " + state + "/>"
+    text += " onClick=\"onGenskyOptionCB('" + opt + "')\" " + state + "/>"
     text += "<span class=\"gridLabel\" style=\"width:20px;padding-left:5px;\">-" + opt + ":</span>";
     if (skyOptions.isActive(opt) == true) {
         text += "<input type=\"text\" class=\"skyOptionInput\"";
