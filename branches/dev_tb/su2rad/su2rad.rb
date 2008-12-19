@@ -148,7 +148,7 @@ def startImport(f='')
 end
 
 def aboutDialog
-    msg = "su2rad.rb\nSketchUp to Radiance exporter\nversion 1.0 BETA"
+    msg = "su2rad.rb\nSketchUp to Radiance exporter\nversion:  Xmas special 2008"
     msg += "\n(c) Thomas Bleicher, 2008\ntbleicher@gmail.com"
     UI.messagebox(msg, MB_OK, 'su2rad.rb')
 end
@@ -193,16 +193,16 @@ else
             pmenu = UI.menu("Plugin")
             radmenu = pmenu.add_submenu("Radiance")
             radmenu.add_item("web dialog (test)") { startWebExport(0) }
-            radmenu.add_item("export scene") { startExport(0) }
-            radmenu.add_item("export selection") { startExport(1) }
-            matmenu = radmenu.add_submenu("Material")
-            matmenu.add_item("count conflicts") { countConflicts }
-            matmenu.add_item("resolve conflicts") { resolveConflicts }
-            importmenu = radmenu.add_submenu("Import")
-            importmenu.add_item("numeric results") { startImport }
-            radmenu.add_item("Preferences") { preferencesDialog() }
+            #radmenu.add_item("export scene") { startExport(0) }
+            #radmenu.add_item("export selection") { startExport(1) }
+            #matmenu = radmenu.add_submenu("Material")
+            #matmenu.add_item("count conflicts") { countConflicts }
+            #matmenu.add_item("resolve conflicts") { resolveConflicts }
+            #importmenu = radmenu.add_submenu("Import")
+            #importmenu.add_item("numeric results") { startImport }
+            #radmenu.add_item("Preferences") { preferencesDialog() }
             radmenu.add_item("About") { aboutDialog() }
-            radmenu.add_item("reload") { su2rad_reload() }
+            #radmenu.add_item("reload") { su2rad_reload() }
         end
     rescue => e
         msg = "%s\n\n%s" % [$!.message,e.backtrace.join("\n")]
