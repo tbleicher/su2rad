@@ -663,7 +663,7 @@ class ExportDialogWeb < ExportBase
         @viewsList.updateViews(views)
     end
  
-    def show(title="dialog_TEST")
+    def show(title="SU2RAD_XMAS_SPECIAL_2008_TEST")
         ## create and show WebDialog
         dlg = UI::WebDialog.new(title, true, nil, 600, 750, 50, 50, true);
         dlg.set_background_color("0000ff")

@@ -192,7 +192,7 @@ else
         if (not file_loaded?("su2rad.rb"))
             pmenu = UI.menu("Plugin")
             radmenu = pmenu.add_submenu("Radiance")
-            radmenu.add_item("web dialog (test)") { startWebExport(0) }
+            radmenu.add_item("export (test)") { startWebExport(0) }
             #radmenu.add_item("export scene") { startExport(0) }
             #radmenu.add_item("export selection") { startExport(1) }
             #matmenu = radmenu.add_submenu("Material")
