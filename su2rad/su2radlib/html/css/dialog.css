@@ -1,4 +1,5 @@
 
+
 /*
 td {
     border-style: solid;
@@ -15,7 +16,6 @@ span {
     border-width: 1px;
     border-color: blue;
 }
-
 */
 
 body {
@@ -108,16 +108,6 @@ h3,th {
     min-height: 18px; /* IE 6 treats height as min-height */
     /* background: lightskyblue; */
 }
-input, select {
-    font-size: 12px;
-    height: 14px;
-    padding: 0;
-    margin: 0;
-}
-
-select {
-    width: 90px;
-}
 table {
     padding: 0;
     margin: 0;
@@ -152,6 +142,13 @@ td {
     width: 60px;
     color: #cc0000;
 }
+select {
+    font-size: 12px;
+    height: 20px;
+    padding: 0;
+    margin: 0;
+    width: 90px;
+}
 input[type=button] {
     position: relative;
     top: -2px;
@@ -159,9 +156,17 @@ input[type=button] {
     height: 20px;
     width: 50;
 }
+input[type=text] {
+    position: relative;
+    top: -2px;
+    font-size: 12px;
+    height: 18px;
+    padding: 0;
+    margin: 0;
+}
 input[type=checkbox] {
-   position: relative;
-   top: 2px;
+    position: relative;
+    /*top: 2px;*/
 }
 .columnRadLable{
     font-weight: bold;
@@ -429,8 +434,14 @@ input.file {
 .rpictCB {
     /* margie-left: 5px; */
     float: left;
+    position: relative;
+    top: -4px;
 }
-
+#genskySunOption * {
+    position: relative;
+    top: -3px;
+    font-size: 12px;
+}
 #rpictOptionsDisplay * div {
     margin: 0;
 }
@@ -440,16 +451,22 @@ input.file {
     /* font-family: "Monaco", "Courier New", Courier, monospace; */
     height: 20px;
     padding-left: 0.5em;
-    width: 100px;
+    width: 105px;
+    padding-top: 3px;
 }
 .rpictOverrideSelected {
     font-weight: bold;
     background-color: #d9eaf4;
 }
+.rpictOverride .gridLabel, .rpictOverrideSelected .gridLabel {
+    width: 33px;
+    padding-left: 5px;
+}
 .rpictOverrideInput, .rpictOverrideInputInt, .rpictOverrideInputIntN {
     width: 40px;
     font-weight: bold;
     background-color: #d9eaf4;
+    height: 20px;
 }
 .rpictOverrideHeader {
     font-weight: bold;
@@ -501,7 +518,7 @@ input.file {
     padding: 0;
 }
 
-.gridLabel{
+.gridLabel, .rpictValue {
     font-weight: bold;
     float: left;
     width: 75px;
@@ -509,6 +526,10 @@ input.file {
     min-height: 20px;
     padding: 0;
     margin: 0;
+}
+.rpictValue {
+    font-weight: normal;
+    width: 40px;
 }
 .gridRow {
     width: 580px;

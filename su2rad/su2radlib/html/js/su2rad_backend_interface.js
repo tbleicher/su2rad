@@ -205,9 +205,11 @@ function _getViewsListTest() {
 }
 
 function applyViews() {
-    var text = viewsList.toString();
+    var selection_only = true;
+    var text = viewsList.toString(selection_only);
     var param = encodeURI(text);
     if (SKETCHUP == true) {
+	log.debug('applyViews() param.length=' + param.length);
         window.location = 'skp:applyViews@' + param;
     } else {
         log.debug("no action for applyViews()"); 

@@ -75,9 +75,9 @@
 #blackbird .header > div, #blackbird .main > div, #blackbird .footer > div { 
     background-image:url(blackbird_panel.png); 
     background-repeat:no-repeat; 
-    -moz-opacity:0.8;
+    /* -moz-opacity:0.8;
     filter:alpha(opacity: 0.8);
-    opacity: 0.8;
+    opacity: 0.8; */
 }
 	
 #blackbird .header div { float:left; _background-color:#000; }
@@ -90,7 +90,8 @@
 
 #blackbird .main div { float:left; }
 #blackbird .main div.left { background-position:0 -30px; width:11px; _width:0; }
-#blackbird .main div.mainBody { background-position:40% -40px; _background-color:#000; _filter:alpha(opacity='80'); }
+/* #blackbird .main div.mainBody { background-position:40% -40px; _background-color:#000; _filter:alpha(opacity='80'); } */
+#blackbird .main div.mainBody { background-position:40% -40px; _background-color:#000; }
 #blackbird .main .mainBody ol { line-height: 1.45; height:100%; overflow:auto; width:100%; list-style-type:none; margin:0; padding:0; }
 #blackbird .main .mainBody ol li { padding:1px 4px 1px 30px; border-bottom: 1px solid #333; color:#CCC; margin: 2px 2px; _text-indent: -2px; }
 #blackbird .main .mainBody ol li span { background:url(blackbird_icons.png) no-repeat 0 0; border: 1px solid #333; height:16px; width:16px; display:block; float:left; margin: -2px 0 1px -25px; _display:inline; }
