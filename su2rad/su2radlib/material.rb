@@ -1,17 +1,299 @@
-require "su2radlib/exportbase.rb"
+require "exportbase.rb"
+
+
+class MaterialDefinition < ExportBase
+    
+    attr_reader :comment, :is_valid, :name, :rest, :text, :type, :depends_on
+    attr_writer :comment
+    
+    def initialize(text=nil)
+        @comment = nil
+        @is_valid = false
+        @name = nil
+        @text = nil
+        @type = nil
+        @rest = nil
+        @depends_on = nil
+        if text
+            begin
+                parseText(text)
+            rescue => e
+                printf "Error in text: '#{text}'\n"
+                msg = "%s\n%s" % [$!.message,e.backtrace.join("\n")]
+                #uimessage("Error in material text '#{text}':", -2)
+                #uimessage(msg, -2)
+                printf "\n#{msg}\n"
+                @valid = false
+            end
+        end
+    end
+    
+    def getText(comment=true, singleline=false)
+        if singleline
+            text = @text.split().join(' ')
+            if comment and @comment
+                c = @comment.split().join(' ')
+                text = c + "\n" + text
+            end
+            return text
+        else
+            text = ''
+            if comment and @comment
+                text = @comment.strip() + "\n"
+            end
+            text += @text.strip()
+            while text.index("\n\n") != nil
+                text.gsub!("\n\n", "\n")
+            end
+            return text
+        end
+    end
+    
+    def parseText(text)
+        defparts = []
+        parts = text.split()
+        @depends_on = parts[0]
+        @type = parts[1]
+        @name = parts[2]
+        if @type == 'alias'
+            @depends_on = parts[3]
+            @rest = parts[4..parts.length].join(' ')
+            @text = "void alias #{@name} #{@depends_on}"
+            @is_valid = true
+        else
+            idx1 = 3
+            step1 = parts[idx1].to_i
+            idx2 = 4 + step1
+            step2 = parts[idx2].to_i
+            idx3 = 5 + step1 + step2
+            nargs = parts[idx3].to_i
+            n = idx3 + nargs
+            line1 = parts[idx1..idx1].join(' ')
+            line2 = parts[idx2..idx2].join(' ')
+            line3 = parts[idx3..n].join(' ')
+            @rest = parts[n+1..parts.length].join(' ')
+            @text = ["#{@depends_on} #{@type} #{@name}", line1, line2, line3].join("\n")
+            @is_valid = true
+        end
+        @text.strip!
+        if @rest.strip == ''
+            @rest = nil
+        end
+    end
+    
+    def set(text,name,type=nil)
+        @text = text
+        @name = name
+        if type
+            @type = type
+            @valid = true
+        else
+            parts = text.split()
+            parts.reverse!
+            parts.each_index { |i|
+                if parts[i] == name
+                    @type = parts[i+1]
+                end
+                break
+            }
+            if @type
+                @valid = true
+            end
+        end
+    end 
+    
+    def write(filename, replace=false)
+        if not File.exists?(filename) or replace == true
+            begin
+                f = File.new(filename, 'w')
+                f.write(getText)
+                f.close()
+            rescue
+                uimessage("Error creating material file '#{filename}'")
+            end
+        end
+    end
+
+    def valid?
+        return @valid
+    end
+end
+
+
+class MaterialFile < ExportBase
+
+    attr_reader :byName
+    
+    def initialize(filename)
+        @comments = {}
+        @filename = filename
+        @materials = []
+        @byName = {}
+        @byType = {}
+        @lines = readFile(filename)
+        if @lines != []
+            parseLines()
+        end
+    end
+
+    def addMaterial(m)
+        if @comments.has_key?(m.name)
+            m.comment = @comments[m.name]
+        end
+        @materials.push(m)
+        @byName[m.name] = m
+        if not @byType.has_key?(m.type)
+            @byType[m.type] = []
+        end
+        @byType[m.type].push(m)
+    end
+    
+    def parseLines(lines=nil)
+        if not lines
+            lines = @lines
+        else
+            lines = purgeLines(lines)
+        end
+        text = lines.join(" ")
+        
+        ## start with basic definitions
+        rest = []
+        basics = text.split("void")
+        basics.each { |line|
+            if line != ''
+                r = parseSingleLine("void " + line)
+                rest.push(r)
+            end
+        }
+        rest.compact!
+        uimessage("#{@filename}: found #{@materials.length} materials", 2)
+        #@materials[0..5].each { |m| printf "m='#{m.text}'\n" }
+        if rest.length != 0:
+            printf "rest.length = #{rest.length}\n"
+            rest.each { |l|
+                if l != ''
+                    printf "r='#{l}'\n" 
+                end
+            }
+        end
+    end     
+    
+    def parseSingleLine(line)
+        if line == ''
+            return
+        else
+            m = MaterialDefinition.new(line)
+            if m.is_valid == true
+                addMaterial(m)
+                if m.rest != nil
+                    parseSingleLine(m.rest)
+                end
+            else
+                return line
+            end
+        end
+    end
+        
+    def readFile(filename)
+        text = ""
+        begin
+            f = File.new(@filename)
+            text = f.read()
+            f.close()
+        rescue => e
+            msg = "%s\n%s" % [$!.message,e.backtrace.join("\n")]
+            #uimessage("Error reading file '#{filename}':", -2)
+            #uimessage(msg, -2)
+            printf "\n#{msg}\n"
+        end
+        return purgeLines(text.split("\n"))
+    end
+    
+    def find_comments(lines)
+        current_comment = ''
+        newlines = []
+        l = lines.shift()
+        while l != nil
+            l.strip!
+            if l == ''
+                #next
+                #l = lines.shift()
+            elsif l[0,1] == '#'
+                current_comment += "\n"
+                current_comment += l
+            else  
+                ## assume this is the material definition
+                parts = l.split()
+                if parts.length >= 3
+                    name = parts[2]
+                    if current_comment != ''
+                        if not @comments.has_key?(name)
+                            @comments[name] = ''
+                        end
+                        @comments[name] = @comments[name] + current_comment
+                    end
+                end
+                current_comment = ''
+            end
+            newlines.push(l)
+            l = lines.shift()
+        end
+        return newlines
+    end        
+    
+    def purgeLines(lines)
+        lines = find_comments(lines)
+        lines.collect! { |l| l.split('#')[0] }
+        lines.compact!
+        lines.collect! { |l| l.split().join(' ') }
+        lines.collect! { |l| l if l != ''}
+        lines.compact!
+        return lines
+    end
+
+    def show(type='')
+        if type == ''
+            @byType.each_pair { |t,list|
+                printf "%-12s - %3d\n" % [t,list.length]
+            }
+        elsif @byType.has_key?(type)
+                list = @byType[type]
+                list.each { |m|
+                    printf "#{m.getText}\n"
+                }
+        else
+            printf "%-12s - %3d\n" % [type,0]
+        end    
+    end
+end
 
 
 class MaterialLibrary < ExportBase
 
     def initialize
         @sketchup_materials = {}        ## map name to path
-        @radiance_descriptions = {}     ## map name to description
-        
+        @byName = {}
+        @byType = {}
+        initLog()
         initLibrary()
+        initSupportDir()
     end
 
     def initLibrary
-        initLog()
+        paths = $MATERIALLIB.split(':')
+        paths.each { |path|
+            if File.exists?(path)
+                mf = MaterialFile.new(path)
+                mf.byName.each_value { |m|
+                    addMaterial(m)
+                }
+            else
+                uimessage("Warning: material lib path '#{path}' does not exists", -1)
+            end
+        }
+    end
+    
+    def initSupportDir
         uimessage("init material library ...", 1)
         if $SUPPORTDIR == '' or $SUPPORTDIR == nil
             uimessage("Warning: '$SUPPORTDIR' is not set. No materials available.")
@@ -36,14 +318,17 @@ class MaterialLibrary < ExportBase
                     text = f.read()
                     f.close()
                     text = text.strip()
-                    text = "## material def from file: '%s'\n%s" % [radname, text]
-                    @radiance_descriptions[matname] = text
+                    md = MaterialDefinition.new()
+                    md.set(text.strip(), matname)
+                    if md.valid?
+                        addMaterial(md)
+                    end
                 rescue
                     uimessage("Error reading Radiance material description from '#{radname}'")
                 end
             end
         }
-        uimessage("=> %d material descriptions found" % @radiance_descriptions.length, 3)
+        uimessage("=> %d material descriptions found" % @byName.length, 3)
     end
     
     def getSKMFiles(mdir)
@@ -63,10 +348,9 @@ class MaterialLibrary < ExportBase
         return paths
     end
     
-    def addMaterial(material, text)
+    def old_addMaterial(skm, text)
         ## store material description in file if it doesn't exist
-        matname = remove_spaces(material.display_name)
-        @radiance_descriptions[matname] = text
+        matname = remove_spaces(skm.display_name)
         if $BUILD_MATERIAL_LIB == false
             return
         end
@@ -81,14 +365,31 @@ class MaterialLibrary < ExportBase
                 f.write(text)
                 f.close()
             rescue
-                uimessage("Error creating material description '#{filename}'!")
+                uimessage("Error creating material file '#{filename}'")
             end
         end
     end
     
-    def getDefinedMaterial(material)
-        name = remove_spaces(material.display_name)
-        return @radiance_descriptions[name]
+    def addMaterial(m)
+        @byName[m.name] = m
+        if not @byType.has_key?(m.type)
+            @byType[m.type] = []
+        end
+        @byType[m.type].push(m)
+        if $BUILD_MATERIAL_LIB == false or not @sketchup_materials[m.name]
+            return
+        end
+        skmfile = @sketchup_materials[m.name]
+        if skmfile
+            filename = skmfile.sub('.skm', '.rad')
+            if $BUILD_MATERIAL_LIB == true
+                m.write(filename)
+            end
+        end
+    end 
+    
+    def getByName(name)
+        return @byName[remove_spaces(name)]
     end
 end
 
@@ -97,11 +398,12 @@ end
 
 class MaterialContext < ExportBase
 
+    attr_reader :texturewriter
+    
     def initialize
-        @nameStack = ['sketchup_default_material']
-        @materialHash = Hash[nil => 'sketchup_default_material']
-        @aliasHash = {}
-
+        @texturewriter = Sketchup.create_texture_writer
+        clear()
+        
         ## matrix for sRGB color space transformation
         ## TODO: Apple RGB?
         red     = [0.412424, 0.212656, 0.0193324]
@@ -109,6 +411,27 @@ class MaterialContext < ExportBase
         blue    = [0.180464, 0.0721856, 0.950444]
         @matrix = [red,green,blue]
     end
+
+    def clear
+        @nameStack = ['sketchup_default_material']
+        @materialsByName = Hash.new()
+        @materialHash = Hash[nil => 'sketchup_default_material']
+        @materialDescriptions = Hash.new()
+        @usedMaterials = Hash.new()
+        @aliasHash = Hash.new()
+        @textureHash = Hash.new()
+    end
+
+    def addMaterial(material, entity, frontface)
+        if @usedMaterials.has_key?(material)
+            return
+        end
+        @usedMaterials[material] = 1
+        $SU2RAD_COUNTER.add(material.class.to_s)
+        if material.texture
+            loadTexture(material, entity, frontface)
+        end
+    end 
     
     def export(filename='')
         if filename == ''
@@ -117,10 +440,10 @@ class MaterialContext < ExportBase
         defined = {}
         text = "## materials.rad\n"
         text += getMaterialDescription(nil)
-        if $MODE == 'by layer'
+        if getConfig('MODE') == 'by layer'
             ## 'by layer' creates alias to default material if no
             ## definition is provided in library (TODO)
-            $byLayer.each_pair { |lname,lines|
+            @@byLayer.each_pair { |lname,lines|
                 if lines.length == 0
                     ## empty layer
                     next
@@ -131,7 +454,11 @@ class MaterialContext < ExportBase
                 defined[lname] = getMaterialDescription(lname)
             }
         else
-            @materialHash.each_pair { |mat,mname|
+            #@materialHash.each_pair { |mat,mname|
+            #    defined[mname] = getMaterialDescription(mat)
+            #}
+            @usedMaterials.each_pair { |mat,foo|
+                mname = getMaterialName(mat)
                 defined[mname] = getMaterialDescription(mat)
             }
         end
@@ -139,16 +466,18 @@ class MaterialContext < ExportBase
         marray.each { |a|
             text += a[1]
         }
-        if $MODE != 'by group'
+        if getConfig('MODE') != 'by group'
             ## check against list of files in 'objects' directory
             reg_obj = Regexp.new('objects')
             $createdFiles.each_pair { |fpath, value|
                 m = reg_obj.match(fpath)
                 if m
                     ofilename = File.basename(fpath, '.rad')
-                    if not defined.has_key?(ofilename)
-                        uimessage("WARNING: material #{ofilename} undefined; adding alias")
-                        text += getAliasDescription(ofilename)
+                    if fpath[-4..-1] != '.obj'
+                        if not defined.has_key?(ofilename)
+                            uimessage("material #{ofilename} undefined; adding alias", -1)
+                            text += getAliasDescription(ofilename)
+                        end
                     end
                 end
             }
@@ -156,10 +485,100 @@ class MaterialContext < ExportBase
         if not createFile(filename, text)
             uimessage("ERROR creating material file '#{filename}'")
         end
-        #$texturewriter.write_all
-        #$texturewriter = nil
+        @texturewriter = nil
+        @textureHash = {}
     end
 
+    def convertTextureDir(texdir)
+        filelist = Dir.entries(texdir)
+        filelist.collect! { |p| p.slice(0,1) != '.' }
+        uimessage("converting textures %d ..." % filelist.length, 1)
+        converted = {}
+        filelist.each { |p|
+            img = File.join(texdir, p)
+            pic = convertTexture(img)
+            if pic != false
+                converted[img] = pic
+            end
+        }
+        uimessage("%d textures converted successfully" % converted.length, 1)
+        return converted
+    end     
+        
+    def convertTexture(filepath)
+        ## convert sketchup textures to *.pic
+        if getConfig('CONVERT') == '' or getConfig('RA_TIFF') == ''
+            uimessage("texture converters not available; no conversion", -1)
+            return false
+        end
+        uimessage("converting texture '%s' ..." % File.split(filepath)[1],2)
+        
+        if filepath =~ /\.tif$|tiff$/i
+            tif = filepath 
+        elsif filepath =~ /\.jpg$|\.gif$|\.png$/i
+            tif = filepath.slice(0..-5) + '.tif'
+        end
+        idx = tif.rindex('.')
+        pic = tif.slice(0..idx-1) + '.pic'
+        
+        begin
+            if File.exists?(pic)
+                uimessage("using existing texture ('#{pic}')", 1)
+                return pic
+            else
+                if tif != filepath
+                    cmd = "#{getConfig('CONVERT')} -format tif -alpha Off -compress None '#{filepath}' '#{tif}'"
+                    #uimessage("convert command: '#{cmd}'", 3)
+                    if system(cmd) == true
+                        uimessage("texture converted to *.tif ('#{tif}')", 2)
+                    else
+                        uimessage("error converting texture #{filepath} to *.tif", -2)
+                        return false
+                    end 
+                end 
+                cmd = "#{getConfig('RA_TIFF')} -r '#{tif}' '#{pic}'"
+                #uimessage("ra_tiff command: '#{cmd}'", 3)
+                if system(cmd) == true
+                    uimessage("texture converted to *.pic (path='#{pic}')", 2)
+                    return pic
+                else
+                    uimessage("error converting texture #{tif} to *.pic", -2)
+                    return false
+                end
+            end 
+        rescue => e
+            msg = "%s\n%s" % [$!.message,e.backtrace.join("\n")]
+            uimessage("Error: conversion to *.pic failed\n\n#{msg}", -2)
+            return false
+        end
+    end
+
+    def loadTexture(skm, entity, frontface)
+        if @textureHash.has_key?(skm)
+            return
+        end
+        handle = @texturewriter.load(entity, frontface)
+        ## write image to texture file
+        texdir = getFilename('textures')
+        if createDirectory(texdir) == false
+            @textureHash[skm] = ''
+            return
+        end
+        filename = _cleanTextureFilename(skm.texture.filename)
+        if entity.class == Sketchup::Face
+            @texturewriter.write(entity, frontface, File.join(texdir, filename)) 
+        else
+            @texturewriter.write(entity, File.join(texdir, filename)) 
+        end
+        texture = convertTexture(File.join(texdir, filename))
+        if texture
+            $SU2RAD_COUNTER.add(skm.texture.class.to_s)
+            @textureHash[skm] = File.basename(texture)
+        else
+            @textureHash[skm] = ''
+        end
+    end
+    
     def setAlias(material, alias_name)
         if @aliasHash.has_key?(alias_name)
             m = @aliasHash[alias_name]
@@ -173,6 +592,7 @@ class MaterialContext < ExportBase
         end
         @aliasHash[alias_name] = material
         @materialHash[alias_name] = getSaveMaterialName(material)
+        @materialsByName[alias_name] = material
     end
 
     def getCurrentMaterialName
@@ -185,6 +605,14 @@ class MaterialContext < ExportBase
     
     def get(mat)
         return @materialHash[mat]
+    end
+   
+    def getByName(name)
+        if @materialsByName.has_key?(name)
+            return @materialsByName[name]
+        else
+            return nil
+        end
     end
     
     def has_key?(mat)
@@ -206,6 +634,7 @@ class MaterialContext < ExportBase
     
     def set(material, name)
         @materialHash[material] = name
+        @materialsByName[name] = material
     end
    
     def getAliasDescription(material)
@@ -219,35 +648,42 @@ class MaterialContext < ExportBase
             return s
         end
     end 
+   
+    def defaultMaterial
+        s  = "\n## default material"
+        s += "\nvoid plastic sketchup_default_material"
+        s += "\n0\n0\n5 0.4 0.4 0.4 0 0\n"
+        return s
+    end
     
     def getMaterialDescription(material)
         if material == nil
-            s  = "\n## default material"
-            s += "\nvoid plastic sketchup_default_material"
-            s += "\n0\n0\n5 0.4 0.4 0.4 0 0\n"
-            return s
+            return defaultMaterial
         elsif material.class == ''.class
             ## could be alias, layer name or undefined material
             if @aliasHash.has_key?(material)
                 return getMaterialDescription(@aliasHash[material])
             else
-                uimessage("WARNING: material '#{material} undefined; adding alias\n")
                 s  = "\n## undefined material #{material}"
                 s += "\nvoid alias #{material} sketchup_default_material\n"
                 return s
             end
         end
         name = getSaveMaterialName(material)
-        text = $materialDescriptions[name]
+        text = @materialDescriptions[name]
         if text != nil
             return text
         end
-        text = $MatLib.getDefinedMaterial(material)
-        if text == nil
-            text = convertRGBColor(material, name)
-            $MatLib.addMaterial(material, text)
+        m = $MatLib.getByName(name)
+        if not m
+            text = convertSketchupMaterial(material, name)
+            md = MaterialDefinition.new()
+            md.set(text,remove_spaces(material.display_name))
+            $MatLib.addMaterial(md)
+        else
+            text = m.getText()
         end
-        $materialDescriptions[name] = text
+        @materialDescriptions[name] = text
         return text
     end
     
@@ -279,42 +715,79 @@ class MaterialContext < ExportBase
         return name
     end
 
-    def convertRGBColor(material, name)
-        ## TODO: proper conversion between color spaces
+    def convertSketchupMaterial(skm, name)
         text = "\n## material conversion from Sketchup rgb color"
+        text += getBaseMaterial(skm, name)
+        if doTextures(skm)
+            uimessage("creating texture material for '#{skm}'", 2)
+            if @textureHash.has_key?(skm) && @textureHash[skm] != ''
+                pic = @textureHash[skm]
+                tex = [ "\nvoid colorpict #{name}_tex",
+                        "7 red green blue textures/#{pic} . frac(Lu) frac(Lv)",
+                        "0\n0",
+                        "#{name}_tex"]
+                text.sub!("void", tex.join("\n"))
+            else
+                uimessage("texture image for material '#{skm}' not available", -1)
+            end
+        end
+        return text 
+    end
+   
+    def _cleanTextureFilename(filename)
+        ## strip texture filename to basename
+        if filename.index('\\')
+            filename = filename.split('\\')[-1]
+        end
+        if filename.index('/')
+            filename = filename.split('/')[-1]
+        end
+        filename.gsub!(' ', '_')    ## XXX better in path module
+        ## TODO: check if first char is digit
+        return filename
+    end
+    
+    def getBaseMaterial(material, name)
+        ## TODO: proper conversion between color spaces
+        text = ""
         c = material.color
         r,g,b = rgb2rgb(c)
         spec = 0.0
         rough = 0.0
-        ## XXX color.alpha does not work in SketchUp 6
         ## hack: search for 'glass' in the name
         if (name.downcase() =~ /glass/) != nil
             text += "\nvoid glass #{name}"
             text += "\n0\n0\n3"
             text += "  %.4f %.4f %.4f\n" % [r,g,b]
-        elsif c.alpha >= 250
+        ## use c.alpha to decide on material type (alpha between 0 and 1!) 
+        elsif c.alpha >= 0.95
             text += "\nvoid plastic #{name}"
-            text += "\n0\n0\n5"
-            text += "  %.4f %.4f %.4f %.3f %.3f\n" % [r,g,b,spec,rough]
-        elsif c.alpha >= 55     ## treshold to use glass or trans
-            trans = c.alpha/255.0 #XXX
+            text += "\n0\n0\n"
+            text += "5 %.4f %.4f %.4f %.3f %.3f\n" % [r,g,b,spec,rough]
+        elsif c.alpha >= 0.2     ## treshold to use glass or trans
+            trans = c.alpha
             transspec = 0.2
             text += "\nvoid trans #{name}"
-            text += "\n0\n0\n7"
-            text += "  %.4f %.4f %.4f %.3f %.3f %.3f %.3f\n" % [r,g,b,spec,rough,trans,transspec]
+            text += "\n0\n0\n"
+            text += "7 %.4f %.4f %.4f %.3f %.3f %.3f %.3f\n" % [r,g,b,spec,rough,trans,transspec]
         else
             text += "\nvoid glass #{name}"
-            text += "\n0\n0\n3"
-            text += "  %.4f %.4f %.4f\n" % [r,g,b]
+            text += "\n0\n0\n"
+            text += "3 %.4f %.4f %.4f\n" % [r,g,b]
         end
         return text
     end
     
     def rgb2rgb(color)
-        var_R = 0.8 * color.red/255.0
-        var_G = 0.8 * color.green/255.0
-        var_B = 0.8 * color.blue/255.0
-        return [var_R,var_G,var_B]
+        ## simple conversion from RGB to RGB
+        #return rgb2rgb_TEST(color)
+        r = color.red/255.0
+        g = color.green/255.0
+        b = color.blue/255.0
+        r *= 0.85
+        g *= 0.85
+        b *= 0.85
+        return [r,g,b]
     end
     
     def rgb2rgb_TEST(color)
@@ -406,10 +879,10 @@ class MaterialConflicts < ExportBase
     end
 
     def getVisibleLayers
-        $visibleLayers = {}
+        @@visibleLayers = {}
         @model.layers.each { |l|
             if l.visible?
-                $visibleLayers[l] = 1
+                @@visibleLayers[l] = 1
             end
         }
     end
@@ -476,3 +949,7 @@ end
 
 
 
+#mf = MaterialFile.new('/usr/local/lib/ray/lib/material.rad')
+#mf.show()
+#mf.show('alias')
+#mf.show('metal')
