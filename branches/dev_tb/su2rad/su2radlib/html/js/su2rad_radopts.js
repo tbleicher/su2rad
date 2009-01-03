@@ -424,8 +424,8 @@ function getRpictOptionSpan(opt) {
     }
     var text = "<div class=\"" + style + "\">";
     text += "<input type=\"checkbox\" class=\"rpictCB\" id=\"rpictOverrideCB" + opt + "\"";
-    text += " onchange=\"onRpictOverride('" + opt + "')\" " + state + "/>";
-    text += "<span class=\"gridLabel\" style=\"width:33px;padding-left:5px;\">-" + opt + ":</span>";
+    text += " onClick=\"onRpictOverride('" + opt + "')\" " + state + "/>";
+    text += "<span class=\"gridLabel\">-" + opt + ":</span>";
     if (selected == true) {
         if (opt == "lr") {
             text += "<input type=\"text\" class=\"rpictOverrideInputIntN\"";
@@ -437,8 +437,7 @@ function getRpictOptionSpan(opt) {
         text += " id=\"rpictOverrideInput" + opt + "\"";
         text += " value=\"" + radOpts.getOption(opt) + "\" onchange=\"validateRpictOverride('" + opt + "')\" />";
     } else {
-        text += radOpts.getOption(opt);
-        
+    	text += "<span class=\"rpictValue\">" + radOpts.getOption(opt) + "</span>";
     }
     text += "</div>"
     return text;
@@ -471,7 +470,7 @@ function getRpictOptionSpansBool() {
             textvalue = "off";
             flagvalue = "-";
         }
-        text += "<div class=\"" + style + "\" style=\"width:160px\";>";
+        text += "<div class=\"" + style + "\" style=\"width:170px\";>";
         text += "<input type=\"checkbox\" class=\"rpictCB\"";
         text += " id=\"rpictOverrideCB" + opt + "\"";
         text += " onClick=\"onRpictOverride('" + opt + "')\" " + state + "/> ";
@@ -590,7 +589,7 @@ function parseRenderLine(inText) {
     while (i<parts.length) {
         var opt = parts[i]
         log.debug("  -> parsing '" + opt + "' ...");
-        if (opt[0] == "-") {
+        if (opt.charAt(0) == "-") {
             opt = opt.slice(1);
         }
         if (opt == "i") {

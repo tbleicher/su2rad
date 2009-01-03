@@ -113,7 +113,7 @@
                         </div>
                         <div class="gridCell">
                             <input id="triangulate" type="checkbox"
-                            onchange="onExportBoolOption('triangulate')"> triangulate<br/>
+                            onClick="onExportBoolOption('triangulate')"> triangulate<br/>
                         </div>
                     </div>
                     <div class="gridRow">
@@ -121,13 +121,13 @@
                         <div class="gridCell">
                             <span id="global_coords_display" style="display:none;">
                                 <input id="global_coords" type="checkbox" 
-                                onchange="onExportBoolOption('global_coords')"> global coords
+                                onClick="onExportBoolOption('global_coords')"> global coords
                             </span>
                         </div>
                         <div class="gridCell">
                             <span id="textures_display">
                                 <input id="textures" type="checkbox"
-                                onchange="onExportBoolOption('textures')"> textures
+                                onClick="onExportBoolOption('textures')"> textures
                             </span>
                         </div>
                     </div>
@@ -233,7 +233,7 @@
                 <h3 style="display:none;">
                     <input class="floatright" type="button" id="edit_climate" value="edit" onclick="switch_to_tab(5)" disabled>
                     <input type="checkbox" id="climate_checkbox" value="climate"
-                    onchange="toggleClimateTab()"> Climate Data
+                    onClick="toggleClimateTab()"> Climate Data
                 </h3>
                 <div id="climateSummary" style="display:none;">
                     <div class="gridRow">
@@ -321,7 +321,7 @@
                         </div>
                         <div class="gridLabel" style="font-size: 12px;">penumbra:</div>
                         <div class="gridCell">
-                            <input type="checkbox" id="radPenumbras" checked onchange="onRadOptionChange('radPenumbras')" /> 
+                            <input type="checkbox" id="radPenumbras" checked onClick="onRadOptionChange('radPenumbras')" /> 
                         </div>
                     </div>        
 
@@ -438,8 +438,8 @@
                             </select>
                         </div>
                         <div id="genskySunOption" style="display:none;width:45px">
-                            <input type="checkbox" id="sunOptionCB" value="sunOption" onchange="onSkyTypeChange()">
-                            <span style="font-size:12px">sun</span>
+				<input type="checkbox" id="sunOptionCB" value="sunOption"
+				onClick="onSkyTypeChange()"><span style="font-size:12px">sun</span>
                         </div>
                     </div>
                     
@@ -485,7 +485,7 @@
                     <div class="optionsColumn">
                         <div class="rpictOverrideHeader">general</div>
                         <div class="optionsRow">
-                            <input type="checkbox" id="sunOptionCB" style="float:left;" value="sunOption" onchange="onSkyTypeChange()">
+                            <input type="checkbox" id="sunOptionCB" style="float:left;" value="sunOption" onClick="onSkyTypeChange()">
                             <span class="gridLabel" style="width:60px;">no sun</span>
                         </div>
                     </div>
@@ -604,7 +604,7 @@
 
                 <h3>
                     <input type="checkbox" id="useGoogleMap" value="useGoogleMap"
-                    onchange="toggleGoogleMap()"><span id="googleMapHeader"> use Google Map</span>
+                    onClick="toggleGoogleMap()"><span id="googleMapHeader"> use Google Map</span>
                 </h3>
                 <div id="googleMapPanel" style="display:none; width:580px;">
                     <div style="margin-left: 30px; width: 400px;">

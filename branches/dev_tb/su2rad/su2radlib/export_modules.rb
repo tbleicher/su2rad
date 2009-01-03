@@ -410,8 +410,8 @@ module RadiancePath
         end
         ## apply to PATHTMPL
         tmpl = getConfig('PATHTMPL')
-        tmpl = tmpl.gsub('$FILE', path)
-        tmpl = tmpl.gsub('$PAGE', name)
+        tmpl = tmpl.gsub(/\$FILE/, path)
+        tmpl = tmpl.gsub(/\$PAGE/, name)
         setConfig('SCENEPATH', File.dirname(tmpl))
         setConfig('SCENENAME', File.basename(tmpl,'.rif'))
     end

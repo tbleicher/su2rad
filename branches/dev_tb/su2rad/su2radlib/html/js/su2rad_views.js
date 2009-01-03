@@ -47,18 +47,21 @@ ViewObject.prototype.setSelection = function (selected) {
     }
 }
 
-ViewObject.prototype.toRubyString = function () {
+ViewObject.prototype.toRubyString = function (selection_only) {
     //log.error("DEBUG: view.toRubyString()")
     var text = "{\"name\" => \""     + this.name     + "\",";
     text +=    " \"selected\" => \"" + this.selected + "\",";
-    text +=    " \"vt\" => \"" + this.vt             + "\",";
+    if (selection_only == true) {
+	return text + "}";
+    }
+    text +=    " \"vt\" => \"" + this.vt             + "\","; 
     text +=    " \"vp\" => \"" + this.vp             + "\",";
-    text +=    " \"vd\" => \"" + this.vd             + "\",";
+    text +=    " \"vd\" => \"" + this.vd             + "\","; 
     text +=    " \"vu\" => \"" + this.vu             + "\",";
-    text +=    " \"vo\" => \"" + this.vo.toFixed(3)  + "\",";
-    text +=    " \"va\" => \"" + this.va.toFixed(3)  + "\",";
-    text +=    " \"vv\" => \"" + this.vv.toFixed(3)  + "\",";
-    text +=    " \"vh\" => \"" + this.vh.toFixed(3)  + "\"";
+    text +=    " \"vo\" => \"" + this.vo.toFixed(3)  + "\","; 
+    text +=    " \"va\" => \"" + this.va.toFixed(3)  + "\","; 
+    text +=    " \"vv\" => \"" + this.vv.toFixed(3)  + "\","; 
+    text +=    " \"vh\" => \"" + this.vh.toFixed(3)  + "\"";  
     text += "}"
     return text;
 }
@@ -98,14 +101,14 @@ ViewsListObject.prototype.setViewsList = function (newViews) {
     updateViewsSummary();
 }
 
-ViewsListObject.prototype.toString = function () {
+ViewsListObject.prototype.toString = function (selection_only) {
     // return views as object notation string
     //log.error("DEBUG: viewsList.toString()")
     var text = "["
     for(var i=0; i<this.views.length; i++) {
         var vname = this.views[i];
         try {
-            text += this[vname].toRubyString() + ",";
+            text += this[vname].toRubyString(selection_only) + ",";
         } catch (e) {
             log.error(vname + ".toRubyString(): " + e.name)
         }
@@ -154,7 +157,7 @@ function _getViewSummaryDiv(view) {
     // return <td> for view line (lable and checkbox)
     var text = '<div class="gridCell">';
     text += '<input id="' + view.id + '"' 
-    text += 'type="checkbox" onchange="onViewSelectionChange(\'' + view.name + '\')"'
+    text += 'type="checkbox" onClick="onViewSelectionChange(\'' + view.name + '\')"'
     if (view.selected == "true") {
         text += ' checked'
     }
