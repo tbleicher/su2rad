@@ -89,7 +89,7 @@ class StatusPage
             template = t.read()
             t.close()
             @template = template.gsub('./css/', @csspath)
-            html = @template.sub('--STATUS--', "initializing ...")
+            html = @template.sub(/--STATUS--/, "initializing ...")
             h = File.open(@htmlpath, 'w')
             h.write(html)
             h.close()
@@ -153,7 +153,7 @@ class StatusPage
             return false
         end
         begin
-            html = @template.sub('--STATUS--', getStatusHTML(dict))
+            html = @template.sub(/--STATUS--/, getStatusHTML(dict))
             h = File.open(@htmlpath, 'w')
             h.write(html)
             h.close()

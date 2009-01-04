@@ -1,8 +1,7 @@
 
 // set environment
 if (navigator.userAgent.indexOf("Windows") != -1) {
-    // this is Windows
-    var PATHSEP = "\\";
+    var PATHSEP = "/";    // helps with file handling in Ruby
     var PLATFORM = "Windows";
 } else {
     var PATHSEP = "/";
@@ -163,6 +162,7 @@ function reverseData(val) {
 function splitPath(val) {
     var text="fileselection: '" + val + "'<br/>";
     setStatusMsg(text);
+    val = val.replace(/\\/g, "/");   
     val=encodeURI(val);
     var reversedsrc=reverseData(val);
     text += "reversedsrc: " + reversedsrc + "<br/>";

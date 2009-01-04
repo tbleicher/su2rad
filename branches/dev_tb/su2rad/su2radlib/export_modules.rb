@@ -412,14 +412,16 @@ module RadiancePath
         tmpl = getConfig('PATHTMPL')
         tmpl = tmpl.gsub(/\$FILE/, path)
         tmpl = tmpl.gsub(/\$PAGE/, name)
+	tmpl = cleanPath(tmpl)
         setConfig('SCENEPATH', File.dirname(tmpl))
         setConfig('SCENENAME', File.basename(tmpl,'.rif'))
     end
 
     def cleanPath(path)
-        if path.slice(-1,1) == File.SEPARATOR
+        if path.slice(-1,1) == File::SEPARATOR
             path = path.slice(0,path.length-1)
         end
+	path = path.gsub(/\\/, File::SEPARATOR)
         return path
     end
         

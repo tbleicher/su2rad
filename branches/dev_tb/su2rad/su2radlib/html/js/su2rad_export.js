@@ -110,7 +110,8 @@ function setExportPath() {
 function _getExportPath() {
     var p = document.getElementById("scenePath").value;
     var f = document.getElementById("sceneName").value;
-    if (p[p.length-1] == PATHSEP) {
+    p = p.replace(/\\/g, "/");   
+    if (p.charAt(p.length-1) == PATHSEP) {
         var path = p + f;
     } else {
         var path = p + PATHSEP + f;
@@ -178,7 +179,6 @@ function setExportModeSelection() {
 }
 
 function setExportOptionsJSON(msg) {
-    log.debug("setExportOptionsJSON()")
     var json = decodeJSON(msg);
     try {
         eval("var exportOpts = " + json);

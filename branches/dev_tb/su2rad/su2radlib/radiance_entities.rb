@@ -58,7 +58,7 @@ class RadianceComponent < ExportBase
         if cpath == nil or cpath == false
             return
         end
-        datapath = cpath.sub('.skp', '.dat')
+        datapath = cpath.sub(/\.skp\z/i, '.dat')
         if FileTest.exists?(datapath)
             uimessage("distribution data file '#{datapath}' found", 1)
         else
@@ -142,15 +142,15 @@ class RadianceComponent < ExportBase
         if cpath == nil or cpath == false
             return
         end
-        if FileTest.exists?(cpath.sub('.skp', '.ies'))
-            @iesdata = cpath.sub('.skp', '.ies')
+        if FileTest.exists?(cpath.sub(/\.skp\z/i, '.ies'))
+            @iesdata = cpath.sub(/\.skp\z/i, '.ies')
             uimessage("ies data file '#{@iesdata}' found", 1)
         end
-        if FileTest.exists?(cpath.sub('.skp', '.oct'))
-            @replacement = cpath.sub('.skp', '.oct')
+        if FileTest.exists?(cpath.sub(/\.skp\z/i, '.oct'))
+            @replacement = cpath.sub(/\.skp\z/i, '.oct')
             uimessage("replacement file '#{@replacement}' found", 1)
-        elsif FileTest.exists?(cpath.sub('.skp', '.rad'))
-            @replacement = cpath.sub('.skp', '.rad')
+        elsif FileTest.exists?(cpath.sub(/\.skp\z/i, '.rad'))
+            @replacement = cpath.sub(/\.skp\z/i, '.rad')
             uimessage("replacement file '#{@replacement}' found", 1)
         end
     end
