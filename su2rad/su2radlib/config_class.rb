@@ -19,14 +19,14 @@ class RunTimeConfig
         'PATHTMPL'  => '$FILE/radiance/$PAGE.rif',
         
         ## paths to utility programs
-        'REPLMARKS' => '/usr/local/bin/replmarks',
-        'CONVERT'   => '/usr/local/bin/convert',
-        'RA_TIFF'   => '/usr/local/bin/ra_tiff',
-        'OBJ2MESH'  => '/usr/local/bin/obj2mesh',
+        'REPLMARKS' => '',
+        'CONVERT'   => '',
+        'RA_TIFF'   => '',
+        'OBJ2MESH'  => '',
 
         ## library options
-        'MATERIALLIB'        => '/usr/local/lib/ray/lib/material.rad',
-        'SUPPORTDIR'         => '/Library/Application Support/Google Sketchup 6/Sketchup',
+        'MATERIALLIB'        => '',
+        'SUPPORTDIR'         => '/Library/Application Support/Google Sketchup 7/Sketchup',
         'BUILD_MATERIAL_LIB' => false,
 
         ## misc and unused options
@@ -34,12 +34,25 @@ class RunTimeConfig
         'CONFIRM_REPLACE' => true,
         'RAD'             => '',
         'PREVIEW'         => false}
+
+    @@_paths = ['REPLMARKS', 'CONVERT', 'RA_TIFF', 'OBJ2MESH',
+                'MATERIALLIB', 'SUPPORTDIR']
         
     def initialize
         @filename = File.expand_path('_config.rb', File.dirname(__FILE__))
         initPaths
     end
 
+    def _checkDictSettings(dict)
+        @@_paths.each { |p|
+            if dict.has_key?(p) and not File.exists?(dict[p])
+                printf "WARNING: path for #{p} does not exist ('#{dict[p]}')\n"
+                dict.delete(p)
+            end
+        }
+        return dict
+    end
+    
     def initPaths
         keys = ['REPLMARKS', 'CONVERT', 'RA_TIFF', 'OBJ2MESH']
         bindir = File.join(File.dirname(__FILE__), 'bin', $OS)
@@ -106,19 +119,33 @@ class RunTimeConfig
             end
         end
         su2rad_config = _evalLines(lines)
-        if su2rad_config.class == Hash
-            printf "=> updating config from file '#{@filename}' ...\n"
+        if applyDict(su2rad_config, filename) == true
             @filename = filename
-            @@_dict.update(su2rad_config)
         end
     end 
+   
+    def applyDict(d, filename='')
+        if d.class != Hash
+            printf "ERROR: can't apply object of class '#{d.class}'\n"
+            return false
+        end
+        d = _checkDictSettings(d)
+        if d.length == 0
+            return false
+        end
+        if filename != ''
+            printf "=> updating config from file '#{filename}' ...\n"
+        end
+        @@_dict.update(d)
+        return true
+    end
     
     def _evalLines(lines)
-        printf "\nevalLines()\n"
+        #printf "\nevalLines()\n"
         config = Hash.new()
         lines.each { |line|
             line.strip!() 
-            printf "line='%s'\n" % line
+            #printf "line='%s'\n" % line
             if line[-1] == ','
                 line = line.slice[0..-2]
             end
@@ -146,6 +173,8 @@ class RunTimeConfig
                 config[k] = nil
             elsif v == 'false'
                 config[k] = false
+            elsif v == "''"
+                config[k] = ''
             elsif v == 'nil'
                 config[k] = nil
             elsif k == 'ZOFFSET'
@@ -153,7 +182,7 @@ class RunTimeConfig
             elsif k == 'UTC_OFFSET'
                 config[k] = Float(v)
             end
-            printf " k=%s config[k]='%s'\t\tclass=%s\n" % [k,config[k],config[k].class]
+            #printf " k=%s config[k]='%s'\t\tclass=%s\n" % [k,config[k],config[k].class]
         }    
         return config       
     end 
@@ -161,7 +190,9 @@ class RunTimeConfig
     def to_s(sep="\n")
         pairs = []
         @@_dict.each_pair { |k,v|
-            if v == false
+            if v == ''
+                pairs.push("%s => ''" % k)
+            elsif v == false
                 pairs.push("%s => %s" % [k,'false'])
             elsif v.class == NilClass
                 pairs.push("%s => %s" % [k,'nil'])
@@ -207,6 +238,13 @@ def test_config
     printf "\n%s\n" % rtc.to_s
     rtc.write()
     rtc.readConfig()
+    printf "\n%s\n" % rtc.to_s
+        ## paths to utility programs
+    paths = {'REPLMARKS' => '/some/path/to/replmarks',
+             'CONVERT'   => '/some/path/to/convert',
+             'RA_TIFF'   => '/usr/local/bin/ra_tiff',
+             'OBJ2MESH'  => '/usr/local/bin/obj2mesh'}
+    rtc.applyDict(paths, 'testpaths.dict')
     printf "\n%s\n" % rtc.to_s
 end
 
