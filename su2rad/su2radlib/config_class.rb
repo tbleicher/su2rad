@@ -39,6 +39,7 @@ class RunTimeConfig
                 'MATERIALLIB', 'SUPPORTDIR']
         
     def initialize
+        printf "RunTimeConfig.initialize()\n"
         @filename = File.expand_path('_config.rb', File.dirname(__FILE__))
         initPaths
     end
@@ -46,7 +47,7 @@ class RunTimeConfig
     def _checkDictSettings(dict)
         @@_paths.each { |p|
             if dict.has_key?(p) and not File.exists?(dict[p])
-                printf "WARNING: path for #{p} does not exist ('#{dict[p]}')\n"
+                uimessage("WARNING: path for #{p} does not exist ('#{dict[p]}')", -1)
                 dict.delete(p)
             end
         }
@@ -54,34 +55,41 @@ class RunTimeConfig
     end
     
     def initPaths
-        keys = ['REPLMARKS', 'CONVERT', 'RA_TIFF', 'OBJ2MESH']
+        uimessage("RunTimeConfig: initPaths() ...", 1)
         bindir = File.join(File.dirname(__FILE__), 'bin', $OS)
+        keys = ['REPLMARKS', 'CONVERT', 'RA_TIFF', 'OBJ2MESH']
         keys.each { |k|
             app = k.downcase()
+            uimessage("  searching '#{app}' ...", 1)
             binpath = File.join(bindir, app)
+            printf "  TEST: #{binpath} ...\n"
             if File.exists?(binpath)
                 set(k, binpath)
-                uimessage("found '#{app}' in '#{bindir}'") 
+                uimessage("  => found '#{app}' in '#{bindir}'", 1) 
             elsif $OS == 'MAC'
                 p = IO.popen('which %s' % app)
                 lines = p.readlines()
                 p.close()
                 if lines != []
                     path = lines[0].strip()
+                    printf "  TEST: #{path} ...\n"
                     if File.exists?(path)
                         set(k, path)
-                        uimessage("found '#{app}' in '#{path}'")
+                        uimessage("  => found '#{app}' in '#{path}'")
                     end
                 end
             elsif ENV.has_key?('Path')
                 ENV['Path'].split(File::PATH_SEPARATOR).each { |p|
                     path = File.join(p, app)
+                    printf "  TEST: #{path} ...\n"
                     if File.exists?(path)
                         set(k, path)
-                        uimessage("found '#{app}' in '#{path}'")
+                        uimessage("  => found '#{app}' in '#{path}'")
                     end
                 }
-            end 
+            else
+                uimessage("  => application '#{app}' not found", -1)
+            end
         }
     end
     
@@ -114,7 +122,7 @@ class RunTimeConfig
                 f.close()
             rescue => e
                 msg = "ERROR reading config file:\n%s\n\n%s" % [$!.message,e.backtrace.join("\n")]
-                printf msg
+                uimessage(msg, -2)
                 return false
             end
         end
@@ -126,7 +134,7 @@ class RunTimeConfig
    
     def applyDict(d, filename='')
         if d.class != Hash
-            printf "ERROR: can't apply object of class '#{d.class}'\n"
+            uimessage("ERROR: can't apply object of class '#{d.class}'", -2)
             return false
         end
         d = _checkDictSettings(d)
@@ -134,7 +142,7 @@ class RunTimeConfig
             return false
         end
         if filename != ''
-            printf "=> updating config from file '#{filename}' ...\n"
+            uimessage(" => updating config from file '#{filename}' ...")
         end
         @@_dict.update(d)
         return true
@@ -203,7 +211,7 @@ class RunTimeConfig
         return "%s\n" % pairs.join(sep) 
     end
     
-    def uimessage(msg)
+    def uimessage(msg, level=0)
         printf "%s\n" % msg.rstrip()
     end
     
@@ -222,11 +230,11 @@ class RunTimeConfig
             f = File.new(filename, 'w')
             f.write(text)
             f.close()
-            printf "=> wrote file '#{filename}'\n"
+            uimessage("=> wrote file '#{filename}'")
             filename = @filename
         rescue => e
-            printf "ERROR creating preferences file '#{@filepath}'!\n"
-            printf "Preferences will not be saved.\n"
+            uimessage("ERROR creating preferences file '#{@filepath}'!")
+            uimessage("Preferences will not be saved.")
         end
     end
         
