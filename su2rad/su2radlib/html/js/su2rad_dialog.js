@@ -36,6 +36,7 @@ function initPage() {
 }
 
 function loadTestData() {
+    setTest();
     if (SKETCHUP == false) {
         // fill dialog with test data
         getExportOptions();
