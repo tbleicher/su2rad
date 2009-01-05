@@ -663,10 +663,10 @@ class ExportDialogWeb < ExportBase
         @viewsList.updateViews(views)
     end
  
-    def show(title="SU2RAD_XMAS_SPECIAL_2008_TEST")
+    def show(title="su2rad")
         ## create and show WebDialog
         dlg = UI::WebDialog.new(title, true, nil, 650, 800, 50, 50, true);
-        dlg.set_background_color("0000ff")
+        #dlg.set_background_color("0000ff")
             
         ## export and cancel actions
         dlg.add_action_callback("onCancel") { |d,p|
@@ -718,7 +718,7 @@ class ExportDialogWeb < ExportBase
         dlg.set_file(html, nil)
         
         ## show dialog
-        dlg.show_modal {
+        dlg.show {
             uimessage("setSketchup()", 2)
             dlg.execute_script("setSketchup()")
             @exportOptions.setExportOptions(dlg, '')
@@ -745,8 +745,8 @@ class ExportDialogWeb < ExportBase
         t = File.open(tmplpath, 'r')
         template = t.read()
         t.close()
-        template = template.gsub('./css/', abspath)
-        html = template.sub('<!--STATUS-->', status)
+        template = template.gsub(/\.\/css\//, abspath)
+        html = template.sub(/--STATUS--/, status)
         printf "\n\n%s\n\n" % html
         dlg = UI::WebDialog.new("export summary", true, nil, 300, 200, 150, 150, true);
         dlg.set_html(html)

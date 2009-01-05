@@ -21,7 +21,7 @@ class RunTimeConfig
         ## paths to utility programs
         'REPLMARKS' => '',
         'CONVERT'   => '',
-        'RA_TIFF'   => '',
+        'RA_PPM'   => '',
         'OBJ2MESH'  => '',
 
         ## library options
@@ -35,7 +35,7 @@ class RunTimeConfig
         'RAD'             => '',
         'PREVIEW'         => false}
 
-    @@_paths = ['REPLMARKS', 'CONVERT', 'RA_TIFF', 'OBJ2MESH',
+    @@_paths = ['REPLMARKS', 'CONVERT', 'RA_PPM', 'OBJ2MESH',
                 'MATERIALLIB', 'SUPPORTDIR']
         
     def initialize
@@ -57,9 +57,12 @@ class RunTimeConfig
     def initPaths
         uimessage("RunTimeConfig: initPaths() ...", 1)
         bindir = File.join(File.dirname(__FILE__), 'bin', $OS)
-        keys = ['REPLMARKS', 'CONVERT', 'RA_TIFF', 'OBJ2MESH']
+        keys = ['REPLMARKS', 'CONVERT', 'RA_PPM', 'OBJ2MESH']
         keys.each { |k|
             app = k.downcase()
+	    if $OS == 'WIN'
+		app += '.exe'
+	    end
             uimessage("  searching '#{app}' ...", 1)
             binpath = File.join(bindir, app)
             printf "  TEST: #{binpath} ...\n"
@@ -85,9 +88,11 @@ class RunTimeConfig
                     if File.exists?(path)
                         set(k, path)
                         uimessage("  => found '#{app}' in '#{path}'")
+			break
                     end
                 }
-            else
+	    end
+	    if get(k) == ''
                 uimessage("  => application '#{app}' not found", -1)
             end
         }
@@ -250,7 +255,7 @@ def test_config
         ## paths to utility programs
     paths = {'REPLMARKS' => '/some/path/to/replmarks',
              'CONVERT'   => '/some/path/to/convert',
-             'RA_TIFF'   => '/usr/local/bin/ra_tiff',
+             'RA_PPM'   => '/usr/local/bin/ra_ppm',
              'OBJ2MESH'  => '/usr/local/bin/obj2mesh'}
     rtc.applyDict(paths, 'testpaths.dict')
     printf "\n%s\n" % rtc.to_s
