@@ -2,14 +2,16 @@
 // switches to call right functions for context
 function setSketchup() {
     // switch to actions for Sketchup (skp:...)
-    log.error('DEBUG: switching to Sketchup functions ...'); 
+    log.info('using Sketchup backend ...'); 
+    log.debug('browser: ' + navigator.userAgent);
     SKETCHUP = true;
 }
 
 function setTest() {
     // set dummy actions
     try {
-        log.debug('switching to test functions ...');
+        log.info('using dummy backend ...'); 
+        log.debug('browser: ' + navigator.userAgent);
     } catch (e) {
         // log might not be defined yet
     }
