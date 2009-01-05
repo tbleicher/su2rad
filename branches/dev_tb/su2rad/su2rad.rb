@@ -38,6 +38,57 @@
 # v 0.0  - 28/10/07  :  initial release
 
 
+$su2rad_acknowledgement = <<-ACK_END
+
+ACKNOWLEDGEMENT
+
+This software distributes and makes use of the following
+software and material written and created by others and
+published under a free license.
+
+* Radiance by Greg Ward and others at LBNL 
+    Copyright (c) 1990 - 2002 The Regents of the University of California,
+    through Lawrence Berkeley National Laboratory. All rights reserved.
+    see LICENSE.Radiance for details
+
+- Windows binaries made available by Francesco Anselmo
+    see http://www.bozzograo.net/radiance/
+    
+* ImageMagick by ImageMagick Studio LLC
+    see http://www.imagemagick.org
+    and LICENSE.ImageMagick for details
+
+* jQuery 1.2.6 
+    Copyright (c) 2008 John Resig (jquery.com)
+    see http://jquery.com for contributors and licensing
+
+- jQuery.tabs and jQuery.history by Klaus Hartl
+    Copyright (c) 2006 Klaus Hartl (stilbuero.de)
+    see http://stilbuero.de/tabs/ for licensing details
+
+- jQuery.alphanumeric by Paulo P. Marinas
+    sponsored by IT Group, Inc.
+    see http://itgroup.com.ph/alphanumeric
+
+- jqModal by Brice Brugess
+    Copyright (c) 2007,2008 Brice Burgess <bhb@iceburg.net>
+    see http://dev.iceburg.net/jquery/jqModal/ for licensing details
+
+* blackbirdjs - by G Scott Olson
+    The MIT License - Copyright (c) 2008 Blackbird Project
+    see http://www.gscottolson.com/blackbirdjs/
+          
+* jsr_class.js by Jason Levitt
+
+* Sweety icon set by Joseph North
+    see http://sweetie.sublink.ca
+
+ACK_END
+
+
+
+
+
 if PLATFORM =~ /darwin/
     $OS = 'MAC'
 else
@@ -89,10 +140,10 @@ $CONFIRM_REPLACE    = true
 ## load configuration from file
 #loadPreferences()
 
-$SU2RAD_CONFIG = RunTimeConfig.new()
 
 def startExport(selected_only=0)
     begin
+        $SU2RAD_CONFIG = RunTimeConfig.new()
         $MatLib = MaterialLibrary.new()
         $SU2RAD_COUNTER = ProgressCounter.new()
         rs = RadianceScene.new()
@@ -106,6 +157,7 @@ end
 
 def startWebExport(selected_only=0)
     begin
+        $SU2RAD_CONFIG = RunTimeConfig.new()
         $MatLib = MaterialLibrary.new()
         $SU2RAD_COUNTER = ProgressCounter.new()
         edw = ExportDialogWeb.new()
@@ -121,6 +173,7 @@ end
 $matConflicts = nil
 
 def countConflicts
+    $SU2RAD_CONFIG = RunTimeConfig.new()
     if $matConflicts == nil
         $matConflicts = MaterialConflicts.new()
     end
@@ -128,6 +181,7 @@ def countConflicts
 end
 
 def resolveConflicts
+    $SU2RAD_CONFIG = RunTimeConfig.new()
     if $matConflicts == nil
         $matConflicts = MaterialConflicts.new()
     end
@@ -135,6 +189,7 @@ def resolveConflicts
 end
 
 def startImport(f='')
+    $SU2RAD_CONFIG = RunTimeConfig.new()
     ni = NumericImport.new()
     if $SU2RAD_DEBUG
         ni.loadFile(f)
@@ -152,6 +207,10 @@ def aboutDialog
     msg += "\n(c) Thomas Bleicher, 2008\ntbleicher@gmail.com"
     UI.messagebox(msg, MB_OK, 'su2rad.rb')
 end
+
+def acknowledgementDialog
+    UI.messagebox($su2rad_acknowledgement, MB_MULTILINE, 'Acknowledgement')
+end
     
 def preferencesDialog
     pd = PreferencesDialog.new()
@@ -159,6 +218,7 @@ def preferencesDialog
 end
 
 def runTest
+    $SU2RAD_CONFIG = RunTimeConfig.new()
     sky = RadianceSky.new()
     sky.test()
 end
@@ -179,6 +239,7 @@ def su2rad_reload
     load "su2radlib/config_class.rb"
     $SU2RAD_DEBUG = true
     load "su2rad.rb"
+    printf acknowledgement
 end
 
 
@@ -202,7 +263,8 @@ else
             #importmenu.add_item("numeric results") { startImport }
             #radmenu.add_item("Preferences") { preferencesDialog() }
             radmenu.add_item("About") { aboutDialog() }
-            #radmenu.add_item("reload") { su2rad_reload() }
+            radmenu.add_item("Acknowledgement") { acknowledgementDialog() }
+            radmenu.add_item("reload") { su2rad_reload() }
         end
     rescue => e
         msg = "%s\n\n%s" % [$!.message,e.backtrace.join("\n")]
