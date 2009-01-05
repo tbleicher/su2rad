@@ -323,11 +323,9 @@ module RadiancePath
         else
             begin
                 rtmfile = getFilename("objects/#{name}.rtm")
-                cmd = "%s '#{objfile}' '#{rtmfile}'" % getConfig('OBJ2MESH')
-                uimessage("converting obj to rtm (cmd='#{cmd}')", 2)
-                f = IO.popen(cmd)
-                f.close()
-                if File.exists?(rtmfile)
+                cmd = "%s \"#{objfile}\" \"#{rtmfile}\"" % getConfig('OBJ2MESH')
+                result = runSystemCmd(cmd)
+                if result == true and File.exists?(rtmfile)
                     return "\n#{name} mesh #{name}_obj\n1 objects/#{name}.rtm\n0\n0"
                 else
                     msg = "Error: could not convert obj file '#{objfile}'"
@@ -375,6 +373,16 @@ module RadiancePath
             prepareSceneDir(scene_dir)
         end
         return true
+    end
+
+    def runSystemCmd(cmd)
+        if $OS == 'WIN'
+           cmd.gsub!(/\//, '\\')
+        end
+        uimessage("system cmd= %s" % cmd, 3)
+        result = system(cmd)
+        uimessage("    result= %s" % result, 3)
+        return result
     end
 
     def setExportDirectory

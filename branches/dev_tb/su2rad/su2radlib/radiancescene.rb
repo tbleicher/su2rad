@@ -76,7 +76,7 @@ class StatusPage
             t = File.open(newtmpl, 'r')
             template = t.read()
             t.close()
-            @template = template.gsub('./css/', @csspath)
+            @template = template.gsub(/\.\/css\//, @csspath)
         rescue
             @template = @template.sub('onload="updateTimeStamp()"', '')
         end
@@ -88,7 +88,7 @@ class StatusPage
             t = File.open(@tmplpath, 'r')
             template = t.read()
             t.close()
-            @template = template.gsub('./css/', @csspath)
+            @template = template.gsub(/\.\/css\//, @csspath)
             html = @template.sub(/--STATUS--/, "initializing ...")
             h = File.open(@htmlpath, 'w')
             h.write(html)
@@ -135,21 +135,24 @@ class StatusPage
     end
 
     def show
+        @timeStart = Time.now()
         if $OS == 'MAC'
             browser = "open"
+	    htmlpath = @htmlpath
         elsif $OS == 'WIN'
-            browser = "iexplorer.exe"
-        else
-            return false
-        end
-        @timeStart = Time.now()
+            browser = "\"C:\\Program Files\\Internet Explorer\\iexplore.exe\""
+	    htmlpath = @htmlpath.gsub(/\//, '\\')
+	    ## separate browser thread does not work in windows ...
+	    return
+	end
 	Thread.new do
-	    system(`#{browser} "#{@htmlpath}"`)
+	    system(`#{browser} "#{htmlpath}"`)
 	end
     end
     
     def update(dict=nil)
-        if @template == ''
+        #TODO set status bar message
+	if @template == ''
             return false
         end
         begin
@@ -177,8 +180,6 @@ class RadianceScene < ExportBase
         
         resetState()
         initLog()
-        
-        #@radOpts = RadianceOptions.new()
         
         @sky = RadianceSky.new()
         setExportDirectory()

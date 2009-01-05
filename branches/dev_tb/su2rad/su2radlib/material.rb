@@ -504,45 +504,40 @@ class MaterialContext < ExportBase
         uimessage("%d textures converted successfully" % converted.length, 1)
         return converted
     end     
-        
+    
     def convertTexture(filepath)
         ## convert sketchup textures to *.pic
-        if getConfig('CONVERT') == '' or getConfig('RA_TIFF') == ''
+        if getConfig('CONVERT') == '' or getConfig('RA_PPM') == ''
             uimessage("texture converters not available; no conversion", -1)
             return false
         end
         uimessage("converting texture '%s' ..." % File.split(filepath)[1],2)
         
-        if filepath =~ /\.tif$|tiff$/i
-            tif = filepath 
-        elsif filepath =~ /\.jpg$|\.gif$|\.png$/i
-            tif = filepath.slice(0..-5) + '.tif'
-        end
-        idx = tif.rindex('.')
-        pic = tif.slice(0..idx-1) + '.pic'
-        
+        idx = filepath.rindex('.')
+        ppm = filepath.slice(0..idx-1) + '.ppm'
+        pic = filepath.slice(0..idx-1) + '.pic'
         begin
             if File.exists?(pic)
                 uimessage("using existing texture ('#{pic}')", 1)
                 return pic
             else
-                if tif != filepath
-                    cmd = "#{getConfig('CONVERT')} -format tif -alpha Off -compress None '#{filepath}' '#{tif}'"
-                    #uimessage("convert command: '#{cmd}'", 3)
-                    if system(cmd) == true
-                        uimessage("texture converted to *.tif ('#{tif}')", 2)
+                if ppm != filepath
+                    cmd = "#{getConfig('CONVERT')} \"#{filepath}\" \"#{ppm}\""
+                    result = runSystemCmd(cmd)
+		    if result == true
+                        uimessage("texture converted to *.ppm ('#{ppm}')", 2)
                     else
-                        uimessage("error converting texture #{filepath} to *.tif", -2)
+                        uimessage("error converting texture #{filepath} to *.ppm", -2)
                         return false
                     end 
                 end 
-                cmd = "#{getConfig('RA_TIFF')} -r '#{tif}' '#{pic}'"
-                #uimessage("ra_tiff command: '#{cmd}'", 3)
-                if system(cmd) == true
+                cmd = "#{getConfig('RA_PPM')} -r \"#{ppm}\" \"#{pic}\""
+                result = runSystemCmd(cmd)
+		if result == true
                     uimessage("texture converted to *.pic (path='#{pic}')", 2)
                     return pic
                 else
-                    uimessage("error converting texture #{tif} to *.pic", -2)
+                    uimessage("error converting texture #{ppm} to *.pic", -2)
                     return false
                 end
             end 
