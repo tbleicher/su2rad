@@ -9,6 +9,7 @@ class ProgressCounter
         @stats = {'status' => 'running'}
         @stats.default = 0
         @statusPage = nil
+        @timeStart = Time.now()
     end
 
     def add(key)
@@ -29,6 +30,28 @@ class ProgressCounter
         return @stats[key]
     end
     
+    def setStartTime
+        @timeStart = Time.now()
+    end
+    
+    def setStatusPage(page)
+        @statusPage = page
+    end
+    
+    def getStatusLine
+        status = @stats['status']
+        groups = @stats['Sketchup::Group'] + @stats['Sketchup::ComponentInstance']
+        faces  = @stats['Sketchup::Faces'] + @stats['faces'] 
+        return "status: %s (groups=%d, faces=%d)" % [status, groups, faces]
+    end
+    
+    def setStatusText
+        Sketchup.set_status_text(getStatusLine(), SB_PROMPT)
+        Sketchup.set_status_text("time", SB_VCB_LABEL)
+        sec = Time.now() - @timeStart
+        Sketchup.set_status_text("%.1f sec" % sec, SB_VCB_VALUE)
+    end
+    
     def updateStatus
         if @stats.has_key?('errors')
             @stats['status'] = 'running (errors)'
@@ -38,10 +61,7 @@ class ProgressCounter
         if @statusPage != nil
             @statusPage.update(@stats)
         end
-    end
-    
-    def setStatusPage(page)
-        @statusPage = page
+        setStatusText()
     end
     
     def pprint()

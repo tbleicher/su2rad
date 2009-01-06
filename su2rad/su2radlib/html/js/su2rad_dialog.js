@@ -59,6 +59,13 @@ function disableGlobalOption() {
     document.getElementById("global_coords_display").style.display='none';
 }
 
+function disableTextureOption() {
+    document.getElementById("textures").checked = false;
+    document.getElementById("textures").style.display='none';
+    document.getElementById("textures_label").className = 'controlValue';
+    document.getElementById("textures_label").innerHTML = '<i>textures disabled</i>';
+}
+
 function toggleClimateTab() {
     if (document.getElementById("climate_checkbox").checked == true) {
         $('#tab-container').enableTab(5);

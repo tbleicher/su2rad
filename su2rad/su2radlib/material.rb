@@ -522,7 +522,7 @@ class MaterialContext < ExportBase
                 return pic
             else
                 if ppm != filepath
-                    cmd = "#{getConfig('CONVERT')} \"#{filepath}\" \"#{ppm}\""
+                    cmd = "\"#{getConfig('CONVERT')}\" \"#{filepath}\" \"#{ppm}\""
                     result = runSystemCmd(cmd)
 		    if result == true
                         uimessage("texture converted to *.ppm ('#{ppm}')", 2)
@@ -531,13 +531,13 @@ class MaterialContext < ExportBase
                         return false
                     end 
                 end 
-                cmd = "#{getConfig('RA_PPM')} -r \"#{ppm}\" \"#{pic}\""
+                cmd = "\"#{getConfig('RA_PPM')}\" -r \"#{ppm}\" \"#{pic}\""
                 result = runSystemCmd(cmd)
 		if result == true
                     uimessage("texture converted to *.pic (path='#{pic}')", 2)
                     return pic
                 else
-                    uimessage("error converting texture #{ppm} to *.pic", -2)
+                    uimessage("error converting texture '#{ppm}' to *.pic", -2)
                     return false
                 end
             end 

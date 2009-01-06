@@ -128,7 +128,7 @@ $testdir = ""
 ## define defaults if config file is messed up
 $BUILD_MATERIAL_LIB = false
 $EXPORTALLVIEWS     = false 
-$SU2RAD_LOGLEVEL    = -1        ## report warnings and errors only
+$SU2RAD_LOGLEVEL    = 4        ## report warnings and errors only
 $SHOWRADOPTS        = true
 $SUPPORTDIR         = '/Library/Application Support/Google Sketchup 6/Sketchup'
 $MATERIALLIB        = '/usr/local/lib/ray/lib/material.rad'
@@ -243,6 +243,28 @@ def su2rad_reload
 end
 
 
+def addRadianceMenu
+    pmenu = UI.menu("Plugin")
+    radmenu = pmenu.add_submenu("Radiance")
+    radmenu.add_item("export (test)") { startWebExport(0) }
+    radmenu.add_separator()
+    #radmenu.add_item("export scene") { startExport(0) }
+    #radmenu.add_item("export selection") { startExport(1) }
+    
+    #matmenu = radmenu.add_submenu("Material")
+    #matmenu.add_item("count conflicts") { countConflicts }
+    #matmenu.add_item("resolve conflicts") { resolveConflicts }
+    
+    #importmenu = radmenu.add_submenu("Import")
+    #importmenu.add_item("numeric results") { startImport }
+    
+    #radmenu.add_item("Preferences") { preferencesDialog() }
+    radmenu.add_item("About") { aboutDialog() }
+    radmenu.add_item("Acknowledgement") { acknowledgementDialog() }
+    radmenu.add_separator()
+    radmenu.add_item("reload") { su2rad_reload() }
+end
+
 
 if $SU2RAD_DEBUG
     printf "debug mode\n"
@@ -251,20 +273,7 @@ else
     ## create menu entry
     begin
         if (not file_loaded?("su2rad.rb"))
-            pmenu = UI.menu("Plugin")
-            radmenu = pmenu.add_submenu("Radiance")
-            radmenu.add_item("export (test)") { startWebExport(0) }
-            #radmenu.add_item("export scene") { startExport(0) }
-            #radmenu.add_item("export selection") { startExport(1) }
-            #matmenu = radmenu.add_submenu("Material")
-            #matmenu.add_item("count conflicts") { countConflicts }
-            #matmenu.add_item("resolve conflicts") { resolveConflicts }
-            #importmenu = radmenu.add_submenu("Import")
-            #importmenu.add_item("numeric results") { startImport }
-            #radmenu.add_item("Preferences") { preferencesDialog() }
-            radmenu.add_item("About") { aboutDialog() }
-            radmenu.add_item("Acknowledgement") { acknowledgementDialog() }
-            radmenu.add_item("reload") { su2rad_reload() }
+            addRadianceMenu()
         end
     rescue => e
         msg = "%s\n\n%s" % [$!.message,e.backtrace.join("\n")]
