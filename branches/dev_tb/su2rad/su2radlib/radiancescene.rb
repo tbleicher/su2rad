@@ -58,6 +58,7 @@ class StatusPage
         @htmlpath = htmlpath
         @tmplpath = File.join(File.dirname(__FILE__), "html", "exportStatsProgress.html")
         @statusHash = {"status" => "initializing"}
+        @statusHash.default = 0
         @timeStart = Time.now()
         @csspath = "file://" + File.join(File.dirname(__FILE__), "html", "css") + File::SEPARATOR
         if $OS == 'WIN'
@@ -70,7 +71,13 @@ class StatusPage
     end
     
     def showFinal()
-        @statusHash.update({"status" => "finished"})
+        if @statusHash['errors'] != 0
+            @statusHash.update({"status" => "finished (errors)"})
+        elsif @statusHash['warnings'] != 0
+            @statusHash.update({"status" => "finished (warnings)"})
+        else
+            @statusHash.update({"status" => "finished"})
+        end
         begin
             newtmpl = File.join(File.dirname(@tmplpath), 'exportStatsFinal.html')
             t = File.open(newtmpl, 'r')
@@ -151,7 +158,6 @@ class StatusPage
     end
     
     def update(dict=nil)
-        #TODO set status bar message
 	if @template == ''
             return false
         end
@@ -300,6 +306,7 @@ class RadianceScene < ExportBase
         statusPage = showStatusPage()
         begin 
             prepareSceneDir(sceneDir)
+            $SU2RAD_COUNTER.setStartTime()
             success = export(selected_only)
         rescue => e
             uimessage($!.message, -2)

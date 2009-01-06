@@ -26,7 +26,7 @@ class RunTimeConfig
 
         ## library options
         'MATERIALLIB'        => '',
-        'SUPPORTDIR'         => '/Library/Application Support/Google Sketchup 7/Sketchup',
+        'SUPPORTDIR'         => '',
         'BUILD_MATERIAL_LIB' => false,
 
         ## misc and unused options
@@ -41,14 +41,19 @@ class RunTimeConfig
     def initialize
         printf "RunTimeConfig.initialize()\n"
         @filename = File.expand_path('_config.rb', File.dirname(__FILE__))
-        initPaths
+        initPaths()
+        _checkDictSettings(@@_dict, false)
     end
 
-    def _checkDictSettings(dict)
+    def _checkDictSettings(dict, remove=true)
         @@_paths.each { |p|
             if dict.has_key?(p) and not File.exists?(dict[p])
                 uimessage("WARNING: path for #{p} does not exist ('#{dict[p]}')", -1)
-                dict.delete(p)
+                if remove == true
+                    dict.delete(p)
+                else
+                    dict[p] = ''
+                end
             end
         }
         return dict
@@ -65,7 +70,6 @@ class RunTimeConfig
 	    end
             uimessage("  searching '#{app}' ...", 1)
             binpath = File.join(bindir, app)
-            printf "  TEST: #{binpath} ...\n"
             if File.exists?(binpath)
                 set(k, binpath)
                 uimessage("  => found '#{app}' in '#{bindir}'", 1) 
@@ -75,7 +79,6 @@ class RunTimeConfig
                 p.close()
                 if lines != []
                     path = lines[0].strip()
-                    printf "  TEST: #{path} ...\n"
                     if File.exists?(path)
                         set(k, path)
                         uimessage("  => found '#{app}' in '#{path}'")
@@ -83,8 +86,11 @@ class RunTimeConfig
                 end
             elsif ENV.has_key?('Path')
                 ENV['Path'].split(File::PATH_SEPARATOR).each { |p|
+                    if p =~ /system/i
+                        uimessage("  ... skipping system folder '#{p}'", 2)
+                        next ## skip system folder on Windows
+                    end
                     path = File.join(p, app)
-                    printf "  TEST: #{path} ...\n"
                     if File.exists?(path)
                         set(k, path)
                         uimessage("  => found '#{app}' in '#{path}'")

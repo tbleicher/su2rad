@@ -35,16 +35,27 @@ class ExportOptions
         ## disable 'global_coords' option in dialog if not available
         replmarks = getConfig('REPLMARKS')
         if replmarks != '' and File.exists?(replmarks)
-            uimessage("replmarks found => keeping 'global coords' options", 1)
+            uimessage("'replmarks' found => keeping 'global coords' options", 1)
             #todo? dlg.execute_script('enableGlobalOption()')
         else
-            uimessage("replmarks not found => disabling 'global coords' options", -1)
+            uimessage("'replmarks' not found => disabling 'global coords' options", -1)
             dlg.execute_script('disableGlobalOption()')
             if @exportMode == 'by group'
                 @exportMode = 'by color'
             end
             @global_coords = true
         end
+        
+        convert = getConfig('CONVERT')
+        ra_ppm = getConfig('RA_PPM')
+        if convert != '' and ra_ppm != '' and File.exists?(convert) and File.exists?(ra_ppm)
+            uimessage("'convert' found => keeping 'textures' options", 1)
+        else
+            uimessage("'convert' not found => disabling 'textures' options", -1)
+            dlg.execute_script('disableTextureOption()')
+            @textures = false
+        end
+            
         if @exportMode != 'by color'
             @textures = false
         end

@@ -39,10 +39,11 @@ module InterfaceBase
     
     def writeLogFile
         line  = "###  finished: %s  ###" % Time.new()
-        line2 = "###  success:  %s  ###" % File.join(getConfig('SCENEPATH'), getConfig('SCENENAME'))
+        line2 = "###  %s  ###" % $SU2RAD_COUNTER.getStatusLine()
         @@_log.push(line)
         @@_log.push(line2)
-        logname = getFilename("%s.log" % getConfig('SCENENAME'))
+        logname = File.join('logfiles', "%s_export.log" % getConfig('SCENENAME'))
+        logname = getFilename(logname)
         if not createFile(logname, @@_log.join("\n"))
             uimessage("Error: Could not create log file '#{logname}'")
             line = "### export failed: %s  ###" % Time.new()
@@ -50,9 +51,7 @@ module InterfaceBase
             Sketchup.set_status_text(line)
         else
             printf "%s\n" % line
-            Sketchup.set_status_text(line)
             printf "%s\n" % line2
-            Sketchup.set_status_text(line2)
         end
     end
 end
@@ -323,7 +322,7 @@ module RadiancePath
         else
             begin
                 rtmfile = getFilename("objects/#{name}.rtm")
-                cmd = "%s \"#{objfile}\" \"#{rtmfile}\"" % getConfig('OBJ2MESH')
+                cmd = "\"%s\" \"#{objfile}\" \"#{rtmfile}\"" % getConfig('OBJ2MESH')
                 result = runSystemCmd(cmd)
                 if result == true and File.exists?(rtmfile)
                     return "\n#{name} mesh #{name}_obj\n1 objects/#{name}.rtm\n0\n0"
@@ -332,8 +331,8 @@ module RadiancePath
                     uimessage(msg, -2)
                     return "## #{msg}"
                 end
-            rescue
-                msg = "Error converting obj file '#{name}.obj'"
+            rescue => e
+                msg = "Error converting obj file '#{name}.obj'\n%s\n%s" % [$!.message,e.backtrace.join("\n")]
                 uimessage(msg, -2)
                 return "## #{msg}"
             end
