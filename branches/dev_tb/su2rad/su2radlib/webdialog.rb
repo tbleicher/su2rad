@@ -35,8 +35,10 @@ class ExportOptions
         ## disable 'global_coords' option in dialog if not available
         replmarks = getConfig('REPLMARKS')
         if replmarks != '' and File.exists?(replmarks)
-            dlg.execute_script('enableGlobalOption()')
+            uimessage("replmarks found => keeping 'global coords' options", 1)
+            #todo? dlg.execute_script('enableGlobalOption()')
         else
+            uimessage("replmarks not found => disabling 'global coords' options", -1)
             dlg.execute_script('disableGlobalOption()')
             if @exportMode == 'by group'
                 @exportMode = 'by color'
@@ -65,7 +67,6 @@ class ExportOptions
         dict['textures'] = @textures
         dict['exportMode'] = @exportMode
         dict['global_coords'] = @global_coords
-        #TODO render options
         json = getJSONDictionary(dict)
         return json
     end
