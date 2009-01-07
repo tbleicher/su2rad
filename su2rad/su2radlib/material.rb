@@ -565,12 +565,16 @@ class MaterialContext < ExportBase
         else
             @texturewriter.write(entity, File.join(texdir, filename)) 
         end
-        texture = convertTexture(File.join(texdir, filename))
-        if texture
-            $SU2RAD_COUNTER.add(skm.texture.class.to_s)
-            @textureHash[skm] = File.basename(texture)
-        else
-            @textureHash[skm] = ''
+        texfile = convertTexture(File.join(texdir, filename))
+        begin
+            if texfile
+                $SU2RAD_COUNTER.add(skm.texture.class.to_s)
+                @textureHash[skm] = File.basename(texfile)
+            else
+                @textureHash[skm] = ''
+            end
+        rescue => e
+            printf "%s\n%s\n" % [$!.message,e.backtrace.join("\n")]
         end
     end
     

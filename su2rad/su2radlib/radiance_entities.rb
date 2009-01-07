@@ -5,7 +5,7 @@ class RadianceGroup < ExportBase
    
     def initialize(entity)
         @entity = entity
-        uimessage("RadGroup: '%s'" % entity.name)
+        uimessage("group: '%s'" % entity.name, 1)
     end
        
     def export(parenttrans)
