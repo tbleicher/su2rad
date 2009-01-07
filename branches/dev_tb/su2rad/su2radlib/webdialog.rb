@@ -588,6 +588,22 @@ class ViewsList
         end
     end
     
+    def selectAllViews(dlg, p=true)
+        if not p or p == 'false' 
+            p = false
+        else
+            p = true
+        end
+        @_views.each_value { |v|
+            v.selected = p
+        }
+        if p
+            uimessage("%d views selected" % @_views.length, 0)
+        else
+            uimessage("%d views deselected" % @_views.length, 0)
+        end
+    end
+    
     def setViewsList(dlg,p='')
         ## build and return JSON string of views (scenes)
         uimessage("ViewsList: setting views list ...", 2)
@@ -605,26 +621,24 @@ class ViewsList
         }
     end
 
-    def updateViews(a)
-        a.each { |d|
-            if not d.has_key?('name')
-                uimessage("ViewsList error: no 'name' for view", -2)
-                next
+    def updateView(d)
+        if not d.has_key?('name')
+            uimessage("ViewsList error: no 'name' for view", -2)
+            next
+        end
+        viewname = d['name']
+        if @_views.has_key?(viewname)
+            view = @_views[viewname]
+            begin
+                view.update(d)
+            rescue => e
+                uimessage("ViewsList error:\n%s\n\n%s\n" % [$!.message,e.backtrace.join("\n")],-2)
+                return false 
             end
-            viewname = d['name']
-            if @_views.has_key?(viewname)
-                view = @_views[viewname]
-                begin
-                    view.update(d)
-                rescue => e
-                    uimessage("ViewsList error:\n%s\n\n%s\n" % [$!.message,e.backtrace.join("\n")],-2)
-                    return false 
-                end
-            else
-                uimessage("ViewsList error: unknown view '%s'\n" % viewname, -2)
-                showViews("   ", -2)
-            end
-        }
+        else
+            uimessage("ViewsList error: unknown view '%s'\n" % viewname, -2)
+            showViews("   ", -2)
+        end
     end
     
 end
@@ -663,16 +677,16 @@ class ExportDialogWeb < ExportBase
         dlg.execute_script("loadFileCallback('%s')" % text)
     end
    
-    def updateViewsFromString(d,p)
+    def updateViewFromString(d,p)
         ## convert <p> to Ruby array and update views
         begin
-            views = eval(p)
+            view = eval(p)
         rescue => e 
-            uimessage("#{self.class} applyViews(): %s\n\n%s\n" % [$!.message,e.backtrace.join("\n")], -2)
+            uimessage("Error updateViewFromString(): %s\n\n%s\n" % [$!.message,e.backtrace.join("\n")], -2)
             return
         end
         ## apply info to views
-        @viewsList.updateViews(views)
+        @viewsList.updateView(view)
     end
  
     def show(title="su2rad")
@@ -716,11 +730,14 @@ class ExportDialogWeb < ExportBase
         }
         
         ## views
+        dlg.add_action_callback("applyViewSettings") { |d,p|
+            updateViewFromString(d,p)
+        }
+        dlg.add_action_callback("selectAllViews") { |d,p|
+            @viewsList.selectAllViews(d,p)
+        }
         dlg.add_action_callback("setViewsList") { |d,p|
             @viewsList.setViewsList(d,p)
-        }
-        dlg.add_action_callback("applyViews") { |d,p|
-            updateViewsFromString(d,p)
         }
         
         #dlg.set_on_close {

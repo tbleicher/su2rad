@@ -166,6 +166,7 @@ function setViewsListJSON(text) {
         log.error("json= " + json.replace(/,/g,',<br/>'));
     }
     viewsList.setViewsList(newViews);
+    updateViewsSummary();
 }
 
 function getViewsList() {
@@ -206,15 +207,20 @@ function _getViewsListTest() {
     return msg;
 }
 
-function applyViews() {
-    var selection_only = true;
-    var text = viewsList.toString(selection_only);
+function applyViewSettings(viewname) {
+    try {
+        var view = viewsList[viewname];
+    } catch(e) {
+        log.error(e)
+        return
+    }
+    var text = view.toRubyString();
     var param = encodeURI(text);
+    log.debug('applyViewSettings(' + view.name + ')');
     if (SKETCHUP == true) {
-	log.debug('applyViews() param.length=' + param.length);
-        window.location = 'skp:applyViews@' + param;
+        window.location = 'skp:applyViewSettings@' + param;
     } else {
-        log.debug("no action for applyViews()"); 
+        log.debug("=> no action for applyViewSettings()"); 
     }
 }
 

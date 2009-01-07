@@ -236,7 +236,7 @@ class RadianceScene < ExportBase
                 xform = "!xform %s" % fpath
             else
                 msg = "ERROR creating file '#{faces_filename}'"
-                uimessage(msg)
+                uimessage(msg, -2)
                 xform = "## " + msg
             end
             references.push(xform)
@@ -250,7 +250,7 @@ class RadianceScene < ExportBase
         ref_filename = getFilename(getConfig('SCENENAME') + ".rad")
         if not createFile(ref_filename, ref_text)
             msg = "\n## ERROR: error creating file '%s'\n" % filename
-            uimessage(msg)
+            uimessage(msg, -2)
             return msg
         end
     end
@@ -310,6 +310,7 @@ class RadianceScene < ExportBase
             success = export(selected_only)
         rescue => e
             uimessage($!.message, -2)
+            printf e.backtrace.join("\n")
             success = false
         ensure
             if statusPage

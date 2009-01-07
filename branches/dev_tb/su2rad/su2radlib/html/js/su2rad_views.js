@@ -98,7 +98,13 @@ ViewsListObject.prototype.setViewsList = function (newViews) {
         }
     }
     log.info("viewsList: " + this.views.length + " views");
-    updateViewsSummary();
+}
+
+ViewsListObject.prototype.selectAllViews = function (selected) {
+    for(var i=0; i<this.views.length; i++) {
+        var vname = this.views[i];
+        this[vname].setSelection(selected);
+    }
 }
 
 ViewsListObject.prototype.toString = function (selection_only) {
@@ -118,7 +124,27 @@ ViewsListObject.prototype.toString = function (selection_only) {
     return text;
 }
 
+function deselectAllViews() {
+    selectAllViews(false); 
+}
 
+function selectAllViews(selected) {
+    if (selected == false) {
+        log.info('deselecting all views');
+        document.getElementById('selectAllViews').innerHTML = "<a onclick=\"selectAllViews()\">[select all]</a>" 
+    } else {
+        log.info('selecting all views');
+        selected = true;
+        document.getElementById('selectAllViews').innerHTML = "<a onclick=\"deselectAllViews()\">[deselect all]</a>" 
+    }
+    viewsList.selectAllViews(selected);
+    updateViewsSummary();
+    if (SKETCHUP == true) {
+        window.location = 'skp:selectAllViews@' + selected;
+    } else {
+        log.debug("no action for selectAllViews(" + selected + ")"); 
+    }
+}
 
 
 function onViewSelectionChange(viewname) {
@@ -129,7 +155,7 @@ function onViewSelectionChange(viewname) {
     } else {
         viewsList[viewname].setSelection(false); 
     }
-    applyViews();
+    applyViewSettings(viewname);
 }
 
 
@@ -139,7 +165,6 @@ function updateViewsSummary() {
     for(var i=0; i<viewsList.views.length; i++) {
         var view = viewsList[viewsList.views[i]];
         if(view != null) {
-            log.debug("view = '" + view.name + "'");
             text += _getViewSummaryDiv(view);
             col += 1;
         }
@@ -158,7 +183,7 @@ function _getViewSummaryDiv(view) {
     var text = '<div class="gridCell">';
     text += '<input id="' + view.id + '"' 
     text += 'type="checkbox" onClick="onViewSelectionChange(\'' + view.name + '\')"'
-    if (view.selected == "true") {
+    if (view.selected == "true" || view.selected == true) {
         text += ' checked'
     }
     text += '/> <a title="' + view.getToolTip() + '">' + view.name + '</a></div>';
