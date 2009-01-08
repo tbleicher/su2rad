@@ -11,7 +11,7 @@ if (navigator.userAgent.indexOf("Windows") != -1) {
 
 // flag for backend 
 var SKETCHUP = false;
-var _currentStatusDiv = "statusTabExport"
+var _currentStatusDiv = "status_tab-export"
 
 var map, marker, lastPoint;
 
@@ -42,6 +42,7 @@ function loadTestData() {
         getExportOptions();
         getViewsList();
         getSkySettings();
+        updateViewsPage();
     } else {
         alert("no testdata within Sketchup!")
     }
@@ -275,20 +276,20 @@ function showResults(msg) {
 
 function onTabClick(link,div_show,div_hide) {
     log.debug("switching to tab '" + div_show.id + "'");
+    _currentStatusDiv = "status_" + div_show.id;
     if (div_show.id == "tab-export") {
-        _currentStatusDiv = "statusTabExport"
         updateExportPage();
     } else if  (div_show.id == "tab-render") {
-        _currentStatusDiv = "statusTabRender"
         updateRenderPage();
     } else if (div_show.id == "tab-sky") {
-        _currentStatusDiv = "statusTabSky"
         updateSkyPage();
+    } else if (div_show.id == "tab-views") {
+        updateViewsPage();
+    } else if (div_show.id == "tab-materials") {
+        updateMaterialsPage();
     } else if (div_show.id == "tab-fields") {
-        _currentStatusDiv = "statusTabFields"
         updateFieldsPage();
     } else if (div_show.id == "tab-climate") {
-        _currentStatusDiv = "statusTabClimate"
         updateClimatePage();
     } else {
         log.warn("unexpected tab id '" + div_show.id + "'");
@@ -333,6 +334,15 @@ function updateSkyPage() {
     }
     setSkyCmdLine();
     skyDateTime.getShadowTime();
+}
+
+function updateViewsPage() {
+    log.debug("updating 'Views' page ...");
+    updateViewDetailsList();
+}
+
+function updateMaterialsPage() {
+    log.debug("updating 'Materials' page ...");
 }
 
 function updateFieldsPage() {

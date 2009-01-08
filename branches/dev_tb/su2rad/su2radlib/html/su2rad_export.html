@@ -39,7 +39,7 @@
             /* create tabs */
             $(function() {
                 $('#tab-container').tabs(1, {
-                    disabled: [5], 
+                    //disabled: [5], 
                     onClick: function(a,s,h) { onTabClick(a,s,h); },
                     onHide:  function(a,s,h) { onTabHide(a,s,h); },
                     onShow:  function(a,s,h) { onTabShow(a,s,h); }
@@ -73,10 +73,14 @@
                 <li><a href="#tab-export"><span>Export</span></a></li>
                 <li><a href="#tab-render"><span>Render</span></a></li>
                 <li><a href="#tab-sky"><span>Sky</span></a></li>
+                <li><a href="#tab-views"><span>Views</span></a></li>
+                <li><a href="#tab-materials"><span>Materials</span></a></li>
                 <!-- <li><a href="#tab-fields"><span>Fields</span></a></li> -->
                 <!-- <li><a href="#tab-climate"><span>Climate</span></a></li> -->
             </ul>
 
+            
+            <!-- TAB export -->
             
             <div id="tab-export">
                 <h3>
@@ -259,7 +263,7 @@
                     <input class="exportbutton" type="button" name="cancel" value="cancel" onclick="onCancelButton()">
                 </h2>
             
-                <div class="statusMessage" id="statusTabExport" style="display:none;">
+                <div class="statusMessage" id="status_tab-export" style="display:none;">
                     msg
                 </div>
                 <div class="jqmWindow" id="progressWindow">
@@ -274,6 +278,8 @@
 
             <!-- tab contents -->
 
+            
+            <!-- TAB render -->
             
             <div id="tab-render">
                 <h3>
@@ -399,14 +405,14 @@
                     <input type="button" value="show details" onclick="updateRpictValues()">
                 </div>
                 
-                <div class="statusMessage" id="statusTabRender" style="display:none;">
+                <div class="statusMessage" id="status_tab-render" style="display:none;">
                     msg
                 </div>
             
             </div>
             
             
-            <!--  TAB SKY  --> 
+            <!--  TAB sky  --> 
             
             <div id="tab-sky">
                 <h3>
@@ -620,7 +626,7 @@
                     <div id="message" style="margin-left: 32px; width: 518; font-size: 12px;">&nbsp;</div>
                 </div>
                 
-                <div class="statusMessage" id="statusTabSky">
+                <div class="statusMessage" id="status_tab-sky">
                     msg
                 </div>
                 <h3 style="display:none;">
@@ -630,7 +636,37 @@
                 </h3>
             
             </div>
+
             
+            <!-- TAB views -->
+            
+            <div id="tab-views" style="display:none;">
+                <h3>View Details</h3>
+                <div id="viewDetails">
+                    <input type="button" id="testDataButton" name="testDataButton" value="load test data" onclick="loadTestData()">
+                </div>
+                <div class="statusMessage" id="status_tab-views">
+                    msg
+                </div>
+            
+            </div>
+            
+            
+            <!-- TAB views -->
+            
+            <div id="tab-materials" style="display:none;">
+                <h3>Materials</h3>
+                <div id="MaterialsDetails">
+                    TODO
+                </div>
+                <div class="statusMessage" id="status_tab-materials">
+                    msg
+                </div>
+            
+            </div>
+            
+            
+            <!-- TAB fields -->
             
             <div id="tab-fields" style="display:none;">
                 <h3>Numeric Fields</h3>
@@ -638,12 +674,14 @@
                 TODO<br/>
                 TODO
                 
-                <div class="statusMessage" id="statusTabFields">
+                <div class="statusMessage" id="status_tab-fields">
                     msg
                 </div>
             
             </div>
             
+            
+            <!-- TAB climate -->
             
             <div id="tab-climate" style="display:none">
                 <h3>
@@ -656,7 +694,7 @@
                     <img src="./img/climate_data_plot.jpg" width="480px;"/>
                 </div>
                 
-                <div class="statusMessage" id="statusTabClimate">
+                <div class="statusMessage" id="status_tab-climate">
                     msg
                 </div>
                 

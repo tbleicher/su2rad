@@ -1,6 +1,6 @@
 
-
 /*
+
 td {
     border-style: solid;
     border-width: 1px;
@@ -600,6 +600,67 @@ input.file {
 .highlightWarn {
     font-weight: bold;
     color: #cc9900;; 
+}
+
+
+.previewPanel {
+    margin-left:220px;
+    height:180px;
+    background-color: #ddddff;
+}
+.previewPanel input[type=button] {
+    margin-left:150px;
+    margin-top:80px;
+    font-size: 12px;
+    height: 20px;
+    width: 100;
+}
+
+
+.viewOptions {
+    width:210px;
+    height:180px;
+    float:left
+}
+.viewOptions div {
+    margin: 0px;
+    height: 24px;
+    margin-left: 5px;
+}
+.viewOptions div.floatGroup {
+    height: 50px;
+    width: 90px;
+    margin-top: 10px;
+    /*border-style:solid;
+    border-width:1px;
+    border-color:red; */
+}
+.viewOptions div * {
+    float: left;
+    margin: 0px;
+    /* border-style:solid;
+    border-width:1px;
+    border-color:green; */
+}
+.viewOptions div select {
+    width: 105px;
+}
+.viewOptions div div.gridLabel {
+    width: 25px;
+    height: 20px;
+    margin-right: 5px;
+    /* border-style:solid;
+    border-width:1px;
+    border-color:green; */
+    position; relative;
+    top: 1px;
+}
+.viewOptions div input {
+    width: 50px;
+    height: 20px;
+    /* font-family: "Monaco", "Courier New", Courier, monospace; */
+    font-size: 12px;
+    background-color: #cbe6f4;
 }
 
 #viewsSelection div.gridRow {
