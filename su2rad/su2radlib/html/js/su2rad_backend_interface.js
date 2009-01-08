@@ -192,11 +192,11 @@ function _getViewsListTest() {
     msg +=    ",{\"name\":\"current view\",\"selected\":\"false\",\"current\":\"true\",";
     msg +=      "\"vt\":\"v\",\"vp\":\"0 0 1\",\"vd\":\"0 1 0\",\"vu\":\"0 0 1\",";
     msg +=      "\"vo\":\"0.0\",\"va\":\"0.0\",\"vv\":\"30.0\",\"vh\":\"60.0\"}";
-    msg +=    ",{\"name\":\"sel_view\",\"selected\":\"true\",\"current\":\"false\",";
-    msg +=      "\"vt\":\"v\",\"vp\":\"0 0 1\",\"vd\":\"0 1 0\",\"vu\":\"0 0 1\",";
+    msg +=    ",{\"name\":\"parallel view\",\"selected\":\"true\",\"current\":\"false\",";
+    msg +=      "\"vt\":\"l\",\"vp\":\"0 0   1\",\"vd\":\"  0  1  0 \",\"vu\":\"0 0 1\",";
     msg +=      "\"vo\":\"0.0\",\"va\":\"0.0\",\"vv\":\"30.0\",\"vh\":\"60.0\"}";
-    msg +=    ",{\"name\":\"scene (2)\",\"selected\":\"true\",\"current\":\"false\",";
-    msg +=      "\"vt\":\"v\",\"vp\":\"0 0 1\",\"vd\":\"0 1 0\",\"vu\":\"0 0 1\",";
+    msg +=    ",{\"name\":\"angular (2)\",\"selected\":\"true\",\"current\":\"false\",";
+    msg +=      "\"vt\":\"a\",\"vp\":\"0 0 1  \",\"vd\":\" 0 1 0\",\"vu\":\"0 0 1\",";
     msg +=      "\"vo\":\"0.0\",\"va\":\"0.0\",\"vv\":\"30.0\",\"vh\":\"60.0\"}";
     msg +=    ",{\"name\":\"next to last\",\"selected\":\"false\",\"current\":\"false\",";
     msg +=      "\"vt\":\"v\",\"vp\":\"0 0 1\",\"vd\":\"0 1 0\",\"vu\":\"0 0 1\",";
@@ -216,7 +216,7 @@ function applyViewSettings(viewname) {
     }
     var text = view.toRubyString();
     var param = encodeURI(text);
-    log.debug('applyViewSettings(' + view.name + ')');
+    //log.debug('applyViewSettings(' + view.name + ')');
     if (SKETCHUP == true) {
         window.location = 'skp:applyViewSettings@' + param;
     } else {

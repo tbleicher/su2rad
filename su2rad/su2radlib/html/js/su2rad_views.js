@@ -4,6 +4,7 @@ function ViewObject() {
     this.id = 'unset';
     this.selected = false;
     this.current = false;
+    this.show_details = false;
     this.vt = "v";
     this.vp = "0 0 1";
     this.vd = "0 1 0";
@@ -12,29 +13,206 @@ function ViewObject() {
     this.vo = 0.0;
     this.vv = 60.0;
     this.vh = 60.0;
+    this._verbose = true;
+    this._bool_attributes   = ['selected','current','show_details']
+    this._float_attributes  = ['vo','va','vv','vh'];
+    this._vector_attributes = ['vp','vd','vu'];
+    this._viewTypes = [ ['v','perspective'],
+                        ['l','parallel'],
+                        ['a','angular'],
+                        ['c','cylindrical'],
+                        ['h','horizontal'],
+                        ['s','stereometric'] ]
+}
+
+ViewObject.prototype.getDetailsHTML = function () {
+    text =  "<h3><span style=\"font-size:12px;float:right;\">"
+    if (this.show_details == false) {
+        text += "<a onclick=\"showViewDetails('" + this.name + "')\">show details</a>";
+    } else {
+        text += "<a onclick=\"hideViewDetails('" + this.name + "')\">hide details</a>";
+    }
+    text += "</span>" + this.name + "</h3>";
+    if (this.show_details == false) {
+        return text
+    }
+    text += "<div class=\"viewOptions\">"
+    text += this._getViewTypeSelection();
+    text += this._getVectorValueInput('vp', 'style="margin-top:10px"');
+    text += this._getVectorValueInput('vd', 'style="margin-top:5px"');
+    text += this._getVectorValueInput('vu', 'style="margin-top:5px"');
+    text += this._getFloatValueGroup('vv','vh', 'style="float:left;"');
+    text += this._getFloatValueGroup('vo','va', 'style="margin-left:113px"');
+    text += "</div>"
+    text += "<div class=\"previewPanel\">"
+    text += "<input type=\"button\" value=\"TODO: preview\" onclick=\"onCreatePreview('" + this.name + "')\">"
+    text += "</div>"
+    return text
+}
+
+
+
+ViewObject.prototype.getElementId = function (opt) {
+    return this.id + "_" + opt;
+}
+
+ViewObject.prototype._getViewTypeSelection = function () {
+    var divtext = "<div><div class=\"gridLabel\">-vt:</div>"
+    divtext += "<select id=\"" + this.getElementId('vt') + "\" onchange=\"onViewTypeChange('"+ this.name + "')\">"
+    for (var i=0; i<this._viewTypes.length; i++) {
+        vt = this._viewTypes[i]
+        if (this.vt == vt[0]) {
+            divtext += "<option value=\"" + vt[0] + "\" selected>" + vt[1] + "</option>"
+        } else {
+            divtext += "<option value=\"" + vt[0] + "\" >" + vt[1] + "</option>"
+        }
+    } 
+    divtext += "</select></div>";
+    return divtext
+}
+
+ViewObject.prototype._getVectorValueInput = function (opt, style) {
+    var divtext = "<div " + style + " >"
+    divtext += "<div class=\"gridLabel\">-" + opt + ":</div>"
+    vect = this[opt]
+    for (var i=0; i<3; i++) {
+        divtext +=     "<input type=\"text\" class=\"viewOptionFloatValue\""
+        divtext +=         "id=\"" + this.getElementId(opt) + "_" + i + "\" value=\"" + vect[i].toFixed(3) + "\""
+        divtext +=         "onchange=\"onViewVectorOptionChange('" + this.name + "','" + opt + "')\" />"
+    }
+    divtext += "</div>";
+    return divtext
+}
+
+ViewObject.prototype._getFloatValueGroup = function (opt1,opt2,style) {
+    var gtext = "<div class=\"floatGroup\" " + style + " \">"
+    gtext += this._getFloatValueInput(opt1)
+    gtext += this._getFloatValueInput(opt2)
+    gtext += "</div>"
+    return gtext;
+}
+
+ViewObject.prototype._getFloatValueInput = function (opt) {
+    var divtext = ''
+    divtext += "<div class=\"gridLabel\">-" + opt + ":</div>"
+    divtext +=     "<input type=\"text\" class=\"viewOptionFloatValue\""
+    divtext +=         "id=\"" + this.getElementId(opt) + "\" value=\"" + this[opt].toFixed(3) + "\""
+    divtext +=         "onchange=\"onViewFloatOptionChange('" + this.name + "','" + opt + "')\" />"
+    return divtext
 }
 
 ViewObject.prototype.getToolTip = function () {
     return this.toViewString();
 }
 
-ViewObject.prototype.setFromJSONObject = function (obj) {
-    var attributes = ['name','selected','current','vt','vp','vd','vu'];
-    var f_attributes = ['vo','va','vv','vh'];
-    try {
-        for (i=0; i<attributes.length; i++) {
-            var attr = attributes[i];
-            this[attr] = obj[attr];
+ViewObject.prototype._evalFloat = function (val) {
+    return this.toViewString();
+}
+
+ViewObject.prototype._checkVector = function (vector) {
+    if (vector.constructor.toString().match(/Array/i) ) {
+        // vector is array
+    } else if (vector.constructor.toString().match(/String/i) ) {
+        if (vector.indexOf(',') > 0) {
+            vector = vector.split(',');
+        } else {
+            var a = vector.split(' ');
+            vector = new Array();
+            for (var i=0; i<a.length; i++) {
+                if (a[i] != '') {
+                    vector.push(a[i])
+                }
+            }
         }
-        for (i=0; i<f_attributes.length; i++) {
-            var attr = f_attributes[i];
-            this[attr] = parseFloat(obj[attr]);
-        }
-    } catch (e) {
-        log.error("view '" + this.name + "': error setting attribute '" + attr + "' [" + e.name + "]");
+    } else {
+        log.error('vector not of type array or string (type=' + vector.constructor + ')');
         return false;
     }
-    this.id = replaceChars(this.name);
+    if (vector.length != 3) {
+        log.error('vector: array of wrong length (' + vector.toString() + ')');
+        return false;
+    }
+    x = parseFloat(vector[0]);
+    y = parseFloat(vector[1]);
+    z = parseFloat(vector[2]);
+    if ( isNaN(x) || isNaN(y) || isNaN(z) ) {
+        log.error('vector: component not float value (' + vector.toString() + ')');
+        return false;
+    }
+    return [x,y,z]
+}
+
+ViewObject.prototype._checkViewType = function (vtype) {
+    for (i=0; i<this._viewTypes.length; i++) {
+        if (vtype == this._viewTypes[i][0] || vtype == this._viewTypes[i][1]) {
+            return this._viewTypes[i][0]
+        }
+    }
+    return false;
+}
+
+ViewObject.prototype.setValue = function (attr, newval) {
+    if (this._setValue(attr, newval) == true) {
+        if (this._verbose == true) {
+            log.info("'" + this.name + "': new value for '" + attr + "': " + this[attr]);
+        }
+    } else {
+        log.warn("new value for '" + attr + "' rejected ('" + newval + "')");
+    }
+}
+
+ViewObject.prototype._setValue = function (attr, newval) {
+    //log.debug('view.setValue(' + attr + ',' + newval + ')');
+    if (attr == 'name') {
+        this.name = newval
+        this.id = replaceChars(this.name);
+        return true
+    }
+    if (attr == 'vt') {
+        this.vt = this._checkViewType(newval) || this.vt;
+        return true
+    }
+    for (var i=0; i<this._bool_attributes.length; i++) {
+        if (attr == this._bool_attributes[i]) {
+            //log.error("DEBUG: bool attr=" + attr + " newval=" + newval)
+            if (newval == 'false' || newval == false || newval == 0 || newval == '0') {
+                this[attr] = false;
+            } else {
+                this[attr] = true;
+            }
+            return true
+        }
+    }
+    for (var i=0; i<this._float_attributes.length; i++) {
+        if (attr == this._float_attributes[i]) {
+            var val = parseFloat(newval);
+            if (!isNaN(val)) {
+                this[attr] = val;
+            }
+            return true
+        }
+    }
+    for (var i=0; i<this._vector_attributes.length; i++) {
+        if (attr == this._vector_attributes[i]) {
+            this[attr] = this._checkVector(newval) || this[attr];
+            return true
+        }
+    }
+    return false
+}
+
+ViewObject.prototype.setFromJSONObject = function (obj) {
+    //log.error('DEBUG: view.setFromJSONObject(obj=' + obj.name + ')');
+    var opts = ['name','vt','selected','current','show_details', 'vo','va','vv','vh','vp','vd','vu'];
+    this._verbose = false;
+    for (var i=0; i<opts.length; i++) {
+        //log.debug('i=' + i + ' opts[i]=' + opts[i]);
+        var attr = opts[i];
+        if (obj[attr]) {
+            this.setValue(attr, obj[attr]);
+        }
+    }
+    this._verbose = true;
     return true;
 }
 
@@ -147,17 +325,88 @@ function selectAllViews(selected) {
 }
 
 
-function onViewSelectionChange(viewname) {
-    // callback for views checkboxes
-    var id = replaceChars(viewname);
-    if (document.getElementById(id).checked == true) {
-        viewsList[viewname].setSelection(true); 
-    } else {
-        viewsList[viewname].setSelection(false); 
-    }
-    applyViewSettings(viewname);
+function hideViewDetails(viewname) {
+    viewsList[viewname].show_details = false;
+    updateViewDetailsList();
 }
 
+function onCreatePreview(viewname) {
+    if (viewsList[viewname]) {
+        var view = viewsList[viewname];
+        log.error("TEST: onCreatePreview('" + viewname + "')");
+    } else {
+        log.error("view '" + viewname + "' not found in viewsList!");
+    }
+}
+
+function onViewFloatOptionChange(viewname, opt) {
+    // callback for single value text fields
+    if (viewsList[viewname]) {
+        var view = viewsList[viewname];
+        var id = view.getElementId(opt);
+        view.setValue(opt, document.getElementById(id).value);
+        applyViewSettings(viewname);
+    } else {
+        log.error("view '" + viewname + "' not found in viewsList!");
+    }
+}
+
+function onViewSelectionChange(viewname) {
+    // callback for views checkboxes
+    if (viewsList[viewname]) {
+        var view = viewsList[viewname];
+        var id = view.getElementId('cb');
+        if (document.getElementById(id).checked == true) {
+            view.setSelection(true); 
+        } else {
+            view.setSelection(false); 
+        }
+        applyViewSettings(viewname);
+    } else {
+        log.error("view '" + viewname + "' not found in viewsList!");
+    }
+}
+
+function onViewTypeChange(viewname) {
+    if (viewsList[viewname]) {
+        var view = viewsList[viewname];
+        var id = view.getElementId('vt');
+        view.setValue('vt', document.getElementById(id).value);
+        applyViewSettings(viewname);
+    } else {
+        log.error("view '" + viewname + "' not found in viewsList!");
+    }
+}
+
+function onViewVectorOptionChange(viewname, opt) {
+    if (viewsList[viewname]) {
+        var view = viewsList[viewname];
+        var id = view.getElementId(opt);
+        x = document.getElementById(id + '_0').value;
+        y = document.getElementById(id + '_1').value;
+        z = document.getElementById(id + '_2').value;
+        view.setValue(opt, [x,y,z]);
+        applyViewSettings(viewname);
+    } else {
+        log.error("view '" + viewname + "' not found in viewsList!");
+    }
+}
+
+function showViewDetails(viewname) {
+    viewsList[viewname].show_details = true;
+    updateViewDetailsList();
+}
+
+
+function updateViewDetailsList() {
+    var text = "";
+    for(var i=0; i<viewsList.views.length; i++) {
+        var view = viewsList[viewsList.views[i]];
+        text += view.getDetailsHTML();
+    }
+    document.getElementById("viewDetails").innerHTML = text;
+    $('.viewOptionFloatValue').numeric({allow:".-"});
+}
 
 function updateViewsSummary() {
     var text = '<div class="gridRow">';
@@ -181,14 +430,17 @@ function updateViewsSummary() {
 function _getViewSummaryDiv(view) {
     // return <td> for view line (lable and checkbox)
     var text = '<div class="gridCell">';
-    text += '<input id="' + view.id + '"' 
+    text += '<input id="' + view.getElementId('cb') + '"' 
     text += 'type="checkbox" onClick="onViewSelectionChange(\'' + view.name + '\')"'
-    if (view.selected == "true" || view.selected == true) {
+    if (view.selected == true || view.current == true) {
         text += ' checked'
     }
-    text += '/> <a title="' + view.getToolTip() + '">' + view.name + '</a></div>';
+    text += '/> <a title="' + view.getToolTip() + '">'
+    if (view.current == true) {
+        text += '<i>' + view.name + '</i></a></div>';
+    } else {
+        text += view.name + '</a></div>';
+    }
     return text;
 }
-
-
 
