@@ -1,6 +1,4 @@
-
 /*
-
 td {
     border-style: solid;
     border-width: 1px;
@@ -603,37 +601,51 @@ input.file {
 }
 
 
-.previewPanel {
-    margin-left:220px;
+.viewPanel {
+    margin: 0;
+    padding: 0;
     height:180px;
-    background-color: #ddddff;
+    /* background-color: #ddddff;
+    border-style:solid;
+    border-width:1px;
+    border-color:red; */
+}
+.previewPanel {
+    float: left;
+    height:175px;
+    margin: 0;
+    padding: 0;
+    width: 330px;
+    margin-left: 20px;
+    border-style: solid;
+    border-width:2px;
+    border-color: #cbe6f4;
 }
 .previewPanel input[type=button] {
-    margin-left:150px;
+    margin-left:100px;
     margin-top:80px;
     font-size: 12px;
     height: 20px;
-    width: 100;
+    width: 100px;
 }
 
 
 .viewOptions {
+    float:left;
     width:210px;
-    height:180px;
-    float:left
+    background-color: #ffffff;
+    /* height:180px; */
 }
 .viewOptions div {
     margin: 0px;
     height: 24px;
     margin-left: 5px;
 }
-.viewOptions div.floatGroup {
-    height: 50px;
+.floatGroup {
+    float: none;
+    height: 60px;
     width: 90px;
     margin-top: 10px;
-    /*border-style:solid;
-    border-width:1px;
-    border-color:red; */
 }
 .viewOptions div * {
     float: left;
@@ -657,6 +669,15 @@ input.file {
 }
 .viewOptions div input {
     width: 50px;
+    height: 20px;
+    /* font-family: "Monaco", "Courier New", Courier, monospace; */
+    font-size: 12px;
+    background-color: #cbe6f4;
+}
+.viewOptionFloatValue {
+    float: left;
+    margin: 0px;
+    width: 40px;
     height: 20px;
     /* font-family: "Monaco", "Courier New", Courier, monospace; */
     font-size: 12px;
