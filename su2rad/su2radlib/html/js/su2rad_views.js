@@ -36,21 +36,21 @@ ViewObject.prototype.getDetailsHTML = function () {
     if (this.show_details == false) {
         return text
     }
+    text += "<div class=\"viewPanel\">"
     text += "<div class=\"viewOptions\">"
     text += this._getViewTypeSelection();
     text += this._getVectorValueInput('vp', 'style="margin-top:10px"');
     text += this._getVectorValueInput('vd', 'style="margin-top:5px"');
     text += this._getVectorValueInput('vu', 'style="margin-top:5px"');
-    text += this._getFloatValueGroup('vv','vh', 'style="float:left;"');
-    text += this._getFloatValueGroup('vo','va', 'style="margin-left:113px"');
+    text += this._getFloatValueGroup('vv','vo', 'style="margin-top:10px"');
+    text += this._getFloatValueGroup('vh','va', '');
     text += "</div>"
     text += "<div class=\"previewPanel\">"
     text += "<input type=\"button\" value=\"TODO: preview\" onclick=\"onCreatePreview('" + this.name + "')\">"
     text += "</div>"
+    text += "</div>"
     return text
 }
-
-
 
 ViewObject.prototype.getElementId = function (opt) {
     return this.id + "_" + opt;
@@ -84,17 +84,26 @@ ViewObject.prototype._getVectorValueInput = function (opt, style) {
     return divtext
 }
 
-ViewObject.prototype._getFloatValueGroup = function (opt1,opt2,style) {
-    var gtext = "<div class=\"floatGroup\" " + style + " \">"
+ViewObject.prototype._getFloatValueGroup = function (opt1, opt2, style) {
+    var divtext = "<div " + style + " >";
+    divtext += this._getFloatValueInput(opt1, '')
+    divtext += this._getFloatValueInput(opt2, 'style="margin-left:24px;"')
+    divtext += "</div>";
+    return divtext
+}
+
+ViewObject.prototype._getFloatValueGroup_old = function (opt1,opt2,style) {
+    //var gtext = "<div class=\"floatGroup\" " + style + " \">"
+    var gtext = "";
     gtext += this._getFloatValueInput(opt1)
     gtext += this._getFloatValueInput(opt2)
-    gtext += "</div>"
+    //gtext += "</div>"
     return gtext;
 }
 
-ViewObject.prototype._getFloatValueInput = function (opt) {
+ViewObject.prototype._getFloatValueInput = function (opt, style) {
     var divtext = ''
-    divtext += "<div class=\"gridLabel\">-" + opt + ":</div>"
+    divtext += "<div class=\"gridLabel\" " + style + ">-" + opt + ":</div>"
     divtext +=     "<input type=\"text\" class=\"viewOptionFloatValue\""
     divtext +=         "id=\"" + this.getElementId(opt) + "\" value=\"" + this[opt].toFixed(3) + "\""
     divtext +=         "onchange=\"onViewFloatOptionChange('" + this.name + "','" + opt + "')\" />"
