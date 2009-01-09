@@ -16,6 +16,13 @@ span {
 }
 */
 
+a:link {
+    cursor: pointer;
+}
+a.clickable {
+    cursor: pointer;
+}
+
 body {
     font-size: 16px; /* @ EOMB */
     color: #333333;
@@ -161,6 +168,8 @@ input[type=text] {
     height: 18px;
     padding: 0;
     margin: 0;
+    /* border: solid 0 #fff; */
+    cursor: pointer;
 }
 input[type=checkbox] {
     position: relative;
@@ -422,8 +431,9 @@ input.file {
     position: relative;
     top: 2px;
     font-size: 12px;
-    font-family: "Monaco", "Courier New", Courier, monospace;
-    /* font-weight: bold; */
+    /* font-family: "Monaco", "Courier New", Courier, monospace; */
+    color: #27537a;
+    font-weight: bold;
     /* color: #27537a; 
     background-color: #d9eaf4;
     padding: 2px; */
@@ -640,12 +650,6 @@ input.file {
     margin: 0px;
     height: 24px;
     margin-left: 5px;
-}
-.floatGroup {
-    float: none;
-    height: 60px;
-    width: 90px;
-    margin-top: 10px;
 }
 .viewOptions div * {
     float: left;

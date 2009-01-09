@@ -18,13 +18,16 @@ var map, marker, lastPoint;
 
 
 // object instances
+try {
 var exportSettings = new ExportSettingsObject();
+var skyOptions = new SkyOptionsObject(); // required by ModelLocationObject
+var skyDateTime = new SkyDateTimeObject();
 var modelLocation = new ModelLocationObject();
 var radOpts = new RadOptsObject();
-var skyOptions = new SkyOptionsObject();
-var skyDateTime = new SkyDateTimeObject();
 var viewsList = new ViewsListObject();
-
+} catch (e) {
+    log.error(e.message)
+}
 
 function initPage() {
     //log.toggle();
@@ -332,7 +335,6 @@ function updateSkyPage() {
         document.getElementById("applyLocationValues").disabled=true;
         document.getElementById("reloadShadowInfo").disabled=true;
     }
-    setSkyCmdLine();
     skyDateTime.getShadowTime();
 }
 

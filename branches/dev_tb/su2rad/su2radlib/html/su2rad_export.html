@@ -141,7 +141,7 @@
 
                 
                 <!-- ###   VIEWS   ### --> 
-                <h3>Views <span id="selectAllViews" style="font-size:12px;"><a onclick="selectAllViews()">select all</a></span></h3>
+                <h3>Views <span id="selectAllViews" style="font-size:12px;margin-left:10px;"><a class="clickable" onclick="selectAllViews()">select all</a></span></h3>
                 <div id="viewsSelection">
                 <!-- use this space for test data button --> 
                 <input type="button" id="testDataButton" name="testDataButton" value="load test data" onclick="loadTestData()">
@@ -516,11 +516,9 @@
                             
                 <div style="clear:both;"></div>
                 
-                <div class="optionsRow" style="display:none;float:none;width:450px;">
-                    <span class="gridLabel">command:</span>
-                    <span class="commandLine" id="skyCommandLine">!gensky</span> 
+                <div class="optionsRow" style="float:none;width:600px;">
+                    <span class="commandLine" id="skyCommandLine">cmd: !gensky</span> 
                 </div>
-            
                             
                 <h3>
                     <input class="floatright" type="button" value="done" onclick="switch_to_tab(1)">
