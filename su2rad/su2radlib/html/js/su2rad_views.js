@@ -28,9 +28,9 @@ function ViewObject() {
 ViewObject.prototype.getDetailsHTML = function () {
     text =  "<h3><span style=\"font-size:12px;float:right;\">"
     if (this.show_details == false) {
-        text += "<a onclick=\"showViewDetails('" + this.name + "')\">show details</a>";
+        text += "<a class=\"clickable\" onclick=\"showViewDetails('" + this.name + "')\">[show details]</a>";
     } else {
-        text += "<a onclick=\"hideViewDetails('" + this.name + "')\">hide details</a>";
+        text += "<a class=\"clickable\" onclick=\"hideViewDetails('" + this.name + "')\">[hide details]</a>";
     }
     text += "</span>" + this.name + "</h3>";
     if (this.show_details == false) {
@@ -90,15 +90,6 @@ ViewObject.prototype._getFloatValueGroup = function (opt1, opt2, style) {
     divtext += this._getFloatValueInput(opt2, 'style="margin-left:24px;"')
     divtext += "</div>";
     return divtext
-}
-
-ViewObject.prototype._getFloatValueGroup_old = function (opt1,opt2,style) {
-    //var gtext = "<div class=\"floatGroup\" " + style + " \">"
-    var gtext = "";
-    gtext += this._getFloatValueInput(opt1)
-    gtext += this._getFloatValueInput(opt2)
-    //gtext += "</div>"
-    return gtext;
 }
 
 ViewObject.prototype._getFloatValueInput = function (opt, style) {
@@ -183,7 +174,6 @@ ViewObject.prototype._setValue = function (attr, newval) {
     }
     for (var i=0; i<this._bool_attributes.length; i++) {
         if (attr == this._bool_attributes[i]) {
-            //log.error("DEBUG: bool attr=" + attr + " newval=" + newval)
             if (newval == 'false' || newval == false || newval == 0 || newval == '0') {
                 this[attr] = false;
             } else {
@@ -211,11 +201,10 @@ ViewObject.prototype._setValue = function (attr, newval) {
 }
 
 ViewObject.prototype.setFromJSONObject = function (obj) {
-    //log.error('DEBUG: view.setFromJSONObject(obj=' + obj.name + ')');
+    //log.debug('view.setFromJSONObject(obj=' + obj.name + ')');
     var opts = ['name','vt','selected','current','show_details', 'vo','va','vv','vh','vp','vd','vu'];
     this._verbose = false;
     for (var i=0; i<opts.length; i++) {
-        //log.debug('i=' + i + ' opts[i]=' + opts[i]);
         var attr = opts[i];
         if (obj[attr]) {
             this.setValue(attr, obj[attr]);
@@ -235,7 +224,6 @@ ViewObject.prototype.setSelection = function (selected) {
 }
 
 ViewObject.prototype.toRubyString = function (selection_only) {
-    //log.error("DEBUG: view.toRubyString()")
     var text = "{\"name\" => \""     + this.name     + "\",";
     text +=    " \"selected\" => \"" + this.selected + "\",";
     if (selection_only == true) {
@@ -273,7 +261,7 @@ function ViewsListObject() {
 
 ViewsListObject.prototype.setViewsList = function (newViews) {
     // create new view objects from array <newViews>
-    log.debug("setViewsList()")
+    //log.debug("setViewsList()")
     this.views = new Array();
     for(var i=0; i<newViews.length; i++) {
         if (newViews[i] != null) {
@@ -296,7 +284,6 @@ ViewsListObject.prototype.selectAllViews = function (selected) {
 
 ViewsListObject.prototype.toString = function (selection_only) {
     // return views as object notation string
-    //log.error("DEBUG: viewsList.toString()")
     var text = "["
     for(var i=0; i<this.views.length; i++) {
         var vname = this.views[i];
@@ -306,7 +293,6 @@ ViewsListObject.prototype.toString = function (selection_only) {
             log.error(vname + ".toRubyString(): " + e.name)
         }
     }
-    //text = text.substr(0,text.length-1);
     text += "]";
     return text;
 }
@@ -318,11 +304,11 @@ function deselectAllViews() {
 function selectAllViews(selected) {
     if (selected == false) {
         log.info('deselecting all views');
-        document.getElementById('selectAllViews').innerHTML = "<a onclick=\"selectAllViews()\">[select all]</a>" 
+        document.getElementById('selectAllViews').innerHTML = "<a class=\"clickable\" onclick=\"selectAllViews()\">[select all]</a>" 
     } else {
         log.info('selecting all views');
         selected = true;
-        document.getElementById('selectAllViews').innerHTML = "<a onclick=\"deselectAllViews()\">[deselect all]</a>" 
+        document.getElementById('selectAllViews').innerHTML = "<a class=\"clickable\" onclick=\"deselectAllViews()\">[deselect all]</a>" 
     }
     viewsList.selectAllViews(selected);
     updateViewsSummary();

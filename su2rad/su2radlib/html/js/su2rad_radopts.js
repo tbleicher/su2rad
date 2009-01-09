@@ -127,7 +127,7 @@ RadOptsObject.prototype.setRpictDefaults = function () {
 
 RadOptsObject.prototype.setRpictOptions = function () {
     // calculate and set rpict options from quality settings
-    log.debug("this.setRpictOptions(" + this.Quality + ")");
+    //log.debug("setRpictOptions(" + this.Quality + ")");
     this.setRpictDefaults()
     if (this.Quality == "low") {
         this._setRpictOptsLow();
@@ -482,7 +482,7 @@ function getRpictOptionSpansBool() {
 }
 
 function setRenderOptionsJSON(text) {
-    log.debug("setRenderOptionsJSON()")
+    //log.debug("setRenderOptionsJSON()")
     var json = decodeJSON(text);
     try {
         eval("var renderOpts = " + json);
@@ -496,7 +496,6 @@ function setRenderOptionsJSON(text) {
         if(attrib != null) {
             radOpts.setValue(attrib.name, attrib.value);
             var line = '&nbsp;&nbsp;<b>' + attrib.name + ':</b> ' + attrib.value + '<br/>';
-            //log.debug(line);
             text = text + line;
         }
     }
@@ -528,7 +527,7 @@ function syncRadOption(id) {
 
 function onRadOptionChange(id) {
     var opt=id.slice(3);    
-    log.debug("onRadOptionChange() opt='" + opt + "'");
+    //log.debug("onRadOptionChange() opt='" + opt + "'");
     if (opt == "Penumbras") {
         radOpts[opt] = document.getElementById(id).checked;
     } else if (opt == "ZoneSize") {
@@ -565,7 +564,7 @@ function onRpictOverride(opt) {
 
 function parseRenderLine(inText) {
     // validate render line input and set overrides
-    log.debug("parseRenderLine('" + inText + "')");
+    //log.debug("parseRenderLine('" + inText + "')");
     if (inText == '') {
         inText = document.getElementById('radRenderLine_2').value;
     }
@@ -588,7 +587,7 @@ function parseRenderLine(inText) {
     i = 0;
     while (i<parts.length) {
         var opt = parts[i]
-        log.debug("  -> parsing '" + opt + "' ...");
+        //log.debug("  -> parsing '" + opt + "' ...");
         if (opt.charAt(0) == "-") {
             opt = opt.slice(1);
         }
@@ -782,7 +781,7 @@ function _updateRpictOptionDisplay() {
 }
 
 function updateRpictValues() {
-    log.debug("updateRpictValues()");
+    //log.debug("updateRpictValues()");
     radOpts.setRpictOptions();
     updateImageSizeDisplay();
     _updateRpictOptionDisplay();

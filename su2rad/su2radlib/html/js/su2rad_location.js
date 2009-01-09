@@ -62,6 +62,19 @@ ModelLocationObject.prototype.setValue = function (opt,val) {
     }
 }
 
+ModelLocationObject.prototype.toGenskyString = function () {
+    var lat = this.Latitude * 1.0;
+    var lng = this.Longitude * -1.0;
+    var mer = this.TZOffset * -15.0;
+    var loc = " -a " + lat.toFixed(4) + " -o " + lng.toFixed(4) + " -m " + mer.toFixed(1);
+    if (this.NorthAngle != 0.0) {
+        var north = this.NorthAngle*-1;
+        loc += " | xform -rz " + north.toFixed(2);
+    }
+    var sky = skyOptions.toString() + loc;
+    return sky;
+}
+
 ModelLocationObject.prototype.toParamString = function () {
     // return params string for SU
     var text = 'City=' + this.City;
@@ -71,7 +84,7 @@ ModelLocationObject.prototype.toParamString = function () {
     text += '&TZOffset=' + this.TZOffset.toFixed(1);
     text += '&NorthAngle=' + this.NorthAngle.toFixed(4);
     text += '&ShadowTime_time_t=' + this.ShadowTime_time_t;
-    text += '&SkyCommand=' + this.SkyCommand;
+    text += '&SkyCommand=' + this.toGenskyString();
     return text;
 }
 
@@ -261,7 +274,7 @@ function _getShadowInfoArrayFromJSON(text) {
 
 function setShadowInfoJSON(msg) {
     // parse and apply shadow_info settings in JSON string 'msg'
-    log.debug("setShadowInfoJSON()")
+    //log.debug("setShadowInfoJSON()")
     shadowinfo = _getShadowInfoArrayFromJSON(msg);
     var text = '<b>shadow info settings:</b><br/>';
     modelLocation.logging = false;

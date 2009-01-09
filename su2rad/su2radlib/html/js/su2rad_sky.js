@@ -10,6 +10,8 @@ function SkyOptionsObject() {
     this.r = 1;
     this.R = 1;
     this._activeOptions = {};
+    this._activeOptions.g = false;
+    this._activeOptions.t = false;
     this._activeOptions.b = false;
     this._activeOptions.B = false;
     this._activeOptions.r = false;
@@ -46,7 +48,7 @@ SkyOptionsObject.prototype.parseSkyCommand = function (cmdline) {
         return
     }
     this.logging = false; // stop info level logging
-    log.info("parsing '" + cmdline + "'");
+    log.debug("parsing '" + cmdline + "'");
     if (cmdline.charAt(0) == '!') {
         cmdline = cmdline.substring(1,cmdline.length);
     }
@@ -103,7 +105,7 @@ SkyOptionsObject.prototype.removeOption = function (opt) {
 }
 
 SkyOptionsObject.prototype.setActive = function (opt, checked) {
-    log.error("DEBUG setActive('" + opt + "', '" + checked + "'");
+    //log.debug("setActive('" + opt + "', '" + checked + "'");
     if (opt == 'g' || opt == 't') {
         this._activeOptions[opt] = checked;
     } else {
@@ -142,7 +144,7 @@ SkyOptionsObject.prototype.setGenerator = function(val) {
 }
 
 SkyOptionsObject.prototype.setValue = function(opt, val) {
-    //log.error("DEBUG setValue(opt='" + opt + "', val='" + val + "'");
+    //log.debug("setValue(opt='" + opt + "', val='" + val + "'");
     if (opt.length == 2 && opt.charAt(0) == '-') {
         opt = opt.charAt(1);
     }
@@ -150,10 +152,15 @@ SkyOptionsObject.prototype.setValue = function(opt, val) {
     if (isNaN(v)) {
         return false;
     } else {
-        this[opt] = v;
         this.setActive(opt, true);
-        return true;
+        this[opt] = v;
     }
+    if (opt == 'g' && v == 0.2) {
+        this.setActive('g', false);
+    } else if (opt == 't' && v == 1.7) {
+        this.setActive('t', false);
+    }
+    return true;
 }
     
 SkyOptionsObject.prototype.toString = function() {
@@ -270,6 +277,7 @@ SkyDateTimeObject.prototype.toGenskyString = function () {
 
 
 function onGenskyInputChanged(opt) {
+    //log.debug("onGenskyInputChanged(opt='" + opt + "')");
     var id = "genskyOptionInput" + opt;
     var val = document.getElementById(id).value;
     var v = parseFloat(val);
@@ -277,7 +285,7 @@ function onGenskyInputChanged(opt) {
         alert("value is not a number: '" + val + "'");
         document.getElementById(id).value = skyOptions[opt];
     } else {
-        skyOptions[opt] = v;
+        skyOptions.setValue(opt, v);
     }
     //document.getElementById('skyCommandLine').innerHTML = skyOptions.toString();
     updateSkyPage();
@@ -285,16 +293,13 @@ function onGenskyInputChanged(opt) {
 }
 
 function onGenskyOptionCB(opt) {
-    //log.error("DEBUG onGenskyOptionCB(opt='" + opt + "'");
+    //log.debug("onGenskyOptionCB(opt='" + opt + "'");
     try {
         var cbid = "genskyOptionCB_" + opt;
         var cb = document.getElementById(cbid);
-        //log.error("DEBUG (cb='" + cb.value + "' cb.checked='" + cb.checked + "')");
         if (cb.checked == true) {
-            //log.error("DEBUG: true");
             enableGenskyOption(opt, true);
         } else {
-            //log.error("DEBUG: false");
             enableGenskyOption(opt, false);
         }
     } catch (e) {
@@ -303,21 +308,7 @@ function onGenskyOptionCB(opt) {
 }
 
 function enableGenskyOption(opt, enable) {
-    //log.error("DEBUG enableGenskyOption(opt='" + opt + "'");
-    if (false) {
-        // disable 'other' option and set positive default
-        var other = '';
-        if (opt == "b" || opt == "r") {
-            other = opt.toUpperCase();
-        } else if (opt == "B" || opt == "R") {
-            other = opt.toLowerCase();
-        }
-        //log.error("DEBUG onGenskyOptionCB(other='" + other + "'");
-        if (other != '') {
-            var otherid = "genskyOptionCB_" + other;
-            document.getElementById(otherid).checked = false;
-        }
-    }
+    //log.debug("enableGenskyOption(opt='" + opt + "'");
     skyOptions.setActive(opt, enable);
     _updateGenskyOptions();
     updateSkyPage();
@@ -411,18 +402,9 @@ function setSkyCmdLine() {
     var loc = modelLocation.City + ", "+ modelLocation.Country;
     document.getElementById("skySummaryLocation").innerHTML = loc;
     document.getElementById("skySummaryNorth").innerHTML = modelLocation.NorthAngle.toFixed(2);
-    var lat = modelLocation.Latitude * 1.0;
-    var lng = modelLocation.Longitude * -1.0;
-    var mer = modelLocation.TZOffset * -15.0;
-    var loc = " -a " + lat.toFixed(4) + " -o " + lng.toFixed(4) + " -m " + mer.toFixed(1);
-    var rot = '';
-    if (modelLocation.NorthAngle != 0.0) {
-        var gensky_north = modelLocation.NorthAngle*-1;
-        rot = " | xform -rz " + gensky_north.toFixed(2);
-    }
-    var sky = skyOptions.toString() + " " + loc + rot;
-    modelLocation.SkyCommand = sky;
+    var sky = modelLocation.toGenskyString();
     document.getElementById("skySummaryOptions").innerHTML = sky;
+    document.getElementById("skyCommandLine").innerHTML = '<b>cmd:</b> ' + sky;
     setStatusMsg(sky);
 }
 
@@ -516,7 +498,7 @@ function _updateGenskyOptionsDiv(opt) {
     } else {
         var text = "<div class=\"" + style + "\" style=\"width:90px;\">";
         text += "<span class=\"gridLabel\" style=\"width:60px;font-size:13px;\">"
-        text += "<a onclick=\"enableGenskyOption('" + opt + "', true)\">[set -" + opt + "]</a></span>";
+        text += "<a class=\"clickable\" onclick=\"enableGenskyOption('" + opt + "', true)\">[set -" + opt + "]</a></span>";
         text += "</div>"
         return text;
     }

@@ -15,7 +15,7 @@ function geonamesLookup(lat,long,zoom) {
     var text = "<b>geonames request in progress ...</b><br/><span style=\"font-size: small;\">";
     text += request + "</span>";
     setStatusMsg(text);
-    document.body.style.cursor='wait';
+    //document.body.style.cursor='wait';
     // Create a new script object
     aObj = new JSONscriptRequest(request);
     // Build and execute ('add') the script tag
@@ -27,21 +27,19 @@ function geonamesLookup(lat,long,zoom) {
 
 function geonamesCallback(jData) {
     // restore cursor
-    document.body.style.cursor='auto';
+    //document.body.style.cursor='auto';
     // check if there was a problem parsing search results
     if (jData == null) {
         log.warn("geonames: no data object received");
-        return;
+        return false;
     }
     // test if 'jData.geonames' exists
     try {
         log.info("jData.geonames [length=" + jData.geonames.length + "]");
     }
     catch (e) {
-        log.error("ERROR for 'jData.geonames.length': " + e.name);
-        log.debug("jData.status.message: " + jData.status.message);
-        log.debug("jData.status.value: " + jData.status.value);
-        return;
+        jDataErrorMsg(jData,e);
+        return false;
     }
     
     // now select closest location
@@ -76,7 +74,7 @@ function geonamesTimeZone(lat,lng) {
     log.info("sending JSON time zone request ...")
     //log.debug("  " + request);
     // Create a new script object
-    document.body.style.cursor='wait';
+    //document.body.style.cursor='wait';
     aObj = new JSONscriptRequest(request);
     // Build and execute ('add') the script tag
     aObj.buildScriptTag();
@@ -84,14 +82,20 @@ function geonamesTimeZone(lat,lng) {
     //log.debug("  JSONscriptRequest=" + aObj)
 }
 
+function jDataErrorMsg(jData, e) {
+    var msg = "ERROR for 'jData.gmtOffset':</br> - " + e.name;
+    msg += "</br>jData.status.message:</br> - " + jData.status.message;
+    msg += "</br>jData.status.value:</br> - " + jData.status.value;
+    log.error(msg)
+}
 
 function geonamesTimeZoneCallback(jData) {
     // restore cursor
-    document.body.style.cursor='auto';
+    //document.body.style.cursor='auto';
     // check if there was a problem parsing search results
     if (jData == null) {
         log.warn("no data returned")
-        return;
+        return false;
     }
     // Test if 'geonames' exists
     try {
@@ -101,10 +105,8 @@ function geonamesTimeZoneCallback(jData) {
         clearTZWarning();
     }
     catch (e) {
-        log.error("ERROR for 'jData.gmtOffset': " + e.name);
-        log.debug("jData.status.message: " + jData.status.message);
-        log.debug("jData.status.value: " + jData.status.value);
-        return;
+        jDataErrorMsg(jData,e);
+        return false;
     }
 }
 
