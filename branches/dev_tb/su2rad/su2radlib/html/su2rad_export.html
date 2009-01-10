@@ -142,7 +142,7 @@
                 
                 <!-- ###   VIEWS   ### --> 
                 <h3>
-                    <input class="floatright" type="button" value="edit" onclick="switch_to_tab('tab-views')">
+                    <!-- <input class="floatright" type="button" value="edit" onclick="switch_to_tab('tab-views')"> -->
                     Views
                     <span id="selectAllViews" style="font-size:12px;margin-left:10px;">
                         <a class="clickable" onclick="selectAllViews()">select all</a>
@@ -157,7 +157,7 @@
                 
                 <!-- ###   RENDER   ### --> 
                 <h3>
-                    <input class="floatright" type="button" value="edit" onclick="switch_to_tab('tab-render')">
+                    <!-- <input class="floatright" type="button" value="edit" onclick="switch_to_tab('tab-render')"> -->
                     Render Options
                 </h3>
                 <div id="renderSummary">
@@ -210,14 +210,14 @@
                         <div class="gridLabel">render:</div>
                         <div class="gridCell" style="width:400px">
                             <span class="commandLine" id="radRenderLine_1"></span>
-                            <!-- <input type="text" class="column2" name="radRenderLine_1" id="radRenderLine_1" value="" onchnge="parseRenderLine('_1')"/> -->
+                            <!-- <input type="text" class="column2" name="radRenderLine_1" id="radRenderLine_1" value="" onchnge="onRenderLineChange(this.value)"/> -->
                         </div>
                     </div>
                 </div>
                 
                 
                 <h3>
-                    <input class="floatright" type="button" value="edit" onclick="switch_to_tab('tab-sky')">
+                    <!-- <input class="floatright" type="button" value="edit" onclick="switch_to_tab('tab-sky')"> -->
                     Sky
                 </h3>
                 <div id="locationSummary">
@@ -243,7 +243,7 @@
                 
                  
                 <h3 style="display:none;">
-                    <input class="floatright" type="button" id="edit_climate" value="edit" onclick="switch_to_tab('tab-climate')" disabled>
+                    <input class="floatright" type="button" id="edit_climate" style="display:none;" value="edit" onclick="switch_to_tab('tab-climate')" disabled>
                     <input type="checkbox" id="climate_checkbox" value="climate"
                     onClick="toggleClimateTab()"> Climate Data
                 </h3>
@@ -289,7 +289,7 @@
             
             <div id="tab-render">
                 <h3>
-                    <input class="floatright" type="button" value="done" onclick="switch_to_tab('tab-export')">
+                    <!-- <input class="floatright" type="button" value="done" onclick="switch_to_tab('tab-export')"> -->
                     Render Settings
                 </h3>
                 
@@ -399,7 +399,7 @@
                     <div class="gridColumn" style="clear:both;width:585px;margin-top:5px;">
                         <div class="gridLabel">render:</div>
                         <div class="gridCell" style="width:300px">
-                            <input type="text" style="width:287px;" name="radRenderLine_2" id="radRenderLine_2" value="" onchange="parseRenderLine(this.value)" />
+                            <input type="text" style="width:287px;" name="radRenderLine_2" id="radRenderLine_2" value="" onchange="onRenderLineChange(this.value)" />
                         </div>
                     </div>
                 </div>
@@ -428,7 +428,7 @@
                 </h3>
                 
                 <h3>
-                    <input class="floatright" type="button" value="done" onclick="switch_to_tab('tab-export')">
+                    <!-- <input class="floatright" type="button" value="done" onclick="switch_to_tab('tab-export')"> -->
                     Sky Settings
                 </h3>
                 <div class="optionsColumn" style="height:120px">
@@ -527,7 +527,7 @@
                 </div>
                             
                 <h3>
-                    <input class="floatright" type="button" value="done" onclick="switch_to_tab('tab-export')">
+                    <!-- <input class="floatright" type="button" value="done" onclick="switch_to_tab('tab-export')"> -->
                     Location Settings
                 </h3>
                 
@@ -646,7 +646,7 @@
             
             <div id="tab-views" style="display:none;">
                 <h3>
-                    <input class="floatright" type="button" value="done" onclick="switch_to_tab('tab-export')">
+                    <!-- <input class="floatright" type="button" value="done" onclick="switch_to_tab('tab-export')"> -->
                     View Details
                 </h3>
                 <div id="viewDetails">
@@ -692,7 +692,7 @@
             
             <div id="tab-climate" style="display:none">
                 <h3>
-                    <input class="floatright" type="button" value="done" onclick="switch_to_tab('tab-export')">
+                    <!-- <input class="floatright" type="button" value="done" onclick="switch_to_tab('tab-export')"> -->
                     Climate Data
                 </h3>
                 

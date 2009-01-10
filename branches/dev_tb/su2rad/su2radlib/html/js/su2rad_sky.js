@@ -35,6 +35,9 @@ SkyOptionsObject.prototype.setSkyType = function (stype) {
     var s = stype.charAt(1);
     if ( s == 'u' || s == 'c' || s == 'i' || s == 's' ) {
         if (stype.charAt(0) == '+' || stype.charAt(0) == '-') {
+            if (stype != this.skytype) {
+                log.debug("new skytype: '" + stype + "'");
+            }
             this.skytype = stype;
             return true;
         }
@@ -56,11 +59,11 @@ SkyOptionsObject.prototype.parseSkyCommand = function (cmdline) {
     for (i=0; i<parts.length; i++) {
         var opt = parts[i];
         if (this.setGenerator(opt) == true) {
-            log.debug("new generator: '" + opt + "'");
+            // log.debug("new generator: '" + opt + "'");
         } else if (this.setSkyType(opt) == true) {
-            log.debug("new skytype: '" + opt + "'");
+            // log.debug("new skytype: '" + opt + "'");
         } else if (opt == '-ang') {
-            log.debug("sky option '-ang' ignored")
+            log.warn("sky option '-ang' ignored")
             if (i < parts.length-2) {
                 var alt = parts[i+1];
                 var azi = parts[i+2];
@@ -80,7 +83,6 @@ SkyOptionsObject.prototype.parseSkyCommand = function (cmdline) {
             if (i < parts.length-1) {
                 var arg = parts[i+1];
                 if (this.setValue(opt, arg) == true) {
-                    log.debug("new value for option '" + opt + "': '" + arg + "'");
                     i += 1;
                 } else {
                     log.error("value for option '" + opt + "' is not a number: '" + arg + "'" );
@@ -123,24 +125,25 @@ SkyOptionsObject.prototype.setActive = function (opt, checked) {
 }
 
 SkyOptionsObject.prototype.setGenerator = function(val) {
+    var oldGen = this.generator;
     if (val == 'gensky') {
         this.generator = 'gensky';
-        // TODO enable gensky options
-        return true;
     } else if (val == 'gendaylit') {
         this.generator = 'gendaylit';
-        // TODO enable gendaylit options
         alert("'gendaylit' not enabled yet\ndefault to 'gensky'")
         this.generator = 'gensky';
-        return true;
     } else if (val == 'hdr-image') {
         this.generator = 'hdr-image';
-        // TODO enable hdr options
         alert("'hdr-image' not enabled yet\ndefault to 'gensky'")
         this.generator = 'gensky';
-        return true;
+    } else {
+        //log.error("'unknown sky generator '" + val + "'; generator unchanged")
+        return false;
     }
-    return false;
+    if (oldGen != this.generator) {
+        log.debug("new generator: '" + opt + "'");
+    }
+    return true;
 }
 
 SkyOptionsObject.prototype.setValue = function(opt, val) {
@@ -153,6 +156,9 @@ SkyOptionsObject.prototype.setValue = function(opt, val) {
         return false;
     } else {
         this.setActive(opt, true);
+        if (this[opt] != v) {
+            log.debug("new value for option '" + opt + "': '" + v + "'");
+        }
         this[opt] = v;
     }
     if (opt == 'g' && v == 0.2) {

@@ -159,6 +159,7 @@ function onCancelButton() {
 }
 
 function switch_to_tab(id) {
+    return
     $('#tab-container').triggerTab(id);
     //updatePageById(id);
 }
@@ -279,7 +280,6 @@ function showResults(msg) {
 }
 
 function onTabClick(link,div_show,div_hide) {
-    log.error("switching to tab '" + div_show.id + "'");
     _currentStatusDiv = "status_" + div_show.id;
     updatePageById(div_show.id);
     return true;

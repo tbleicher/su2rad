@@ -21,11 +21,17 @@ class ExportOptions
         @textures      = getConfig('TEXTURES')
         @exportMode    = getConfig('MODE')
         @global_coords = getConfig('MAKEGLOBAL')
+        optsString = Sketchup.active_model.get_attribute('SU2RAD', 'EXPORTOPTIONS')
+        if optsString != nil
+            uimessage('loading export options from attribute', 1)
+            setOptionsFromString(nil, optsString, true)
+        end
     end
     
-    def applyExportOptions(dlg,params)
-        setOptionsFromString(dlg, params)
+    def applyExportOptions(dlg, optsString)
+        setOptionsFromString(dlg, optsString)
         ## check if selected file path exists and enable 'load' button
+        Sketchup.active_model.set_attribute('SU2RAD', 'EXPORTOPTIONS', optsString) 
     end
     
     def _setDialogOptions(dlg)
@@ -65,9 +71,8 @@ class ExportOptions
         json = toJSON()
         dlg.execute_script( "setExportOptionsJSON('%s')" % encodeJSON(json) )
     end 
-     
-    def toJSON
-        ## collect export options and return JSON string
+    
+    def _getSettings
         dict = Hash.new()
         dict['scenePath'] = @scenePath
         dict['sceneName'] = @sceneName
@@ -75,6 +80,12 @@ class ExportOptions
         dict['textures'] = @textures
         dict['exportMode'] = @exportMode
         dict['global_coords'] = @global_coords
+        return dict
+    end
+    
+    def toJSON
+        ## collect export options and return JSON string
+        dict = _getSettings()
         json = getJSONDictionary(dict)
         return json
     end
@@ -142,9 +153,6 @@ class RenderOptions
     include JSONUtils
     include InterfaceBase
     
-    @@attributesDictName = 'SU2RAD'
-    @@attributesDictKey  = 'RENDERSETTINGS'
-
     def initialize
         @Quality = 'medium'
         @Detail = 'medium'
@@ -163,10 +171,18 @@ class RenderOptions
         @oconv = '-w'
         @filename = ''
         update()
+
+        optsString = Sketchup.active_model.get_attribute('SU2RAD', 'RENDEROPTIONS')
+        if optsString != nil
+            uimessage('loading render options from attribute', 1)
+            setOptionsFromString(nil, optsString, true)
+        end
     end
-    
-    def applyRenderOptions(dlg,params)
-        setOptionsFromString(dlg, params)
+        
+    def applyRenderOptions(dlg, optsString)
+        setOptionsFromString(dlg, optsString)
+        ## save 
+        Sketchup.active_model.set_attribute('SU2RAD', 'RENDEROPTIONS', optsString) 
     end
   
     def getRifOptionsText
@@ -261,28 +277,6 @@ class RenderOptions
         return json
     end
     
-    def attrRead
-        dName = @@attributesDictName
-        dKey = @@attributesDictKey
-        dmp = Sketchup.active_model.get_attribute(dName, dKey)
-        d = {}
-        if dmp != nil
-            begin
-                d = Marshal.load(dmp)
-            rescue => e
-                uimessage("Error loading attributes:\n#{e}", -2)
-            end
-        end
-        updateFromDict(d, false)
-    end
-    
-    def attrStore
-        dName = @@attributesDictName
-        dKey = @@attributesDictKey
-        d = _getSettingsDict()
-        Sketchup.active_model.set_attribute(dName, dKey, Marshal.dump(d))
-    end
-    
     def update
         @ImageSizeX = Sketchup.active_model.active_view.vpwidth
         @ImageSizeY = Sketchup.active_model.active_view.vpheight
@@ -306,9 +300,9 @@ class RenderOptions
                 uimessage("%s\n[k='%s'  v='%s'\n" % [$!.message, k, v], -2)
             end
         }
-        if store == true
-            attrStore()
-        end
+        sDict = _getSettingsDict()
+        opts = sDict.collect { |k,v| "%s=%s" [k,v] }
+        Sketchup.active_model.set_attribute('SU2RAD', 'RENDEROPTIONS', opts.join('&')) 
     end
 
 end
@@ -320,16 +314,25 @@ class SkyOptions
     include JSONUtils
     include InterfaceBase
 
-    @@attributesDictName = 'SU2RAD_SKIES'
-
     def initialize
         @rsky = RadianceSky.new()
-        @_settings = {'name' => 'default'}
+        @_settings = {}
+        @_settings['SkyCommand'] = getSkyCommand()
         @_sinfo_unused = ['DisplayNorth', 'EdgesCastShadows', 'Light', 'Dark', 
                           'SunRise', 'SunRise_time_t',
                           'SunSet', 'SunSet_time_t',
+                          #'ShadowTime',
+                          #'DaylightSavings',
+                          'SunDirection',
+                          #'DisplayShadows', 'UseSunForAllShading',
                           'DisplayOnAllFaces', 'DisplayOnGroundPlane']
         _syncSettings()
+        opts = Sketchup.active_model.get_attribute('SU2RAD', 'SKYOPTIONS')
+        if opts != nil
+            #printf "\nDEBUG: found SKYOPTIONS:\n r %s\n\n" % opts.gsub(/&/, "&\n r ") 
+            uimessage('loading sky options from attribute', 1)
+            applySkySettings(nil, opts)
+        end
     end
     
     def applySkySettings(d,p)
@@ -337,49 +340,33 @@ class SkyOptions
         pairs = _evalParams(p)
         pairs.each { |k,v|
             if (@_settings.has_key?(k) == false) || @_settings[k] != v
-                uimessage("SkyOptions: new value for '%s': '%s'\n" % [k,v])
+                uimessage("sky: new value for '%s': '%s'" % [k,v])
                 @_settings[k] = v
             end
         }
+        settings = getSettings()
+        opts = settings.collect { |k,v| "%s=%s" % [k,v] }
+        #printf "DEBUG: SKYOPTIONS opts=\n w %s\n\n" % opts.join("\n w ")
+        Sketchup.active_model.set_attribute('SU2RAD', 'SKYOPTIONS', opts.join('&')) 
     end
 
-    def attrRead
-        dName = @@attributesDictName 
-        dKey = @_settings['name']
-        dmp = Sketchup.active_model.get_attribute(dName, dKey)
-        d = {}
-        if dmp != nil
-            begin
-                d = Marshal.load(dmp)
-            rescue => e
-                uimessage("Error loading attributes:\n#{e}", -2)
-            end
-        end
-        updateFromDict(d, false)
-    end
-    
-    def attrStore
-        dName = @@attributesDictName
-        dKey = @_settings['name']
-        d = getSettings()
-        Sketchup.active_model.set_attribute(dName, dKey, Marshal.dump(d))
-    end
-    
     def _evalParams(param)
         ## evaluate string <param> to [k,v] pairs
         pairs = param.split("&")
         newpairs = []
         pairs.each { |pair| 
             k,v = pair.split("=")
-            if (k == "City" || k == "Country" || k == "SkyCommand")
+            if (k == 'City' || k == 'Country' || k == 'SkyCommand' || k == 'ShadowTime')
                 newpairs.push([k,v])
+            elsif (v == 'true' || v == 'false')
+                newpairs.push([k,eval(v)])
             else
                 begin
                     v = Float(v)
                     newpairs.push([k,v])
                 rescue ArgumentError => e
                     v = v
-                    uimessage("SkyOptions: ArgumentError for key '%s' (v='%s')" % [k,v], -2)
+                    uimessage("sky: ArgumentError for key '%s' (v='%s')" % [k,v], -2)
                 end
             end
         }
@@ -399,7 +386,7 @@ class SkyOptions
     def setSkyOptions(dlg, params='')
         ## get shadow_info dict and apply to dialog
         uimessage("setSkyOptions() ...\n", 2)
-        _syncSettings()
+        #_syncSettings()
         json = toJSON()
         dlg.execute_script( "setShadowInfoJSON('%s')" % encodeJSON(json) )
     end
@@ -409,7 +396,7 @@ class SkyOptions
         dict = {}
         sinfo.each { |k,v| dict[k] = v }
         @_sinfo_unused.each { |k| dict.delete(k) }
-        dict['SkyCommand'] = getSkyCommand()
+        #dict['SkyCommand'] = getSkyCommand()
         @_settings.update(dict)
     end
         

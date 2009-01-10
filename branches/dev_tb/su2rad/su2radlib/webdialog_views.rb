@@ -88,7 +88,6 @@ class SketchupView
     
     def _setViewVector(k, value)
         ## parse v as x,y,z tripple
-        #printf "DEBUG: _setViewVector value='%s'\n" % value
         if value.class == Array
             if value.length != 3
                 uimessage("view '%s': value for '%s' not a vector [v='%s']" % [@name,k,v.to_s], -2)
@@ -118,7 +117,6 @@ class SketchupView
    
     def _setViewOption(k,v)
         ## set bool or string value
-        #printf "#{@name}: _setViewOption('%s', '%s')\n" % [k,v] 
         if v == 'true'
             v = true
         elsif v == 'false'
@@ -165,7 +163,6 @@ class SketchupView
             d.delete('current')
             d.delete('pageChanged')
             d.each_pair { |k,v|
-                #printf "DEBUG: store attr: '%s', '%s'\n" % [k,v]
                 @page.set_attribute('SU2RAD_VIEW', k, v)
             }
         rescue => e
@@ -210,9 +207,6 @@ class SketchupView
             d.each_pair { |k,v|
                 dict[k] = v
                 @pageChanged = _compareSetting(k,v) || @pageChanged
-                #if _compareSetting(k,v) == true
-                #    printf "DEBUG: page changed! k='%s' v='%s'\n" % [k,v]
-                #end
             }
             if dict.has_key?('name')
                 dict.delete('name')
