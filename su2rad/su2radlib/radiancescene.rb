@@ -408,7 +408,7 @@ class RadianceScene < ExportBase
     end
 
     def runPreview
-        if $OS =! 'MAC'
+        if $OS != 'MAC'
             uimessage("'rvu' only available on Mac OS X",-1)
             return
         end
