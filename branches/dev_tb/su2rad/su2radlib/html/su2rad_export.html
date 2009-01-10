@@ -141,7 +141,13 @@
 
                 
                 <!-- ###   VIEWS   ### --> 
-                <h3>Views <span id="selectAllViews" style="font-size:12px;margin-left:10px;"><a class="clickable" onclick="selectAllViews()">select all</a></span></h3>
+                <h3>
+                    <input class="floatright" type="button" value="edit" onclick="switch_to_tab('tab-views')">
+                    Views
+                    <span id="selectAllViews" style="font-size:12px;margin-left:10px;">
+                        <a class="clickable" onclick="selectAllViews()">select all</a>
+                    </span>
+                </h3>
                 <div id="viewsSelection">
                 <!-- use this space for test data button --> 
                 <input type="button" id="testDataButton" name="testDataButton" value="load test data" onclick="loadTestData()">
@@ -151,7 +157,7 @@
                 
                 <!-- ###   RENDER   ### --> 
                 <h3>
-                    <input class="floatright" type="button" value="edit" onclick="switch_to_tab(2)">
+                    <input class="floatright" type="button" value="edit" onclick="switch_to_tab('tab-render')">
                     Render Options
                 </h3>
                 <div id="renderSummary">
@@ -211,7 +217,7 @@
                 
                 
                 <h3>
-                    <input class="floatright" type="button" value="edit" onclick="switch_to_tab(4)">
+                    <input class="floatright" type="button" value="edit" onclick="switch_to_tab('tab-sky')">
                     Sky
                 </h3>
                 <div id="locationSummary">
@@ -237,7 +243,7 @@
                 
                  
                 <h3 style="display:none;">
-                    <input class="floatright" type="button" id="edit_climate" value="edit" onclick="switch_to_tab(5)" disabled>
+                    <input class="floatright" type="button" id="edit_climate" value="edit" onclick="switch_to_tab('tab-climate')" disabled>
                     <input type="checkbox" id="climate_checkbox" value="climate"
                     onClick="toggleClimateTab()"> Climate Data
                 </h3>
@@ -283,7 +289,7 @@
             
             <div id="tab-render">
                 <h3>
-                    <input class="floatright" type="button" value="done" onclick="switch_to_tab(1)">
+                    <input class="floatright" type="button" value="done" onclick="switch_to_tab('tab-export')">
                     Render Settings
                 </h3>
                 
@@ -422,7 +428,7 @@
                 </h3>
                 
                 <h3>
-                    <input class="floatright" type="button" value="done" onclick="switch_to_tab(1)">
+                    <input class="floatright" type="button" value="done" onclick="switch_to_tab('tab-export')">
                     Sky Settings
                 </h3>
                 <div class="optionsColumn" style="height:120px">
@@ -521,7 +527,7 @@
                 </div>
                             
                 <h3>
-                    <input class="floatright" type="button" value="done" onclick="switch_to_tab(1)">
+                    <input class="floatright" type="button" value="done" onclick="switch_to_tab('tab-export')">
                     Location Settings
                 </h3>
                 
@@ -639,7 +645,10 @@
             <!-- TAB views -->
             
             <div id="tab-views" style="display:none;">
-                <h3>View Details</h3>
+                <h3>
+                    <input class="floatright" type="button" value="done" onclick="switch_to_tab('tab-export')">
+                    View Details
+                </h3>
                 <div id="viewDetails">
                     <input type="button" id="testDataButton" name="testDataButton" value="load test data" onclick="loadTestData()">
                 </div>
@@ -650,7 +659,7 @@
             </div>
             
             
-            <!-- TAB views -->
+            <!-- TAB materials -->
             
             <div id="tab-materials" style="display:none;">
                 <h3>Materials</h3>
@@ -683,7 +692,7 @@
             
             <div id="tab-climate" style="display:none">
                 <h3>
-                    <input class="floatright" type="button" value="done" onclick="switch_to_tab(1)">
+                    <input class="floatright" type="button" value="done" onclick="switch_to_tab('tab-export')">
                     Climate Data
                 </h3>
                 
