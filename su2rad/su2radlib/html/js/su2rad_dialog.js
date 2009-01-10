@@ -158,8 +158,9 @@ function onCancelButton() {
     }
 }
 
-function switch_to_tab(pos) {
-    $('#tab-container').triggerTab(pos);
+function switch_to_tab(id) {
+    $('#tab-container').triggerTab(id);
+    //updatePageById(id);
 }
 
 function reverseData(val) {
@@ -278,27 +279,31 @@ function showResults(msg) {
 }
 
 function onTabClick(link,div_show,div_hide) {
-    log.debug("switching to tab '" + div_show.id + "'");
+    log.error("switching to tab '" + div_show.id + "'");
     _currentStatusDiv = "status_" + div_show.id;
-    if (div_show.id == "tab-export") {
-        updateExportPage();
-    } else if  (div_show.id == "tab-render") {
-        updateRenderPage();
-    } else if (div_show.id == "tab-sky") {
-        updateSkyPage();
-    } else if (div_show.id == "tab-views") {
-        updateViewsPage();
-    } else if (div_show.id == "tab-materials") {
-        updateMaterialsPage();
-    } else if (div_show.id == "tab-fields") {
-        updateFieldsPage();
-    } else if (div_show.id == "tab-climate") {
-        updateClimatePage();
+    updatePageById(div_show.id);
+    return true;
+}
+
+function updatePageById(id) {
+    if (id == "tab-export") {
+        return updateExportPage();
+    } else if  (id == "tab-render") {
+        return updateRenderPage();
+    } else if (id == "tab-sky") {
+        return updateSkyPage();
+    } else if (id == "tab-views") {
+        return updateViewsPage();
+    } else if (id == "tab-materials") {
+        return updateMaterialsPage();
+    } else if (id == "tab-fields") {
+        return updateFieldsPage();
+    } else if (id == "tab-climate") {
+        return updateClimatePage();
     } else {
-        log.warn("unexpected tab id '" + div_show.id + "'");
+        log.warn("unexpected tab id '" + id + "'");
         return false;
     }
-    return true;
 }
 
 function onTabHide(link,div_show,div_hide) {
