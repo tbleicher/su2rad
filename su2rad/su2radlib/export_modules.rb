@@ -162,12 +162,15 @@ module JSONUtils
         printf "\n"
     end
     
-    def setOptionsFromString(dlg, params)
+    def setOptionsFromString(dlg, params, verbose=false)
         ## set export options from string <p>
         pairs = params.split("&")
         pairs.each { |pair|
             k,v = pair.split("=")
             old = eval("@%s" % k)
+            if verbose
+                uimessage(" -  %s (old='%s')" % [pair, old], 2)
+            end
             if (v == 'true' || v == 'false' || v =~ /\A[+-]?\d+\z/ || v =~ /\A[+-]?\d+\.\d+\z/)
                 val = eval("%s" % v)
             else

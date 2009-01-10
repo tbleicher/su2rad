@@ -23,7 +23,7 @@ function applySkySettings() {
     // send back location and sky settings
     var params = modelLocation.toParamString();
     if (SKETCHUP == true) {
-        log.debug("applySkySettings(): " + params);
+        // log.debug("applySkySettings():<br/>" + params.replace(/&/g,"<br/>"));
         window.location = 'skp:applySkySettings@' + params;
     } else {
         log.debug("applySkySettings(): no need to set shadow_info");
@@ -96,7 +96,7 @@ function _getSkySettingsTest() {
     json +=    ",{\"name\":\"ShadowTime\",\"value\":\"Fri Nov 08 13:30:00 +0000 2002\"}";
     json +=    ",{\"name\":\"ShadowTime_time_t\",\"value\":\"1036762200\"}";
     json +=    ",{\"name\":\"UseSunForAllShading\",\"value\":\"false\"}";
-    json +=    ",{\"name\":\"SkyCommand\",\"value\":\"!gensky +i 03 21 12:34 -a 40.017 -o 105.283 -m 105.0 -g 0.22 -t 1.8\"}]";
+    json +=    ",{\"name\":\"SkyCommand\",\"value\":\"!gensky -u 03 21 12:34 -a 40.017 -o 105.283 -m 105.0 -g 0.22 -t 1.8 -B 55.877\"}]";
     return json;
 }
 
@@ -117,6 +117,7 @@ function loadTextFile(fname) {
 function applyExportOptions() {
     var param = exportSettings.toString();
     if (SKETCHUP == true) {
+        //log.debug("applyExportOptions:<br/>" + param.replace(/&/g,"<br/>") );
         window.location = 'skp:applyExportOptions@' + param;
     } else {
         log.debug("no options to apply");
@@ -128,13 +129,14 @@ function applyExportOptions() {
 function applyRenderOptions() {
     param = radOpts.toString();
     if (SKETCHUP == true) {
-        log.debug("param=" + param);
+        //log.debug("applyRenderOptions:<br/>" + param.replace(/&/g,"<br/>") );
         window.location = 'skp:applyRenderOptions@' + param;
     } else {
         log.debug("no options to apply");
+        param = param.replace(/&/g,"<br/>");
+        setStatusMsg("applyRenderOptions:<br/>" + param);
     }
 }
-
 
 function decodeJSON(text) {
     var json = unescape(text)
@@ -157,7 +159,7 @@ function encodeJSON(json) {
 function setViewsListJSON(text) {
     // eval JSON views string from SketchUp
     var json = decodeJSON(text);
-    //log.debug("json=<br/>" + json)
+    //log.debug("setViewsListJSON=<br/>" + json.replace(/,/g,',<br/>'));
     var newViews = new Array();
     try {
         eval("newViews = " + json);
@@ -209,15 +211,16 @@ function _getViewsListTest() {
 }
 
 function applyViewSettings(viewname) {
+    //log.deubg('applyViewSettings(' + viewname + ')');
     try {
         var view = viewsList[viewname];
     } catch(e) {
         log.error(e)
         return
     }
+    //log.debug('applyViewSettings(view=' + view + ')');
     var text = view.toRubyString();
     var param = encodeURI(text);
-    //log.debug('applyViewSettings(' + view.name + ')');
     if (SKETCHUP == true) {
         window.location = 'skp:applyViewSettings@' + param;
     } else {

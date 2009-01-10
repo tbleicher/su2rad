@@ -7,8 +7,8 @@ function RadOptsObject() {
     this.Penumbras = true;
     // Image group
     this.ImageAspect = 1.0;  // XXX
-    this.ImageSizeX = 512;  // XXX
-    this.ImageSizeY = 512;  // XXX
+    this.ImageSizeX = 512;   // XXX
+    this.ImageSizeY = 512;   // XXX
     this.ImageType = "normal";
     // Zone group
     this.ZoneSize = 10.0;  // XXX
@@ -68,6 +68,15 @@ RadOptsObject.prototype.getRpictOverride = function (opt) {
         }
     }
     return this._rpictOpts[opt];
+}
+
+RadOptsObject.prototype.rpictOverrideSelected = function (opt) {
+    for (var i=0; i<this._rpictOverrides.length; i++) {
+        if (this._rpictOverrides[i][0] == opt) {
+            return true;
+        }
+    }
+    return false;
 }
 
 RadOptsObject.prototype.toString = function () {
@@ -417,7 +426,7 @@ function getRpictOptionSpan(opt) {
     // return text for option span (checkbox and textfield)
     var style = "rpictOverride";
     var state = "";
-    var selected = rpictOverrideSelected(opt);
+    var selected = radOpts.rpictOverrideSelected(opt);
     if (selected == true) {
         style = "rpictOverrideSelected";
         state = "checked";
@@ -549,6 +558,13 @@ function onRadOptionChange(id) {
     applyRenderOptions();
 }
 
+function onRenderLineChange(inText) {
+    parseRenderLine(inText)
+    _updateRpictOptionDisplay();
+    updateRenderLine();
+    applyRenderOptions();
+}
+
 function onRpictOverride(opt) {
     // set or remove override when checkbox is ticked
     var id = "rpictOverrideCB" + opt;
@@ -564,7 +580,6 @@ function onRpictOverride(opt) {
 
 function parseRenderLine(inText) {
     // validate render line input and set overrides
-    //log.debug("parseRenderLine('" + inText + "')");
     if (inText == '') {
         inText = document.getElementById('radRenderLine_2').value;
     }
@@ -587,7 +602,7 @@ function parseRenderLine(inText) {
     i = 0;
     while (i<parts.length) {
         var opt = parts[i]
-        //log.debug("  -> parsing '" + opt + "' ...");
+        log.debug("  -> parsing '" + opt + "' ...");
         if (opt.charAt(0) == "-") {
             opt = opt.slice(1);
         }
@@ -628,9 +643,7 @@ function parseRenderLine(inText) {
     if (removeIrr == true) {
         setImageType('normal')
     }
-    _updateRpictOptionDisplay();
-    updateRenderLine();
-    applyRenderOptions();
+
 }
 
 function setImageType(imgType) {
@@ -639,7 +652,6 @@ function setImageType(imgType) {
     syncRadOption('radImageType_1');
     syncRadOption('radImageType_2');
 }
-
 
 function parseBoolOverride(txt) {
     var opt = txt.slice(1,-1);
@@ -668,7 +680,8 @@ function parseBoolOverride(txt) {
 
 function removeOverride(opt) {
     // remove override from radOpts and clear checkbox
-    radOpts.removeRpictOverride(opt);   
+    radOpts.removeRpictOverride(opt);
+    return;
     try {
         document.getElementById("rpictOverrideCB" + opt).checked = false;
     } catch(e) {
@@ -677,19 +690,6 @@ function removeOverride(opt) {
 
 }
     
-function rpictOverrideSelected(opt) {
-    // return true if override for rpict opt id is set
-    var selected = false;
-    id = "rpictOverrideCB" + opt;
-    try {
-        selected = document.getElementById(id).checked;
-    } catch (e) {
-        // may not exist yet
-        // log.warn("error at rpict checkbox '-" + opt + "': " + e.name)
-    }
-    return selected;
-}
-
 function selectImageType(id) {
     // set new value and sync radImageType select element
     var opt = id.slice(3,-2)
@@ -703,6 +703,7 @@ function selectImageType(id) {
 function setOverride(opt, newValue) {
     // add override value and set checkbox.checked = true
     radOpts.setRpictOverride(opt, newValue);
+    return;
     try {
         document.getElementById("rpictOverrideCB" + opt).checked = true;
     } catch(e) {
