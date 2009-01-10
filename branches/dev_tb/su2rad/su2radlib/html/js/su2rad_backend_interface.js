@@ -157,6 +157,7 @@ function encodeJSON(json) {
 function setViewsListJSON(text) {
     // eval JSON views string from SketchUp
     var json = decodeJSON(text);
+    //log.debug("json=<br/>" + json)
     var newViews = new Array();
     try {
         eval("newViews = " + json);

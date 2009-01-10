@@ -144,6 +144,9 @@ class RenderOptions
 
     include JSONUtils
     include InterfaceBase
+    
+    @@attributesDictName = 'SU2RAD'
+    @@attributesDictKey  = 'RENDERSETTINGS'
 
     def initialize
         @Quality = 'medium'
@@ -235,8 +238,8 @@ class RenderOptions
         json = toJSON()
         dlg.execute_script( "setRenderOptionsJSON('%s')" % encodeJSON(json) )
     end 
-    
-    def toJSON
+   
+    def _getSettingsDict
         dict = Hash.new()
         dict['Quality'] = @Quality
         dict['Detail'] = @Detail
@@ -252,10 +255,37 @@ class RenderOptions
         dict['Report'] = @Report
         dict['ReportFile'] = @ReportFile
         dict['render'] = @render
+        return dict
+    end
+    
+    def toJSON
+        dict = _getSettingsDict()
         json = getJSONDictionary(dict)
         return json
     end
-
+    
+    def attrRead
+        dName = @@attributesDictName
+        dKey = @@attributesDictKey
+        dmp = Sketchup.active_model.get_attribute(dName, dKey)
+        d = {}
+        if dmp != nil
+            begin
+                d = Marshal.load(dmp)
+            rescue => e
+                uimessage("Error loading attributes:\n#{e}", -2)
+            end
+        end
+        updateFromDict(d, false)
+    end
+    
+    def attrStore
+        dName = @@attributesDictName
+        dKey = @@attributesDictKey
+        d = _getSettingsDict()
+        Sketchup.active_model.set_attribute(dName, dKey, Marshal.dump(d))
+    end
+    
     def update
         @ImageSizeX = Sketchup.active_model.active_view.vpwidth
         @ImageSizeY = Sketchup.active_model.active_view.vpheight
@@ -263,7 +293,7 @@ class RenderOptions
         @ZoneSize = Sketchup.active_model.bounds.diagonal*getConfig('UNIT')
     end 
     
-    def updateFromDict(dict)
+    def updateFromDict(dict, store=true)
         dict.each_pair { |k,v|
             old = eval("@%s" % k)
             if old != v
@@ -279,6 +309,9 @@ class RenderOptions
                 uimessage("%s\n[k='%s'  v='%s'\n" % [$!.message, k, v], -2)
             end
         }
+        if store == true
+            attrStore()
+        end
     end
 
 end
@@ -290,9 +323,11 @@ class SkyOptions
     include JSONUtils
     include InterfaceBase
 
+    @@attributesDictName = 'SU2RAD_SKIES'
+
     def initialize
         @rsky = RadianceSky.new()
-        @_settings = Hash.new()
+        @_settings = {'name' => 'default'}
         @_sinfo_unused = ['DisplayNorth', 'EdgesCastShadows', 'Light', 'Dark', 
                           'SunRise', 'SunRise_time_t',
                           'SunSet', 'SunSet_time_t',
@@ -311,6 +346,28 @@ class SkyOptions
         }
     end
 
+    def attrRead
+        dName = @@attributesDictName 
+        dKey = @_settings['name']
+        dmp = Sketchup.active_model.get_attribute(dName, dKey)
+        d = {}
+        if dmp != nil
+            begin
+                d = Marshal.load(dmp)
+            rescue => e
+                uimessage("Error loading attributes:\n#{e}", -2)
+            end
+        end
+        updateFromDict(d, false)
+    end
+    
+    def attrStore
+        dName = @@attributesDictName
+        dKey = @_settings['name']
+        d = getSettings()
+        Sketchup.active_model.set_attribute(dName, dKey, Marshal.dump(d))
+    end
+    
     def _evalParams(param)
         ## evaluate string <param> to [k,v] pairs
         pairs = param.split("&")
@@ -409,19 +466,20 @@ class SketchupView
     def initialize (name, current=false)
         @name = name
         @current = current
+        @page = nil
+        @pageChanged = false
+        @selected = false
+        if current == true
+            @selected = true
+        end
         @vt = "v";
-        @vp = "0 0 1";
-        @vd = "0 1 0";
-        @vu = "0 0 1";
+        @vp = [0,0,1];
+        @vd = [0,1,0];
+        @vu = [0,0,1];
         @va = 0.0;
         @vo = 0.0;
         @vv = 60.0;
         @vh = 60.0;
-        if current == true
-            @selected = true
-        else
-            @selected = false
-        end
     end
 
     def createViewFile
@@ -439,57 +497,83 @@ class SketchupView
         end
     end
     
-    def getOptions
+    def getViewLine
         text = "rvu -vt#{@vt} -vp #{@vp} -vd #{@vd} -vu #{@vu}"
         text +=  " -vv #{@vv} -vh #{@vh} -vo #{@vo} -va #{@va}"
         return text
     end 
     
-    def getViewLine
-        return getOptions()
+    def getOptions
+        printf "\nERROR: use of view.getOptions!\n\n"
+        return getViewLine()
+    end
+    
+    def _getSettingsDict
+        dict = {'name' => @name, 'selected' => @selected,
+                'current' => @current, 'pageChanged' => @pageChanged,
+                'vt' => @vt, 'vp' => @vp, 'vd' => @vd, 'vu' => @vu,
+                'vo' => @vo, 'va' => @va, 'vv' => @vv, 'vh' => @vh}
+        return dict
     end
     
     def toJSON
-        text = "{\"name\":\"%s\", " % @name
-        text += "\"selected\":\"%s\", \"current\":\"%s\", " % [@selected, @current]
-        text += "\"vt\":\"#{@vt}\", \"vp\":\"#{@vp}\", \"vd\":\"#{@vd}\", \"vu\":\"#{@vu}\", " 
-        text += "\"vv\":\"#{@vv}\", \"vh\":\"#{@vh}\", \"vo\":\"#{@vo}\", \"va\":\"#{@va}\", "
-        text += "\"options\":\"%s\"}" % getOptions()
-        return text
+        json = toStringJSON(_getSettingsDict())
+        return json
     end
     
     def _setFloatValue(k, v)
         begin
-            #val = parseFloat(v)
-            eval("@%s = %s" % [k,v])
+            oldValue = eval("@%s" % k)
+            if oldValue != v
+                eval("@%s = %s" % [k,v])
+                uimessage("view '%s': new value for '%s' = '%s'" % [@name,k,v], 1)
+            end
         rescue
             uimessage("view '%s': value for '%s' not a float value [v='%s']" % [@name,k,v],-2)
         end
-            
     end
     
     def _setViewVector(k, value)
         ## parse v as x,y,z tripple
-        begin
-            x,y,z = value.split().collect { |v| v.to_f }
-            s = "%.3f %.3f %.3f" % [x,y,z]
-            eval("@%s = '%s'" % [k,s])
-        rescue
-            uimessage("view '%s': value for '%s' not a vector [v='%s']" % [@name,k,v],-2)
+        #printf "DEBUG: _setViewVector value='%s'\n" % value
+        if value.class == Array
+            if value.length != 3
+                uimessage("view '%s': value for '%s' not a vector [v='%s']" % [@name,k,v.to_s], -2)
+                return false
+            else
+                vect = "[%.3f,%.3f,%.3f]" % value
+            end
+        else
+            begin
+                if value.index(',') != nil
+                    x,y,z = value.split(',').collect { |v| v.to_f }
+                else
+                    x,y,z = value.split().collect { |v| v.to_f }
+                end
+                vect = "[%.3f,%.3f,%.3f]" % [x,y,z]
+            rescue
+                uimessage("view '%s': value for '%s' not a vector [v='%s']" % [@name,k,v],-2)
+                return false
+            end
+        end
+        oldVect = "[%.3f,%.3f,%.3f]" % eval("@%s" % k)
+        if oldVect != vect
+            uimessage("view '%s': new value for '%s' = '%s'" % [@name,k,vect], 1)
+            eval("@%s = %s" % [k,vect])
         end
     end
    
     def _setViewOption(k,v)
+        ## set bool or string value
         #printf "#{@name}: _setViewOption('%s', '%s')\n" % [k,v] 
         if v == 'true'
             v = true
         elsif v == 'false'
             v = false
         end
-        value = eval("@%s" % k)
-        #printf "TEST: k='%s'  eval(@%s)=%s\n" % [k,k,value]
-        if v != value
-            uimessage("view '%s': new value for '%s' = '%s'" % [@name,k,v])
+        oldValue = eval("@%s" % k)
+        if v != oldValue
+            uimessage("view '%s': new value for '%s' = '%s'" % [@name,k,v], 1)
             if (v == 'true' || v == 'false')
                 eval("@%s = %s" % [k,v])
             elsif (v.class == TrueClass || v.class == FalseClass)
@@ -500,27 +584,48 @@ class SketchupView
         end
     end
     
-    def update(dict)
+    def update(dict, store=true)
         dict.each_pair { |k,v|
-            if (k == 'vp' || k == 'vd' || k == 'vu')
-                _setViewVector(k, v)
-            elsif (k == 'vo' || k == 'va' || k == 'vv' || k == 'vh')
-                _setFloatValue(k, v)
-            else
-                begin
+            begin
+                if (k == 'vp' || k == 'vd' || k == 'vu')
+                    _setViewVector(k, v)
+                elsif (k == 'vo' || k == 'va' || k == 'vv' || k == 'vh')
+                    _setFloatValue(k, v)
+                else
                     _setViewOption(k,v)
-                rescue => e
-                    uimessage("view '%s':\n%s" % [@name,$!.message], -2)
                 end
+            rescue => e
+                uimessage("view '%s' update(key='%s',v='%s'):\n%s" % [@name,k,v,$!.message], -2)
             end
-        }       
+        }
+        if store
+            storeSettings()
+        end
+    end
+    
+    def storeSettings
+        if not @page
+            return
+        end
+        begin
+            d = _getSettingsDict()
+            d.delete('current')
+            d.delete('pageChanged')
+            d.each_pair { |k,v|
+                #printf "DEBUG: store attr: '%s', '%s'\n" % [k,v]
+                @page.set_attribute('SU2RAD_VIEW', k, v)
+            }
+        rescue => e
+            uimessage("Error setting attributes:\n%s\n\n%s\n" % [$!.message,e.backtrace.join("\n")],-2)
+        end
     end
     
     def setViewParameters(camera)
+        ## set params from camera
         unit = getConfig('UNIT')
-        @vp = "%.3f %.3f %.3f" % [camera.eye.x*unit, camera.eye.y*unit, camera.eye.z*unit]
-        @vd = "%.3f %.3f %.3f" % [camera.zaxis.x, camera.zaxis.y, camera.zaxis.z]
-        @vu = "%.3f %.3f %.3f" % [camera.up.x, camera.up.y, camera.up.z]
+        @vp = [camera.eye.x*unit, camera.eye.y*unit, camera.eye.z*unit]
+        @vd = [camera.zaxis.x, camera.zaxis.y, camera.zaxis.z]
+        @vu = [camera.up.x, camera.up.y, camera.up.z]
         imgW = Sketchup.active_model.active_view.vpwidth.to_f
         imgH = Sketchup.active_model.active_view.vpheight.to_f
         aspect = imgW/imgH
@@ -537,6 +642,55 @@ class SketchupView
             @vt = 'v'
             @vv = camera.height*unit
             @vh = @vv*aspect
+        end
+    end
+    
+    def setPage(page)
+        @page = page
+        begin
+            d = @page.attribute_dictionary('SU2RAD_VIEW')
+        rescue => e
+            uimessage("Error getting attributes:\n%s\n\n%s\n" % [$!.message,e.backtrace.join("\n")],-2)
+        end
+        if d != nil
+            dict = Hash.new()
+            d.each_pair { |k,v|
+                dict[k] = v
+                @pageChanged = _compareSetting(k,v) || @pageChanged
+                #if _compareSetting(k,v) == true
+                #    printf "DEBUG: page changed! k='%s' v='%s'\n" % [k,v]
+                #end
+            }
+            if dict.has_key?('name')
+                dict.delete('name')
+            end
+            update(dict, false)
+        end
+    end
+
+    def _compareSetting(k,v)
+        begin
+            oldValue = eval("@%s" % k)
+        rescue => e
+            uimessage("error getting attribute '%s': %s" % [k, $!.message], -2)
+            return false
+        end
+        if k == 'vt' and (v == 'v' || v == 'l')
+            ## check only perspective and parallel
+            return (oldValue != v)
+        elsif (k == 'vp' || k == 'vd' || k == 'vu')
+            begin
+                oldVect = "%.3f %.3f %.3f" % oldValue
+                newVect = "%.3f %.3f %.3f" % v
+                return (oldVect != newVect)
+            rescue => e
+                msg = "\nError while converting to vector: %s\n%s\n\n" % [$!.message, e.backtrace.join("\n")]
+                uimessage(msg, -2)
+                return false
+            end
+        else
+            ## all other setting are not comparable
+            return false
         end
     end
     
@@ -578,10 +732,12 @@ class ViewsList
                 if page == pages.selected_page
                     view = SketchupView.new(viewname, true)
                     view.setViewParameters(page.camera)
+                    view.setPage(page)
                     @_views[view.name] = view
                 elsif page.use_camera? == true
                     view = SketchupView.new(viewname)
                     view.setViewParameters(page.camera)
+                    view.setPage(page)
                     @_views[view.name] = view
                 end
             }
@@ -624,20 +780,24 @@ class ViewsList
     def updateView(d)
         if not d.has_key?('name')
             uimessage("ViewsList error: no 'name' for view", -2)
-            next
+            return false
         end
         viewname = d['name']
         if @_views.has_key?(viewname)
             view = @_views[viewname]
             begin
                 view.update(d)
+                uimessage("updated view '#{view.name}'", 2)
+                return true
             rescue => e
-                uimessage("ViewsList error:\n%s\n\n%s\n" % [$!.message,e.backtrace.join("\n")],-2)
+                msg = "ViewsList error:\n%s\n%s\n" % [$!.message, e.backtrace.join("\n")]
+                uimessage(msg,-2)
                 return false 
             end
         else
-            uimessage("ViewsList error: unknown view '%s'\n" % viewname, -2)
-            showViews("   ", -2)
+            uimessage("ViewsList error: unknown view '%s'" % viewname, -2)
+            #showViews("   ", -2)
+            return false
         end
     end
     
@@ -680,13 +840,13 @@ class ExportDialogWeb < ExportBase
     def updateViewFromString(d,p)
         ## convert <p> to Ruby array and update views
         begin
-            view = eval(p)
+            vDict = eval(p)
+            ## apply vDict settings to view
+            return @viewsList.updateView(vDict)
         rescue => e 
             uimessage("Error updateViewFromString(): %s\n\n%s\n" % [$!.message,e.backtrace.join("\n")], -2)
-            return
+            return false
         end
-        ## apply info to views
-        @viewsList.updateView(view)
     end
  
     def show(title="su2rad")

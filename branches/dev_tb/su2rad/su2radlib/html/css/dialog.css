@@ -113,6 +113,11 @@ h3,th {
     min-height: 18px; /* IE 6 treats height as min-height */
     /* background: lightskyblue; */
 }
+h3.highlightWarn {
+    font-weight: bold;
+    color: #cc9900;; 
+    background: url(gradient_warning.png) repeat-x;
+}
 table {
     padding: 0;
     margin: 0;

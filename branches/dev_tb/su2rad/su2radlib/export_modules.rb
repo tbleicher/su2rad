@@ -18,10 +18,10 @@ module InterfaceBase
     end
     
     def uimessage(msg, loglevel=0)
-        prefix = "  " * getNestingLevel()
-        levels = ["I", "V", "D", "D", "D", "D", "E", "W"]  ## [0,1,2,-2,-1]
-        line = "%s[%s] %s" % [prefix, levels[loglevel], msg]
         begin
+            prefix = "  " * getNestingLevel()
+            levels = ["I", "V", "D", "D", "D", "D", "E", "W"]  ## [0,1,2,-2,-1]
+            line = "%s[%s] %s" % [prefix, levels[loglevel], msg]
             if loglevel <= $SU2RAD_LOGLEVEL
                 Sketchup.set_status_text(line.strip())
                 printf "#{line}\n"
@@ -33,7 +33,7 @@ module InterfaceBase
                 $SU2RAD_COUNTER.add('warnings')
             end
         rescue
-            printf "uimessage rescue: #{line}\n"
+            printf "uimessage rescue: #{msg}\n"
         end
     end
     
@@ -191,6 +191,10 @@ module JSONUtils
         printf toStringJSON(obj) + "\n"
     end 
 
+    def vectorToJSON(v)
+        return "[%.3f,%.3f,%.3f]" % v
+    end
+    
 end
 
 

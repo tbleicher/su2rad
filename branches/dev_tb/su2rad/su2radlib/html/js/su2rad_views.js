@@ -4,6 +4,7 @@ function ViewObject() {
     this.id = 'unset';
     this.selected = false;
     this.current = false;
+    this.pageChanged = false;
     this.show_details = false;
     this.vt = "v";
     this.vp = "0 0 1";
@@ -14,7 +15,7 @@ function ViewObject() {
     this.vv = 60.0;
     this.vh = 60.0;
     this._verbose = true;
-    this._bool_attributes   = ['selected','current','show_details']
+    this._bool_attributes   = ['selected','current','show_details','pageChanged']
     this._float_attributes  = ['vo','va','vv','vh'];
     this._vector_attributes = ['vp','vd','vu'];
     this._viewTypes = [ ['v','perspective'],
@@ -26,16 +27,37 @@ function ViewObject() {
 }
 
 ViewObject.prototype.getDetailsHTML = function () {
-    text =  "<h3><span style=\"font-size:12px;float:right;\">"
+    
+    // title (clickable)
     if (this.show_details == false) {
-        text += "<a class=\"clickable\" onclick=\"showViewDetails('" + this.name + "')\">[show details]</a>";
+        text  = "<a class=\"clickable\" onclick=\"showViewDetails('" + this.name + "')\">";
+        lable = "[show details]";
     } else {
-        text += "<a class=\"clickable\" onclick=\"hideViewDetails('" + this.name + "')\">[hide details]</a>";
+        text  = "<a class=\"clickable\" onclick=\"hideViewDetails('" + this.name + "')\">";
+        lable = "[hide details]";
     }
-    text += "</span>" + this.name + "</h3>";
+    if (this.pageChanged) {
+        text += "<h3 class=\"highlightWarn\">"
+    } else {
+        text += "<h3>"
+    } 
+    text += "<span style=\"font-size:12px;float:right;\">" + lable + "</span>"
+    text += this.name + "-" + this.pageChanged +  "</h3></a>";
+    
+    // stop here in overview
     if (this.show_details == false) {
         return text
     }
+    
+    // reset camera button
+    if (this.pageChanged == true) {
+        text += "<div class=\"highlightWarn\" style=\"padding-left:5px;\">"
+        text += "page view has changed! "
+        text += "<input type=\"button\" value=\"TODO: reset cam\" onclick=\"onResetCamera('" + this.name + "')\">"
+        text += "</div>"
+    }
+    
+    // view details
     text += "<div class=\"viewPanel\">"
     text += "<div class=\"viewOptions\">"
     text += this._getViewTypeSelection();
@@ -45,6 +67,8 @@ ViewObject.prototype.getDetailsHTML = function () {
     text += this._getFloatValueGroup('vv','vo', 'style="margin-top:10px"');
     text += this._getFloatValueGroup('vh','va', '');
     text += "</div>"
+
+    // preview
     text += "<div class=\"previewPanel\">"
     text += "<input type=\"button\" value=\"TODO: preview\" onclick=\"onCreatePreview('" + this.name + "')\">"
     text += "</div>"
@@ -152,6 +176,7 @@ ViewObject.prototype._checkViewType = function (vtype) {
 }
 
 ViewObject.prototype.setValue = function (attr, newval) {
+    //log.debug(this.name + '.setValue(' + attr + ',' + newval + ')');
     if (this._setValue(attr, newval) == true) {
         if (this._verbose == true) {
             log.info("'" + this.name + "': new value for '" + attr + "': " + this[attr]);
@@ -162,7 +187,6 @@ ViewObject.prototype.setValue = function (attr, newval) {
 }
 
 ViewObject.prototype._setValue = function (attr, newval) {
-    //log.debug('view.setValue(' + attr + ',' + newval + ')');
     if (attr == 'name') {
         this.name = newval
         this.id = replaceChars(this.name);
@@ -202,7 +226,10 @@ ViewObject.prototype._setValue = function (attr, newval) {
 
 ViewObject.prototype.setFromJSONObject = function (obj) {
     //log.debug('view.setFromJSONObject(obj=' + obj.name + ')');
-    var opts = ['name','vt','selected','current','show_details', 'vo','va','vv','vh','vp','vd','vu'];
+    var opts = ['name','vt'];
+    opts = opts.concat(this._bool_attributes);   
+    opts = opts.concat(this._float_attributes);
+    opts = opts.concat(this._vector_attributes);
     this._verbose = false;
     for (var i=0; i<opts.length; i++) {
         var attr = opts[i];
@@ -323,6 +350,15 @@ function selectAllViews(selected) {
 function hideViewDetails(viewname) {
     viewsList[viewname].show_details = false;
     updateViewDetailsList();
+}
+
+function onResetCamera(viewname) {
+    if (viewsList[viewname]) {
+        var view = viewsList[viewname];
+        log.error("TEST: onResetCamera('" + viewname + "')");
+    } else {
+        log.error("view '" + viewname + "' not found in viewsList!");
+    }
 }
 
 function onCreatePreview(viewname) {
