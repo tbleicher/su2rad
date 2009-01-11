@@ -228,6 +228,64 @@ function applyViewSettings(viewname) {
     }
 }
 
+function setMaterialsListJSON(text, type) {
+    var json = decodeJSON(text);
+    //log.error("TEST: setMaterialsListJSON=<br/>json.length=" + json.length);
+    var newMats = new Array();
+    try {
+        eval("newMats = " + json);
+        log.info("materials found: " + newMats.length); 
+    } catch (e) {
+        log.error("setMaterialsListJSON: error in eval() '" + e.name + "'");
+        log.error("json= " + json.replace(/,/g,',<br/>'));
+    }
+    if (type == 'skm') {
+        skmMaterialsList.update(newMats);
+    } else {
+        radMaterialsList.update(newMats);
+    }
+}
+
+function getMaterialsListsTest() {
+    var rad = _getRadMaterialDataTest();
+    setMaterialsListJSON(encodeJSON(rad),'rad');
+    var skm = _getSkmMaterialDataTest();
+    setMaterialsListJSON(encodeJSON(skm),'skm');
+    // TODO: Radiance materials
+}
+
+function _getRadMaterialDataTest () {
+    var json = "[{'name':'redMat','nameRad':'redMat','nameHTML':'redMat','alias':''";
+    json += ",'preview':'','definition':'','requires':''},";                
+    json += "{'name':'blueMat','nameRad':'blueMat','nameHTML':'blueMat','alias':''";
+    json += ",'preview':'','definition':'','requires':''},";                
+    json += "{'name':'green','nameRad':'green','nameHTML':'green','alias':''";
+    json += ",'preview':'','definition':'','requires':''},";                
+    json += "{'name':'brick','nameRad':'brick','nameHTML':'brick','alias':''";
+    json += ",'preview':'','definition':'','requires':''},";                
+    json += "{'name':'concrete','nameRad':'concrete','nameHTML':'concrete','alias':''";
+    json += ",'preview':'','definition':'','requires':''},";                
+    json += "{'name':'asphalt dark','nameRad':'asphalt_dark','nameHTML':'asphalt dark','alias':''";
+    json += ",'preview':'','definition':'','requires':''},";                
+    json += "{'name':'grass_green','nameRad':'grass_green','nameHTML':'grass_green','alias':''";
+    json += ",'preview':'','definition':'','requires':''}]";
+    return json
+}
+
+function _getSkmMaterialDataTest () {
+    var json = "[{'name':'red','nameRad':'red','nameHTML':'red','alias':'redMat'},";
+    json += "{'name':'blue','nameRad':'blue','nameHTML':'blue','alias':'blueMat'},";
+    json += "{'name':'green','nameRad':'green','nameHTML':'green','alias':''},";
+    json += "{'name':'brick','nameRad':'brick','nameHTML':'brick','alias':''},";
+    json += "{'name':'concrete','nameRad':'concrete','nameHTML':'concrete','alias':''},";
+    json += "{'name':'asphalt dark','nameRad':'asphalt_dark','nameHTML':'asphalt dark','alias':''},";
+    json += "{'name':'grass_green','nameRad':'grass_green','nameHTML':'grass_green','alias':''},";
+    json += "{'name':'grass_brown','nameRad':'grass_brown','nameHTML':'grass_brown','alias':''},";
+    json += "{'name':'brick 2','nameRad':'brick_2','nameHTML':'brick 2','alias':''},";
+    json += "{'name':'walls white','nameRad':'walls_white','nameHTML':'walls white','alias':''}]";
+    return json;
+}
+
 
 
 

@@ -701,32 +701,56 @@ input.file {
 /*****************/
 /*   MATERIALS   */
 /*****************/
-.mdev, .skm {
+.mdev, .skm, .skm_with_alias, .skm_defined {
     font-weight: bold;
     min-width: 150px; 
     margin: 5px; 
     padding: 2px;
     padding-left:5px;
+    overflow: hidden;
+    z-index: 10;
 }
 .mdev {
-    /* border: 2px solid #0090DF; */
-    /* background-color: #68BFEF; */
     color: #27537a;
     background: url(gradient.png) repeat-x;
     cursor: move;
     z-index: 100;
 }
+div.mdev:hover {
+    background: none;
+    background-color: #cbe6f4;
+}
 .skm { 
     background-color: #e9b96e;
     /* border: 2px solid #c17d11; */
 }
-.skm .mdev {
+.skm_with_alias, .skm_defined {
+    /* color: #27537a; */
+    /* background: url(gradient.png) repeat-x; */
+    color: #27537a;
+    background-color: #cbe6f4;
+}
+.droppable-hover .mdev, .skm_with_alias .mdev {
     margin: 2px 2px 2px 0;
+    outline: 1px solid #27537a;
+    font-size: 12px;
+}
+.droppable-hover .mdev {
+    color: #cc0000;
+    outline: 2px solid #cc0000;
     background: none;
-    background: url(gradient.png) repeat-x; 
+    background-color: #e9b96e;
 }
 .droppable-hover {
+    color: #333333;
     background-color: #c17d11;
+}
+.droppable-hover-defined {
+    color: #333333;
+    background-color: #6699ff;
+}
+.droppable-active {
+    opacity: 1.0;
 }
 .listPanel, .detailsPanel {
     /* background-color: #ccf; */
@@ -739,7 +763,7 @@ input.file {
     float: left;
     width: 44%;
     min-width: 150px;
-    height: 250px;
+    height: 300px;
     overflow: auto;
 }
 .container {
@@ -748,17 +772,17 @@ input.file {
     margin: 5px;
     height: 100px;
 }   
-.droppable-active {
-    opacity: 1.0;
-}
 .alias_clear {
     font-weight: bold;
+    width: 16px;
+    height: 16px;
     font-size: 10px;
-    color: red;
+    color: #cc0000;
     float: right;
     position: relative;
-    top: -1px;
+    top: -3px;
     cursor: pointer;
+    background: url(16-circle-red-remove.png) no-repeat right; 
 }
 #skmListPanel {
     margin-left: 5px;
@@ -768,7 +792,7 @@ input.file {
 }
 
 .detailsPanel {
-    height: 150px;
+    height: 200px;
     padding: 0;
 }
 
@@ -784,15 +808,16 @@ input.file {
     margin-left: 5px;
 }
 #panelPreview {
-    width: 150px;
+    width: 200px;
     margin: 0;
     float: right;
     position: relative;
     right: -10px;
+    background: url(material_preview_bg.png) no-repeat; 
 }
 #panelText {
     margin: 0;
-    margin-right: 150px;
+    margin-right: 200px;
 }
 #MaterialsDetails {
     margin: 0;
