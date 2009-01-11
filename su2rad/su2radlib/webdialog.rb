@@ -6,6 +6,38 @@ require 'radiancescene.rb'
 require 'webdialog_options.rb'
 require 'webdialog_views.rb'
 
+module RadianceUtils
+
+    def getRadianceIdentifier(name)
+        name = name.gsub(/[\[(}\]<>]/, '')
+        name = name.gsub(/\s+/, '_')
+        return name
+    end
+
+end 
+
+
+class SkmMaterial
+    
+    include JSONUtils
+    include RadianceUtils
+    
+    def initialize(skm)
+        @skm = skm
+        @radName = getRadianceIdentifier(@skm.display_name)
+        @alias = ''
+    end
+    
+    def toJSON
+        dict = {'name'     => '%s' % @skm.name,
+                'nameRad'  => '%s' % @radName,
+                'nameHTML' => '%s' % JSONUtils::escapeHTML(@skm.name),
+                'alias'    => '%s' % @alias}
+        return toStringJSON(dict)
+    end
+    
+end
+
 
 
 class ExportDialogWeb < ExportBase
@@ -40,6 +72,16 @@ class ExportDialogWeb < ExportBase
         dlg.execute_script("loadFileCallback('%s')" % text)
     end
    
+    def setMaterialLists(dlg, p='')
+        mList = []
+        Sketchup.active_model.materials.each { |skm| 
+            mList.push( SkmMaterial.new(skm) )
+        }
+        jsonList = mList.collect { |m| m.toJSON() }
+        json = encodeJSON( "[%s]" % jsonList.join(',') )
+        dlg.execute_script("setSkmMaterialsListJSON('%s')" % json)
+    end
+    
     def updateViewFromString(d,p)
         ## convert <p> to Ruby array and update views
         begin
@@ -117,6 +159,7 @@ class ExportDialogWeb < ExportBase
             @renderOptions.setRenderOptions(dlg, '')
             @viewsList.setViewsList(dlg, '')
             @skyOptions.setSkyOptions(dlg, '')
+            setMaterialLists(dlg, '')
             dlg.execute_script("updateExportPage()")
         }
     end ## end def show
