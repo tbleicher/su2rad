@@ -344,7 +344,7 @@ class SkyOptions
                 @_settings[k] = v
             end
         }
-        settings = getSettings()
+        settings = getAttributeSettings()
         opts = settings.collect { |k,v| "%s=%s" % [k,v] }
         #printf "DEBUG: SKYOPTIONS opts=\n w %s\n\n" % opts.join("\n w ")
         Sketchup.active_model.set_attribute('SU2RAD', 'SKYOPTIONS', opts.join('&')) 
@@ -379,7 +379,8 @@ class SkyOptions
         return txt
     end
    
-    def getSettings
+    def getAttributeSettings
+        ## filter settings that are saved elsewhere (shadow_info)?
         return @_settings
     end
     

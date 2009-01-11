@@ -350,6 +350,7 @@ function updateViewsPage() {
 
 function updateMaterialsPage() {
     log.debug("updating 'Materials' page ...");
+    updateMaterialsList();
 }
 
 function updateFieldsPage() {
