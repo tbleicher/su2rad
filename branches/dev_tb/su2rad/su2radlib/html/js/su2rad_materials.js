@@ -1,30 +1,30 @@
 
-function SkmMaterialsListObject() {
+function materialsListObject() {
     this._lookupTable = {};
     this._idArray = new Array();
 }
 
-SkmMaterialsListObject.prototype.update = function (list) {
+materialsListObject.prototype.update = function (list) {
     var replaced = 0;
     for (var i=0; i<list.length; i++) {
-        var skm = list[i];
-        skm.id = this.genId(skm);
-        if (!this._lookupTable[skm.id]) {
-            log.debug("DEBUG: new material '" + skm.nameHTML + "'");
-            this._idArray.push(skm.id);
-            this._lookupTable[skm.id] = skm;
+        var mat = list[i];
+        mat.id = this.genId(mat);
+        if (!this._lookupTable[mat.id]) {
+            // log.debug("DEBUG: new material '" + mat.nameHTML + "'");
+            this._idArray.push(mat.id);
+            this._lookupTable[mat.id] = mat;
         } else {
-            log.info("replacing material_id '" + skm.id + "' mat='" + skm.nameHTML + "'");
-            this._lookupTable[skm.id] = skm;
+            log.info("replacing material_id '" + mat.id + "' mat='" + mat.nameHTML + "'");
+            this._lookupTable[mat.id] = mat;
         }
     }   
 }
 
-SkmMaterialsListObject.prototype.genId = function (skm) {
-    return skm.nameRad + '_id'
+materialsListObject.prototype.genId = function (mat) {
+    return mat.id
 }
 
-SkmMaterialsListObject.prototype.getMaterials = function () {
+materialsListObject.prototype.getList = function () {
     this._idArray.sort()
     list = new Array();
     try {
@@ -36,108 +36,166 @@ SkmMaterialsListObject.prototype.getMaterials = function () {
                 list.push(this._lookupTable[id])
             }
         }
-    } catch (e) [
-        log.error("getMaterials() " + e)
+    } catch (e) {
+        log.error("getList() " + e)
     }
     return list;   
 }
 
-
-
-
-var draggedElement = null;
-var skmMaterialsList = new SkmMaterialsListObject();
-var radMaterialsList = new Array();
-
-
-function setSkmMaterialsListJSON(text) {
-    var json = decodeJSON(text);
-    //log.debug("setSkmMaterialsListJSON=<br/>" + json.replace(/,/g,',<br/>'));
-    //log.error("TEST: setSkmMaterialsListJSON=<br/>json.length=" + json.length);
-    var newMats = new Array();
-    try {
-        eval("newMats = " + json);
-        log.info("SketchUp materials in model: " + newMats.length); 
-    } catch (e) {
-        log.error("setSkmMaterialsListJSON: error in eval() '" + e.name + "'");
-        log.error("json= " + json.replace(/,/g,',<br/>'));
+materialsListObject.prototype.getMaterial = function (id) {
+    var mat = this._lookupTable[id]
+    if (mat) {
+        return mat;
+    } else {
+        log.error("getMaterial(): id not found '" + id + "'");
+        return false;
     }
-    skmMaterialsList.update(newMats);
+}
+    
+// mixin for SketchUp materials
+function genSkmId(skm) {
+    return skm.nameRad + '_id'
 }
 
-function getSkmMaterialsList () {
-    var text = "";
-    skmList = skmMaterialsList.getMaterials();
-    for (var i=0; i<skmList.length; i++) {
-        var skm = skmList[i]
-        text += "<div class=\"skm\" id=\"" + skm.id + "\">" + skm.nameHTML + "</div>"
-    }
-    return text;
-}
-
-function getRadMaterialsList () {
-    var rad_mats = ['green', 'red', 'blue', 'grass_green', 
-                    'dark_red_brick', 'blue_paint', 'oxidised_aluminium', 'concrete']
-    var text = "";
-    for (var i=0; i<rad_mats.length; i++) {
-        var mdev = rad_mats[i]
-        text += "<div class=\"mdev\" id=\"" + mdev + "\">" + mdev + "</div>"
-    }
-    return text;
-}
-
-function updateMaterialsList() {
-    // list containers
-    var text ="<div class=\"listPanel\" id=\"skmListPanel\">"
-    text += getSkmMaterialsList()
-    text += "</div>"
-    text += "<div class=\"listPanel\" id=\"matListPanel\">"
-    text += getRadMaterialsList()
-    text += "</div>"
-    // details
-    text += "<div class=\"detailsPanel\" id=\"containerDetails\">"
-    text += "<div class=\"detailsPanel\" id=\"panelPreview\">preview</div>" 
-    text += "<div class=\"detailsPanel\" id=\"panelText\">text</div>" 
-    text += "</div>" 
-    document.getElementById('MaterialsDetails').innerHTML = text;
-    activateDraggables();
+// mixin for Radiance materials
+function genMatId(mat) {
+    return mat.nameRad
 }
 
 
-function activateDraggables() {
-    $(".mdev").draggable({helper:'clone'});
-        //ghosting: true,
-        //start: function(e, ui) {
-        //    var dragId = $(ui.draggable.element).attr('id');
-        //}
+var skmMaterialsList = new materialsListObject();
+skmMaterialsList.genId = genSkmId 
+
+var radMaterialsList = new materialsListObject();
+radMaterialsList.genId = genMatId
+
+
+function activateDragDrop () {
+    $(".mdev").draggable({
+        helper:'clone',
+        start: function (ev,ui) {
+            showMaterialDetails( $(ui.helper).attr('id') );
+        }
+    });
     $(".skm").droppable({
         accept: ".mdev",
         activeClass: 'droppable-active',
         hoverClass: 'droppable-hover',
-        drop: function(ev, ui) {
-            var dragClone = $(ui.draggable).clone();
-            dragClone.draggable({helper:'clone'});
-            var skmId = $(this).attr('id');
-            var radId = $(ui.draggable).attr('id');
-            setAlias(skmId, radId);
-            
+        drop: _dropAction
+    });
+    $(".skm_with_alias").droppable({
+        accept: ".mdev",
+        activeClass: 'droppable-active',
+        hoverClass: 'droppable-hover',
+        drop: _dropAction
+    });
+    $(".skm_defined").droppable({
+        accept: ".mdev",
+        activeClass: 'droppable-active',
+        hoverClass: 'droppable-hover-defined',
+        drop: _dropAction
+    });
+}
+
+function _dropAction (ev, ui) {
+    var skmId = $(this).attr('id');
+    var radId = $(ui.draggable).attr('id');
+    setAlias(skmId, radId);
+    var dragClone = $(ui.draggable).clone();
+    dragClone.draggable({
+        helper:'clone',
+        start: function (ev,ui) {
+            showMaterialDetails( $(ui.helper).attr('id') );
         }
     });
+    $(this).append(dragClone);
+}
+
+function buildMatList () {
+    var text = "";
+    matList = radMaterialsList.getList();
+    for (var i=0; i<matList.length; i++) {
+        var mat = matList[i]
+        text += getMatDragHTML(mat.nameRad)
+    }
+    return text;
+}
+
+function buildSkmList () {
+    var text = "";
+    skmList = skmMaterialsList.getList();
+    for (var i=0; i<skmList.length; i++) {
+        var skm = skmList[i]
+        if (skm.alias != '') {
+            // material has alias set
+            text += "<div class=\"skm_with_alias\" id=\"" + skm.id + "\">";
+            text += getSkmInnerHTML(skm);
+            //TODO: if verify_materials == true
+            text += getMatDragHTML(skm.alias);
+            text += "</div>";
+        } else if (radMaterialsList.getMaterial(skm.nameRad)) {
+            // defined material
+            text += "<div class=\"skm_defined\" id=\"" + skm.id + "\">" + skm.nameHTML + "</div>";
+        } else {
+            text += "<div class=\"skm\" id=\"" + skm.id + "\">" + skm.nameHTML + "</div>"
+        }
+    }
+    return text;
 }
 
 function clearAlias(skmId) {
     log.info("clearing alias for '" + skmId + "'");
-    document.getElementById(skmId).innerHTML = skmId;
+    try {
+        var skm = skmMaterialsList.getMaterial(skmId);
+        skm.alias = '';
+        document.getElementById(skmId).innerHTML = skm.nameHTML
+        if (radMaterialsList.getMaterial(skm.nameRad)) {
+            document.getElementById(skmId).className = 'skm_defined';
+        } else {
+            document.getElementById(skmId).className = 'skm';
+        }
+    } catch (e) {
+        log.error("Error clearAlias(): '" + e + "'");
+    }
+}
+
+function getMatDragHTML(matname) {
+    var text = "<div class=\"mdev\" id=\"" + matname + "\">"
+    text += "<a onClick=\"showMaterialDetails('" + matname + "')\">" 
+    text += matname + "</a></div>"
+    return text
+}
+
+function showMaterialDetails(matname) {
+    var mat = radMaterialsList.getMaterial(matname)
+    if (mat) {
+        var text = "<b>" + matname + "</b><br/>"
+        text += "definition=<br/>" + mat.definition;
+        document.getElementById('panelText').innerHTML = text;
+        if (mat.preview != '') {
+            document.getElementById('panelPreview').innerHTML = mat.preview;
+        } else {
+            document.getElementById('panelPreview').innerHTML = "no preview for " + matname;
+        }
+        return true;
+    }
+}
+
+function getSkmInnerHTML(skm) {
+    var html = '';
+    html += "<a class=\"alias_clear\" onclick=\"clearAlias('" + skm.id + "')\""
+    html += "title=\"remove alias\">&nbsp;</a>";
+    html += skm.nameHTML + "<br/>";
+    return html
 }
 
 function setAlias(skmId, radId) {
-    // update <div>
-    log.error("TEST: setAlias('" + skmId + "', '" + radId + "')";
     try {
-        document.getElementById(skmId).innerHTML = '';
-        $(this).append("<a class=\"alias_clear\" onclick=\"clearAlias('" + skmId + "')\">[clear]</a>") 
-        $(this).append("again: " + skmId);
-        $(this).append(dragClone);
+        // update <div>
+        var skm = skmMaterialsList.getMaterial(skmId);
+        skm.alias = radId;
+        document.getElementById(skmId).className = 'skm_with_alias';
+        document.getElementById(skmId).innerHTML = getSkmInnerHTML(skm);
         // show log and status
         var msg = "material '" + skmId + "' aliased to '" + radId + "'";
         log.info(msg);
@@ -147,19 +205,23 @@ function setAlias(skmId, radId) {
     }
 }
 
-
-function _getMaterialTestDataSkm () {
-    var json = "[{'name':'red','nameRad':'red','nameHTML':'red','alias':''},";
-    json += "{'name':'blue','nameRad':'blue','nameHTML':'blue','alias':''},";
-    json += "{'name':'green','nameRad':'green','nameHTML':'green','alias':''},";
-    json += "{'name':'brick','nameRad':'brick','nameHTML':'brick','alias':''},";
-    json += "{'name':'concrete','nameRad':'concrete','nameHTML':'concrete','alias':''},";
-    json += "{'name':'asphalt dark','nameRad':'asphalt_dark','nameHTML':'asphalt dark','alias':''},";
-    json += "{'name':'grass_green','nameRad':'grass_green','nameHTML':'grass_green','alias':''},";
-    json += "{'name':'grass_brown','nameRad':'grass_brown','nameHTML':'grass_brown','alias':''},";
-    json += "{'name':'brick 2','nameRad':'brick_2','nameHTML':'brick 2','alias':''},";
-    json += "{'name':'walls white','nameRad':'walls_white','nameHTML':'walls white','alias':''}]";
-    return encodeJSON(json);
+function updateMaterialsList () {
+    // list containers
+    var text ="<div class=\"listPanel\" id=\"skmListPanel\">"
+    text += buildSkmList()
+    text += "</div>"
+    text += "<div class=\"listPanel\" id=\"matListPanel\">"
+    text += buildMatList()
+    text += "</div>"
+    // details
+    text += "<div class=\"detailsPanel\" id=\"containerDetails\">"
+    text += "<div class=\"detailsPanel\" id=\"panelPreview\">preview</div>" 
+    text += "<div class=\"detailsPanel\" id=\"panelText\">text</div>" 
+    text += "</div>" 
+    document.getElementById('MaterialsDetails').innerHTML = text;
+    activateDragDrop();
 }
+
+
 
 

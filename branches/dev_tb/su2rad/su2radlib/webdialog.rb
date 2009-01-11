@@ -73,13 +73,14 @@ class ExportDialogWeb < ExportBase
     end
    
     def setMaterialLists(dlg, p='')
+        #TODO: dlg.execute_script("setMaterialsListJSON('%s','rad')" % json)
         mList = []
         Sketchup.active_model.materials.each { |skm| 
             mList.push( SkmMaterial.new(skm) )
         }
         jsonList = mList.collect { |m| m.toJSON() }
         json = encodeJSON( "[%s]" % jsonList.join(',') )
-        dlg.execute_script("setSkmMaterialsListJSON('%s')" % json)
+        dlg.execute_script("setMaterialsListJSON('%s','skm')" % json)
     end
     
     def updateViewFromString(d,p)
