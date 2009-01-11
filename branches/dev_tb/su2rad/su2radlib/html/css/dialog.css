@@ -106,7 +106,6 @@ h3,th {
     padding: 0.3em;
     padding-left: 0.5em;
     font-weight: bold;
-    color: blue;
     color: #27537a;
     background: url(gradient.png) repeat-x;
     height: 18px; /* IE 6 treats height as min-height */
@@ -696,4 +695,107 @@ input.file {
 #viewsSelection div.gridRow {
     width: 510px;
     margin-left: 75px;
+}
+
+
+/*****************/
+/*   MATERIALS   */
+/*****************/
+.mdev, .skm {
+    font-weight: bold;
+    min-width: 150px; 
+    margin: 5px; 
+    padding: 2px;
+    padding-left:5px;
+}
+.mdev {
+    /* border: 2px solid #0090DF; */
+    /* background-color: #68BFEF; */
+    color: #27537a;
+    background: url(gradient.png) repeat-x;
+    cursor: move;
+    z-index: 100;
+}
+.skm { 
+    background-color: #e9b96e;
+    /* border: 2px solid #c17d11; */
+}
+.skm .mdev {
+    margin: 2px 2px 2px 0;
+    background: none;
+    background: url(gradient.png) repeat-x; 
+}
+.droppable-hover {
+    background-color: #c17d11;
+}
+.listPanel, .detailsPanel {
+    /* background-color: #ccf; */
+    /* border: 2px solid #0090DF; */
+    border: none;
+    outline: 2px solid #cbe6f4;
+    margin: 10px;
+}
+.listPanel {
+    float: left;
+    width: 44%;
+    min-width: 150px;
+    height: 250px;
+    overflow: auto;
+}
+.container {
+    border: 2px solid #0090DF;
+    padding: 5px;
+    margin: 5px;
+    height: 100px;
+}   
+.droppable-active {
+    opacity: 1.0;
+}
+.alias_clear {
+    font-weight: bold;
+    font-size: 10px;
+    color: red;
+    float: right;
+    position: relative;
+    top: -1px;
+    cursor: pointer;
+}
+#skmListPanel {
+    margin-left: 5px;
+}
+#matListPanel {
+    float:none;
+}
+
+.detailsPanel {
+    height: 150px;
+    padding: 0;
+}
+
+#containerDetails {
+    background-color: white;
+    /* border: 2px solid red; */
+    border: none;
+    outline: none;
+    width: 88%;
+    float: none;
+    padding: 0;
+    margin-top: 20px;
+    margin-left: 5px;
+}
+#panelPreview {
+    width: 150px;
+    margin: 0;
+    float: right;
+    position: relative;
+    right: -10px;
+}
+#panelText {
+    margin: 0;
+    margin-right: 150px;
+}
+#MaterialsDetails {
+    margin: 0;
+    padding: 0;
+    border: 1px solid white;
 }

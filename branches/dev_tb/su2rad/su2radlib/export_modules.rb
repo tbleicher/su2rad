@@ -91,6 +91,15 @@ module JSONUtils
         end.tr(' ', '+')
     end
     
+    # ecapeHTML from Ruby::CGI
+    #
+    # Escape special characters in HTML, namely &\"<>
+    #   CGI::escapeHTML('Usage: foo "bar" <baz>')
+    #      # => "Usage: foo &quot;bar&quot; &lt;baz&gt;"
+    def JSONUtils::escapeHTML(string)
+        string.gsub(/&/n, '&amp;').gsub(/\"/n, '&quot;').gsub(/>/n, '&gt;').gsub(/</n, '&lt;')
+    end
+    
     def urlDecode(string)
         ## URL-decode from Ruby::CGI
         string.tr('+', ' ').gsub(/((?:%[0-9a-fA-F]{2})+)/n) do
