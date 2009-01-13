@@ -1,9 +1,11 @@
 require "exportbase.rb"
+require "radiance.rb"
+
 
 
 class MaterialDefinition < ExportBase
     
-    attr_reader :comment, :is_valid, :name, :rest, :text, :type, :depends_on
+    attr_reader :comment, :is_valid, :name, :rest, :text, :type, :required
     attr_writer :comment
     
     def initialize(text=nil)
@@ -13,7 +15,7 @@ class MaterialDefinition < ExportBase
         @text = nil
         @type = nil
         @rest = nil
-        @depends_on = nil
+        @required = nil
         if text
             begin
                 parseText(text)
@@ -28,37 +30,16 @@ class MaterialDefinition < ExportBase
         end
     end
     
-    def getText(comment=true, singleline=false)
-        if singleline
-            text = @text.split().join(' ')
-            if comment and @comment
-                c = @comment.split().join(' ')
-                text = c + "\n" + text
-            end
-            return text
-        else
-            text = ''
-            if comment and @comment
-                text = @comment.strip() + "\n"
-            end
-            text += @text.strip()
-            while text.index("\n\n") != nil
-                text.gsub!("\n\n", "\n")
-            end
-            return text
-        end
-    end
-    
     def parseText(text)
         defparts = []
         parts = text.split()
-        @depends_on = parts[0]
+        @required = parts[0]
         @type = parts[1]
         @name = parts[2]
         if @type == 'alias'
-            @depends_on = parts[3]
+            @required = parts[3]
             @rest = parts[4..parts.length].join(' ')
-            @text = "void alias #{@name} #{@depends_on}"
+            @text = "void alias #{@name} #{@required}"
             @is_valid = true
         else
             idx1 = 3
@@ -72,7 +53,7 @@ class MaterialDefinition < ExportBase
             line2 = parts[idx2..idx2].join(' ')
             line3 = parts[idx3..n].join(' ')
             @rest = parts[n+1..parts.length].join(' ')
-            @text = ["#{@depends_on} #{@type} #{@name}", line1, line2, line3].join("\n")
+            @text = ["#{@required} #{@type} #{@name}", line1, line2, line3].join("\n")
             @is_valid = true
         end
         @text.strip!
@@ -155,13 +136,15 @@ class MaterialFile < ExportBase
             lines = purgeLines(lines)
         end
         text = lines.join(" ")
-        
+        parseWords(text.split())
+        return
+        #XXX
         ## start with basic definitions
         rest = []
         basics = text.split("void")
-        basics.each { |line|
-            if line != ''
-                r = parseSingleLine("void " + line)
+        basics.each { |chunk|
+            if chunk != ''
+                r = parseSingleLine("void " + chunk)
                 rest.push(r)
             end
         }
@@ -177,6 +160,17 @@ class MaterialFile < ExportBase
             }
         end
     end     
+        
+    def parseWords(words)
+        if words == []
+            return
+        end
+        definitions = []
+        current_def = []
+        old_word = words[0]
+        idx_word = words[0]
+        
+    end 
     
     def parseSingleLine(line)
         if line == ''
@@ -268,6 +262,7 @@ class MaterialFile < ExportBase
 end
 
 
+
 class MaterialLibrary < ExportBase
 
     def initialize
@@ -279,8 +274,14 @@ class MaterialLibrary < ExportBase
         initSupportDir()
     end
 
+    def inspect
+        return "#<MaterialLibrary skm=%d names=%d types=%d" % [@sketchup_materials.length, @byName.length, @byType.length]
+    end
+
     def initLibrary
-        paths = $MATERIALLIB.split(':')
+        paths = [File.join(__FILE__, 'raylib', 'materials.rad'),
+                 File.join(__FILE__, 'raylib', 'materials.mat')]
+        paths += $MATERIALLIB.split(':')
         paths.each { |path|
             if File.exists?(path)
                 mf = MaterialFile.new(path)
@@ -336,12 +337,11 @@ class MaterialLibrary < ExportBase
         paths = []
         Dir.foreach(mdir) { |p|
             path = File.join(mdir, p)
-            if p[0,1] == '.'[0,1]
+            if p.slice(0,1) == '.'
                 next
             elsif FileTest.directory?(path) == true
-                lst = getSKMFiles(path)
-                lst.each { |f| paths.push(f) }
-            elsif p.downcase[-4,4] == '.skm'
+                paths += getSKMFiles(path)
+            elsif p.downcase.slice(-4,4) == '.skm'
                 paths.push(path)
             end
         }
