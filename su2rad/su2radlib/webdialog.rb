@@ -1,10 +1,12 @@
 require 'sketchup.rb'
 require 'export_modules.rb'
 require 'exportbase.rb'
+require 'radiance.rb'
 require 'radiance_entities.rb'
 require 'radiancescene.rb'
 require 'webdialog_options.rb'
 require 'webdialog_views.rb'
+
 
 module RadianceUtils
 
@@ -39,6 +41,29 @@ class SkmMaterial
 end
 
 
+class RadMaterial
+    
+    include JSONUtils
+    include RadianceUtils
+    
+    def initialize(mat)
+        @material = mat
+        @radName  = mat.name
+        @alias    = ''
+    end
+    
+    def toJSON
+        dict = {'name'     => '%s' % @radName,
+                'nameRad'  => '%s' % @radName,
+                'nameHTML' => '%s' % JSONUtils::escapeHTML(@radName),
+                'alias'    => '%s' % @alias,
+                'definition' => '%s' % @material.getText().gsub(/\n/, '<br/>'),
+                'mType'      => '%s' % @material.getType()}
+        return toStringJSON(dict)
+    end
+    
+end
+
 
 class ExportDialogWeb < ExportBase
     
@@ -72,15 +97,36 @@ class ExportDialogWeb < ExportBase
         dlg.execute_script("loadFileCallback('%s')" % text)
     end
    
-    def setMaterialLists(dlg, p='')
-        #TODO: dlg.execute_script("setMaterialsListJSON('%s','rad')" % json)
-        mList = []
-        Sketchup.active_model.materials.each { |skm| 
-            mList.push( SkmMaterial.new(skm) )
-        }
-        jsonList = mList.collect { |m| m.toJSON() }
-        json = encodeJSON( "[%s]" % jsonList.join(',') )
-        dlg.execute_script("setMaterialsListJSON('%s','skm')" % json)
+    def setMaterialLists(dlg, mtype)
+        if mtype == 'rad'
+            path = File.join( File.dirname(__FILE__), 'ray')
+            mLib = Radiance::MaterialLibrary.new(path)
+            materials = mLib.getMaterials()
+            matList = materials.collect { |mat| RadMaterial.new(mat) }
+            _setMaterialListInChunks(matList, dlg, mtype)
+        else
+            skmList = []
+            Sketchup.active_model.materials.each { |skm| 
+                skmList.push( SkmMaterial.new(skm) )
+            }
+            _setMaterialListInChunks(skmList, dlg, mtype)
+            #jsonList = skmList.collect { |m| m.toJSON() }
+            #json = encodeJSON( "[%s]" % jsonList.join(',') )
+            #printf "DEBUG: setting SketchUp materials ...\n"
+            #dlg.execute_script("setMaterialsListJSON('%s','skm')" % json)
+        end
+    end
+
+    def _setMaterialListInChunks(mList, dlg, mtype)
+        startIdx = 0
+        while startIdx < mList.length
+            chunk = mList[startIdx...startIdx+50]
+            jsonList = chunk.collect { |m| m.toJSON() }
+            json = encodeJSON( "[%s]" % jsonList.join(',') )
+            uimessage("mList %s: setting materials %d to %d" % [mtype, startIdx, startIdx+chunk.length])
+            dlg.execute_script("setMaterialsListJSON('%s','%s')" % [json,mtype])
+            startIdx += 50
+        end
     end
     
     def updateViewFromString(d,p)
@@ -160,7 +206,8 @@ class ExportDialogWeb < ExportBase
             @renderOptions.setRenderOptions(dlg, '')
             @viewsList.setViewsList(dlg, '')
             @skyOptions.setSkyOptions(dlg, '')
-            setMaterialLists(dlg, '')
+            setMaterialLists(dlg, 'rad')
+            setMaterialLists(dlg, 'skm')
             dlg.execute_script("updateExportPage()")
         }
     end ## end def show

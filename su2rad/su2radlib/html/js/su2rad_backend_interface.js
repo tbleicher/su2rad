@@ -229,20 +229,27 @@ function applyViewSettings(viewname) {
 }
 
 function setMaterialsListJSON(text, type) {
-    var json = decodeJSON(text);
-    //log.error("TEST: setMaterialsListJSON=<br/>json.length=" + json.length);
-    var newMats = new Array();
+    log.error("DEBUG: setMaterialsListJSON type='" + type + "'");
     try {
-        eval("newMats = " + json);
-        log.info("materials found: " + newMats.length); 
-    } catch (e) {
-        log.error("setMaterialsListJSON: error in eval() '" + e.name + "'");
-        log.error("json= " + json.replace(/,/g,',<br/>'));
-    }
-    if (type == 'skm') {
-        skmMaterialsList.update(newMats);
-    } else {
-        radMaterialsList.update(newMats);
+        var json = decodeJSON(text);
+        //log.error("TEST: setMaterialsListJSON=<br/>json.length=" + json.length);
+        var newMats = new Array();
+        try {
+            eval("newMats = " + json);
+            log.info("materials found: " + newMats.length); 
+        } catch (e) {
+            log.error("setMaterialsListJSON: error in eval() '" + e.name + "'");
+            log.error("json= " + json.replace(/,/g,',<br/>'));
+        }
+        if (type == 'skm') {
+            log.info("setting SketchUp materials")
+            skmMaterialsList.update(newMats);
+        } else {
+            log.info("setting Radiance materials")
+            radMaterialsList.update(newMats);
+        }
+    } catch (err) {
+        log.error("setMaterialsListJSON:'" + err.message + "'");
     }
 }
 

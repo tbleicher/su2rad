@@ -1,5 +1,6 @@
 
 function materialsListObject() {
+    this.name = "MLIST";
     this._lookupTable = {};
     this._idArray = new Array();
 }
@@ -10,7 +11,7 @@ materialsListObject.prototype.update = function (list) {
         var mat = list[i];
         mat.id = this.genId(mat);
         if (!this._lookupTable[mat.id]) {
-            // log.debug("DEBUG: new material '" + mat.nameHTML + "'");
+            //log.debug(this.name + " DEBUG: new material '" + mat.nameHTML + "'");
             this._idArray.push(mat.id);
             this._lookupTable[mat.id] = mat;
         } else {
@@ -31,7 +32,7 @@ materialsListObject.prototype.getList = function () {
         for (var i=0; i<this._idArray.length; i++) {
             var id = this._idArray[i];
             if (!this._lookupTable[id]) {
-                log.error("material id not found '" + id + "'");
+                log.error(this.name + ": material id not found '" + id + "'");
             } else {
                 list.push(this._lookupTable[id])
             }
@@ -64,9 +65,11 @@ function genMatId(mat) {
 
 
 var skmMaterialsList = new materialsListObject();
+skmMaterialsList.name = "SKM"
 skmMaterialsList.genId = genSkmId 
 
 var radMaterialsList = new materialsListObject();
+radMaterialsList.name = "RAD"
 radMaterialsList.genId = genMatId
 
 
@@ -114,6 +117,7 @@ function _dropAction (ev, ui) {
 function buildMatList () {
     var text = "";
     matList = radMaterialsList.getList();
+    log.error("DEBUG: matList=" + matList.length);
     for (var i=0; i<matList.length; i++) {
         var mat = matList[i]
         text += getMatDragHTML(mat.nameRad)
@@ -124,6 +128,7 @@ function buildMatList () {
 function buildSkmList () {
     var text = "";
     skmList = skmMaterialsList.getList();
+    log.error("DEBUG: skmList=" + skmList.length);
     for (var i=0; i<skmList.length; i++) {
         var skm = skmList[i]
         if (skm.alias != '') {
