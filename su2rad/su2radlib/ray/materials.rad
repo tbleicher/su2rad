@@ -1229,7 +1229,7 @@ void plastic RAL3004
 5  0.09 0.026 0.014     0     0
 
 #
-# RAL5002 : ultramarine paint / peinture Bleu d'outremer
+# RAL5002 : ultramarine paint / peinture Bleu outremer
 #
 void plastic RAL5002
 0
@@ -1472,13 +1472,13 @@ void plastic blue-gray_ETERNIT
 void alias ETERNIT_gris-bleu blue-gray_ETERNIT
 
 #
-# Oregon_pine_wood / Bois_Pin_d'Oregon
+# Oregon_pine_wood / Bois_Pin_Oregon
 #
 void plastic Oregon_pine_wood
 0
 0
 5 0.588 0.329 0.154     0     0
-void alias Bois_Pin_d'Oregon Oregon_pine_wood
+void alias Bois_Pin_Oregon Oregon_pine_wood
 
 #
 # cream-white_gravel / Gravier_chemin_blanc-creme
