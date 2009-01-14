@@ -57,7 +57,9 @@ class RadMaterial
                 'nameRad'  => '%s' % @radName,
                 'nameHTML' => '%s' % JSONUtils::escapeHTML(@radName),
                 'alias'    => '%s' % @alias,
+                'defType'  => '%s' % @material.defType,
                 'definition' => '%s' % @material.getText().gsub(/\n/, '<br/>'),
+                'required'   => '%s' % @material.required,
                 'mType'      => '%s' % @material.getType()}
         return toStringJSON(dict)
     end
@@ -110,22 +112,19 @@ class ExportDialogWeb < ExportBase
                 skmList.push( SkmMaterial.new(skm) )
             }
             _setMaterialListInChunks(skmList, dlg, mtype)
-            #jsonList = skmList.collect { |m| m.toJSON() }
-            #json = encodeJSON( "[%s]" % jsonList.join(',') )
-            #printf "DEBUG: setting SketchUp materials ...\n"
-            #dlg.execute_script("setMaterialsListJSON('%s','skm')" % json)
         end
     end
 
     def _setMaterialListInChunks(mList, dlg, mtype)
+        nChunk = 200
         startIdx = 0
         while startIdx < mList.length
-            chunk = mList[startIdx...startIdx+50]
+            chunk = mList[startIdx...startIdx+nChunk]
             jsonList = chunk.collect { |m| m.toJSON() }
             json = encodeJSON( "[%s]" % jsonList.join(',') )
             uimessage("mList %s: setting materials %d to %d" % [mtype, startIdx, startIdx+chunk.length])
             dlg.execute_script("setMaterialsListJSON('%s','%s')" % [json,mtype])
-            startIdx += 50
+            startIdx += nChunk
         end
     end
     

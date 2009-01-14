@@ -703,7 +703,7 @@ input.file {
 /*****************/
 .mdev, .skm, .skm_with_alias, .skm_defined {
     font-weight: bold;
-    min-width: 150px; 
+    min-width: 200px; 
     margin: 5px; 
     padding: 2px;
     padding-left:5px;
@@ -732,7 +732,8 @@ div.mdev:hover {
 }
 .droppable-hover .mdev, .skm_with_alias .mdev {
     margin: 2px 2px 2px 0;
-    outline: 1px solid #27537a;
+    /* outline: 1px solid #27537a; */
+    border: 1px solid #27537a;
     font-size: 12px;
 }
 .droppable-hover .mdev {
@@ -762,16 +763,42 @@ div.mdev:hover {
 .listPanel {
     float: left;
     width: 44%;
-    min-width: 150px;
-    height: 300px;
+    height: 301px;
     overflow: auto;
 }
-.container {
-    border: 2px solid #0090DF;
-    padding: 5px;
-    margin: 5px;
-    height: 100px;
-}   
+.listOptions {
+    background: url(gradient.png) repeat-x;
+    height: 20px;
+    padding: 2px;
+    margin: 0px;
+    border: none;
+}
+.listOptions div {
+    float: right;
+    color: #27537a;
+    font-size: 12px;
+    height: 14px;
+    /* border: 1px solid #27537a; */
+    margin-left: 10px;
+}
+.listOptions span {
+    float: left;
+    color: #27537a;
+    font-size: 14px;
+    font-weight: bold;
+    /* border: 1px solid #27537a; */
+    margin-left: 3px;
+}
+.cbListOption {
+    margin: 2px 3px;
+}
+.mlistPanel {
+    float: none;
+    overflow: auto;
+    height: 275px;
+    border: none;
+    /* outline: 1px solid red; */
+}
 .alias_clear {
     font-weight: bold;
     width: 16px;
@@ -784,18 +811,20 @@ div.mdev:hover {
     cursor: pointer;
     background: url(16-circle-red-remove.png) no-repeat right; 
 }
-#skmListPanel {
-    margin-left: 5px;
-}
-#matListPanel {
-    float:none;
-}
-
 .detailsPanel {
     height: 200px;
     padding: 0;
 }
-
+.textDisplay {
+    padding: 5px;
+    font-family: "Monaco", "Courier New", Courier, monospace;
+    font-size: 14px;
+    overflow: auto;
+}
+.textDisplay span {
+    font-family: "Monaco", "Courier New", Courier, monospace;
+    font-size: 14px;
+}
 #containerDetails {
     background-color: white;
     /* border: 2px solid red; */
@@ -815,7 +844,7 @@ div.mdev:hover {
     right: -10px;
     background: url(material_preview_bg.png) no-repeat; 
 }
-#panelText {
+#panelDetails {
     margin: 0;
     margin-right: 200px;
 }

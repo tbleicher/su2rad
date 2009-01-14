@@ -1,0 +1,15 @@
+/*****************/
+/*   MATERIALS   */
+/*****************/
+.mdev {
+    background: none;
+    border: 1px solid #27537a;
+}
+.listPanel, .detailsPanel {
+    border: 2px solid #cbe6f4;
+    margin: 8px;
+}
+.alias_clear {
+    background: none;
+    background-color: #cc0000;
+}
