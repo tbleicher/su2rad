@@ -682,9 +682,14 @@
                     </div>
                     <div class="listPanel" style="float:none;">
                         <div class="listOptions">
-                            <div>light<input type=checkbox class="cbListOption" id="showDefType_light" onclick="buildMaterialListRad()"></div>
-                            <div>pattern<input type=checkbox class="cbListOption" id="showDefType_pattern" onclick="buildMaterialListRad()"></div>
-                            <div>alias<input type=checkbox class="cbListOption" id="showDefType_alias" onclick="buildMaterialListRad()"></div>
+                            <div style="float:left;margin:0;margin-left:3px;margin-top:1px;">
+                                <select style="width:100px;" id="showMaterialGroup" onchange="buildMaterialListRad()">
+                                    <option value="all" selected>all</option>
+                                </select>
+                            </div>
+                            <!-- <div>light<input type=checkbox class="cbListOption" id="showDefType_light" onclick="buildMaterialListRad()"></div> -->
+                            <!-- <div>pattern<input type=checkbox class="cbListOption" id="showDefType_pattern" onclick="buildMaterialListRad()"></div> -->
+                            <div>alias<input type=checkbox class="cbListOption" id="showDefTypeAlias" onclick="buildMaterialListRad()"></div>
                         </div>
                         <div class="mlistPanel" id="radListPanel"></div>
                     </div>

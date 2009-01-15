@@ -1,12 +1,36 @@
 
+function UniqueArray () {
+    this.values = []
+    this.length = 0;
+}
+
+UniqueArray.prototype.getValues = function() {
+    return this.values;
+}
+
+UniqueArray.prototype.push = function(v) {
+    if (this[v] == null) {
+        this[v] = v;
+        this.values.push(v);
+        this.length = this.values.length;
+    }
+}
+
+UniqueArray.prototype.sort = function(sortFunc) {
+    this.values.sort(sortFunc);
+}
+
+
+
 function materialsListObject() {
     this.name = "matList";
     this._lookupTable = {};
     this._idArray = new Array();
+    this._groups = new UniqueArray();
 }
 
 materialsListObject.prototype.update = function (list) {
-    var replaced = 0;
+    var redefined = 0;
     for (var i=0; i<list.length; i++) {
         var mat = list[i];
         mat.id = this.genId(mat);
@@ -14,11 +38,14 @@ materialsListObject.prototype.update = function (list) {
             //log.debug(this.name + " DEBUG: new material '" + mat.nameHTML + "'");
             this._idArray.push(mat.id);
             this._lookupTable[mat.id] = mat;
+            this._groups.push(mat.group)
         } else {
-            log.info(this.name + ": replacing material_id '" + mat.id + "' mat='" + mat.nameHTML + "'");
+            log.debug(this.name + ": replacing material_id '" + mat.id + "' mat='" + mat.nameHTML + "'");
             this._lookupTable[mat.id] = mat;
+            redefined += 1;
         }
-    }   
+    }
+    log.debug(this.name + ".update(): materials total=" + this._idArray.length + " new=" + list.length + " redef=" + redefined)
 }
 
 materialsListObject.prototype.genId = function (mat) {
@@ -55,6 +82,11 @@ materialsListObject.prototype.getMaterial = function (id, silent) {
     }
 }
     
+materialsListObject.prototype.getMaterialGroups = function () {
+   this._groups.sort()
+   return this._groups.getValues();
+}
+
 // mixin for SketchUp materials
 function genSkmId(skm) {
     return skm.nameRad + '_id'
@@ -127,32 +159,32 @@ function buildMaterialListRad () {
     var text = "";
     matList = radMaterialsList.getList();
     for (var i=0; i<matList.length; i++) {
+        var showAlias = document.getElementById('showDefTypeAlias').checked;
+        var showType = document.getElementById('showMaterialGroup').value;
         var mat = matList[i]
-        if (_materialFilter(mat) == true) {
+        if (_materialFilter(mat, showAlias, showType) == true) {
             text += getMatDragHTML(mat.nameRad)
         }
     }
-    log.debug("Radiance materials total: " + radMaterialsList.length)
     document.getElementById("radListPanel").innerHTML = text;
     activateDrag();
 }
 
-function _materialFilter(mat) {
-    try {
-        if (mat.defType == 'material') {
-            return true
-        } else {
-            var id = 'showDefType_' + mat.defType
-            return document.getElementById(id).checked
-        }
-    } catch (e) {
-        log.error(e.message)
+function _materialFilter(mat, showAlias, showType) {
+    if (mat.defType == 'alias' && showType == 'alias') {
         return true
+    } else if (!showAlias && mat.defType == 'alias') {
+        return false
+    } else if (showType == 'all') {
+        return true
+    } else if (showType == mat.group) {
+        return true
+    } else {
+        return false
     }
 }
 
 function buildMaterialListSkm () {
-    log.debug("buildMaterialListSkm()")
     var text = "";
     skmList = skmMaterialsList.getList();
     for (var i=0; i<skmList.length; i++) {
@@ -204,6 +236,16 @@ function getMatDragHTML(matname) {
     text += "<a title=\"" + matname + "\" onClick=\"showMaterialDetails('" + matname + "')\">" 
     text += matname + "</a></div>"
     return text
+}
+
+function setGroupSelection () {
+    var classes = radMaterialsList.getMaterialGroups()
+    var select = document.getElementById('showMaterialGroup');
+    select.options.length = 0;
+    select.options[0] = new Option("all", "all", true, true);
+    for (var i=0; i<classes.length; i++) {
+        select.options[i+1] = new Option(classes[i], classes[i])
+    }
 }
 
 function showMaterialDetails(matname) {

@@ -34,6 +34,7 @@ class SkmMaterial
         dict = {'name'     => '%s' % @skm.name,
                 'nameRad'  => '%s' % @radName,
                 'nameHTML' => '%s' % JSONUtils::escapeHTML(@skm.name),
+                'group'    => 'skm',
                 'alias'    => '%s' % @alias}
         return toStringJSON(dict)
     end
@@ -56,6 +57,7 @@ class RadMaterial
         dict = {'name'     => '%s' % @radName,
                 'nameRad'  => '%s' % @radName,
                 'nameHTML' => '%s' % JSONUtils::escapeHTML(@radName),
+                'group'    => '%s' % @material.getGroup(),
                 'alias'    => '%s' % @alias,
                 'defType'  => '%s' % @material.defType,
                 'definition' => '%s' % @material.getText().gsub(/\n/, '<br/>'),
