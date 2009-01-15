@@ -36,6 +36,7 @@ module Radiance
             @required = 'void'
             @text = ''
             @rest = ''
+            @_group = ''
             begin
                 @valid = parseText(text)
             rescue => e
@@ -54,12 +55,20 @@ module Radiance
             end
         end
         
-        def valid?
-            return @valid
-        end
-        
         def getType
             return @matType
+        end
+        
+        def getGroup
+            if @_group != ''
+                return @_group
+            elsif @matType == 'light' || @matType == 'glow'
+                return 'light'
+            elsif @matType =~ /2\z/
+                return $`
+            else 
+                return @matType
+            end
         end
         
         def identifier
@@ -134,6 +143,14 @@ module Radiance
                 return "## %s\n%s" % [@name,@text]
             end
         end
+
+        def setGroup(group)
+            @_group = group
+        end
+        
+        def valid?
+            return @valid
+        end
         
     end
    
@@ -207,7 +224,13 @@ module Radiance
         
         def update(dict)
             if dict.class == Hash
-                @materials.update(dict)
+                dict.each_pair { |k,m|
+                    if m.getGroup() == 'alias' && @materials.has_key?(m.required)
+                        req = @materials[m.required]
+                        m.setGroup(req.getGroup())
+                    end
+                    @materials[k] = m
+                }
             else
                 uimessage("Error: can't update from object type '#{dict.class}'", -2)
             end

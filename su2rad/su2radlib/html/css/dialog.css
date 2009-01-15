@@ -738,7 +738,7 @@ div.mdev:hover {
 }
 .droppable-hover .mdev {
     color: #cc0000;
-    outline: 2px solid #cc0000;
+    border: 2px solid #cc0000;
     background: none;
     background-color: #e9b96e;
 }
