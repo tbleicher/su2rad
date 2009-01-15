@@ -654,7 +654,12 @@ function setImageType(imgType) {
 }
 
 function parseBoolOverride(txt) {
-    var opt = txt.slice(1,-1);
+    var lastChar = txt.charAt(txt.length-1)
+    if (lastChar == '-' || lastChar == '+') {
+        var opt = txt.slice(0,txt.length-1);
+    } else {
+        var opt = txt
+    }
     var idx;
     for (var i=0; i<rpictBoolOptions.length; i++) {
         if (rpictBoolOptions[i] == opt) {
