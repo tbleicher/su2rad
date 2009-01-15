@@ -16,8 +16,8 @@ UniqueArray.prototype.push = function(v) {
     }
 }
 
-UniqueArray.prototype.sort = function(sortFunc) {
-    this.values.sort(sortFunc);
+UniqueArray.prototype.sort = function() {
+    this.values.sort();
 }
 
 
