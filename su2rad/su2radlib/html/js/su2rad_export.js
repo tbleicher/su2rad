@@ -81,6 +81,7 @@ function onExportModeChange() {
     exportSettings.setMode(val);
     _setGlobalCoordsDisplay();
     updateExportFormValues();
+    setCurrentMaterialList(val);
     applyExportOptions();
 }
 
