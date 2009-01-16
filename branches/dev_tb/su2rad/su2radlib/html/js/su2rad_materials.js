@@ -283,7 +283,7 @@ function _clearAliasSkm(listId) {
     } else {
         document.getElementById(listId).className = 'skm';
     }
-    skpRemoveMaterialAlias(element.name);
+    skpRemoveMaterialAlias(element.name, element.group);
 }
         
 function getMatDragHTML(matname) {

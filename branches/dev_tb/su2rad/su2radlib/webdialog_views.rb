@@ -324,6 +324,17 @@ class SketchupViewsList
         }
     end
 
+    def updateFromString(d,p)
+        ## convert param to Ruby array and update view
+        begin
+            vDict = eval(p)
+            return updateView(vDict)
+        rescue => e 
+            uimessage("Error updateFromString(): %s\n\n%s\n" % [$!.message,e.backtrace.join("\n")], -2)
+            return false
+        end
+    end
+ 
     def updateView(d)
         if not d.has_key?('name')
             uimessage("SketchupViewsList error: no 'name' for view", -2)
