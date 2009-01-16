@@ -225,8 +225,9 @@ function applyViewSettings(viewname) {
     }
 }
 
-function skpRemoveMaterialAlias(skmname) {
-    var param = encodeURI(skmname);
+function skpRemoveMaterialAlias(skmname, skmgroup) {
+    var text = skmname + "&" + skmgroup;
+    var param = encodeURI(text);
     if (SKETCHUP == true) {
         window.location = 'skp:removeMaterialAlias@' + param;
     } else {

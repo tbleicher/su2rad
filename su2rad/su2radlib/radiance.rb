@@ -376,3 +376,15 @@ end
 
 
 
+module RadianceUtils
+
+    def getRadianceIdentifier(name)
+        name = name.gsub(/[\[(}\]<>]/, '')
+        name = name.gsub(/\s+/, '_')
+        return name
+    end
+
+end 
+
+
+
