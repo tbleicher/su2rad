@@ -19,51 +19,58 @@ module RadianceUtils
 end 
 
 
-class SkmMaterial
+class ListMaterial
     
     include JSONUtils
     include RadianceUtils
     
-    def initialize(skm)
-        @skm = skm
-        @radName = getRadianceIdentifier(@skm.display_name)
+    def initialize(material, group='undef')
+        @material = material
         @alias = ''
+        @group = group
+    end
+    
+    def getDict
+        dict = {'name'     => '%s' % @material.name,
+                'nameRad'  => '%s' % getRadianceIdentifier(@material.name),
+                'nameHTML' => '%s' % JSONUtils::escapeHTML(@material.name),
+                'alias'    => '%s' % @alias,
+                'group'    => '%s' % @group}
+        return dict
+    end
+    
+    def setAlias(newAlias)
+        @alias = newAlias
     end
     
     def toJSON
-        dict = {'name'     => '%s' % @skm.name,
-                'nameRad'  => '%s' % @radName,
-                'nameHTML' => '%s' % JSONUtils::escapeHTML(@skm.name),
-                'group'    => 'skm',
-                'alias'    => '%s' % @alias}
-        return toStringJSON(dict)
+        return toStringJSON(getDict())
+    end  
+
+end
+
+
+class SkmMaterial < ListMaterial
+    
+    def getDict
+        d = super()
+        d['radName'] = getRadianceIdentifier(@material.display_name)
+        return d
     end
     
 end
 
 
-class RadMaterial
+class RadMaterial < ListMaterial
     
-    include JSONUtils
-    include RadianceUtils
-    
-    def initialize(mat)
-        @material = mat
-        @radName  = mat.name
-        @alias    = ''
-    end
-    
-    def toJSON
-        dict = {'name'     => '%s' % @radName,
-                'nameRad'  => '%s' % @radName,
-                'nameHTML' => '%s' % JSONUtils::escapeHTML(@radName),
-                'group'    => '%s' % @material.getGroup(),
-                'alias'    => '%s' % @alias,
-                'defType'  => '%s' % @material.defType,
-                'definition' => '%s' % @material.getText().gsub(/\n/, '<br/>'),
-                'required'   => '%s' % @material.required,
-                'mType'      => '%s' % @material.getType()}
-        return toStringJSON(dict)
+    def getDict
+        d = super()
+        d['group']      = @material.getGroup()
+        d['defType']    = @material.defType
+        d['definition'] = @material.getText().gsub(/\n/, '<br/>')
+        d['required']   = @material.required
+        d['mType']      = @material.getType()
+        return d
     end
     
 end
@@ -100,18 +107,37 @@ class ExportDialogWeb < ExportBase
         end
         dlg.execute_script("loadFileCallback('%s')" % text)
     end
-   
-    def setMaterialLists(dlg, mtype)
+    
+    def setMaterialAlias(dlg, param)
+        skmname, radname, mtype = param.split("&")
+        uimessage("TODO: setting alias for %s '%s' to material '%s'" % [mtype,skmname,radname], 0)
+        #TODO
+    end
+    
+    def removeMaterialAlias(dlg, skmname)
+        radname = "TODO"
+        uimessage("TODO: removing alias for skm '%s' (was: '%s')" % [skmname,radname], 0)
+        #TODO
+    end
+    
+    def setMaterialList(dlg, mtype)
         if mtype == 'rad'
             path = File.join( File.dirname(__FILE__), 'ray')
             mLib = Radiance::MaterialLibrary.new(path)
             materials = mLib.getMaterials()
             matList = materials.collect { |mat| RadMaterial.new(mat) }
             _setMaterialListInChunks(matList, dlg, mtype)
+        elsif mtype == 'layer'
+            layerList = []
+            Sketchup.active_model.layers.each { |layer| 
+                layerList.push( ListMaterial.new(layer, 'layer') )
+            }
+            _setMaterialListInChunks(layerList, dlg, mtype)
         else
+            mtype = 'skm'
             skmList = []
             Sketchup.active_model.materials.each { |skm| 
-                skmList.push( SkmMaterial.new(skm) )
+                skmList.push( SkmMaterial.new(skm, 'skm') )
             }
             _setMaterialListInChunks(skmList, dlg, mtype)
         end
@@ -131,10 +157,9 @@ class ExportDialogWeb < ExportBase
     end
     
     def updateViewFromString(d,p)
-        ## convert <p> to Ruby array and update views
+        ## convert param to Ruby array and update view
         begin
             vDict = eval(p)
-            ## apply vDict settings to view
             return @viewsList.updateView(vDict)
         rescue => e 
             uimessage("Error updateViewFromString(): %s\n\n%s\n" % [$!.message,e.backtrace.join("\n")], -2)
@@ -193,6 +218,13 @@ class ExportDialogWeb < ExportBase
             @viewsList.setViewsList(d,p)
         }
         
+        ## materials
+        dlg.add_action_callback("setMaterialAlias") { |d,p|
+            setMaterialAlias(d,p)
+        }
+        dlg.add_action_callback("removeMaterialAlias") { |d,p|
+            removeMaterialAlias(d,p)
+        }
         #dlg.set_on_close {
         #}
         
@@ -207,8 +239,9 @@ class ExportDialogWeb < ExportBase
             @renderOptions.setRenderOptions(dlg, '')
             @viewsList.setViewsList(dlg, '')
             @skyOptions.setSkyOptions(dlg, '')
-            setMaterialLists(dlg, 'rad')
-            setMaterialLists(dlg, 'skm')
+            setMaterialList(dlg, 'rad')
+            setMaterialList(dlg, 'skm')
+            setMaterialList(dlg, 'layer')
             dlg.execute_script("updateExportPage()")
         }
     end ## end def show

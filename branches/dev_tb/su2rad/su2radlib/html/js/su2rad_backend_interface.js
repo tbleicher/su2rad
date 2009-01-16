@@ -225,6 +225,25 @@ function applyViewSettings(viewname) {
     }
 }
 
+function skpRemoveMaterialAlias(skmname) {
+    var param = encodeURI(skmname);
+    if (SKETCHUP == true) {
+        window.location = 'skp:removeMaterialAlias@' + param;
+    } else {
+        log.debug("using dummy backend skpSetMaterialAlias()"); 
+    }
+}
+
+function skpSetMaterialAlias(skmname, radname, mtype) {
+    var text = skmname + "&" + radname + "&" + mtype;
+    var param = encodeURI(text);
+    if (SKETCHUP == true) {
+        window.location = 'skp:setMaterialAlias@' + param;
+    } else {
+        log.debug("using dummy backend skpSetMaterialAlias()"); 
+    }
+}
+
 function setMaterialsListJSON(text, type) {
     try {
         var json = decodeJSON(text);
@@ -239,11 +258,16 @@ function setMaterialsListJSON(text, type) {
         }
         if (type == 'skm') {
             skmMaterialsList.update(newMats);
-            buildMaterialListSkm()
-        } else {
+            buildMaterialListByType('skm')
+        } else if (type == 'layer') {
+            layerMaterialsList.update(newMats);
+            buildMaterialListByType('layer')
+        } else if (type == 'rad') {
             radMaterialsList.update(newMats);
             setGroupSelection()
             buildMaterialListRad()
+        } else {
+            log.warn("unknown material list type '" + type + "'");
         }
     } catch (err) {
         log.error("setMaterialsListJSON:'" + err.message + "'");

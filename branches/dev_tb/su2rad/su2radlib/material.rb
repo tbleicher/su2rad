@@ -1,6 +1,6 @@
+
 require "exportbase.rb"
 require "radiance.rb"
-
 
 
 class MaterialDefinition < ExportBase
@@ -212,7 +212,7 @@ class MaterialFile < ExportBase
             if l == ''
                 #next
                 #l = lines.shift()
-            elsif l[0,1] == '#'
+            elsif l.slice(0,1) == '#'
                 current_comment += "\n"
                 current_comment += l
             else  
@@ -279,8 +279,8 @@ class MaterialLibrary < ExportBase
     end
 
     def initLibrary
-        paths = [File.join(__FILE__, 'raylib', 'materials.rad'),
-                 File.join(__FILE__, 'raylib', 'materials.mat')]
+        paths = [File.join(File.dirname(__FILE__), 'ray', 'materials.rad'),
+                 File.join(File.dirname(__FILE__), 'ray', 'materials.mat')]
         paths += $MATERIALLIB.split(':')
         paths.each { |path|
             if File.exists?(path)
@@ -403,13 +403,6 @@ class MaterialContext < ExportBase
     def initialize
         @texturewriter = Sketchup.create_texture_writer
         clear()
-        
-        ## matrix for sRGB color space transformation
-        ## TODO: Apple RGB?
-        red     = [0.412424, 0.212656, 0.0193324]
-        green   = [0.357579, 0.715158,  0.119193]
-        blue    = [0.180464, 0.0721856, 0.950444]
-        @matrix = [red,green,blue]
     end
 
     def clear
@@ -467,20 +460,7 @@ class MaterialContext < ExportBase
             text += a[1]
         }
         if getConfig('MODE') != 'by group'
-            ## check against list of files in 'objects' directory
-            reg_obj = Regexp.new('objects')
-            $createdFiles.each_pair { |fpath, value|
-                m = reg_obj.match(fpath)
-                if m
-                    ofilename = File.basename(fpath, '.rad')
-                    if fpath[-4..-1] != '.obj'
-                        if not defined.has_key?(ofilename)
-                            uimessage("material #{ofilename} undefined; adding alias", -1)
-                            text += getAliasDescription(ofilename)
-                        end
-                    end
-                end
-            }
+            text += checkObjFiles(defined)
         end
         if not createFile(filename, text)
             uimessage("ERROR creating material file '#{filename}'")
@@ -488,7 +468,25 @@ class MaterialContext < ExportBase
         @texturewriter = nil
         @textureHash = {}
     end
-
+    
+    def checkObjFiles(defined)
+        ## check against list of files in 'objects' directory
+        txt = ""
+        reg_obj = Regexp.new('objects')
+        $createdFiles.each_pair { |fpath, value|
+            if reg_obj.match(fpath)
+                ofilename = File.basename(fpath, '.rad')
+                if fpath[-4..-1] != '.obj'
+                    if not defined.has_key?(ofilename)
+                        uimessage("material #{ofilename} undefined; adding alias", -1)
+                        txt += getAliasDescription(ofilename)
+                    end
+                end
+            end
+        }
+        return txt
+    end
+    
     def convertTextureDir(texdir)
         filelist = Dir.entries(texdir)
         filelist.collect! { |p| p.slice(0,1) != '.' }
@@ -694,19 +692,9 @@ class MaterialContext < ExportBase
         if @materialHash.has_key?(mat)
             return @materialHash[mat]
         end
-        ## if there is no display name, set it
-        if mat.display_name == ''
-            name = mat.name
-            if name == ''
-                name = "material_id%s" % mat.id
-                mat.name = name
-            end
-            mat.display_name = name
-        else
-            name = mat.display_name
-        end
-        if (name =~ /\d/) == 0
-            ## names starting with numbers can't be used in Radiance
+        name = mat.display_name
+        if (name =~ /\A\d+/)
+            ## names starting with numbers can't be used in Radiance (?)
             name = 'sketchup_' + name
         end
         name = remove_spaces(name)
@@ -746,15 +734,15 @@ class MaterialContext < ExportBase
         return filename
     end
     
-    def getBaseMaterial(material, name)
+    def getBaseMaterial(skm, name)
         ## TODO: proper conversion between color spaces
         text = ""
-        c = material.color
+        c = skm.color
         r,g,b = rgb2rgb(c)
         spec = 0.0
         rough = 0.0
         ## hack: search for 'glass' in the name
-        if (name.downcase() =~ /glass/) != nil
+        if name =~ /glass/i
             text += "\nvoid glass #{name}"
             text += "\n0\n0\n3"
             text += "  %.4f %.4f %.4f\n" % [r,g,b]
@@ -789,6 +777,18 @@ class MaterialContext < ExportBase
         return [r,g,b]
     end
     
+end
+    
+
+
+module ColorSpace
+        
+    ## matrix for sRGB color space transformation
+    red     = [0.412424, 0.212656, 0.0193324]
+    green   = [0.357579, 0.715158,  0.119193]
+    blue    = [0.180464, 0.0721856, 0.950444]
+    sRGBMatrix = [red,green,blue]
+    
     def rgb2rgb_TEST(color)
         printf "rgb2rgb: #{color}\n"
         xyz = sRGB2XYZ(color)
@@ -816,9 +816,9 @@ class MaterialContext < ExportBase
 
     def applyMatrix(r,g,b)
         ## apply colorspace conversion matrix 
-        _a,_b,_c = @matrix[0]
-        _d,_e,_f = @matrix[1]
-        _h,_i,_j = @matrix[2]
+        _a,_b,_c = ColorSpace::sRGBMatrix[0]
+        _d,_e,_f = ColorSpace::sRGBMatrix[1]
+        _h,_i,_j = ColorSpace::sRGBMatrix[2]
         x = _a*r + _b*g + _c*b
         y = _d*r + _e*g + _f*b
         z = _h*r + _i*g + _j*b
@@ -869,82 +869,6 @@ class MaterialContext < ExportBase
     end
 end
 
-class MaterialConflicts < ExportBase
-
-    def initialize
-        @model = Sketchup.active_model
-        @faces = [] 
-        getVisibleLayers
-    end
-
-    def getVisibleLayers
-        @@visibleLayers = {}
-        @model.layers.each { |l|
-            if l.visible?
-                @@visibleLayers[l] = 1
-            end
-        }
-    end
-        
-    def findConflicts(entities=nil)
-        if entities == nil
-            entities = @model.entities
-        end
-        entities.each { |e|
-            if e.class == Sketchup::Group
-                if not isVisible(e)
-                    next
-                end
-                findConflicts(e.entities)
-            elsif e.class == Sketchup::ComponentInstance
-                if not isVisible(e)
-                    next
-                end
-                cdef = e.definition
-                $inComponent.push(true)
-                findConflicts(cdef.entities)
-                $inComponent.pop()
-            elsif e.class == Sketchup::Face
-                if not isVisible(e)
-                    next
-                end
-                if e.material != e.back_material
-                    @faces.push(e)
-                end
-            end
-        }
-    end
-
-    def count
-        @faces = []
-        findConflicts()
-        if @faces.length == 1
-            msg = "1 conflict found." 
-        else
-            msg = "%d conflicts found." % @faces.length
-        end
-        UI.messagebox msg, MB_OK, 'material conflicts'
-    end
-    
-    def resolve
-        if @faces.length == 0
-            findConflicts()
-        end
-        if @faces.length == 0
-            UI.messagebox "No conflicts found.", MB_OK, 'material conflicts'
-        else
-            @faces.each { |e|
-                if e.material
-                    e.back_material = e.material
-                elsif e.back_material
-                    e.material = e.back_material
-                end
-            }
-            msg = "%d materials changed." % @faces.length
-            UI.messagebox msg, MB_OK, 'material conflicts'
-        end
-    end    
-end
 
 
 
