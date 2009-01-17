@@ -13,9 +13,6 @@ class SketchupView
     include InterfaceBase
     include RadiancePath
     
-    ## TODO:
-    ## parse and format vectors
-    
     def initialize (name, current=false)
         @name = name
         @current = current
@@ -51,7 +48,10 @@ class SketchupView
     end
     
     def getViewLine
-        text = "rvu -vt#{@vt} -vp #{@vp} -vd #{@vd} -vu #{@vu}"
+        text = "rvu -vt#{@vt}"
+        text +=   " -vp %f %f %f" % @vp
+        text +=   " -vd %f %f %f" % @vd
+        text +=   " -vu %f %f %f" % @vu
         text +=  " -vv #{@vv} -vh #{@vh} -vo #{@vo} -va #{@va}"
         return text
     end 

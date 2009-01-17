@@ -206,7 +206,15 @@ module Radiance
             }
             return text
         end
-       
+        
+        def get(mname)
+            return @materials[mname]
+        end
+        
+        def getByName(mname)
+            return get(mname)
+        end
+        
         def getMaterials
             return @materials.values
         end

@@ -321,7 +321,7 @@ class SkyOptions
         @_sinfo_unused = ['DisplayNorth', 'EdgesCastShadows', 'Light', 'Dark', 
                           'SunRise', 'SunRise_time_t',
                           'SunSet', 'SunSet_time_t',
-                          #'ShadowTime',
+                          'ShadowTime',
                           #'DaylightSavings',
                           'SunDirection',
                           #'DisplayShadows', 'UseSunForAllShading',
@@ -356,11 +356,16 @@ class SkyOptions
         newpairs = []
         pairs.each { |pair| 
             k,v = pair.split("=")
-            if (k == 'City' || k == 'Country' || k == 'SkyCommand' || k == 'ShadowTime')
+            if (k == 'ShadowTime')
+                ## keep Time object out of it
+                next
+            elsif (k == 'City' || k == 'Country' || k == 'SkyCommand')
+                ## String values
                 newpairs.push([k,v])
             elsif (v == 'true' || v == 'false')
                 newpairs.push([k,eval(v)])
             else
+                ## should only be Floats values left
                 begin
                     v = Float(v)
                     newpairs.push([k,v])
@@ -379,6 +384,9 @@ class SkyOptions
         return txt
     end
    
+    def getSettings
+        return @_settings
+    end 
     def getAttributeSettings
         ## filter settings that are saved elsewhere (shadow_info)?
         return @_settings
@@ -425,7 +433,7 @@ class SkyOptions
                 end
             end
         }
-        @_settings['ShadowTime'] = sinfo['ShadowTime']
+        #@_settings['ShadowTime'] = sinfo['ShadowTime']
         @_settings['ShadowTime_time_t'] = sinfo['ShadowTime_time_t']
         d.execute_script("setShadowInfoJSON('%s')" % encodeJSON(toJSON()) )
     end

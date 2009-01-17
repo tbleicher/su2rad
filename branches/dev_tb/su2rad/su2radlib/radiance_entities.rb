@@ -631,7 +631,17 @@ class RadianceSky < ExportBase
         text += "groundglow source ground\n0\n0\n4 0 0 -1 180\n"
 
         city = remove_spaces(sinfo['City'])
-        timestamp = sinfo['ShadowTime'].strftime("%m%d_%H%M")
+        if sinfo['ShadowTime'].class == Time
+            timestamp = sinfo['ShadowTime'].strftime("%m%d_%H%M")
+        else
+            skytime = Time.at(sinfo['ShadowTime_time_t'])
+            if skytime.isdst == true
+                skytime -= 3600
+            end
+            ## time zone of ShadowTime is UTC
+            skytime.utc
+            timestamp = skytime.strftime("%m%d_%H%M")
+        end
         rpath = File.join("skies","%s_%s.sky" % [city, timestamp])
         filename = getFilename(rpath)
         filetext = @comments + "\n" + text
