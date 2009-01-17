@@ -128,7 +128,7 @@ $testdir = ""
 ## define defaults if config file is messed up
 $BUILD_MATERIAL_LIB = false
 $EXPORTALLVIEWS     = false 
-$SU2RAD_LOGLEVEL    = 4        ## report warnings and errors only
+$SU2RAD_LOGLEVEL    = 2        ## report warnings and errors only
 $SHOWRADOPTS        = true
 $SUPPORTDIR         = '/Library/Application Support/Google Sketchup 6/Sketchup'
 $MATERIALLIB        = '/usr/local/lib/ray/lib/material.rad'
@@ -144,7 +144,7 @@ $CONFIRM_REPLACE    = true
 def startExport(selected_only=0)
     begin
         $SU2RAD_CONFIG = RunTimeConfig.new()
-        $MatLib = MaterialLibrary.new()
+        #$MatLib = MaterialLibrary.new()
         $SU2RAD_COUNTER = ProgressCounter.new()
         rs = RadianceScene.new()
         rs.startExport(selected_only)
@@ -158,7 +158,7 @@ end
 def startWebExport(selected_only=0)
     begin
         $SU2RAD_CONFIG = RunTimeConfig.new()
-        $MatLib = MaterialLibrary.new()
+        #$MatLib = MaterialLibrary.new()
         $SU2RAD_COUNTER = ProgressCounter.new()
         edw = ExportDialogWeb.new()
         edw.show()
@@ -226,20 +226,22 @@ end
 def su2rad_reload
     ## reload all script files for debugging
     printf "reloading modules ...\n"
-    #    load "su2radlib/preferences.rb"
+    # load "su2radlib/preferences.rb"
     load "su2radlib/export_modules.rb"
     load "su2radlib/exportbase.rb"
     load "su2radlib/context.rb"
-    #    load "su2radlib/interface.rb"
+    # load "su2radlib/interface.rb"
     load "su2radlib/numeric.rb"
     load "su2radlib/material.rb"
     load "su2radlib/radiance_entities.rb"
     load "su2radlib/radiancescene.rb"
     load "su2radlib/webdialog.rb"
+    load "su2radlib/webdialog_options.rb"
+    load "su2radlib/webdialog_views.rb"
     load "su2radlib/config_class.rb"
+    # set debug flag and reload main file to start dialog
     $SU2RAD_DEBUG = true
     load "su2rad.rb"
-    printf acknowledgement
 end
 
 

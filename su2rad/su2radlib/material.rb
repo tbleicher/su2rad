@@ -397,11 +397,14 @@ end
 
 
 class MaterialContext < ExportBase
+    
+    include RadianceUtils
 
     attr_reader :texturewriter
     
     def initialize
         @texturewriter = Sketchup.create_texture_writer
+        @newMatLib = nil
         clear()
     end
 
@@ -426,13 +429,12 @@ class MaterialContext < ExportBase
         end
     end 
     
-    def export(filename='')
+    def export(mlib, filename='')
+        @newMatLib = mlib
         if filename == ''
             filename = getFilename("materials.rad")
         end
         defined = {}
-        text = "## materials.rad\n"
-        text += getMaterialDescription(nil)
         if getConfig('MODE') == 'by layer'
             ## 'by layer' creates alias to default material if no
             ## definition is provided in library (TODO)
@@ -455,6 +457,9 @@ class MaterialContext < ExportBase
                 defined[mname] = getMaterialDescription(mat)
             }
         end
+        
+        text = "## materials.rad\n"
+        text += getMaterialDescription(nil)
         marray = defined.sort()
         marray.each { |a|
             text += a[1]
@@ -666,17 +671,37 @@ class MaterialContext < ExportBase
                 return s
             end
         end
+        
+        ## search alias in attribute_dictionary
+        if @newMatLib
+            skmAlias = Sketchup.active_model.get_attribute("SU2RAD_ALIAS_SKM", material.name)
+            layerAlias = Sketchup.active_model.get_attribute("SU2RAD_ALIAS_LAYER", material.name)
+            mAlias = skmAlias || layerAlias
+            if mAlias
+                mdef = "\n## defined alias for material '%s'\n" % material.name
+                mdef += "void alias %s %s" % [getRadianceIdentifier(material.name), mAlias]
+                radMat = @newMatLib.get(mAlias)
+                while radMat
+                    mdef = "%s\n%s" % [radMat.getText(), mdef]
+                    radMat = @newMatLib.get(radMat.required)
+                end
+                return "\n%s\n" % mdef
+            end
+        end
+        
         name = getSaveMaterialName(material)
         text = @materialDescriptions[name]
         if text != nil
             return text
         end
-        m = $MatLib.getByName(name)
+        
+        #m = $MatLib.getByName(name)
+        m = false
         if not m
             text = convertSketchupMaterial(material, name)
-            md = MaterialDefinition.new()
-            md.set(text,remove_spaces(material.display_name))
-            $MatLib.addMaterial(md)
+            #md = MaterialDefinition.new()
+            #md.set(text,remove_spaces(material.display_name))
+            #$MatLib.addMaterial(md)
         else
             text = m.getText()
         end
@@ -692,12 +717,7 @@ class MaterialContext < ExportBase
         if @materialHash.has_key?(mat)
             return @materialHash[mat]
         end
-        name = mat.display_name
-        if (name =~ /\A\d+/)
-            ## names starting with numbers can't be used in Radiance (?)
-            name = 'sketchup_' + name
-        end
-        name = remove_spaces(name)
+        name = getRadianceIdentifier(mat.name)
         set(mat, name)
         return name
     end

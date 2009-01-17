@@ -2,6 +2,11 @@ require "exportbase.rb"
 require "context.rb"
 require "export_modules.rb"
 
+require 'webdialog_options.rb'
+require 'webdialog_views.rb'
+require 'scene_materials.rb'
+
+
 class UserDialogOptions < ExportBase
     
     def initialize
@@ -177,7 +182,9 @@ end
 
 
 class RadianceScene < ExportBase
-        
+    
+    attr_reader :exportOptions, :renderOptions, :viewsList, :skyOptions, :materialLists
+    
     def initialize
         @model = Sketchup.active_model
         
@@ -190,8 +197,11 @@ class RadianceScene < ExportBase
         @sky = RadianceSky.new()
         setExportDirectory()
         
-        @viewsList = nil
-        @renderOptions = nil
+        @exportOptions = ExportOptions.new()
+        @renderOptions = RenderOptions.new()
+        @viewsList     = SketchupViewsList.new()
+        @skyOptions    = SkyOptions.new()
+        @materialLists = MaterialLists.new() 
     end
 
     
@@ -324,7 +334,7 @@ class RadianceScene < ExportBase
     def renameExisting(sceneDir)
         if File.exists?(sceneDir)
             t = Time.new()
-            newname = sceneDir + t.strftime("_%y%m%d_%H%M")
+            newname = sceneDir + t.strftime("_%y%m%d_%H%M%S")
             begin
                 File.rename(sceneDir, newname)
                 uimessage("renamed scene directory to '%s'" % newname)
@@ -351,6 +361,7 @@ class RadianceScene < ExportBase
         $globaltrans = Geom::Transformation.new
         @@nameContext.push(getConfig('SCENENAME')) 
         
+        uimessage("\nOBJECTS:", 0)
         sceneref = exportByGroup(entities, Geom::Transformation.new)
         if getConfig('MODE') == 'by color'
             refs = saveFilesByColor(@@byColor)
@@ -361,7 +372,8 @@ class RadianceScene < ExportBase
         end
         
         @@nameContext.pop()
-        @@materialContext.export()
+        uimessage("\nMATERIALS:", 0)
+        @@materialContext.export(@materialLists.matLib)
         createRifFile()
         writeLogFile()
         return true
@@ -369,6 +381,7 @@ class RadianceScene < ExportBase
    
     def saveFilesByColor(byColor)
         references = []
+        uimessage("\nSCENEFILES:", 0)
         byColor.each_pair { |name,lines|
             if lines.length == 0
                 next
@@ -485,12 +498,10 @@ class RadianceScene < ExportBase
         return viewLines.join("\n")
     end
     
-    def setOptionsFromDialog(export,render,sky,views)
-        @exportOptions = export
-        export.writeOptionsToConfig()
-        @renderOptions = render
-        @sky.setSkyOptions(sky.getSettings())
-        @viewsList = views
+    #XXX def setOptionsFromDialog(export,render,sky,views)
+    def prepareExport()
+        @exportOptions.writeOptionsToConfig()
+        @sky.setSkyOptions(@skyOptions.getSettings())
     end
 
     def _getViewLineOLD(c)

@@ -4,155 +4,8 @@ require 'exportbase.rb'
 require 'radiance.rb'
 require 'radiance_entities.rb'
 require 'radiancescene.rb'
-require 'webdialog_options.rb'
-require 'webdialog_views.rb'
-
-
-class ListMaterial
-    
-    include JSONUtils
-    include RadianceUtils
-   
-    attr_reader :name, :alias
-    attr_writer :alias
-    
-    def initialize(material, group='undef')
-        @material = material
-        @name = material.name
-        @alias = ''
-        @group = group
-    end
-    
-    def getDict
-        dict = {'name'     => '%s' % @material.name,
-                'nameRad'  => '%s' % getRadianceIdentifier(@material.name),
-                'nameHTML' => '%s' % JSONUtils::escapeHTML(@material.name),
-                'alias'    => '%s' % @alias,
-                'group'    => '%s' % @group}
-        return dict
-    end
-    
-    def setAlias(newAlias)
-        @alias = newAlias
-    end
-    
-    def toJSON
-        return toStringJSON(getDict())
-    end  
-
-end
-
-
-class SkmMaterial < ListMaterial
-    
-    def getDict
-        d = super()
-        d['radName'] = getRadianceIdentifier(@material.display_name)
-        return d
-    end
-    
-end
-
-
-class RadMaterial < ListMaterial
-    
-    def getDict
-        d = super()
-        d['group']      = @material.getGroup()
-        d['defType']    = @material.defType
-        d['definition'] = @material.getText().gsub(/\n/, '<br/>')
-        d['required']   = @material.required
-        d['mType']      = @material.getType()
-        return d
-    end
-    
-end
-
-
-
-class MaterialLists < ExportBase
-    
-    include JSONUtils
-    include InterfaceBase
-
-    def initialize
-        path = File.join( File.dirname(__FILE__), 'ray')
-        @matLib = Radiance::MaterialLibrary.new(path)
-    end
-        
-    def setMaterialAlias(dlg, param)
-        skmname, radname, mtype = param.split("&")
-        uimessage("setting alias for %s '%s' to material '%s'" % [mtype,skmname,radname], 0)
-        dictName = "SU2RAD_ALIAS_%s" % mtype.upcase()
-        printf "dictName=%s\n"  % dictName
-        Sketchup.active_model.set_attribute(dictName, skmname, radname)
-    end
-    
-    def removeMaterialAlias(dlg, param)
-        skmname, mtype = param.split("&")
-        dictName = "SU2RAD_ALIAS_%s" % mtype.upcase()
-        radname = Sketchup.active_model.get_attribute(dictName, skmname)
-        printf "dictName=%s\n" % dictName
-        if radname
-            attrDict = Sketchup.active_model.attribute_dictionary(dictName)
-            oldalias = attrDict.delete_key(skmname)
-            uimessage("removed alias for skm '%s' (was: '%s')" % [skmname,oldalias], 0)
-        else
-            uimessage("no alias set for %s '%s'" % [mtype, skmname]) 
-        end
-    end
-   
-    def setLists(dlg)
-        setMaterialList(dlg, 'rad')
-        setMaterialList(dlg, 'skm')
-        setMaterialList(dlg, 'layer')
-    end
-
-    def setMaterialList(dlg, mtype)
-        printf "\nsetMaterialList %s\n" % mtype
-        if mtype == 'rad'
-            materials = @matLib.getMaterials()
-            matList = materials.collect { |mat| RadMaterial.new(mat) }
-            _setMaterialListInChunks(matList, dlg, mtype)
-        elsif mtype == 'layer'
-            layers = Sketchup.active_model.layers
-            layerList = layers.collect { |layer| ListMaterial.new(layer, 'layer') }
-            attrDict = Sketchup.active_model.attribute_dictionary("SU2RAD_ALIAS_LAYER")
-            printf "attrDict=%s\n" % attrDict
-            if attrDict
-                ##TODO: check availability?
-                layerList.each { |m| m.alias = attrDict[m.name] || m.alias } 
-            end
-            _setMaterialListInChunks(layerList, dlg, mtype)
-        else
-            materials = Sketchup.active_model.materials
-            skmList = materials.collect { |skm| SkmMaterial.new(skm, 'skm') }
-            attrDict = Sketchup.active_model.attribute_dictionary("SU2RAD_ALIAS_SKM")
-            printf "attrDict=%s\n" % attrDict
-            if attrDict
-                ##TODO: check availability?
-                printf "keys=", attrDict.keys, "\n"
-                skmList.each { |m| m.alias = attrDict[m.name] || m.alias } 
-            end
-            _setMaterialListInChunks(skmList, dlg, 'skm')
-        end
-    end
-
-    def _setMaterialListInChunks(mList, dlg, mtype)
-        nChunk = 200
-        startIdx = 0
-        while startIdx < mList.length
-            chunk = mList[startIdx...startIdx+nChunk]
-            jsonList = chunk.collect { |m| m.toJSON() }
-            json = encodeJSON( "[%s]" % jsonList.join(',') )
-            uimessage("mList %s: setting materials %d to %d" % [mtype, startIdx, startIdx+chunk.length])
-            dlg.execute_script("setMaterialsListJSON('%s','%s')" % [json,mtype])
-            startIdx += nChunk
-        end
-    end
-
-end 
-
+#require 'webdialog_options.rb'
+#require 'webdialog_views.rb'
 
 
 class ExportDialogWeb < ExportBase
@@ -162,18 +15,19 @@ class ExportDialogWeb < ExportBase
     
     def initialize()
         @scene = RadianceScene.new()
-        @exportOptions = ExportOptions.new()
-        @renderOptions = RenderOptions.new()
-        @skyOptions = SkyOptions.new()
-        @viewsList = SketchupViewsList.new()
-        @materialLists = MaterialLists.new() 
+        
+        @exportOptions = @scene.exportOptions
+        @renderOptions = @scene.renderOptions
+        @skyOptions    = @scene.skyOptions
+        @viewsList     = @scene.viewsList
+        @materialLists = @scene.materialLists
     end
 
     def applyExportOptions(dlg, params='')
         @exportOptions.applyExportOptions(dlg,params)
+        ## allow load of existing rif files
         filepath = File.join(@exportOptions.scenePath,@exportOptions.sceneName)
         if File.exists?(filepath) && (@renderOptions.loaded?(filepath) == false)
-            printf "DEBUG: enabling 'load' ...\n"
             dlg.execute_script("enableLoadSceneFile('%s')" % filepath)
         end
     end
@@ -188,8 +42,7 @@ class ExportDialogWeb < ExportBase
         dlg.execute_script("loadFileCallback('%s')" % text)
     end
     
-    
-    def show(title="su2rad")
+    def show(title="su2rad export")
         ## create and show WebDialog
         dlg = UI::WebDialog.new(title, true, nil, 650, 800, 50, 50, true);
         #dlg.set_background_color("0000ff")
@@ -247,10 +100,13 @@ class ExportDialogWeb < ExportBase
         dlg.add_action_callback("removeMaterialAlias") { |d,p|
             @materialLists.removeMaterialAlias(d,p)
         }
+        
+        ## final actions
         dlg.set_on_close {
-            uimessage("webdialog closed", 1)
+            uimessage("TODO: webdialog closed", 1)
         }
         
+        ## set contents
         html = File.join(File.dirname(__FILE__), "html","su2rad_export.html")
         dlg.set_file(html, nil)
         
@@ -268,7 +124,8 @@ class ExportDialogWeb < ExportBase
     end ## end def show
         
     def startExport(dlg,params)
-        @scene.setOptionsFromDialog(@exportOptions,@renderOptions,@skyOptions,@viewsList)
+        #XXX @scene.setOptionsFromDialog(@exportOptions,@renderOptions,@skyOptions,@viewsList)
+        @scene.prepareExport()
         dlg.close()
         status = @scene.startExportWeb()
         if status 
