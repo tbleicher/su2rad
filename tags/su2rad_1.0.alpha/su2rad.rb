@@ -1,6 +1,6 @@
 # Sketchup To Radiance Exporter
 #
-# su2rad.rb - version 0.0d
+# su2rad.rb - version 1.0 alpha
 #
 # Written by Thomas Bleicher
 # based on ogre_export by Kojack
@@ -23,6 +23,17 @@
 
 
 # revisions:
+# ===========
+#
+# branch 1.0:
+# -----------
+# v 1.0alpha - 18/01/09  :  pre-releas for feedback (including Windows)
+#                           new interface pages for views and materials
+# Xmas_special_2008      :  pre-releas for feedback (Mac only)
+#                           all new webdialog JavaScript interface
+#
+# branch 0.0:
+# -----------
 # v 0.0d - tbc       :  fixed bug in cleaning of colour names
 #                         (thanks to Rob Guglielmetti for reporting)
 #                       fixed export of hidden layers in components
@@ -128,7 +139,7 @@ $testdir = ""
 ## define defaults if config file is messed up
 $BUILD_MATERIAL_LIB = false
 $EXPORTALLVIEWS     = false 
-$SU2RAD_LOGLEVEL    = 2        ## report warnings and errors only
+$SU2RAD_LOGLEVEL    = -1       ## report warnings and errors only
 $SHOWRADOPTS        = true
 $SUPPORTDIR         = '/Library/Application Support/Google Sketchup 6/Sketchup'
 $MATERIALLIB        = '/usr/local/lib/ray/lib/material.rad'
@@ -203,7 +214,7 @@ def startImport(f='')
 end
 
 def aboutDialog
-    msg = "su2rad.rb\nSketchUp to Radiance exporter\nversion:  Xmas special 2008"
+    msg = "su2rad.rb\nSketchUp to Radiance exporter\nversion:  1.0 alpha"
     msg += "\n(c) Thomas Bleicher, 2008\ntbleicher@gmail.com"
     UI.messagebox(msg, MB_OK, 'su2rad.rb')
 end
@@ -250,7 +261,7 @@ end
 def addRadianceMenu
     pmenu = UI.menu("Plugin")
     radmenu = pmenu.add_submenu("Radiance")
-    radmenu.add_item("export (test)") { startWebExport(0) }
+    radmenu.add_item("export (1.0 alpha)") { startWebExport(0) }
     radmenu.add_separator()
     #radmenu.add_item("export scene") { startExport(0) }
     #radmenu.add_item("export selection") { startExport(1) }
@@ -265,8 +276,8 @@ def addRadianceMenu
     #radmenu.add_item("Preferences") { preferencesDialog() }
     radmenu.add_item("About") { aboutDialog() }
     radmenu.add_item("Acknowledgement") { acknowledgementDialog() }
-    radmenu.add_separator()
-    radmenu.add_item("reload") { su2rad_reload() }
+    #radmenu.add_separator()
+    #radmenu.add_item("reload") { su2rad_reload() }
 end
 
 
