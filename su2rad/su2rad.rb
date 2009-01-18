@@ -233,11 +233,13 @@ def su2rad_reload
     # load "su2radlib/interface.rb"
     load "su2radlib/numeric.rb"
     load "su2radlib/material.rb"
+    load "su2radlib/radiance.rb"
     load "su2radlib/radiance_entities.rb"
     load "su2radlib/radiancescene.rb"
     load "su2radlib/webdialog.rb"
     load "su2radlib/webdialog_options.rb"
     load "su2radlib/webdialog_views.rb"
+    load "su2radlib/scene_materials.rb"
     load "su2radlib/config_class.rb"
     # set debug flag and reload main file to start dialog
     $SU2RAD_DEBUG = true

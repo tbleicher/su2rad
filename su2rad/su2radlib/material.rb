@@ -458,11 +458,12 @@ class MaterialContext < ExportBase
             }
         end
         
-        text = "## materials.rad\n"
+        text = "## materials.rad\n\n"
         text += getMaterialDescription(nil)
+        text += "\n\n"
         marray = defined.sort()
         marray.each { |a|
-            text += a[1]
+            text += a[1] + "\n\n"
         }
         if getConfig('MODE') != 'by group'
             text += checkObjFiles(defined)
@@ -642,71 +643,75 @@ class MaterialContext < ExportBase
     def getAliasDescription(material)
         if @aliasHash.has_key?(material)
             name = @materialHash[material]
-            return "\nvoid alias #{material} #{name}\n"
+            return "void alias #{material} #{name}"
         else
-            uimessage("WARNING: material '#{material} undefined; adding alias\n")
-            s  = "\n## undefined material #{material}"
-            s += "\nvoid alias #{material} sketchup_default_material\n"
+            uimessage("WARNING: material '#{material} undefined; adding alias")
+            s  = "## undefined material #{material}"
+            s += "\nvoid alias #{material} sketchup_default_material"
             return s
         end
     end 
    
     def defaultMaterial
-        s  = "\n## default material"
+        s  = "## default material"
         s += "\nvoid plastic sketchup_default_material"
-        s += "\n0\n0\n5 0.4 0.4 0.4 0 0\n"
+        s += "\n0\n0\n5 0.4 0.4 0.4 0 0"
         return s
     end
     
     def getMaterialDescription(material)
         if material == nil
             return defaultMaterial
-        elsif material.class == ''.class
+        elsif material.class == String
             ## could be alias, layer name or undefined material
             if @aliasHash.has_key?(material)
                 return getMaterialDescription(@aliasHash[material])
             else
-                s  = "\n## undefined material #{material}"
-                s += "\nvoid alias #{material} sketchup_default_material\n"
+                s  = "## undefined material #{material}"
+                s += "\nvoid alias #{material} sketchup_default_material"
                 return s
             end
         end
         
-        ## search alias in attribute_dictionary
+        ## search in library if available
         if @newMatLib
-            skmAlias = Sketchup.active_model.get_attribute("SU2RAD_ALIAS_SKM", material.name)
-            layerAlias = Sketchup.active_model.get_attribute("SU2RAD_ALIAS_LAYER", material.name)
-            mAlias = skmAlias || layerAlias
-            if mAlias
-                mdef = "\n## defined alias for material '%s'\n" % material.name
-                mdef += "void alias %s %s" % [getRadianceIdentifier(material.name), mAlias]
-                radMat = @newMatLib.get(mAlias)
-                while radMat
-                    mdef = "%s\n%s" % [radMat.getText(), mdef]
-                    radMat = @newMatLib.get(radMat.required)
-                end
-                return "\n%s\n" % mdef
+            text = _searchMaterialLibrary(material)
+            if text
+                return text
             end
         end
         
+        ## finally convert SU material
         name = getSaveMaterialName(material)
         text = @materialDescriptions[name]
         if text != nil
             return text
-        end
-        
-        #m = $MatLib.getByName(name)
-        m = false
-        if not m
-            text = convertSketchupMaterial(material, name)
-            #md = MaterialDefinition.new()
-            #md.set(text,remove_spaces(material.display_name))
-            #$MatLib.addMaterial(md)
         else
-            text = m.getText()
+            text = convertSketchupMaterial(material, name)
+            @materialDescriptions[name] = text
+            return text
         end
-        @materialDescriptions[name] = text
-        return text
+    end
+    
+    def _searchMaterialLibrary(material)
+        ## first search alias in attribute_dictionary
+        skmAlias = Sketchup.active_model.get_attribute("SU2RAD_ALIAS_SKM", material.name)
+        layerAlias = Sketchup.active_model.get_attribute("SU2RAD_ALIAS_LAYER", material.name)
+        mAlias = skmAlias || layerAlias
+        if mAlias
+            radMat = @newMatLib.getMaterialWithDependencies(mAlias)
+            if radMat
+                mdef = "## defined alias for material '%s'" % material.name
+                mdef += "\n%s" % radMat
+                mdef += "\nvoid alias %s %s" % [getRadianceIdentifier(material.name), mAlias]
+                #TODO define alias?
+                return mdef
+            end
+        end 
+        ## or search for material name
+        name = getRadianceIdentifier(material.name)
+        return @newMatLib.getMaterialWithDependencies(name)
+        
     end
     
     def getSaveMaterialName(mat)
@@ -723,13 +728,13 @@ class MaterialContext < ExportBase
     end
 
     def convertSketchupMaterial(skm, name)
-        text = "\n## material conversion from Sketchup rgb color"
+        text = "## material conversion from Sketchup rgb color"
         text += getBaseMaterial(skm, name)
         if doTextures(skm)
             uimessage("creating texture material for '#{skm}'", 2)
             if @textureHash.has_key?(skm) && @textureHash[skm] != ''
                 pic = @textureHash[skm]
-                tex = [ "\nvoid colorpict #{name}_tex",
+                tex = [ "void colorpict #{name}_tex",
                         "7 red green blue textures/#{pic} . frac(Lu) frac(Lv)",
                         "0\n0",
                         "#{name}_tex"]
