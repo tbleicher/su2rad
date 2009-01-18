@@ -1,0 +1,855 @@
+/*
+td {
+    border-style: solid;
+    border-width: 1px;
+    border-color: red;
+}
+div {
+    border-style: solid;
+    border-width: 1px;
+    border-color: green;
+}
+span {
+    border-style: solid;
+    border-width: 1px;
+    border-color: blue;
+}
+*/
+
+a:link {
+    cursor: pointer;
+}
+a.clickable {
+    cursor: pointer;
+}
+
+body {
+    font-size: 16px; /* @ EOMB */
+    color: #333333;
+    line-height: 1.2;
+}
+* html body {
+    font-size: 100%; /* @ IE */
+    color: #333333;
+    line-height: 1.2;
+}
+body * {
+    font-size: 87.5%;
+    font-family: "Trebuchet MS", Trebuchet, Verdana, Helvetica, Arial, sans-serif;
+    /* border: solid; */
+    margin: 0.2em 0 0.2em;
+}
+body * * {
+    font-size: 100%;
+}
+code {
+    font-family: "Monaco", "Courier New", Courier, monospace;
+    font-size: 12px;
+    line-height: 1.0;
+}
+.column {
+    width: 140px;
+    /* margin-right: 15px; */
+    /* background: lightskyblue; */
+}
+.column2 {
+    width: 275px;
+    /* background: lightskyblue; */
+}
+
+#loadSceneButton {
+    margin-left: 5px;
+    width: 50px;
+    position: relative;
+    top: 0px;
+}
+#testDataButton {
+    width: 120px;
+    color: red;
+    margin-left: 80px;
+}
+#showLogButton {
+    position: relative;
+    float: right;
+    width: 50px;
+    height: 20px;
+    margin: 0;
+    margin-top: 8px;
+    margin-right: 18px;
+}
+.exportbutton {
+    float: right;
+    width: 100px;
+    height: 24px;
+    margin: 10px;
+    margin-top: 20px;
+}
+
+.floatright {
+    float: right;
+    width: 50px;
+    margin-right: 10px;
+}
+h1 {
+    margin: 1em 0 1.5em;
+    font-size: 18px;
+}
+h2 {
+    margin: 2em 0 1.5em;
+    font-size: 18px;
+    background: url(gradient.png) repeat-x;
+    height: 44px; /* IE 6 treats height as min-height */
+    min-height: 44px; /* IE 6 treats height as min-height */
+}
+h3,th {
+    margin: 0.8em 0 0.8em;
+    padding: 0.3em;
+    padding-left: 0.5em;
+    font-weight: bold;
+    color: #27537a;
+    background: url(gradient.png) repeat-x;
+    height: 18px; /* IE 6 treats height as min-height */
+    min-height: 18px; /* IE 6 treats height as min-height */
+    /* background: lightskyblue; */
+}
+h3.highlightWarn {
+    font-weight: bold;
+    color: #cc9900;; 
+    background: url(gradient_warning.png) repeat-x;
+}
+table {
+    padding: 0;
+    margin: 0;
+}
+td {
+    vertical-align: middle;
+    padding: 0;
+    margin: 0;
+    height: 14px; 
+    min-height: 14px;  
+}
+
+.tableHeader {
+    margin: 0.8em 0 0.8em;
+    padding: 0.3em;
+    padding-left: 0.5em;
+    color: #27537a; /* blue-grey */
+    background: url(gradient.png) repeat-x;
+    /* font-size: 14px; */ 
+    height: 30px; 
+    min-height: 30px;  
+    font-weight: bold;
+    text-align: left;
+    /* width: 180px; */
+}
+.column_lable {
+    font-weight: bold;
+    width: 60px;
+}
+.column_lable_highlight {
+    font-weight: bold;
+    width: 60px;
+    color: #cc0000;
+}
+select {
+    font-size: 12px;
+    height: 20px;
+    padding: 0;
+    margin: 0;
+    width: 90px;
+}
+input[type=button] {
+    position: relative;
+    top: -2px;
+    font-size: 12px;
+    height: 20px;
+    width: 50;
+}
+input[type=text] {
+    position: relative;
+    top: -2px;
+    font-size: 12px;
+    height: 18px;
+    padding: 0;
+    margin: 0;
+    /* border: solid 0 #fff; */
+    cursor: pointer;
+}
+input[type=checkbox] {
+    position: relative;
+    /*top: 2px;*/
+}
+.columnRadLable{
+    font-weight: bold;
+    width: 85px;
+    padding-left: 0.5em;
+}
+.columnRadOption {
+    width: 95px;
+}
+.option_lable {
+    font-weight: bold;
+    width: 60px;
+}
+.controlValue {
+    font-size: 12px;
+    color: #27537a; /* blue-grey */
+    line-height: 1;
+    height: 12px;
+    min-height: 12px;
+    position: relative;
+    top: -2px;
+}
+#meridianWarning {
+    width: 155px;
+    color:#cc0000;
+    font-weight:bold;
+    /*border: solid;
+    border-width: 1px;
+    border-color: red;*/
+}
+#meridianWarning input {
+    font-size: 10px;
+    color:#cc0000;
+    width: 65px;
+    height: 14px;
+    margin-left: 75px;
+}
+p {
+    padding: 0.2;
+    margin: 0.2 0 0.2;
+}
+pre, pre+p, p+p {
+    margin: 0.2 0 0.2;
+}
+
+div.fileinputs {
+    position: relative;
+    float: right;
+    width: 24px;
+    top: -3px;
+    height: 20px;
+    margin: 0;
+}
+div.fakefile {
+    position: absolute;
+    top: -2px;
+    height: 20px;
+    left: 3px;
+    z-index: 1;
+    margin: 0;
+    border-color: red;
+}
+input.file {
+    width: 20px;
+    height: 24px;
+    position: relative;
+    text-align: right;
+    -moz-opacity:0.0;
+    filter:alpha(opacity: 0.0);
+    opacity: 0.0;
+    z-index: 2;
+    margin: 0;
+}
+
+.listing {
+    font-family: "Monaco", "Courier New", Courier, monospace;
+    font-size: 12px;
+    line-height: 1.0;
+}
+.statusMessage {
+    color: #27537a;
+    background-color: #cbe6f4;
+    padding-left: 0.5em;
+    clear: both;
+}
+
+.locationOption {
+    float: left;
+    /* font-family: "Monaco", "Courier New", Courier, monospace; */
+    font-weight: bold;
+    /* padding-left: 0.5em; */
+    width: 75px;
+}
+.locationOptionInput {
+    width: 60px;
+    size: 10;
+}
+.optionsColumn {
+    float: left;
+    padding: 0;
+    margin: 0;
+    width: 220px;
+}
+.optionsColumn * div {
+    padding: 0;
+    margin: 0;
+}
+.locationOptionsGroupLabel {
+    font-weight: bold;
+    float: left;
+    width: 75px;
+    height: 20px;
+    min-height: 20px;
+}
+
+.skyOption {
+    /*font-family: "Monaco", "Courier New", Courier, monospace;*/
+    font-weight: bold;
+    float: left;
+    width: 20px;
+    text-align: center;
+    /* padding-left: 0.5em; */
+}
+.skyOptionInput {
+    float: left;
+    width: 40px;
+    size: 10;
+    padding: 0;
+    margin: 0;
+}
+.skyOptionsGroup {
+    float: left;
+    padding: 0;
+    margin: 0;
+    width: 200px;
+    /*clear: both;*/
+}
+.skyOptionsLeft {
+    padding: 0;
+    margin: 0;
+    float: left;
+    width: 100px;
+    height: 20px;
+    min-height: 20px;
+}
+#genskySunOption {
+    float: left;
+    padding: 0;
+    margin: 0;
+    margin-top: 1.5px;
+    width: 40px;
+    height: 20px;
+    min-height: 20px;
+    /*margin-left: 78px;*/
+}
+.optionsHeader, .optionsRow {
+    float: left;
+    padding: 0;
+    padding-left: 5px;
+    margin: 1.5px;
+    width: 200px;
+    height: 20px;
+    min-height: 20px;
+}
+.optionsHeader {
+    color: #27537a; 
+    /*background-color: #d9eaf4;*/
+    margin-bottom: 3.5px;
+    background: url(gradient.png) repeat-x;
+    /* font-size: 14px; */ 
+    height: 28px; 
+    min-height: 28px;  
+    font-weight: bold;
+    text-align: left;
+    vertical-align: bottom;
+}
+.optionsHeader * {
+    position: relative;
+    top: 3px;
+}
+.optionsHeader select {
+    width: 120px;
+    position: relative;
+    top: 4px;
+}
+
+.optionsRow select {
+    width: 120px;
+}
+.inputCityCountry {
+    width: 115px;
+    size: 60;
+}
+
+
+#timegroup {
+    float: left;
+    width: 180px;
+}
+#timegroup * DIV {
+    padding: 0;
+    margin: 0;
+}
+.timeOptionInput {
+    float: left;
+    width: 20px;
+    size: 2;
+    padding: 0;
+    margin: 0;
+}
+.timeOptionsLeft {
+    padding: 0;
+    margin: 0;
+    float: left;
+    width: 140px;
+    height: 20px;
+    min-height: 20px;
+}
+#thegrid * TH {
+    font-size: 2px;
+    font-weight: bold;
+    text-align: center;
+    height: 10px;
+    width: 10px;
+    padding: 0;
+    margin: 0;
+}
+#thegrid * TD {
+    font-size: 2px;
+    text-align: center;
+    height: 10px;
+    width: 10px;
+    padding: 0;
+    margin: 0;
+}
+
+
+
+#rpictOptionsLeft {
+    float:left;
+    width: 120px;
+}
+#rpictOptionsMiddle {
+    float:left;
+    width: 120px;
+    margin-left: 10px;
+}
+#rpictOptionsRight {
+    float:left;
+    width: 180px;
+    margin-left: 10px;
+}
+
+.commandLine {
+    position: relative;
+    top: 2px;
+    font-size: 12px;
+    /* font-family: "Monaco", "Courier New", Courier, monospace; */
+    color: #27537a;
+    font-weight: bold;
+    /* color: #27537a; 
+    background-color: #d9eaf4;
+    padding: 2px; */
+}
+
+.rpictCB {
+    /* margie-left: 5px; */
+    float: left;
+    position: relative;
+    top: -4px;
+}
+#genskySunOption * {
+    position: relative;
+    top: -3px;
+    font-size: 12px;
+}
+#rpictOptionsDisplay * div {
+    margin: 0;
+}
+
+.rpictOverride, .rpictOverrideSelected {
+    /*font-size: 12px; */
+    /* font-family: "Monaco", "Courier New", Courier, monospace; */
+    height: 20px;
+    padding-left: 0.5em;
+    width: 105px;
+    padding-top: 3px;
+}
+.rpictOverrideSelected {
+    font-weight: bold;
+    background-color: #d9eaf4;
+}
+.rpictOverride .gridLabel, .rpictOverrideSelected .gridLabel {
+    width: 33px;
+    padding-left: 5px;
+}
+.rpictOverrideInput, .rpictOverrideInputInt, .rpictOverrideInputIntN {
+    width: 40px;
+    font-weight: bold;
+    background-color: #d9eaf4;
+    height: 20px;
+}
+.rpictOverrideHeader {
+    font-weight: bold;
+    padding-left: 0.5em;
+    /* padding-top: 2.5em; */
+    color: #27537a; /* blue-grey */
+}
+
+.skyGeneratorOptions {
+    padding: 0;
+    margin: 0;
+    float: left;
+    width: 350px;
+}
+.skyGeneratorOptions div.optionsColumn {
+    width: 100px;
+    /* border: solid;
+    border-width: 1px;
+    border-color: #27537a;
+    margin: 2px 2px 2px 2px;
+    padding: 2px 0px 2px 0px; */
+}
+.skyGeneratorOptions * div.optionsRow {
+    width: 80px;
+}
+
+#scenePath {
+    float: left;
+    width: 275px;
+}
+#sceneName {
+    float: left;
+    width: 275px;
+}
+
+.gridCell {
+    float: left;
+    width: 140px;
+    height: 20px;
+    min-height: 20px;
+    padding: 0;
+    margin: 0;
+}
+
+.gridColumn {
+    float:left;
+    width: 190px;
+    margin: 0;
+    padding: 0;
+}
+
+.gridLabel, .rpictValue {
+    font-weight: bold;
+    float: left;
+    width: 75px;
+    height: 20px;
+    min-height: 20px;
+    padding: 0;
+    margin: 0;
+}
+.rpictValue {
+    font-weight: normal;
+    width: 40px;
+}
+.gridRow {
+    width: 580px;
+    height: 20px;
+    min-height: 20px;
+    padding: 0;
+    padding-left: 5px;
+    margin: 1.5px;
+}
+
+.exportStatus {
+    float:left;
+    width: 250px;
+    height: 150px;
+}
+.exportStatus img {
+    margin-top: 50px;
+    margin-left: 34px;
+}
+.exportStatus .gridLabel {
+    width: 60px;
+    background-color: #d9eaf4;
+    text-align: right;
+    padding-right: 0.5em;
+}
+.exportStatus .gridCell {
+    width: 165px;
+    padding-left: 0.5em;
+}
+
+.exportStatusFinal {
+    float:left;
+    width: 150px;
+    height: 170px;
+}
+.exportStatusFinal img {
+    margin-top: 25px;
+    margin-left: 10px;
+}
+
+
+.gridColumn .gridLabel {
+    width: 75px;
+    padding-left: 5px;
+}
+.gridColumn  .optionsHeader {
+    width: 170px;
+}
+.gridColumn .optionsHeader * {
+    position: relative;
+    top: 7px;
+}
+.gridColumn * {
+    margin: 1.5px;
+}
+.gridColumn  .gridCell {
+    width: 90px;
+}
+
+.highlight {
+    font-weight: bold;
+    color: #27537a; 
+}
+.highlightError {
+    font-weight: bold;
+    color: #cc0000;
+}
+.highlightWarn {
+    font-weight: bold;
+    color: #cc9900;; 
+}
+
+
+.viewPanel {
+    margin: 0;
+    padding: 0;
+    height:180px;
+    /* background-color: #ddddff;
+    border-style:solid;
+    border-width:1px;
+    border-color:red; */
+}
+.previewPanel {
+    float: left;
+    height:175px;
+    margin: 0;
+    padding: 0;
+    width: 330px;
+    margin-left: 20px;
+    border-style: solid;
+    border-width:2px;
+    border-color: #cbe6f4;
+}
+.previewPanel input[type=button] {
+    margin-left:100px;
+    margin-top:80px;
+    font-size: 12px;
+    height: 20px;
+    width: 100px;
+}
+
+
+.viewOptions {
+    float:left;
+    width:210px;
+    background-color: #ffffff;
+    /* height:180px; */
+}
+.viewOptions div {
+    margin: 0px;
+    height: 24px;
+    margin-left: 5px;
+}
+.viewOptions div * {
+    float: left;
+    margin: 0px;
+    /* border-style:solid;
+    border-width:1px;
+    border-color:green; */
+}
+.viewOptions div select {
+    width: 105px;
+}
+.viewOptions div div.gridLabel {
+    width: 25px;
+    height: 20px;
+    margin-right: 5px;
+    /* border-style:solid;
+    border-width:1px;
+    border-color:green; */
+    position; relative;
+    top: 1px;
+}
+.viewOptions div input {
+    width: 50px;
+    height: 20px;
+    /* font-family: "Monaco", "Courier New", Courier, monospace; */
+    font-size: 12px;
+    background-color: #cbe6f4;
+}
+.viewOptionFloatValue {
+    float: left;
+    margin: 0px;
+    width: 40px;
+    height: 20px;
+    /* font-family: "Monaco", "Courier New", Courier, monospace; */
+    font-size: 12px;
+    background-color: #cbe6f4;
+}
+
+#viewsSelection div.gridRow {
+    width: 510px;
+    margin-left: 75px;
+}
+
+
+/*****************/
+/*   MATERIALS   */
+/*****************/
+.mdev, .skm, .skm_with_alias, .skm_defined {
+    font-weight: bold;
+    min-width: 200px; 
+    margin: 5px; 
+    padding: 2px;
+    padding-left:5px;
+    overflow: hidden;
+    z-index: 10;
+}
+.mdev {
+    color: #27537a;
+    background: url(gradient.png) repeat-x;
+    cursor: move;
+    z-index: 100;
+}
+div.mdev:hover {
+    background: none;
+    background-color: #cbe6f4;
+}
+.skm { 
+    background-color: #e9b96e;
+    /* border: 2px solid #c17d11; */
+}
+.skm_with_alias, .skm_defined {
+    /* color: #27537a; */
+    /* background: url(gradient.png) repeat-x; */
+    color: #27537a;
+    background-color: #cbe6f4;
+}
+.droppable-hover .mdev, .skm_with_alias .mdev {
+    margin: 2px 2px 2px 0;
+    /* outline: 1px solid #27537a; */
+    border: 1px solid #27537a;
+    font-size: 12px;
+}
+.droppable-hover .mdev {
+    color: #cc0000;
+    border: 2px solid #cc0000;
+    background: none;
+    background-color: #e9b96e;
+}
+.droppable-hover {
+    color: #333333;
+    background-color: #c17d11;
+}
+.droppable-hover-defined {
+    color: #333333;
+    background-color: #6699ff;
+}
+.droppable-active {
+    opacity: 1.0;
+}
+.listPanel, .detailsPanel {
+    /* background-color: #ccf; */
+    /* border: 2px solid #0090DF; */
+    border: none;
+    outline: 2px solid #cbe6f4;
+    margin: 10px;
+}
+.listPanel {
+    float: left;
+    width: 44%;
+    height: 301px;
+    overflow: auto;
+}
+.listOptions {
+    background: url(gradient.png) repeat-x;
+    height: 20px;
+    padding: 2px;
+    margin: 0px;
+    border: none;
+}
+.listOptions div {
+    float: right;
+    color: #27537a;
+    font-size: 12px;
+    height: 14px;
+    /* border: 1px solid #27537a; */
+    margin-left: 10px;
+}
+.listOptions span {
+    float: left;
+    color: #27537a;
+    font-size: 14px;
+    font-weight: bold;
+    /* border: 1px solid #27537a; */
+    margin-left: 3px;
+}
+.cbListOption {
+    margin: 2px 3px;
+}
+.mlistPanel {
+    float: none;
+    overflow: auto;
+    height: 275px;
+    border: none;
+    /* outline: 1px solid red; */
+}
+.alias_clear {
+    font-weight: bold;
+    width: 16px;
+    height: 16px;
+    font-size: 10px;
+    color: #cc0000;
+    float: right;
+    position: relative;
+    top: -3px;
+    cursor: pointer;
+    background: url(16-circle-red-remove.png) no-repeat right; 
+}
+.detailsPanel {
+    height: 200px;
+    padding: 0;
+}
+.textDisplay {
+    padding: 5px;
+    font-family: "Monaco", "Courier New", Courier, monospace;
+    font-size: 14px;
+    overflow: auto;
+}
+.textDisplay span {
+    font-family: "Monaco", "Courier New", Courier, monospace;
+    font-size: 14px;
+}
+#containerDetails {
+    background-color: white;
+    /* border: 2px solid red; */
+    border: none;
+    outline: none;
+    width: 88%;
+    float: none;
+    padding: 0;
+    margin-top: 20px;
+    margin-left: 5px;
+}
+#panelPreview {
+    width: 200px;
+    margin: 0;
+    float: right;
+    position: relative;
+    right: -10px;
+    background: url(material_preview_bg.png) no-repeat; 
+}
+#panelDetails {
+    margin: 0;
+    margin-right: 200px;
+}
+#MaterialsDetails {
+    margin: 0;
+    padding: 0;
+    border: 1px solid white;
+}
