@@ -42,7 +42,7 @@ ViewObject.prototype.getDetailsHTML = function () {
         text += "<h3>"
     } 
     text += "<span style=\"font-size:12px;float:right;\">" + lable + "</span>"
-    text += this.name + "-" + this.pageChanged +  "</h3></a>";
+    text += this.name + "</h3></a>";
     
     // stop here in overview
     if (this.show_details == false) {
@@ -353,6 +353,7 @@ function hideViewDetails(viewname) {
 }
 
 function onResetCamera(viewname) {
+    //XXX
     if (viewsList[viewname]) {
         var view = viewsList[viewname];
         log.error("TEST: onResetCamera('" + viewname + "')");

@@ -219,6 +219,19 @@ module Radiance
             return @materials.values
         end
         
+        def getMaterialWithDependencies(mname)
+            radMat = get(mname)
+            if not radMat
+                return false
+            end
+            mdef = ""
+            while radMat 
+                mdef = "%s\n%s" % [radMat.getText(), mdef]
+                radMat = get(radMat.required)
+            end
+            return mdef.strip()
+        end
+        
         def isDefined?(m)
             req = m.required
             if req == 'void'
