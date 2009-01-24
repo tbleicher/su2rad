@@ -42,7 +42,7 @@ RadOptsObject.prototype.getRenderLine = function () {
         var opt = this._rpictOverrides[i][0];
         if (opt == 'av') {
             var v = this._rpictOverrides[i][1]; 
-            text += "-" + opt + " " + v + " " + v + " " + v + " ";
+            text += "-" + opt + " " + v[0] + " " + v[1] + " " + v[2] + " ";
         } else if (isInList(rpictBoolOptions, opt) == true) {
             var sign = "+";
             if (this._rpictOverrides[i][1] == false) {
@@ -104,7 +104,7 @@ RadOptsObject.prototype.setRpictDefaults = function () {
     this._rpictOpts.ad = 512;
     this._rpictOpts.ar = 64;
     this._rpictOpts.as = 128;
-    this._rpictOpts.av = 0.0;
+    this._rpictOpts.av = [0.0,0.0,0.0];
     // one value for r,g and b
     this._rpictOpts.aw = 0;
     // direct calc
@@ -152,9 +152,9 @@ RadOptsObject.prototype.setRpictOptions = function () {
     } 
     // todo: ambient file, overture
     if (this.ZoneType == "interior") {
-        this._rpictOpts.av = 0.1;
+        this._rpictOpts.av = [0.1,0.1,0.1];
     } else {
-        this._rpictOpts.av = 10.0;
+        this._rpictOpts.av = [10.0,10.0,10.0];
     }
     // apply overrides
     for (var i=0; i<this._rpictOverrides.length; i++) {
@@ -424,68 +424,80 @@ function isInList(list, element) {
 
 function getRpictOptionSpan(opt) {
     // return text for option span (checkbox and textfield)
-    var style = "rpictOverride";
-    var state = "";
+    var text = "<div class=\"gridRow\">";
     var selected = radOpts.rpictOverrideSelected(opt);
-    if (selected == true) {
-        style = "rpictOverrideSelected";
-        state = "checked";
-    }
-    var text = "<div class=\"" + style + "\">";
-    text += "<input type=\"checkbox\" class=\"rpictCB\" id=\"rpictOverrideCB" + opt + "\"";
-    text += " onClick=\"onRpictOverride('" + opt + "')\" " + state + "/>";
-    text += "<span class=\"gridLabel\">-" + opt + ":</span>";
-    if (selected == true) {
+    text += getCheckBoxLabel(opt, "Rpict", selected)
+    // add text input or show default value
+    if (opt == "av" && selected == true) { 
+        // add 3 text input fields for 'av'
+        text += _getRpictOptionInputAV(opt);
+        text += "</div>"
+        return text;
+    } else if (selected == true) {
         if (opt == "lr") {
-            text += "<input type=\"text\" class=\"rpictOverrideInputIntN\"";
+            text += "<input type=\"text\" class=\"valueInputIntN\"";
         } else if (isInList(rpictIntOptions, opt) == true) {
-            text += "<input type=\"text\" class=\"rpictOverrideInputInt\"";
+            text += "<input type=\"text\" class=\"valueInputInt\"";
         } else {
-            text += "<input type=\"text\" class=\"rpictOverrideInput\"";
+            text += "<input type=\"text\" class=\"valueInput\"";
         } 
-        text += " id=\"rpictOverrideInput" + opt + "\"";
+        text += " id=\"valueInput" + opt + "\"";
         text += " value=\"" + radOpts.getOption(opt) + "\" onchange=\"validateRpictOverride('" + opt + "')\" />";
     } else {
-    	text += "<span class=\"rpictValue\">" + radOpts.getOption(opt) + "</span>";
+    	text += "<span class=\"defaultValue\">" + radOpts.getOption(opt) + "</span>";
     }
     text += "</div>"
     return text;
 }
 
+function _getRpictOptionInputAV(opt,text) {
+    var text = ""
+    var colors = ['r', 'g', 'b'];
+    for (var i=0; i<colors.length; i++) {
+        var copt = opt + "_" + colors[i]
+        text += "<input type=\"text\" class=\"valueInput\"";
+        text += " id=\"valueInput" + copt + "\"";
+        text += " value=\"" + radOpts.getOption(opt)[i] + "\" onchange=\"validateRpictOverride('" + opt + "')\" />";
+    }
+    return text;
+}
+
+function getCheckBoxLabel(opt, group, selected, label) {
+    if (!label) {
+        label = "-" + opt;
+    }
+    if (selected == true) {
+        var action = " onClick=\"disable" + group + "Override('" + opt + "')\" "
+        var text = "<input type=\"checkbox\"" + action + "checked />";
+    } else {
+        var action = " onClick=\"enable" + group + "Override('" + opt + "')\" "
+        var text = "<input type=\"checkbox\"" + action + " />";
+    }
+    text += "<a class=\"gridLabel\"" + action + "\">" + label + ":";
+    text += "<span class=\"tooltip\">TODO: tooltip for option '" + opt + "'</span>";
+    text += "</a>";
+    return text;
+}
+
 function getRpictOptionSpansBool() {
     // return text for all bool option checkboxes
+    // bool options are selected if current value != default value
     var text = "";
     for (var i=0; i<rpictBoolOptions.length; i++) {
         var opt = rpictBoolOptions[i];
         var bvalue = radOpts.getOption(opt);
-        var style = "rpictOverride";
-        var state = "";
-        var textvalue = "on";
-        var flagvalue = "+";
-        var id = "rpictOverrideCB" + opt;
-        if (bvalue != rpictBoolDefaults[i]) {
-            state = "checked";
-            style = "rpictOverrideSelected";
-        }
-        try {
-            if (document.getElementById(id).checked == true) {
-                state = "checked";
-                style = "rpictOverrideSelected";
-            } 
-        } catch (e) {
-            // log.warn("error at rpict checkbox '-" + opt + "': " + e.name);
-        }
-        if (bvalue == false) {
-            textvalue = "off";
-            flagvalue = "-";
-        }
-        text += "<div class=\"" + style + "\" style=\"width:170px\";>";
-        text += "<input type=\"checkbox\" class=\"rpictCB\"";
-        text += " id=\"rpictOverrideCB" + opt + "\"";
-        text += " onClick=\"onRpictOverride('" + opt + "')\" " + state + "/> ";
-        text += "<span class=\"gridLabel\" style=\"width:40px;padding-left:5px;\">-" + opt + flagvalue + ":</span>";
-        text += rpictBoolComments[i] + " " + textvalue;
-        text += "</div>";
+        var selected = (bvalue != rpictBoolDefaults[i])
+        text += "<div class=\"gridRow\">";
+        text += getCheckBoxLabel(opt, "Rpict", selected)
+        // add comment and 'on'/'off' value
+        text += "<span class=\"defaulValue\">";
+        if (bvalue == true) {
+            text += rpictBoolComments[i] + " on";
+        } else {
+            text += rpictBoolComments[i] + " off";
+        } 
+        text += "</span>";
+        text += "</div>"
     }
     return text;
 }
@@ -553,9 +565,7 @@ function onRadOptionChange(id) {
             syncRadOption(id);
         }
     }
-    updateRpictValues();
-    updateRenderLine();
-    applyRenderOptions();
+    _onRpictOverrideUpdate();
 }
 
 function onRenderLineChange(inText) {
@@ -565,14 +575,17 @@ function onRenderLineChange(inText) {
     applyRenderOptions();
 }
 
-function onRpictOverride(opt) {
-    // set or remove override when checkbox is ticked
-    var id = "rpictOverrideCB" + opt;
-    if (document.getElementById(id).checked == true) {
-        setOverride(opt, radOpts.getOption(opt));
-    } else {
-        removeOverride(opt);
-    }
+function enableRpictOverride(opt) {
+    setOverride(opt, radOpts.getOption(opt));
+    _onRpictOverrideUpdate();
+}
+
+function disableRpictOverride(opt) {
+    removeOverride(opt);
+    _onRpictOverrideUpdate();
+}
+
+function _onRpictOverrideUpdate() {
     updateRpictValues();
     updateRenderLine();
     applyRenderOptions();
@@ -617,24 +630,37 @@ function parseRenderLine(inText) {
             parseBoolOverride(opt + "+")
         } else {
             var value = _validateRpictOverrideValue(opt, parts[i+1]) 
-            if (isNaN(value) == false) {
+            if (opt == "av" && isNaN(value) == false) {
+                // check for green and blue values (which are ignored ...)
+                var r = value;
+                var g = value;
+                var b = value;
+                i += 1;
+                g = parseFloat(parts[i+1]);
+                if (isNaN(g) == false) {
+                    log.info("'-av' value for green=" + g)
+                    i += 1;
+                    b = parseFloat(parts[i+1]);
+                    if (isNaN(b) == false) {
+                        log.info("'-av' value for blue=" + b)
+                        i += 1;
+                    } else {
+                        log.error("'-av' value for blue not a number: " + parts[i+1] )
+                        g = value;
+                        b = value;
+                    }
+                } else {
+                    log.error("'-av' value for green not a number: " + parts[i+1] )
+                    g = value;
+                }
+                setOverride('av', [r,g,b])
+            } else if (isNaN(value) == false) {
                 setOverride(opt, value);
                 i += 1;
             } else {
                 log.error("'" + opt + "' argument is not a number: '" + parts[i] + "'");
                 log.error(" => option ignored");
             }
-            if (opt == "av") {
-                // check for green and blue values (which are ignored ...)
-                if (isNaN(parseFloat(parts[i+1])) == false) {
-                    log.warn("'-av' value for green ignored: " + parts[i+1])
-                    i += 1;
-                    if (isNaN(parseFloat(parts[i+1])) == false) {
-                        log.warn("'-av' value for blue ignored: " + parts[i+1])
-                        i += 1;
-                    }
-                }
-            } // end of if '-av'
         } 
         // dont forget to increase counter!
         i += 1;
@@ -686,13 +712,6 @@ function parseBoolOverride(txt) {
 function removeOverride(opt) {
     // remove override from radOpts and clear checkbox
     radOpts.removeRpictOverride(opt);
-    return;
-    try {
-        document.getElementById("rpictOverrideCB" + opt).checked = false;
-    } catch(e) {
-        log.error("check box for '-" + opt + "' not found");
-    }
-
 }
     
 function selectImageType(id) {
@@ -708,12 +727,6 @@ function selectImageType(id) {
 function setOverride(opt, newValue) {
     // add override value and set checkbox.checked = true
     radOpts.setRpictOverride(opt, newValue);
-    return;
-    try {
-        document.getElementById("rpictOverrideCB" + opt).checked = true;
-    } catch(e) {
-        log.error("check box for '-" + opt + "' not found");
-    }
 }
 
 function updateRenderFormValues() {
@@ -748,24 +761,23 @@ function updateRenderLine() {
 
 function _updateRpictOptionDisplay() {
     // return HTML code for rpict option overrides
-    //log.debug("_updateRpictOptionDisplay()");
     var options = ["ambient",    "aa", "ab", "ad", "ar", "as", "aw",
-                   "amb. value", "av",
                    "NEWCOL", 
                    "direct",     "dc", "dj", "dp", "dr", "ds", "dt",
                    "limits",     "lr", "lw",
                    "NEWCOL",
                    "pixel",      "pa", "pd", "pj", "pm", "ps", "pt",
                    "specular",   "sj", "st"]
-
-    text = "<div id=\"rpictOptionsLeft\">"
+    
+    // start with 'rpictOptions' column
+    text = "<div class=\"rpictOptions\">"
     for (var i=0; i<options.length; i++) {
         var opt = options[i];
         if (opt == "") {
             text += "&nbsp;<br />";
         } else if (opt == "NEWCOL") {
             text += "</div>";
-            text += '<div id="rpictOptionsMiddle">';
+            text += "<div class=\"rpictOptions\">";
         } else if (opt.length > 2) {
             //text += "<span class=\"rpictOverrideHeader\">" + opt + "</span><br/>";
             text += "<div class=\"rpictOverrideHeader\">" + opt + "</div>";
@@ -773,17 +785,24 @@ function _updateRpictOptionDisplay() {
             text += getRpictOptionSpan(opt)
         }
     }
-    text += "</div><div id=\"rpictOptionsRight\">";
-    //text += "<span class=\"rpictOverrideHeader\">bool options</span><br/>";
+    text += "</div>"
+    
+    // wider column for -av and bool options
+    text += "<div class=\"rpictOptions\" id=\"rpictOptionsRight\">";
+    // -av option (3 text inputs)
+    text += "<div class=\"rpictOverrideHeader\">ambient value</div>";
+    text += getRpictOptionSpan("av")
+    // bool options
     text += "<div class=\"rpictOverrideHeader\">bool options</div>";
-    // add bool options
     text += getRpictOptionSpansBool();
     text += "</div>";
+    
+    // add to document
     document.getElementById("rpictOptionsDisplay").innerHTML = text;
     // set restrictions on text input fields
-    $('.rpictOverrideInput').numeric({allow:"."});
-    $('.rpictOverrideInputInt').numeric({allow:""});
-    $('.rpictOverrideInputIntN').numeric({allow:"-"});
+    $('.valueInput').numeric({allow:"."});
+    $('.valueInputInt').numeric({allow:""});
+    $('.valueInputIntN').numeric({allow:"-"});
 }
 
 function updateRpictValues() {
@@ -804,20 +823,44 @@ function updateImageSizeDisplay() {
 
 function validateRpictOverride(opt) {
     // validate rpict arg against int or float;
-    var id = "rpictOverrideInput" + opt;
-    var value = document.getElementById(id).value;
-    var newValue = _validateRpictOverrideValue(opt, value);
-    // check if return value is a valid number and apply
-    if (isNaN(newValue)) {
-        // NaN: revert to old value
-        document.getElementById(id).value = radOpts.getRpictOverride(opt);
-        return
-    } else {
-        document.getElementById(id).value = newValue;
-        setOverride(opt, newValue);
+    try {
+        if (opt == "av") {
+            //log.debug("validateRpictOverride('av')");
+            var colors = ['r', 'g', 'b'];
+            var newValue = radOpts.getRpictOverride(opt);
+            for (var i=0; i<colors.length; i++) {
+                var c = colors[i];
+                var id = "valueInput" + opt + "_" + c;
+                var value = document.getElementById(id).value;
+                //log.debug(id + ": " + value)
+                if (isNaN(parseFloat(value))) {
+                    log.error("validateRpictOverride('av')" + c + " is not a color ('" + value + "')");
+                    document.getElementById(id).value = newValue[i].toFixed(3);
+                    return;
+                } else {
+                    newValue[i] = parseFloat(value);
+                }
+            }
+            setOverride(opt, newValue);
+        } else {
+            var id = "valueInput" + opt;
+            var value = document.getElementById(id).value;
+            var newValue = _validateRpictOverrideValue(opt, value);
+            // check if return value is a valid number and apply
+            if (isNaN(newValue)) {
+                // NaN: revert to old value
+                document.getElementById(id).value = radOpts.getRpictOverride(opt);
+                return
+            } else {
+                document.getElementById(id).value = newValue;
+                setOverride(opt, newValue);
+            }
+        }
+        updateRenderLine();
+        applyRenderOptions();
+    } catch(e) {
+        log.error(e.message)
     }
-    updateRenderLine();
-    applyRenderOptions();
 }
 
 function _validateRpictOverrideValue(opt, value) {

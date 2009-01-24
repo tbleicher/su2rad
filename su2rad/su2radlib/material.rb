@@ -263,139 +263,6 @@ end
 
 
 
-class MaterialLibrary < ExportBase
-
-    def initialize
-        @sketchup_materials = {}        ## map name to path
-        @byName = {}
-        @byType = {}
-        initLog()
-        initLibrary()
-        initSupportDir()
-    end
-
-    def inspect
-        return "#<MaterialLibrary skm=%d names=%d types=%d" % [@sketchup_materials.length, @byName.length, @byType.length]
-    end
-
-    def initLibrary
-        paths = [File.join(File.dirname(__FILE__), 'ray', 'materials.rad'),
-                 File.join(File.dirname(__FILE__), 'ray', 'materials.mat')]
-        paths += $MATERIALLIB.split(':')
-        paths.each { |path|
-            if File.exists?(path)
-                mf = MaterialFile.new(path)
-                mf.byName.each_value { |m|
-                    addMaterial(m)
-                }
-            else
-                uimessage("Warning: material lib path '#{path}' does not exists", -1)
-            end
-        }
-    end
-    
-    def initSupportDir
-        uimessage("init material library ...", 1)
-        if $SUPPORTDIR == '' or $SUPPORTDIR == nil
-            uimessage("Warning: '$SUPPORTDIR' is not set. No materials available.")
-            return
-        end
-        mdir = File.join($SUPPORTDIR, 'Materials')
-        if not FileTest.directory?(mdir)
-            uimessage("Warning: directory 'Materials' not found. No materials available.")
-            return
-        end
-        lst = getSKMFiles(mdir)
-        uimessage("=> %d materials found" % lst.length, 2)
-        lst.each { |path|
-            filename = File.split(path)[1]
-            matname = filename[0,filename.length-4]
-            @sketchup_materials[matname] = path
-            radname = path.sub('.skm', '.rad')
-            if File.exists?(radname)
-                uimessage("  material file '%s' found" % radname, 3)
-                begin
-                    f = File.new(radname, 'r')
-                    text = f.read()
-                    f.close()
-                    text = text.strip()
-                    md = MaterialDefinition.new()
-                    md.set(text.strip(), matname)
-                    if md.valid?
-                        addMaterial(md)
-                    end
-                rescue
-                    uimessage("Error reading Radiance material description from '#{radname}'")
-                end
-            end
-        }
-        uimessage("=> %d material descriptions found" % @byName.length, 3)
-    end
-    
-    def getSKMFiles(mdir)
-        uimessage("searching for materials in '#{mdir}'", 2)
-        paths = []
-        Dir.foreach(mdir) { |p|
-            path = File.join(mdir, p)
-            if p.slice(0,1) == '.'
-                next
-            elsif FileTest.directory?(path) == true
-                paths += getSKMFiles(path)
-            elsif p.downcase.slice(-4,4) == '.skm'
-                paths.push(path)
-            end
-        }
-        return paths
-    end
-    
-    def old_addMaterial(skm, text)
-        ## store material description in file if it doesn't exist
-        matname = remove_spaces(skm.display_name)
-        if $BUILD_MATERIAL_LIB == false
-            return
-        end
-        skmfile = @sketchup_materials[matname]
-        if skmfile == nil
-            return
-        end
-        filename = skmfile.sub('.skm', '.rad')
-        if not File.exists?(filename)
-            begin
-                f = File.new(filename, 'w')
-                f.write(text)
-                f.close()
-            rescue
-                uimessage("Error creating material file '#{filename}'")
-            end
-        end
-    end
-    
-    def addMaterial(m)
-        @byName[m.name] = m
-        if not @byType.has_key?(m.type)
-            @byType[m.type] = []
-        end
-        @byType[m.type].push(m)
-        if $BUILD_MATERIAL_LIB == false or not @sketchup_materials[m.name]
-            return
-        end
-        skmfile = @sketchup_materials[m.name]
-        if skmfile
-            filename = skmfile.sub('.skm', '.rad')
-            if $BUILD_MATERIAL_LIB == true
-                m.write(filename)
-            end
-        end
-    end 
-    
-    def getByName(name)
-        return @byName[remove_spaces(name)]
-    end
-end
-
-
-
-
 class MaterialContext < ExportBase
     
     include RadianceUtils
@@ -443,7 +310,7 @@ class MaterialContext < ExportBase
                     ## empty layer
                     next
                 end
-                if $RADPRIMITIVES.has_key?(lname)
+                if isRadianceKeyword?(lname)
                     lname = "layer_" + lname
                 end
                 defined[lname] = getMaterialDescription(lname)

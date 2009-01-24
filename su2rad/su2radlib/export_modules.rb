@@ -295,35 +295,6 @@ module RadiancePath
         return true
     end 
     
-    def find_support_files(filename, subdir="")
-        ## replacement for Sketchup.find_support_files
-        if subdir == ""
-            subdir = $SUPPORTDIR
-        elsif subdir.slice(0,1) != '/'
-            ## subdir not abs path (Mac)
-            subdir = File.join($SUPPORTDIR, subdir)
-        elsif subdir.slice(1,1) != ':'
-            ## subdir not abs path (Windows)
-            subdir = File.join($SUPPORTDIR, subdir)
-        end
-        if FileTest.directory?(subdir) == false
-            return []
-        end
-        paths = []
-        Dir.foreach(subdir) { |p|
-            path = File.join(subdir, p)
-            if p[0,1] == '.'[0,1]
-                next
-            elsif FileTest.directory?(path) == true
-                lst = find_support_files(filename, path)
-                lst.each { |f| paths.push(f) }
-            elsif p.downcase == filename.downcase
-                paths.push(path)
-            end
-        }
-        return paths
-    end
-        
     def getFilename(name)
         return File.join(getConfig('SCENEPATH'), name)
     end
@@ -365,31 +336,20 @@ module RadiancePath
         return s.gsub(/\W/, '')
     end
     
-    def removeExisting(scene_dir)
-        if FileTest.exists?(scene_dir)
-            scene_name = File.basename(scene_dir)
-            if $CONFIRM_REPLACE == false
-                uimessage("removing scene directory #{scene_name}")
-                clearDirectory(scene_dir)
-                prepareSceneDir(scene_dir)
-                return true
-            end
-            ui_result = (UI.messagebox "Remove existing directory\n'#{scene_name}'?", MB_OKCANCEL, "Remove directory?")
-            if ui_result == 1
-                uimessage("removing scene directory #{scene_name}")
-                clearDirectory(scene_dir)
-                prepareSceneDir(scene_dir)
-                return true
-            else
-                uimessage('export canceled')
+    def renameExisting(sceneDir)
+        if File.exists?(sceneDir)
+            t = Time.new()
+            newname = sceneDir + t.strftime("_%y%m%d_%H%M%S")
+            begin
+                File.rename(sceneDir, newname)
+                uimessage("renamed scene directory to '%s'" % newname)
+            rescue => e
+                uimessage("could not rename directory '%s':\n%s" % [sceneDir, $!.message])
                 return false
             end
-        else
-            prepareSceneDir(scene_dir)
         end
-        return true
     end
-
+    
     def runSystemCmd(cmd)
         if $OS == 'WIN'
            cmd.gsub!(/\//, '\\')
@@ -446,16 +406,6 @@ module RadiancePath
         end
 	path = path.gsub(/\\/, File::SEPARATOR)
         return path
-    end
-        
-    def setTestDirectory
-        if $testdir and $testdir != ''
-            setConfig('SCENEPATH', $testdir)
-            scene_dir = File.join(getConfig('SCENEPATH'), getConfig('SCENENAME'))
-            if FileTest.exists?(scene_dir)
-                system("rm -rf #{scene_dir}")
-            end
-        end
     end
     
 end

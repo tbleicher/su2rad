@@ -313,14 +313,6 @@ function onGenskyOptionCB(opt) {
     }
 }
 
-function enableGenskyOption(opt, enable) {
-    //log.debug("enableGenskyOption(opt='" + opt + "'");
-    skyOptions.setActive(opt, enable);
-    _updateGenskyOptions();
-    updateSkyPage();
-    applySkySettings();
-}
-
 function onSkyDateTimeChange(id) {
     var val = document.getElementById(id).value;
     if (val.indexOf('0') == 0 && val.length == 2) {
@@ -455,13 +447,19 @@ function updateSkyTypeDisplay() {
 }
     
 function _updateGenskyOptions() {
-    var opts = ["general","-g","-t","zenith","-b","-B","solar","-r","-R"];
-    var text = "<div class=\"optionsHeader\" style=\"width:280px;\">";
+    var text = "<div class=\"optionsHeader\" style=\"width:330px;\">";
     text += "<span class=\"gridLabel\" style=\"width:240px;\">gensky options:</span>";
+    text += "</div>";
+    text += "<div class=\"genskyOptions\" style=\"width:100px;\">";
+    text += "<div class=\"rpictOverrideHeader\" style=\"width:80px;\">general</div>";
+    text += _updateGenskyOptionsDiv("g");
+    text += _updateGenskyOptionsDiv("t");
+    text += "</div>";
+    text += "<div class=\"genskyOptions\">";
+    var opts = ["sky radiance","-b","-B","solar radiance","-r","-R"];
     for (var i=0; i<opts.length; i++) {
         opt = opts[i];
         if (opt.charAt(0) != '-') {
-            text += "</div><div class=\"optionsColumn\">";
             text += "<div class=\"rpictOverrideHeader\">" + opt + "</div>";
         } else {
             text += _updateGenskyOptionsDiv(opt.charAt(1));
@@ -474,39 +472,58 @@ function _updateGenskyOptions() {
 
 function _updateGenskyOptionsDiv(opt) {
     var text = "";
-    var style = "rpictOverride";
     var state = "";
     if (skyOptions.isActive(opt) == true) {
-        style = "rpictOverrideSelected";
         state = "checked";
     }
     if (opt == 'g' || opt == 't') {
-        var text = "<div class=\"" + style + "\" style=\"width:85px;\">";
-        text += "<span class=\"gridLabel\" style=\"width:20px;\">-" + opt + ":</span>";
-        text += "<input type=\"text\" class=\"skyOptionInput\"";
-        text += " id=\"genskyOptionInput" + opt + "\"";
-        text += " value=\"" + skyOptions[opt] + "\"";
-        text += " onChange=\"onGenskyInputChanged('" + opt + "')\" />";
-        text += "</div>"
-        return text;
-    } else if (skyOptions.isActive(opt) == true) {
-        var text = "<div class=\"" + style + "\" style=\"width:90px;\">";
-        text += "<input type=\"checkbox\" value=\"" + opt + "\"" 
-        text += " class=\"rpictCB\" id=\"genskyOptionCB_" + opt + "\"";
-        text += " onClick=\"onGenskyOptionCB('" + opt + "')\" " + state + "/>"
-        text += "<span class=\"gridLabel\" style=\"width:20px;padding-left:5px;\">-" + opt + ":</span>";
-        text += "<input type=\"text\" class=\"skyOptionInput\"";
+        var text = "<div class=\"gridRow\" style=\"width:85px;\">";
+        text += "<a class=\"gridLabel\" style=\"width:25px;\">-" + opt + ":";
+        text += "<span class=\"tooltip\">tooltip for option '" + opt + "'</span>";
+        text += "</a>";
+        text += "<input type=\"text\" class=\"valueInput\"";
         text += " id=\"genskyOptionInput" + opt + "\"";
         text += " value=\"" + skyOptions[opt] + "\"";
         text += " onChange=\"onGenskyInputChanged('" + opt + "')\" />";
         text += "</div>"
         return text;
     } else {
-        var text = "<div class=\"" + style + "\" style=\"width:90px;\">";
-        text += "<span class=\"gridLabel\" style=\"width:60px;font-size:13px;\">"
-        text += "<a class=\"clickable\" onclick=\"enableGenskyOption('" + opt + "', true)\">[set -" + opt + "]</a></span>";
+        var labels = {};
+        labels.b = "diffuse normal"
+        labels.B = "diffuse horizontal"
+        labels.r = "direct normal" 
+        labels.R = "direct horizontal" 
+        var label = "long label for -" + opt;
+        var text = "<div class=\"gridRow\">";
+        text += getCheckBoxLabel(opt, "Gensky", skyOptions.isActive(opt), labels[opt]);
+        if (skyOptions.isActive(opt) == true) {
+            text += "<input type=\"text\" class=\"valueInput\"";
+            text += " id=\"genskyOptionInput" + opt + "\"";
+            text += " value=\"" + skyOptions[opt] + "\"";
+            text += " onChange=\"onGenskyInputChanged('" + opt + "')\" />";
+        } else {
+            text += "<span class=\"defaultValue\">[not set]</span>";
+        }
         text += "</div>"
         return text;
     }
+}
+
+function disableGenskyOverride(opt) {
+    log.debug("disableGenskyOverride('" + opt + "')");
+    enableGenskyOption(opt, false);
+}
+
+function enableGenskyOverride(opt) {
+    log.debug("enableGenskyOverride('" + opt + "')");
+    enableGenskyOption(opt, true);
+}
+
+function enableGenskyOption(opt, enable) {
+    log.debug("enableGenskyOption(opt='" + opt + "'");
+    skyOptions.setActive(opt, enable);
+    _updateGenskyOptions();
+    updateSkyPage();
+    applySkySettings();
 }
 

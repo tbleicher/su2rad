@@ -16,7 +16,7 @@ class NumericImport < ExportBase
         @maxvalue = 0.0     ## max in values
         @scalevalue = 1     ## scale of surface 'height' (e.g. 500lx/m)
         @surface = nil      ## replaced with Sketchup group
-        @zOffset = $ZOFFSET ## config for offset of value scale
+        @zOffset = 0.0      ## config for offset of value scale
         if filename != ''
             loadFile(filename)
         end

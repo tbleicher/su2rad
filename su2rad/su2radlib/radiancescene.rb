@@ -7,51 +7,6 @@ require 'webdialog_views.rb'
 require 'scene_materials.rb'
 
 
-class UserDialogOptions < ExportBase
-    
-    def initialize
-        @ud = UserDialog.new()
-        setDialogOptions()
-    end
-    
-    def applyDialogResults
-        setConfig('SCENEPATH', cleanPath(@ud.results[0]))
-        setConfig('SCENENAME', remove_spaces(@ud.results[1]))
-        $SHOWRADOPTS = @ud.results[2] 
-        $EXPORTALLVIEWS = @ud.results[3] 
-        setConfig('MODE',        @ud.results[4])
-        setConfig('TEXTURES',    @ud.results[5])
-        setConfig('TRIANGULATE', @ud.results[6])
-        if getConfig('REPLMARKS') != '' and File.exists?(getConfig('REPLMARKS'))
-            setConfig('MAKEGLOBAL', @ud.results[7])
-        end
-    end
-
-    def setDialogOptions
-        @ud.addOption("export path", getConfig('SCENEPATH'))
-        @ud.addOption("scene name", getConfig('SCENENAME'))
-        @ud.addOption("show options", $SHOWRADOPTS) 
-        @ud.addOption("all views", $EXPORTALLVIEWS) 
-        @ud.addOption("mode", getConfig('MODE'), "by group|by layer|by color")
-        @ud.addOption("textures", getConfig('TEXTURES'))
-        @ud.addOption("triangulate", getConfig('TRIANGULATE'))
-        if getConfig('REPLMARKS') != '' and File.exists?(getConfig('REPLMARKS'))
-            @ud.addOption("global coords", getConfig('MAKEGLOBAL')) 
-        end
-    end
-
-    def show(title='export options')
-        if @ud.show(title) == true
-            applyDialogResults()
-            return true
-        else
-            return false
-        end
-    end
-    
-end 
-
-
 class StatusPage 
    
     include InterfaceBase
@@ -119,7 +74,6 @@ class StatusPage
             @statusHash.update(dict)
         end
         v = @statusHash['status']
-        #TODO: higlight warnings and errors
         if v =~ /warn/i
             style = "highlightWarn"
         elsif v =~ /err/i
@@ -203,7 +157,6 @@ class RadianceScene < ExportBase
         @skyOptions    = SkyOptions.new()
         @materialLists = MaterialLists.new() 
     end
-
     
     def initLog
         line1 = "###  su2rad.rb export  ###" 
@@ -212,23 +165,7 @@ class RadianceScene < ExportBase
         printf "\n\n%s\n" % line1
         Sketchup.set_status_text(line1)
     end
-    
 
-    def confirmExportDirectoryOLD
-        ## show user dialog for export options
-        ud = UserDialogOptions.new()    
-        if ud.show('export options') == false
-            uimessage('export canceled')
-            return false
-        end
-        ## use test directory in debug mode
-        if $SU2RAD_DEBUG 
-            setTestDirectory()
-        end
-        return true
-    end
-  
-    
     def createMainScene(references, faces_text, parenttrans=nil)
         ## top level scene split in references (*.rad) and faces ('objects/*_faces.rad')
         if getConfig('MODE') != 'by group'
@@ -265,30 +202,6 @@ class RadianceScene < ExportBase
         end
     end
     
-
-    def startExportOLD(selected_only=0)
-        if confirmExportDirectory() == false
-            return
-        end
-        scene_dir = File.join(getConfig('SCENEPATH'),getConfig('SCENENAME'))
-        if removeExisting(scene_dir) == false
-            return
-        end
-        
-        ## check if global coord system is required
-        if getConfig('MODE') != 'by group'
-            uimessage("export mode '%s' requires global coordinates" % getConfig('MODE'))
-            setConfig('MAKEGLOBAL', true)
-        elsif getConfig('REPLMARKS') == '' || File.exists?(getConfig('REPLMARKS')) == false
-            if makeGlobal?() == false
-                uimessage("WARNING: 'replmarks' not found.")
-                uimessage("=> global coordinates will be used in files")
-                setConfig('MAKEGLOBAL', true)
-            end
-        end
-        export(selected_only)
-    end
-
     def showStatusPage
         htmlpath = getFilename(File.join('logfiles', 'status.html'))
         if not createFile(htmlpath, "foo")
@@ -302,10 +215,6 @@ class RadianceScene < ExportBase
         else
             return nil
         end
-    end
-    
-    def startExportWebTest(selected_only=0)
-        puts "startExportWebTest\n"
     end
     
     def startExportWeb(selected_only=0)
@@ -331,20 +240,6 @@ class RadianceScene < ExportBase
         return success
     end 
     
-    def renameExisting(sceneDir)
-        if File.exists?(sceneDir)
-            t = Time.new()
-            newname = sceneDir + t.strftime("_%y%m%d_%H%M%S")
-            begin
-                File.rename(sceneDir, newname)
-                uimessage("renamed scene directory to '%s'" % newname)
-            rescue => e
-                uimessage("could not rename directory '%s':\n%s" % [sceneDir, $!.message])
-                return false
-            end
-        end
-    end
-    
     def export(selected_only=0)
        
         ## write sky first for <scene>.rad file
@@ -364,10 +259,10 @@ class RadianceScene < ExportBase
         uimessage("\nOBJECTS:", 0)
         sceneref = exportByGroup(entities, Geom::Transformation.new)
         if getConfig('MODE') == 'by color'
-            refs = saveFilesByColor(@@byColor)
+            refs = _saveFilesByColor(@@byColor)
             createMainScene(refs, '')
         elsif getConfig('MODE') == 'by layer'
-            refs = saveFilesByLayer(@@byLayer)
+            refs = _saveFilesByLayer(@@byLayer)
             createMainScene(refs, '')
         end
         
@@ -379,7 +274,7 @@ class RadianceScene < ExportBase
         return true
     end
    
-    def saveFilesByColor(byColor)
+    def _saveFilesByColor(byColor)
         references = []
         uimessage("\nSCENEFILES:", 0)
         byColor.each_pair { |name,lines|
@@ -403,7 +298,7 @@ class RadianceScene < ExportBase
         return references
     end
     
-    def saveFilesByLayer(byLayer)
+    def _saveFilesByLayer(byLayer)
         references = []
         byLayer.each_pair { |name,lines|
             if lines.length == 0
@@ -477,77 +372,10 @@ class RadianceScene < ExportBase
         end
     end
         
-    def exportViews_OLD
-        viewLines = []
-        if @viewsList != nil
-            return @viewsList.getViewLines()
-        else
-            viewLines.push( createViewFile(@model.active_view.camera, getConfig('SCENENAME')) )
-            if $EXPORTALLVIEWS == true
-                pages = @model.pages
-                pages.each { |page|
-                    if page == @model.pages.selected_page
-                        next
-                    elsif page.use_camera? == true
-                        name = remove_spaces(page.name)
-                        viewLines.push(createViewFile(page.camera, name))
-                    end
-                }
-            end
-        end
-        return viewLines.join("\n")
-    end
-    
-    #XXX def setOptionsFromDialog(export,render,sky,views)
     def prepareExport()
         @exportOptions.writeOptionsToConfig()
         @sky.setSkyOptions(@skyOptions.getSettings())
     end
 
-    def _getViewLineOLD(c)
-        unit = getConfig('UNIT')
-        text =  "-vp %.3f %.3f %.3f  " % [c.eye.x*unit,c.eye.y*unit,c.eye.z*unit]
-        text += "-vd %.3f %.3f %.3f  " % [c.zaxis.x,c.zaxis.y,c.zaxis.z]
-        text += "-vu %.3f %.3f %.3f  " % [c.up.x,c.up.y,c.up.z]
-        imgW = Sketchup.active_model.active_view.vpwidth.to_f
-        imgH = Sketchup.active_model.active_view.vpheight.to_f
-        aspect = imgW/imgH
-        if c.perspective?
-            type = '-vtv'
-            if aspect > 1.0
-                vv = c.fov
-                vh = getFoVAngle(vv, imgH, imgW)
-            else
-                vh = c.fov
-                vv = getFoVAngle(vh, imgW, imgH)
-            end
-        else
-            type = '-vtl'
-            vv = c.height*unit
-            vh = vv*aspect
-        end
-        text += "-vv %.3f -vh %.3f" % [vv, vh]
-        text = "rvu #{type} " + text
-        return text
-    end
-    
-    def createViewFileOLD(c, viewname)
-        filename = getFilename("views/%s.vf" % viewname)
-        if not createFile(filename, getViewLine(c))
-            msg = "## Error: Could not create view file '#{filename}'"
-            uimessage(msg)
-            return msg
-        else
-            return "view=   #{viewname} -vf views/#{viewname}.vf" 
-        end
-    end
-    
-    def getFoVAngleOLD(ang1, side1, side2)
-        ang1_rad = ang1*Math::PI/180.0
-        dist = side1 / (2.0*Math::tan(ang1_rad/2.0))
-        ang2_rad = 2 * Math::atan2(side2/(2*dist), 1)
-        ang2 = (ang2_rad*180.0)/Math::PI
-        return ang2
-    end
 end
 
