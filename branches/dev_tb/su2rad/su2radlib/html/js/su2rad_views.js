@@ -14,6 +14,12 @@ function ViewObject() {
     this.vo = 0.0;
     this.vv = 60.0;
     this.vh = 60.0;
+    this._overrides = {};
+    this._overrides.vp = false;
+    this._overrides.vd = false;
+    this._overrides.vu = false;
+    this._overrides.vv = false;
+    this._overrides.vh = false;
     this._verbose = true;
     this._bool_attributes   = ['selected','current','show_details','pageChanged']
     this._float_attributes  = ['vo','va','vv','vh'];
@@ -24,6 +30,20 @@ function ViewObject() {
                         ['c','cylindrical'],
                         ['h','horizontal'],
                         ['s','stereometric'] ]
+}
+
+ViewObject.prototype.getCheckBoxLabel = function(opt) {
+    if (this._overrides[opt] == true) {
+        var action = " onClick=\"disableViewOverride('" + this.name + "','" + opt + "')\" "
+        var text = "<input type=\"checkbox\"" + action + "checked />";
+    } else {
+        var action = " onClick=\"enableViewOverride('" + this.name + "','" + opt + "')\" "
+        var text = "<input type=\"checkbox\"" + action + " />";
+    }
+    text += "<a class=\"gridLabel\"" + action + "\">-" + opt + ":";
+    text += "<span class=\"tooltip\">set fixed value for '-" + opt + "'</span>";
+    text += "</a>";
+    return text;
 }
 
 ViewObject.prototype.getDetailsHTML = function () {
@@ -81,7 +101,8 @@ ViewObject.prototype.getElementId = function (opt) {
 }
 
 ViewObject.prototype._getViewTypeSelection = function () {
-    var divtext = "<div><div class=\"gridLabel\">-vt:</div>"
+    var divtext = "<div><div class=\"checkBoxDummy\"></div>";
+    divtext += "<div class=\"gridLabel\">-vt:</div>";
     divtext += "<select id=\"" + this.getElementId('vt') + "\" onchange=\"onViewTypeChange('"+ this.name + "')\">"
     for (var i=0; i<this._viewTypes.length; i++) {
         vt = this._viewTypes[i]
@@ -95,9 +116,10 @@ ViewObject.prototype._getViewTypeSelection = function () {
     return divtext
 }
 
+
 ViewObject.prototype._getVectorValueInput = function (opt, style) {
     var divtext = "<div " + style + " >"
-    divtext += "<div class=\"gridLabel\">-" + opt + ":</div>"
+    divtext += this.getCheckBoxLabel(opt)
     vect = this[opt]
     for (var i=0; i<3; i++) {
         divtext +=     "<input type=\"text\" class=\"viewOptionFloatValue\""
@@ -110,18 +132,19 @@ ViewObject.prototype._getVectorValueInput = function (opt, style) {
 
 ViewObject.prototype._getFloatValueGroup = function (opt1, opt2, style) {
     var divtext = "<div " + style + " >";
-    divtext += this._getFloatValueInput(opt1, '')
-    divtext += this._getFloatValueInput(opt2, 'style="margin-left:24px;"')
+    divtext += this.getCheckBoxLabel(opt1)
+    divtext += this._getFloatValueInput(opt1)
+    divtext += "<div class=\"gridLabel\" style=\"margin-left:21px;\" >-" + opt2 + ":</div>"
+    divtext += this._getFloatValueInput(opt2)
     divtext += "</div>";
     return divtext
 }
 
 ViewObject.prototype._getFloatValueInput = function (opt, style) {
     var divtext = ''
-    divtext += "<div class=\"gridLabel\" " + style + ">-" + opt + ":</div>"
-    divtext +=     "<input type=\"text\" class=\"viewOptionFloatValue\""
-    divtext +=         "id=\"" + this.getElementId(opt) + "\" value=\"" + this[opt].toFixed(3) + "\""
-    divtext +=         "onchange=\"onViewFloatOptionChange('" + this.name + "','" + opt + "')\" />"
+    divtext += "<input type=\"text\" class=\"viewOptionFloatValue\""
+    divtext +=     "id=\"" + this.getElementId(opt) + "\" value=\"" + this[opt].toFixed(3) + "\""
+    divtext +=     "onchange=\"onViewFloatOptionChange('" + this.name + "','" + opt + "')\" />"
     return divtext
 }
 
@@ -474,5 +497,31 @@ function _getViewSummaryDiv(view) {
         text += view.name + '</a></div>';
     }
     return text;
+}
+
+function disableViewOverride(viewname, opt) {
+    log.error("TEST: disableViewOverride('" + opt + "')");
+    if (viewsList[viewname]) {
+        var view = viewsList[viewname];
+        view._overrides[opt] = false;
+        // TODO: display setting from page.camera 
+        updateViewDetailsList();
+        applyViewSettings(viewname);
+    } else {
+        log.error("view '" + viewname + "' not found in viewsList!");
+    }
+}
+
+function enableViewOverride(viewname, opt) {
+    log.error("TEST: enableViewOverride('" + opt + "')");
+    if (viewsList[viewname]) {
+        var view = viewsList[viewname];
+        view._overrides[opt] = true;
+        // TODO: apply settings from text field  
+        updateViewDetailsList();
+        applyViewSettings(viewname);
+    } else {
+        log.error("view '" + viewname + "' not found in viewsList!");
+    }
 }
 

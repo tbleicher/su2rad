@@ -23,7 +23,6 @@ module Radiance
     Radiance::Keywords_Other  = {'void'  => true,  'alias' => true}
     Radiance::Keywords_Source = {'illum' => true, 'source' => true, 'spotlight' => true}
 
-    
     class Radiance::Material
         
         attr_reader :name, :comment, :defType, :matType, :text, :rest, :valid, :required
@@ -403,6 +402,16 @@ module RadianceUtils
         name = name.gsub(/[\[(}\]<>]/, '')
         name = name.gsub(/\s+/, '_')
         return name
+    end
+    
+    def isRadianceKeyword?(word)
+        isKey = false;
+        isKey = Radiance::Keywords_Geometry[word] || isKey
+        isKey = Radiance::Keywords_Material[word] || isKey
+        isKey = Radiance::Keywords_Pattern[word] || isKey
+        isKey = Radiance::Keywords_Other[word] || isKey
+        isKey = Radiance::Keywords_Source[word] || isKey
+        return isKey
     end
 
 end 

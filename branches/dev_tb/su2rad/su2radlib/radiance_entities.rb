@@ -416,7 +416,7 @@ class RadiancePolygon < ExportBase
             layer = getEffectiveLayer(@face)
         end
         layername = remove_spaces(layer.name)
-        if $RADPRIMITIVES.has_key?(layername)
+        if isRadianceKeyword?(layername)
             layername = "layer_" + layername
         end
         if not @@byLayer.has_key?(layername)
@@ -638,8 +638,7 @@ class RadianceSky < ExportBase
             if skytime.isdst == true
                 skytime -= 3600
             end
-            ## time zone of ShadowTime is UTC
-            skytime.utc
+            skytime.utc             ## time zone of ShadowTime is UTC
             timestamp = skytime.strftime("%m%d_%H%M")
         end
         rpath = File.join("skies","%s_%s.sky" % [city, timestamp])
@@ -662,48 +661,13 @@ class RadianceSky < ExportBase
         if skytime.isdst == true
             skytime -= 3600
         end
-        ## time zone of ShadowTime is UTC
-        skytime.utc
+        skytime.utc                 ## time zone of ShadowTime is UTC
         lat = sinfo['Latitude']
         lng = sinfo['Longitude']
         mer = "%.1f" % (sinfo['TZOffset']*-15.0)
         text = "gensky %s #{@skytype}" % skytime.strftime("%m %d %H:%M")
         text += " -a %.3f -o %.3f -m %1.f" % [lat, -1*lng, mer]
         text += " -g 0.2 -t 1.7"
-        return text
-        
-        ## Time zone of ShadowTime is UTC. When strftime is used
-        ## local tz is applied which shifts the time string for gensky.
-        ## $UTC_OFFSET has to be defined to compensate this. Without
-        ## it sky can only by definded by '-ang alti azi' syntax.
-        if $UTC_OFFSET != nil
-            ## if offset is defined change time before strftime
-            skytime = sinfo['ShadowTime']
-            skytime -= $UTC_OFFSET*3600
-            if skytime.isdst == true
-                skytime -= 3600
-            end
-            lat  = sinfo['Latitude']
-            long = sinfo['Longitude']
-            mer  = "%.1f" % (sinfo['TZOffset']*-15.0)
-            text = "gensky %s " % skytime.strftime("%m %d %H:%M")
-            text += " -a %.2f -o %.2f -m %1.f" % [lat, -1*long, mer]
-        else
-            ## use gensky with angles derieved from sun direction
-            text = "## set $UTC_OFFSET to allow gensky spec with daytime\n"
-            d = sinfo['SunDirection']
-            dXY = Geom::Vector3d.new(d.x, d.y, 0)
-            south = Geom::Vector3d.new(0, -1, 0)
-            alti = d.angle_between(dXY) * 180 / 3.141592654
-            if d.z < 0.0
-                alti *= -1
-            end
-            azi  = dXY.angle_between(south) * 180 / 3.141592654
-            if d.x > 0.0
-                azi *= -1
-            end
-            text += "gensky -ang %.3f %.3f " % [alti, azi]
-        end
         return text
     end
    

@@ -1,7 +1,7 @@
 require 'config_class.rb'
 require 'export_modules.rb'
 require 'context.rb'
-
+require 'radiance.rb'
 
 class ProgressCounter
     
@@ -78,6 +78,7 @@ class ExportBase
 
     include InterfaceBase
     include RadiancePath
+    include RadianceUtils
     
     @@_log = []
     @@materialContext = nil
@@ -351,8 +352,6 @@ class ExportBase
         elsif skm.texture == nil
             return false
         elsif getConfig('TEXTURES') == false
-            return false
-        elsif $OBJ2MESH == ''
             return false
         else
             return true

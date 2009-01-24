@@ -5,18 +5,14 @@ td {
     border-color: red;
 }
 div {
-    border-style: solid;
-    border-width: 1px;
-    border-color: green;
+    outline: 1px solid green;
 }
 span {
-    border-style: solid;
-    border-width: 1px;
-    border-color: blue;
+    outline: 1px solid blue;
 }
 */
 
-a:link {
+a {
     cursor: pointer;
 }
 a.clickable {
@@ -47,15 +43,6 @@ code {
     font-size: 12px;
     line-height: 1.0;
 }
-.column {
-    width: 140px;
-    /* margin-right: 15px; */
-    /* background: lightskyblue; */
-}
-.column2 {
-    width: 275px;
-    /* background: lightskyblue; */
-}
 
 #loadSceneButton {
     margin-left: 5px;
@@ -77,6 +64,7 @@ code {
     margin-top: 8px;
     margin-right: 18px;
 }
+
 .exportbutton {
     float: right;
     width: 100px;
@@ -95,11 +83,15 @@ h1 {
     font-size: 18px;
 }
 h2 {
-    margin: 2em 0 1.5em;
+    font-weight: bold;
+    color: #27537a;
     font-size: 18px;
     background: url(gradient.png) repeat-x;
-    height: 44px; /* IE 6 treats height as min-height */
-    min-height: 44px; /* IE 6 treats height as min-height */
+    margin: 2em 0 1em;
+    padding: 0.5em;
+    padding-top: 0.8em;
+    padding-bottom: 0.3em;
+    vertical-align: middle;
 }
 h3,th {
     margin: 0.8em 0 0.8em;
@@ -117,39 +109,12 @@ h3.highlightWarn {
     color: #cc9900;; 
     background: url(gradient_warning.png) repeat-x;
 }
-table {
-    padding: 0;
-    margin: 0;
-}
-td {
-    vertical-align: middle;
-    padding: 0;
-    margin: 0;
-    height: 14px; 
-    min-height: 14px;  
-}
-
-.tableHeader {
-    margin: 0.8em 0 0.8em;
+h4 {
+    color: #27537a;
+    margin: 0.8em 0 0.4em;
     padding: 0.3em;
     padding-left: 0.5em;
-    color: #27537a; /* blue-grey */
-    background: url(gradient.png) repeat-x;
-    /* font-size: 14px; */ 
-    height: 30px; 
-    min-height: 30px;  
     font-weight: bold;
-    text-align: left;
-    /* width: 180px; */
-}
-.column_lable {
-    font-weight: bold;
-    width: 60px;
-}
-.column_lable_highlight {
-    font-weight: bold;
-    width: 60px;
-    color: #cc0000;
 }
 select {
     font-size: 12px;
@@ -178,14 +143,6 @@ input[type=text] {
 input[type=checkbox] {
     position: relative;
     /*top: 2px;*/
-}
-.columnRadLable{
-    font-weight: bold;
-    width: 85px;
-    padding-left: 0.5em;
-}
-.columnRadOption {
-    width: 95px;
 }
 .option_lable {
     font-weight: bold;
@@ -252,11 +209,6 @@ input.file {
     margin: 0;
 }
 
-.listing {
-    font-family: "Monaco", "Courier New", Courier, monospace;
-    font-size: 12px;
-    line-height: 1.0;
-}
 .statusMessage {
     color: #27537a;
     background-color: #cbe6f4;
@@ -285,13 +237,6 @@ input.file {
     padding: 0;
     margin: 0;
 }
-.locationOptionsGroupLabel {
-    font-weight: bold;
-    float: left;
-    width: 75px;
-    height: 20px;
-    min-height: 20px;
-}
 
 .skyOption {
     /*font-family: "Monaco", "Courier New", Courier, monospace;*/
@@ -308,21 +253,7 @@ input.file {
     padding: 0;
     margin: 0;
 }
-.skyOptionsGroup {
-    float: left;
-    padding: 0;
-    margin: 0;
-    width: 200px;
-    /*clear: both;*/
-}
-.skyOptionsLeft {
-    padding: 0;
-    margin: 0;
-    float: left;
-    width: 100px;
-    height: 20px;
-    min-height: 20px;
-}
+
 #genskySunOption {
     float: left;
     padding: 0;
@@ -372,14 +303,9 @@ input.file {
     size: 60;
 }
 
-
 #timegroup {
     float: left;
     width: 180px;
-}
-#timegroup * DIV {
-    padding: 0;
-    margin: 0;
 }
 .timeOptionInput {
     float: left;
@@ -396,85 +322,137 @@ input.file {
     height: 20px;
     min-height: 20px;
 }
-#thegrid * TH {
-    font-size: 2px;
-    font-weight: bold;
-    text-align: center;
-    height: 10px;
-    width: 10px;
-    padding: 0;
-    margin: 0;
-}
-#thegrid * TD {
-    font-size: 2px;
-    text-align: center;
-    height: 10px;
-    width: 10px;
-    padding: 0;
-    margin: 0;
-}
 
 
 
-#rpictOptionsLeft {
+.rpictOptions, .genskyOptions {
     float:left;
     width: 120px;
+    margin-right: 10px;
 }
-#rpictOptionsMiddle {
-    float:left;
-    width: 120px;
-    margin-left: 10px;
+.rpictOptions DIV, .genskyOptions DIV {
+    height: 22px;
+    width: 110px;
 }
+.rpictOptions DIV *, .genskyOptions DIV * {
+    float: left;
+    padding-left: 3px;
+}
+.rpictOptions * .gridLabel {
+    width: 35px;
+}
+
 #rpictOptionsRight {
-    float:left;
     width: 180px;
-    margin-left: 10px;
 }
+#rpictOptionsRight DIV {
+    width: 170px;
+}
+#rpictOptionsRight * .defaultValue {
+    width: 110px;
+}
+#rpictOptionsRight * .valueInput {
+    width: 30px;
+}
+
+
+
+.genskyOptions {
+    width: 220px;
+}
+.genskyOptions DIV {
+    width: 220px;
+}
+.genskyOptions * .gridLabel {
+    width: 135px;
+}
+.genskyOptions * .defaultValue {
+    width: 60px;
+}
+
+.viewOptions {
+    float:left;
+    width:215px;
+}
+.viewOptions div {
+    margin: 0px;
+    height: 24px;
+    margin-left: 5px;
+    vertical-align: middle;
+}
+.viewOptions div * {
+    float: left;
+    margin: 0px;
+}
+.viewOptions div select {
+    width: 105px;
+}
+.viewOptions div .gridLabel {
+    width: 25px;
+    height: 20px;
+    margin-right: 5px;
+    padding-left: 3px;
+}
+.viewOptions div input[type=text] {
+    width: 50px;
+    height: 20px;
+    font-size: 12px;
+    background-color: #cbe6f4;
+}
+
+.viewOptionFloatValue {
+    float: left;
+    margin: 0px;
+    width: 40px;
+    height: 20px;
+    /* font-family: "Monaco", "Courier New", Courier, monospace; */
+    font-size: 12px;
+    background-color: #cbe6f4;
+}
+
+#viewsSelection div.gridRow {
+    width: 510px;
+    margin-left: 75px;
+}
+
+
+
+
+.tooltip {
+    display: none;
+}
+
+a.gridLabel:hover .tooltip {
+    display: block;
+    position: relative;
+    font-size: 12px;
+    font-weight: normal;
+    top: 0;
+    left: 20px;
+    width: 150px;
+    padding: 2px;
+    padding-left: 4px;
+    border: 1px solid #27537a; /* blue-grey */
+    background-color: #cbe6f4;
+    color: #333333;
+    z-index: 25;
+}
+
+.checkBoxDummy {
+    width: 12px;
+}
+
+
 
 .commandLine {
     position: relative;
     top: 2px;
     font-size: 12px;
-    /* font-family: "Monaco", "Courier New", Courier, monospace; */
     color: #27537a;
     font-weight: bold;
-    /* color: #27537a; 
-    background-color: #d9eaf4;
-    padding: 2px; */
 }
 
-.rpictCB {
-    /* margie-left: 5px; */
-    float: left;
-    position: relative;
-    top: -4px;
-}
-#genskySunOption * {
-    position: relative;
-    top: -3px;
-    font-size: 12px;
-}
-#rpictOptionsDisplay * div {
-    margin: 0;
-}
-
-.rpictOverride, .rpictOverrideSelected {
-    /*font-size: 12px; */
-    /* font-family: "Monaco", "Courier New", Courier, monospace; */
-    height: 20px;
-    padding-left: 0.5em;
-    width: 105px;
-    padding-top: 3px;
-}
-.rpictOverrideSelected {
-    font-weight: bold;
-    background-color: #d9eaf4;
-}
-.rpictOverride .gridLabel, .rpictOverrideSelected .gridLabel {
-    width: 33px;
-    padding-left: 5px;
-}
-.rpictOverrideInput, .rpictOverrideInputInt, .rpictOverrideInputIntN {
+.valueInput, .valueInputInt, .valueInputIntN {
     width: 40px;
     font-weight: bold;
     background-color: #d9eaf4;
@@ -485,6 +463,7 @@ input.file {
     padding-left: 0.5em;
     /* padding-top: 2.5em; */
     color: #27537a; /* blue-grey */
+    vertical-align: bottom;
 }
 
 .skyGeneratorOptions {
@@ -495,11 +474,6 @@ input.file {
 }
 .skyGeneratorOptions div.optionsColumn {
     width: 100px;
-    /* border: solid;
-    border-width: 1px;
-    border-color: #27537a;
-    margin: 2px 2px 2px 2px;
-    padding: 2px 0px 2px 0px; */
 }
 .skyGeneratorOptions * div.optionsRow {
     width: 80px;
@@ -530,7 +504,7 @@ input.file {
     padding: 0;
 }
 
-.gridLabel, .rpictValue {
+.gridLabel, .defaultValue {
     font-weight: bold;
     float: left;
     width: 75px;
@@ -539,7 +513,7 @@ input.file {
     padding: 0;
     margin: 0;
 }
-.rpictValue {
+.defaultValue {
     font-weight: normal;
     width: 40px;
 }
@@ -551,6 +525,9 @@ input.file {
     padding-left: 5px;
     margin: 1.5px;
 }
+
+
+
 
 .exportStatus {
     float:left;
@@ -581,6 +558,7 @@ input.file {
     margin-top: 25px;
     margin-left: 10px;
 }
+
 
 
 .gridColumn .gridLabel {
@@ -643,59 +621,6 @@ input.file {
     width: 100px;
 }
 
-
-.viewOptions {
-    float:left;
-    width:210px;
-    background-color: #ffffff;
-    /* height:180px; */
-}
-.viewOptions div {
-    margin: 0px;
-    height: 24px;
-    margin-left: 5px;
-}
-.viewOptions div * {
-    float: left;
-    margin: 0px;
-    /* border-style:solid;
-    border-width:1px;
-    border-color:green; */
-}
-.viewOptions div select {
-    width: 105px;
-}
-.viewOptions div div.gridLabel {
-    width: 25px;
-    height: 20px;
-    margin-right: 5px;
-    /* border-style:solid;
-    border-width:1px;
-    border-color:green; */
-    position; relative;
-    top: 1px;
-}
-.viewOptions div input {
-    width: 50px;
-    height: 20px;
-    /* font-family: "Monaco", "Courier New", Courier, monospace; */
-    font-size: 12px;
-    background-color: #cbe6f4;
-}
-.viewOptionFloatValue {
-    float: left;
-    margin: 0px;
-    width: 40px;
-    height: 20px;
-    /* font-family: "Monaco", "Courier New", Courier, monospace; */
-    font-size: 12px;
-    background-color: #cbe6f4;
-}
-
-#viewsSelection div.gridRow {
-    width: 510px;
-    margin-left: 75px;
-}
 
 
 /*****************/

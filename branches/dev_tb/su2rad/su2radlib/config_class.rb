@@ -24,11 +24,6 @@ class RunTimeConfig
         'RA_PPM'   => '',
         'OBJ2MESH'  => '',
 
-        ## library options
-        'MATERIALLIB'        => '',
-        'SUPPORTDIR'         => '',
-        'BUILD_MATERIAL_LIB' => false,
-
         ## misc and unused options
         'ZOFFSET'         => nil,
         'CONFIRM_REPLACE' => true,
