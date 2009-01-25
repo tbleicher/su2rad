@@ -479,7 +479,7 @@ function _updateGenskyOptionsDiv(opt) {
     if (opt == 'g' || opt == 't') {
         var text = "<div class=\"gridRow\" style=\"width:85px;\">";
         text += "<a class=\"gridLabel\" style=\"width:25px;\">-" + opt + ":";
-        text += "<span class=\"tooltip\">tooltip for option '" + opt + "'</span>";
+        text += getToolTip('gensky', opt)
         text += "</a>";
         text += "<input type=\"text\" class=\"valueInput\"";
         text += " id=\"genskyOptionInput" + opt + "\"";
