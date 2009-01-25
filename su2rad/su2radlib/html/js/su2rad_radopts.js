@@ -474,7 +474,7 @@ function getCheckBoxLabel(opt, group, selected, label) {
         var text = "<input type=\"checkbox\"" + action + " />";
     }
     text += "<a class=\"gridLabel\"" + action + "\">" + label + ":";
-    text += "<span class=\"tooltip\">TODO: tooltip for option '" + opt + "'</span>";
+    text += getToolTip(group.toLowerCase(), opt);
     text += "</a>";
     return text;
 }
