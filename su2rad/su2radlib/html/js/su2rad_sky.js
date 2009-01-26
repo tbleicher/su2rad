@@ -493,7 +493,6 @@ function _updateGenskyOptionsDiv(opt) {
         labels.B = "diffuse horizontal"
         labels.r = "direct normal" 
         labels.R = "direct horizontal" 
-        var label = "long label for -" + opt;
         var text = "<div class=\"gridRow\">";
         text += getCheckBoxLabel(opt, "Gensky", skyOptions.isActive(opt), labels[opt]);
         if (skyOptions.isActive(opt) == true) {
