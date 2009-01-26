@@ -426,7 +426,7 @@ function getRpictOptionSpan(opt) {
     // return text for option span (checkbox and textfield)
     var text = "<div class=\"gridRow\">";
     var selected = radOpts.rpictOverrideSelected(opt);
-    text += getCheckBoxLabel(opt, "Rpict", selected)
+    text += getCheckBoxLabel(opt, "Rpict", selected, '')
     // add text input or show default value
     if (opt == "av" && selected == true) { 
         // add 3 text input fields for 'av'
@@ -463,17 +463,17 @@ function _getRpictOptionInputAV(opt,text) {
 }
 
 function getCheckBoxLabel(opt, group, selected, label) {
-    if (!label) {
+    if (!label || label == '') {
         label = "-" + opt;
     }
     if (selected == true) {
         var action = " onClick=\"disable" + group + "Override('" + opt + "')\" "
-        var text = "<input type=\"checkbox\"" + action + "checked />";
+        var text = '<input type="checkbox" ' + action + 'checked />';
     } else {
         var action = " onClick=\"enable" + group + "Override('" + opt + "')\" "
-        var text = "<input type=\"checkbox\"" + action + " />";
+        var text = '<input type="checkbox" ' + action + ' />';
     }
-    text += "<a class=\"gridLabel\"" + action + "\">" + label + ":";
+    text += '<a class="gridLabel" ' + action + ' >' + label + ':';
     text += getToolTip(group.toLowerCase(), opt);
     text += "</a>";
     return text;
@@ -488,7 +488,7 @@ function getRpictOptionSpansBool() {
         var bvalue = radOpts.getOption(opt);
         var selected = (bvalue != rpictBoolDefaults[i])
         text += "<div class=\"gridRow\">";
-        text += getCheckBoxLabel(opt, "Rpict", selected)
+        text += getCheckBoxLabel(opt, "Rpict", selected, '')
         // add comment and 'on'/'off' value
         text += "<span class=\"defaulValue\">";
         if (bvalue == true) {
