@@ -20,6 +20,8 @@ function ViewObject() {
     this._overrides.vu = false;
     this._overrides.vv = false;
     this._overrides.vh = false;
+    this._overrides.vo = true;
+    this._overrides.va = true;
     this._verbose = true;
     this._bool_attributes   = ['selected','current','show_details','pageChanged']
     this._float_attributes  = ['vo','va','vv','vh'];
@@ -40,7 +42,7 @@ ViewObject.prototype.getCheckBoxLabel = function(opt) {
         var action = " onClick=\"enableViewOverride('" + this.name + "','" + opt + "')\" "
         var text = "<input type=\"checkbox\"" + action + " />";
     }
-    text += "<a class=\"gridLabel\"" + action + "\">-" + opt + ":";
+    text += "<a class=\"gridLabel\"" + action + ">-" + opt + ":";
     text += getToolTip('rpict', opt);
     text += "</a>";
     return text;
@@ -122,9 +124,15 @@ ViewObject.prototype._getVectorValueInput = function (opt, style) {
     divtext += this.getCheckBoxLabel(opt)
     vect = this[opt]
     for (var i=0; i<3; i++) {
-        divtext +=     "<input type=\"text\" class=\"viewOptionFloatValue\""
-        divtext +=         "id=\"" + this.getElementId(opt) + "_" + i + "\" value=\"" + vect[i].toFixed(3) + "\""
-        divtext +=         "onchange=\"onViewVectorOptionChange('" + this.name + "','" + opt + "')\" />"
+        if (this._overrides[opt] == true) {
+            divtext += "<input type=\"text\" class=\"viewOptionFloatValue\""
+            divtext += " id=\"" + this.getElementId(opt) + "_" + i + "\" value=\"" + vect[i].toFixed(3) + "\""
+            divtext += " onchange=\"onViewVectorOptionChange('" + this.name + "','" + opt + "')\" />"
+        } else {
+            divtext += "<span class=\"defaultValue\">"
+            divtext += vect[i].toFixed(3)
+            divtext += "</span>"
+        }
     }
     divtext += "</div>";
     return divtext
@@ -140,11 +148,17 @@ ViewObject.prototype._getFloatValueGroup = function (opt1, opt2, style) {
     return divtext
 }
 
-ViewObject.prototype._getFloatValueInput = function (opt, style) {
+ViewObject.prototype._getFloatValueInput = function (opt) {
     var divtext = ''
-    divtext += "<input type=\"text\" class=\"viewOptionFloatValue\""
-    divtext +=     "id=\"" + this.getElementId(opt) + "\" value=\"" + this[opt].toFixed(3) + "\""
-    divtext +=     "onchange=\"onViewFloatOptionChange('" + this.name + "','" + opt + "')\" />"
+    if (this._overrides[opt] == true) {
+        divtext += "<input type=\"text\" class=\"viewOptionFloatValue\""
+        divtext += " id=\"" + this.getElementId(opt) + "\" value=\"" + this[opt].toFixed(3) + "\""
+        divtext += " onchange=\"onViewFloatOptionChange('" + this.name + "','" + opt + "')\" />"
+    } else {
+        divtext += "<span class=\"defaultValue\">"
+        divtext += this[opt].toFixed(3)
+        divtext += "</span>"
+    }
     return divtext
 }
 
