@@ -209,6 +209,41 @@ input.file {
     margin: 0;
 }
 
+.gridColumn .gridLabel {
+    width: 75px;
+    padding-left: 5px;
+}
+.gridColumn  .optionsHeader {
+    width: 170px;
+}
+.gridColumn .optionsHeader * {
+    position: relative;
+    top: 7px;
+}
+.gridColumn * {
+    margin: 1.5px;
+}
+.gridColumn  .gridCell {
+    width: 90px;
+}
+
+.highlight {
+    font-weight: bold;
+    color: #27537a; 
+}
+.highlightError {
+    font-weight: bold;
+    color: #cc0000;
+}
+.highlightWarn {
+    font-weight: bold;
+    color: #cc9900;; 
+}
+
+
+
+
+
 .statusMessage {
     color: #27537a;
     background-color: #cbe6f4;
@@ -339,6 +374,7 @@ input.file {
     padding-left: 3px;
 }
 .rpictOptions * .gridLabel {
+    float: left;
     width: 35px;
 }
 
@@ -349,10 +385,16 @@ input.file {
     width: 170px;
 }
 #rpictOptionsRight * .defaultValue {
-    width: 110px;
+    float: left;
+    width: 100px;
 }
 #rpictOptionsRight * .valueInput {
+    float: left;
     width: 30px;
+}
+#rpictOptionsRight * .gridLabel {
+    float: left;
+    width: 35px;
 }
 
 
@@ -557,39 +599,6 @@ a.gridLabel:hover .tooltip {
 .exportStatusFinal img {
     margin-top: 25px;
     margin-left: 10px;
-}
-
-
-
-.gridColumn .gridLabel {
-    width: 75px;
-    padding-left: 5px;
-}
-.gridColumn  .optionsHeader {
-    width: 170px;
-}
-.gridColumn .optionsHeader * {
-    position: relative;
-    top: 7px;
-}
-.gridColumn * {
-    margin: 1.5px;
-}
-.gridColumn  .gridCell {
-    width: 90px;
-}
-
-.highlight {
-    font-weight: bold;
-    color: #27537a; 
-}
-.highlightError {
-    font-weight: bold;
-    color: #cc0000;
-}
-.highlightWarn {
-    font-weight: bold;
-    color: #cc9900;; 
 }
 
 
