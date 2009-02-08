@@ -671,65 +671,6 @@ class RadianceSky < ExportBase
         return text
     end
    
-    def getTimeZone(country, city, long)
-        ## unused
-        meridian = ''
-        ## location data file depends on platform
-        if $OS == 'MAC'
-            locationdata = 'locations.dat'
-        else
-            locationdata = 'SketchUp.tzl'
-        end
-        files = Sketchup.find_support_file(locationdata)
-        if files == nil
-            uimessage("support file '#{locationdata}' not found")
-            files = []
-        end
-        locations = []
-        files.each { |f|
-            begin
-                uimessage("using locations file '#{f}'")
-                fd = File.new(f, 'r')
-                locations = fd.readlines()
-                fd.close()
-                break
-            rescue
-                uimessage("could not use location file: '#{f}'")
-            end
-        }
-        re_country = Regexp.new(country)
-        re_city = Regexp.new(city)
-        locations.each { |l|
-            l = l.strip()
-            begin
-                a = l.split(",")
-                co = a[0].gsub('"','')
-                ci = a[1].gsub('"','')
-                if country == co 
-                    if city == ci
-                        uimessage("found location: '#{l}'")
-                        @comments += "## location data: %s '#{l}'\n"
-                        delta = a[-1].to_f
-                        meridian = "%.1f" % (delta*-15.0)
-                        break
-                    end
-                end
-            rescue
-                uimessage("Could not use location line '#{l}'")
-            end
-        }
-        if meridian == ''
-            ## not found in locations
-            msg = "meridian not found in location data -> calculating from long"
-            uimessage(msg)
-            @comments += "## %s\n" % msg
-            delta = long.to_f / 15.0
-            delta = delta.to_i
-            meridian = "%.1f" % (delta*-15.0)
-        end
-        return meridian
-    end
-    
     def setSkyOptions(sinfo)
         @sinfo = sinfo
     end

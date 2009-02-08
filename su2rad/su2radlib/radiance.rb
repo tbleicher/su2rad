@@ -414,6 +414,69 @@ module RadianceUtils
         return isKey
     end
 
+    def isRadianceTransformation?(trans)
+        ## test if trans can be created with xform (uniform scale only)
+        a = trans.to_a
+        vx = Geom::Vector3d.new(a[0..2])
+        vy = Geom::Vector3d.new(a[4..6])
+        vz = Geom::Vector3d.new(a[8..10])
+        lengths = [vx.length, vy.length, vz.length]
+        sorted = lengths.sort
+        diff = sorted[2] - sorted[0]
+        if diff > 0.01
+            uimessage("  scale not uniform: sx=%.2f sy=%.2f sz=%.2f\n" % lengths, 2)
+            return false
+        end
+        return true
+    end
+    
+    def xformFromReplmarks(trans, filename, objname, scale)
+        ## return xform command for transformation <trans>
+        #TODO: get mirror axes from trans
+        mirror = ""
+        
+        ## scale is calculated by replmarks
+        ## we just check for extrem values
+        #a = trans.to_a
+        #scale = Geom::Vector3d.new(a[0..2])
+        #if scale.length > 10000 or scale.length < 0.0001
+        #    uimessage("Warning unusual scale (%.3f) for object '%s'" % [scale.length, objname]) 
+        #end
+        
+        ## transformation
+        scaletrans = Geom::Transformation.new(1/scale)
+        trans = trans * scaletrans
+        a = trans.to_a
+        o = a[12..14]
+        vx = [o[0]+a[0], o[1]+a[1], o[2]+a[2]]
+        vy = [o[0]+a[4]*0.5, o[1]+a[5]*0.5, o[2]+a[6]*0.5]
+        marker = "replaceme polygon #{objname}\n0\n0\n9\n"
+        marker += "%.6f %.6f %.6f\n" % o
+        marker += "%.6f %.6f %.6f\n" % vx 
+        marker += "%.6f %.6f %.6f\n" % vy
+        
+        if filname =~ /\.oct\z/i
+            cmd = "echo '#{marker}' | replmarks -s 1.0 -i #{filename} replaceme"
+        elsif filname =~ /\.msh\z/i
+            cmd = "echo '#{marker}' | replmarks -s 1.0 -I #{filename} replaceme"
+        else
+            cmd = "echo '#{marker}' | replmarks -s 1.0 -x #{filename} replaceme"
+        end
+        f = IO.popen(cmd)
+        lines = f.readlines
+        f.close()
+        begin
+            xform = lines[2].strip()
+            parts = xform.split()
+            p1 = parts[0..2]
+            p2 = parts[3..30]
+            xform = p1.join(" ") + " #{mirror} " + p2.join(" ")
+        rescue
+            xform = "## ERROR: could not generate '!xform' command for file '#{filename}'"
+        end
+        return xform
+
+    end
 end 
 
 

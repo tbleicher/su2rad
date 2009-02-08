@@ -21,7 +21,7 @@ class StatusPage
         @statusHash.default = 0
         @timeStart = Time.now()
         @csspath = "file://" + File.join(File.dirname(__FILE__), "html", "css") + File::SEPARATOR
-        if $OS == 'WIN'
+        if $SU2RAD_PLATFORM == 'WIN'
             @csspath.gsub!(File::SEPARATOR, '/')
         end
         @shortnames = { "Sketchup::ComponentInstance" => "components",
@@ -102,10 +102,10 @@ class StatusPage
 
     def show
         @timeStart = Time.now()
-        if $OS == 'MAC'
+        if $SU2RAD_PLATFORM == 'MAC'
             browser = "open"
 	    htmlpath = @htmlpath
-        elsif $OS == 'WIN'
+        elsif $SU2RAD_PLATFORM == 'WIN'
             browser = "\"C:\\Program Files\\Internet Explorer\\iexplore.exe\""
 	    htmlpath = @htmlpath.gsub(/\//, '\\')
 	    ## separate browser thread does not work in windows ...
@@ -316,7 +316,7 @@ class RadianceScene < ExportBase
     end
 
     def runPreview
-        if $OS != 'MAC'
+        if $SU2RAD_PLATFORM != 'MAC'
             uimessage("'rvu' only available on Mac OS X",-1)
             return
         end
@@ -341,6 +341,9 @@ class RadianceScene < ExportBase
                 files.push("objects/#{f}")
             elsif f =~ /\.rtm\z/i
                 meshes.push("objects/#{f}")
+            else
+                #XXX
+                printf "XXX object file: %s\n" % f
             end
         }
         files += meshes

@@ -351,7 +351,7 @@ module RadiancePath
     end
     
     def runSystemCmd(cmd)
-        if $OS == 'WIN'
+        if $SU2RAD_PLATFORM == 'WIN'
            cmd.gsub!(/\//, '\\')
         end
         uimessage("system cmd= %s" % cmd, 3)

@@ -46,7 +46,7 @@ function loadTestData() {
         getViewsList();
         getSkySettings();
         updateViewsPage();
-        getMaterialsListsTest();
+        test_getMaterialsLists();
         updateMaterialsPage()
     } else {
         alert("no testdata within Sketchup!")
