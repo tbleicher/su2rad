@@ -84,7 +84,10 @@ class ExportDialogWeb < ExportBase
         
         ## views
         dlg.add_action_callback("applyViewSettings") { |d,p|
-            @viewsList.updateFromString(d,p)
+            @viewsList.applyViewSettings(d,p)
+        }
+        dlg.add_action_callback("removeViewOverride") { |d,p|
+            @viewsList.removeViewOverride(d,p)
         }
         dlg.add_action_callback("selectAllViews") { |d,p|
             @viewsList.selectAllViews(d,p)

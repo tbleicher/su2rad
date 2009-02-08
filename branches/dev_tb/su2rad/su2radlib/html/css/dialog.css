@@ -209,6 +209,23 @@ input.file {
     margin: 0;
 }
 
+
+
+.gridCell {
+    float: left;
+    width: 140px;
+    height: 20px;
+    min-height: 20px;
+    padding: 0;
+    margin: 0;
+}
+
+.gridColumn {
+    float:left;
+    width: 190px;
+    margin: 0;
+    padding: 0;
+}
 .gridColumn .gridLabel {
     width: 75px;
     padding-left: 5px;
@@ -227,6 +244,31 @@ input.file {
     width: 90px;
 }
 
+.gridLabel, .defaultValue {
+    font-weight: bold;
+    float: left;
+    width: 75px;
+    height: 20px;
+    min-height: 20px;
+    padding: 0;
+    margin: 0;
+}
+.defaultValue {
+    font-weight: normal;
+    width: 40px;
+}
+.gridRow {
+    width: 580px;
+    height: 20px;
+    min-height: 20px;
+    padding: 0;
+    padding-left: 5px;
+    margin: 1.5px;
+    vertical-align: middle;
+}
+
+
+
 .highlight {
     font-weight: bold;
     color: #27537a; 
@@ -240,16 +282,14 @@ input.file {
     color: #cc9900;; 
 }
 
-
-
-
-
 .statusMessage {
     color: #27537a;
     background-color: #cbe6f4;
     padding-left: 0.5em;
     clear: both;
 }
+
+
 
 .locationOption {
     float: left;
@@ -262,6 +302,9 @@ input.file {
     width: 60px;
     size: 10;
 }
+
+
+
 .optionsColumn {
     float: left;
     padding: 0;
@@ -272,6 +315,8 @@ input.file {
     padding: 0;
     margin: 0;
 }
+
+
 
 .skyOption {
     /*font-family: "Monaco", "Courier New", Courier, monospace;*/
@@ -452,22 +497,24 @@ input.file {
     background-color: #cbe6f4;
 }
 
-#viewsSelection div.gridRow {
-    width: 510px;
-    margin-left: 75px;
-}
-
 .checkBoxDummy {
     width: 12px;
 }
 
+#viewsSelection div.gridRow {
+    width: 510px;
+    margin-left: 75px;
+}
+#viewsSelection div div {
+    height: 18px;
+    overflow: hidden;
+}
 
 
 
 .tooltip {
     display: none;
 }
-
 a.gridLabel:hover .tooltip {
     display: block;
     position: relative;
@@ -529,44 +576,6 @@ a.gridLabel:hover .tooltip {
     width: 275px;
 }
 
-.gridCell {
-    float: left;
-    width: 140px;
-    height: 20px;
-    min-height: 20px;
-    padding: 0;
-    margin: 0;
-}
-
-.gridColumn {
-    float:left;
-    width: 190px;
-    margin: 0;
-    padding: 0;
-}
-
-.gridLabel, .defaultValue {
-    font-weight: bold;
-    float: left;
-    width: 75px;
-    height: 20px;
-    min-height: 20px;
-    padding: 0;
-    margin: 0;
-}
-.defaultValue {
-    font-weight: normal;
-    width: 40px;
-}
-.gridRow {
-    width: 580px;
-    height: 20px;
-    min-height: 20px;
-    padding: 0;
-    padding-left: 5px;
-    margin: 1.5px;
-}
-
 
 
 
@@ -612,14 +621,26 @@ a.gridLabel:hover .tooltip {
 }
 .previewPanel {
     float: left;
-    height:175px;
+    height:172px;
     margin: 0;
     padding: 0;
-    width: 330px;
+    width: 302px;
     margin-left: 20px;
-    border-style: solid;
+    /*border-style: solid;
     border-width:2px;
-    border-color: #cbe6f4;
+    border-color: #cbe6f4; */
+    border: none;
+    /* background-color: #cbe6f4; */
+}
+.imageSizeFrame {
+    margin: 0;
+    padding: 0;
+    border: 1px dashed #333333;
+}
+.imageSizeView {
+    margin: 0;
+    padding: 0;
+    border: 1px solid red;
 }
 .previewPanel input[type=button] {
     margin-left:100px;

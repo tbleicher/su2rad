@@ -7,14 +7,15 @@ function ViewObject() {
     this.pageChanged = false;
     this.show_details = false;
     this.vt = "v";
-    this.vp = "0 0 1";
-    this.vd = "0 1 0";
-    this.vu = "0 0 1";
+    this.vp = [0,0,1.5];
+    this.vd = [0,1,0];
+    this.vu = [0,0,1];
     this.va = 0.0;
     this.vo = 0.0;
     this.vv = 60.0;
     this.vh = 60.0;
     this._overrides = {};
+    this._overrides.vt = true;
     this._overrides.vp = false;
     this._overrides.vd = false;
     this._overrides.vu = false;
@@ -34,6 +35,71 @@ function ViewObject() {
                         ['s','stereometric'] ]
 }
 
+ViewObject.prototype.calculateFoV = function (attr) {
+    if (attr == 'vv') {
+        var wanted = 'vh';
+    } else {
+        var wanted = 'vv';
+    }
+    if (this._overrides[wanted] || this._verbose == false) {
+        return
+    } else {
+        var val = this._calculateFoV(wanted);
+        if (val != false) {
+            log.debug("calculated FoV for '" + wanted + "': " + val.toFixed(3) )
+            this[wanted] = val;
+        }
+    }
+}
+
+ViewObject.prototype._calculateFoV = function(wanted) {
+    var imgHor = parseFloat(radOpts.ImageSizeX); 
+    var imgVert = parseFloat(radOpts.ImageSizeY);
+    if (this.vt == 'l' || this.vt == 'a') {
+        // parallel and angular fisheye: linear
+        if (wanted == 'vh') {
+            return this.vv * (imgHor/imgVert)
+        } else if (wanted == 'vv') {
+            return this.vh * (imgVert/imgHor) 
+        }
+    } else if (this.vt == 'v') {
+        // perspective: tan/atan
+        if (wanted == 'vh') {
+            return this._calculateFoVPerspective(this.vv, imgVert, imgHor);
+        } else if (wanted == 'vv') {
+            return this._calculateFoVPerspective(this.vh, imgHor, imgVert);
+        }
+    } else {
+        log.info("can't calculate " + wanted + " for view type '" + this.vt + "'");
+        return false;
+    }
+}
+
+ViewObject.prototype._calculateFoVPerspective = function(ang1, side1, side2) {
+    var ang1_rad = ang1*Math.PI/180.0;
+    var dist = side1 / ( 2.0*Math.tan(ang1_rad/2.0) );
+    var ang2_rad = 2* Math.atan( side2/(2*dist) );
+    var ang2 = (ang2_rad*180.0) / Math.PI;
+    return ang2;
+}
+
+ViewObject.prototype.calculateUpVector = function(attr) {
+    if (this._overrides.vu || this._verbose) {
+        return
+    }
+    log.info("TODO: calculate up vector")
+}
+
+ViewObject.prototype.fitViewToImage = function () {
+    var vh = this._calculateFoV('vh');
+    var vv = this._calculateFoV('vv');
+    if (vh && vh > this.vh) {
+        this.vh = vh;
+    } else if (vv && vv > this.vv) {
+        this.vv = vv;
+    }
+}
+
 ViewObject.prototype.getCheckBoxLabel = function(opt) {
     if (this._overrides[opt] == true) {
         var action = " onClick=\"disableViewOverride('" + this.name + "','" + opt + "')\" "
@@ -49,7 +115,6 @@ ViewObject.prototype.getCheckBoxLabel = function(opt) {
 }
 
 ViewObject.prototype.getDetailsHTML = function () {
-    
     // title (clickable)
     if (this.show_details == false) {
         text  = "<a class=\"clickable\" onclick=\"showViewDetails('" + this.name + "')\">";
@@ -75,7 +140,8 @@ ViewObject.prototype.getDetailsHTML = function () {
     if (this.pageChanged == true) {
         text += "<div class=\"highlightWarn\" style=\"padding-left:5px;\">"
         text += "page view has changed! "
-        text += "<input type=\"button\" value=\"TODO: reset cam\" onclick=\"onResetCamera('" + this.name + "')\">"
+        text += "<input type=\"button\" value=\"apply to view\" onclick=\"onResetCamera('" + this.name + "')\">"
+        text += "<input type=\"button\" value=\"remove settings\" onclick=\"onRemoveSettings('" + this.name + "')\">"
         text += "</div>"
     }
     
@@ -92,10 +158,65 @@ ViewObject.prototype.getDetailsHTML = function () {
 
     // preview
     text += "<div class=\"previewPanel\">"
+    text += "<div class=\"imageSizeFrame\" " + this._getStyle(this._getImageSizeFrame()) + " >"
+    text += "<div class=\"imageSizeView\" " +  this._getStyle(this._getImageSizeView()) + " >"
     text += "<input type=\"button\" value=\"TODO: preview\" onclick=\"onCreatePreview('" + this.name + "')\">"
-    text += "</div>"
+    text += "</div></div></div>"
     text += "</div>"
     return text
+}
+
+ViewObject.prototype._getStyle = function (frame) {
+    text = "style=\"";
+    text += "width:"  + frame.width.toFixed(0) + "px;"
+    text += "height:" + frame.height.toFixed(0) + "px;";
+    text += "margin-top:" + frame.m_top.toFixed(0) + "px;"; 
+    text += "margin-left:" + frame.m_left.toFixed(0) + "px\"";
+    return text;
+}
+
+ViewObject.prototype._getImageSizeView = function () {
+    var outer = this._getImageSizeFrame();
+    var maxW = outer.width-2;
+    var maxH = outer.height-2;
+    if (this.vt == 'l' || this.vt == 'a') {
+        var imgW = this.vh;
+        var imgH = this.vv;
+    } else {
+        var imgW = Math.tan((this.vh*Math.PI/180.0)/2.0);
+        var imgH = Math.tan((this.vv*Math.PI/180.0)/2.0);
+    }
+    return this._fitFrame(maxW,maxH,imgW,imgH);
+}
+
+ViewObject.prototype._getImageSizeFrame = function () {
+    // return style override for imageSizeFrame div
+    // max w/h = 300/150 (defined in css)
+    var maxW = 300.0;
+    var maxH = 170.0;
+    var imgW = parseFloat(radOpts.ImageSizeX); 
+    var imgH = parseFloat(radOpts.ImageSizeY);
+    var frame = this._fitFrame(maxW,maxH,imgW,imgH);
+    frame.m_left = 0;
+    return frame;
+}
+
+ViewObject.prototype._fitFrame = function (maxW,maxH,imgW,imgH) {
+    var frame = {};
+    frame.width = maxW;
+    frame.height = maxH;
+    frame.m_top = 0;
+    frame.m_left = 0;
+    if ( (imgW/imgH) > (maxW/maxH) ) {
+        // padding at top
+        frame.height = imgH * (maxW/imgW);
+        frame.m_top = (maxH-frame.height) / 2.0
+    } else {
+        // padding at sides
+        frame.width = imgW * (maxH/imgH);
+        frame.m_left = (maxW-frame.width) / 2.0
+    }
+    return frame;
 }
 
 ViewObject.prototype.getElementId = function (opt) {
@@ -117,7 +238,6 @@ ViewObject.prototype._getViewTypeSelection = function () {
     divtext += "</select></div>";
     return divtext
 }
-
 
 ViewObject.prototype._getVectorValueInput = function (opt, style) {
     var divtext = "<div " + style + " >"
@@ -233,6 +353,12 @@ ViewObject.prototype._setValue = function (attr, newval) {
         this.vt = this._checkViewType(newval) || this.vt;
         return true
     }
+    if (attr == 'overrides') {
+        for (var i=0; i<newval.length; i++) {
+            this._overrides[newval[i]] = true;
+        }
+        return true
+    }
     for (var i=0; i<this._bool_attributes.length; i++) {
         if (attr == this._bool_attributes[i]) {
             if (newval == 'false' || newval == false || newval == 0 || newval == '0') {
@@ -248,13 +374,22 @@ ViewObject.prototype._setValue = function (attr, newval) {
             var val = parseFloat(newval);
             if (!isNaN(val)) {
                 this[attr] = val;
+                if (attr == 'vv' || attr == 'vh') {
+                    this.calculateFoV(attr)
+                }
             }
             return true
         }
     }
     for (var i=0; i<this._vector_attributes.length; i++) {
         if (attr == this._vector_attributes[i]) {
-            this[attr] = this._checkVector(newval) || this[attr];
+            vect = this._checkVector(newval);
+            if (vect != false) {
+                this[attr] = vect;
+                if (attr == 'vd') {
+                    this.calculateUpVector(attr)
+                }
+            }
             return true
         }
     }
@@ -263,7 +398,7 @@ ViewObject.prototype._setValue = function (attr, newval) {
 
 ViewObject.prototype.setFromJSONObject = function (obj) {
     //log.debug('view.setFromJSONObject(obj=' + obj.name + ')');
-    var opts = ['name','vt'];
+    var opts = ['name','vt','overrides'];
     opts = opts.concat(this._bool_attributes);   
     opts = opts.concat(this._float_attributes);
     opts = opts.concat(this._vector_attributes);
@@ -275,7 +410,39 @@ ViewObject.prototype.setFromJSONObject = function (obj) {
         }
     }
     this._verbose = true;
+    // adjust vv and vh to image aspect
+    this.fitViewToImage()
     return true;
+}
+
+ViewObject.prototype.toJSON = function () {
+    var text = "{"
+    text += "'name':'" + this.name + "',";
+    text += "'vt':'" + this.vt + "',";
+    var opts = [];
+    opts = opts.concat(this._bool_attributes);   
+    opts = opts.concat(this._float_attributes);
+    for (var i=0; i<opts.length; i++) {
+        var attr = opts[i];
+        text += "'" + attr + "':" + this[attr] + ",";
+    }
+    opts = this._vector_attributes;
+    for (var i=0; i<opts.length; i++) {
+        var attr = opts[i];
+        var vect = this[attr]
+        text += "'" + attr + "':[" + vect[0] + "," + vect[1] + "," + vect[2] + "],";
+    }
+    text += "'overrides':["
+    opts = ['vt','vp','vd','vu','vv','vh','vo','va'];
+    for (var i=0; i<opts.length; i++) {
+        var attr = opts[i];
+        if (this._overrides[attr] == true) {
+            text += "'" + attr + "',";
+        }
+    }
+    text = text.slice(0,-1); 
+    text += "]}";
+    return text
 }
 
 ViewObject.prototype.setSelection = function (selected) {
@@ -289,18 +456,21 @@ ViewObject.prototype.setSelection = function (selected) {
 
 ViewObject.prototype.toRubyString = function (selection_only) {
     var text = "{\"name\" => \""     + this.name     + "\",";
-    text +=    " \"selected\" => \"" + this.selected + "\",";
+    text +=    " \"selected\" => \"" + this.selected + "\"";
     if (selection_only == true) {
 	return text + "}";
     }
-    text +=    " \"vt\" => \"" + this.vt             + "\","; 
-    text +=    " \"vp\" => \"" + this.vp             + "\",";
-    text +=    " \"vd\" => \"" + this.vd             + "\","; 
-    text +=    " \"vu\" => \"" + this.vu             + "\",";
-    text +=    " \"vo\" => \"" + this.vo.toFixed(3)  + "\","; 
-    text +=    " \"va\" => \"" + this.va.toFixed(3)  + "\","; 
-    text +=    " \"vv\" => \"" + this.vv.toFixed(3)  + "\","; 
-    text +=    " \"vh\" => \"" + this.vh.toFixed(3)  + "\"";  
+    var opts = ['vt','vp', 'vd', 'vu', 'vv', 'vh', 'vo', 'va'];
+    for (var i=0; i<opts.length; i++) {
+        var o = opts[i];
+        if (this._overrides[o] == true) {
+            if (o == 'vo' || o == 'va' || o == 'vv' || o == 'vh') {
+                text += ",\"" + o + "\" => \"" + this[o].toFixed(4) + "\"";
+            } else {
+                text += ",\"" + o + "\" => \"" + this[o] + "\"";
+            }
+        }
+    }
     text += "}"
     return text;
 }
@@ -319,8 +489,21 @@ ViewObject.prototype.toViewString = function () {
 
 
 
+
 function ViewsListObject() {
     this.views = new Array();
+}
+
+ViewsListObject.prototype.setView = function (viewname, obj) {
+    var view = this[viewname]
+    if (view) {
+        if (view.setFromJSONObject(obj) == true) {
+            log.debug("view '" + viewname + "' updated successfully")
+            updateViewDetailsList();
+        }
+    } else {
+        log.error("view '" + viewname + "' not found")
+    }
 }
 
 ViewsListObject.prototype.setViewsList = function (newViews) {
@@ -361,6 +544,11 @@ ViewsListObject.prototype.toString = function (selection_only) {
     return text;
 }
 
+
+
+
+
+
 function deselectAllViews() {
     selectAllViews(false); 
 }
@@ -383,10 +571,19 @@ function selectAllViews(selected) {
     }
 }
 
-
 function hideViewDetails(viewname) {
     viewsList[viewname].show_details = false;
     updateViewDetailsList();
+}
+
+function onRemoveSettings(viewname) {
+    //log.debug("onRemoveSettings('" + viewname + "')");
+    if (viewsList[viewname]) {
+        log.info("removing all settings of view '" + viewname + "'");
+        removeViewOverride(viewname, 'all');
+    } else {
+        log.error("view '" + viewname + "' not found in viewsList!");
+    }
 }
 
 function onResetCamera(viewname) {
@@ -466,7 +663,6 @@ function showViewDetails(viewname) {
     updateViewDetailsList();
 }
 
-
 function updateViewDetailsList() {
     var text = "";
     for(var i=0; i<viewsList.views.length; i++) {
@@ -514,20 +710,18 @@ function _getViewSummaryDiv(view) {
 }
 
 function disableViewOverride(viewname, opt) {
-    log.error("TEST: disableViewOverride('" + opt + "')");
+    //log.debug("disableViewOverride('" + viewname + "','" + opt + "')");
     if (viewsList[viewname]) {
         var view = viewsList[viewname];
         view._overrides[opt] = false;
-        // TODO: display setting from page.camera 
-        updateViewDetailsList();
-        applyViewSettings(viewname);
+        removeViewOverride(viewname, opt);
     } else {
         log.error("view '" + viewname + "' not found in viewsList!");
     }
 }
 
 function enableViewOverride(viewname, opt) {
-    log.error("TEST: enableViewOverride('" + opt + "')");
+    //log.debug("enableViewOverride('" + viewname + "','" + opt + "')");
     if (viewsList[viewname]) {
         var view = viewsList[viewname];
         view._overrides[opt] = true;

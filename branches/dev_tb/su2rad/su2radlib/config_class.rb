@@ -56,11 +56,11 @@ class RunTimeConfig
     
     def initPaths
         uimessage("RunTimeConfig: initPaths() ...", 1)
-        bindir = File.join(File.dirname(__FILE__), 'bin', $OS)
+        bindir = File.join(File.dirname(__FILE__), 'bin', $SU2RAD_PLATFORM)
         keys = ['REPLMARKS', 'CONVERT', 'RA_PPM', 'OBJ2MESH']
         keys.each { |k|
             app = k.downcase()
-	    if $OS == 'WIN'
+	    if $SU2RAD_PLATFORM == 'WIN'
 		app += '.exe'
 	    end
             uimessage("  searching '#{app}' ...", 1)
@@ -68,7 +68,7 @@ class RunTimeConfig
             if File.exists?(binpath)
                 set(k, binpath)
                 uimessage("  => found '#{app}' in '#{bindir}'", 1) 
-            elsif $OS == 'MAC'
+            elsif $SU2RAD_PLATFORM == 'MAC'
                 p = IO.popen('which %s' % app)
                 lines = p.readlines()
                 p.close()

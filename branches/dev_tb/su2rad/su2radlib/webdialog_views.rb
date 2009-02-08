@@ -16,22 +16,84 @@ class SketchupView
     def initialize (name, current=false)
         @name = name
         @current = current
+        @_fitted = false
         @page = nil
         @pageChanged = false
         @selected = false
         if current == true
             @selected = true
         end
-        @vt = "v";
-        @vp = [0,0,1];
-        @vd = [0,1,0];
-        @vu = [0,0,1];
-        @va = 0.0;
-        @vo = 0.0;
-        @vv = 60.0;
-        @vh = 60.0;
+        @vt = "v"
+        @vp = [0,0,1]
+        @vd = [0,1,0]
+        @vu = [0,0,1]
+        @va = 0.0
+        @vo = 0.0
+        @vv = 60.0
+        @vh = 60.0
     end
 
+    def activate
+        ## necessary to update view
+        if @page
+            old_t = @page.transition_time
+            @page.transition_time = 0.1
+            Sketchup.active_model.pages.selected_page = @page
+            @page.transition_time = old_t
+        end
+    end
+    
+    def applyToPage
+        printf "TEST: applyToPage('#{@name}')\n"
+        begin
+            if @page
+                camera = @page.camera
+            else
+                camera = Sketchup.active_model.active_view.camera
+            end
+            unit = getConfig('UNIT')
+            eye = [@vp[0]/unit, @vp[1]/unit, @vp[2]/unit]
+            target = [eye[0]+@vd[0],eye[1]+@vd[1],eye[2]+@vd[2]]
+            camera.set(eye, target, @vu)
+            fitFoV(camera)
+            Sketchup.active_model.active_view.show_frame()
+        rescue => e
+            uimessage("Error in view.applyToPage(view='#{@name}'):\n%s\n\n%s\n" % [$!.message,e.backtrace.join("\n")],-2)
+            return false
+        end
+    end
+    
+    def _compareSetting(k,v)
+        begin
+            oldValue = eval("@%s" % k)
+        rescue => e
+            uimessage("error getting attribute '%s': %s" % [k, $!.message], -2)
+            return false
+        end
+        if k == 'vt'
+            if oldValue == 'l' and v != 'l'
+                return true
+            elsif oldValue == 'v' and v == 'l'
+                return true
+            else
+                return false
+            end
+        elsif (k == 'vp' || k == 'vd' || k == 'vu')
+            begin
+                oldVect = "%.3f %.3f %.3f" % oldValue
+                newVect = "%.3f %.3f %.3f" % v
+                return (oldVect != newVect)
+            rescue => e
+                msg = "\nError while converting to vector: %s\n%s\n\n" % [$!.message, e.backtrace.join("\n")]
+                uimessage(msg, -2)
+                return false
+            end
+        else
+            ## all other setting are not comparable
+            return false
+        end
+    end
+    
     def createViewFile
         name = remove_spaces(@name)
         viewpath = File.join("views", "%s.vf" % name)
@@ -47,14 +109,35 @@ class SketchupView
         end
     end
     
-    def getViewLine
-        text = "rvu -vt#{@vt}"
-        text +=   " -vp %f %f %f" % @vp
-        text +=   " -vd %f %f %f" % @vd
-        text +=   " -vu %f %f %f" % @vu
-        text +=  " -vv #{@vv} -vh #{@vh} -vo #{@vo} -va #{@va}"
-        return text
-    end 
+    def fitFoV(camera)
+        ## calculate page camera fov to fit view
+        printf "DEBUG: fitFoV\n"
+        ## set flag to avoid export of modified fov 
+        @_fitted = true
+        imgW = Sketchup.active_model.active_view.vpwidth.to_f
+        imgH = Sketchup.active_model.active_view.vpheight.to_f
+        asp_c = imgW/imgH
+        asp_v = @vh/@vv
+        unit = getConfig('UNIT')
+        
+        if @vt == 'l'
+            camera.perspective = false
+            if asp_c > asp_v
+                camera.height = @vv/unit
+            else
+                camera.height = (@vh/asp_c)/unit
+            end
+        else
+            camera.perspective = true
+            if asp_c > asp_v
+                camera.fov = @vv
+            elsif asp_c > 1.0
+                camera.fov = _getFoVAngle(@vh, imgW, imgH)
+            else
+                camera.fov = @vh
+            end
+        end
+    end
     
     def getOptions
         printf "\nERROR: use of view.getOptions!\n\n"
@@ -65,13 +148,45 @@ class SketchupView
         dict = {'name' => @name, 'selected' => @selected,
                 'current' => @current, 'pageChanged' => @pageChanged,
                 'vt' => @vt, 'vp' => @vp, 'vd' => @vd, 'vu' => @vu,
-                'vo' => @vo, 'va' => @va, 'vv' => @vv, 'vh' => @vh}
+                'vo' => @vo, 'va' => @va}
+        if not @_fitted
+            dict['vv'] = @vv
+            dict['vh'] = @vh
+        end
+        if @page
+            overrides = @page.attribute_dictionary('SU2RAD_VIEW')
+            if overrides
+                dict['overrides'] = overrides.keys()
+            end
+        end
         return dict
     end
     
-    def toJSON
-        json = toStringJSON(_getSettingsDict())
-        return json
+    def getViewLine
+        text = "rvu -vt#{@vt}"
+        text +=   " -vp %f %f %f" % @vp
+        text +=   " -vd %f %f %f" % @vd
+        text +=   " -vu %f %f %f" % @vu
+        text +=  " -vv #{@vv} -vh #{@vh} -vo #{@vo} -va #{@va}"
+        return text
+    end 
+    
+    def removeOverride(name)
+        if @page
+            begin
+                if name == 'all'
+                    @page.delete_attribute('SU2RAD_VIEW')
+                else
+                    @page.delete_attribute('SU2RAD_VIEW', name)
+                end
+                setViewParameters(@page.camera)
+                setPage(@page)
+                return true
+            rescue => e
+                uimessage("Error deleting override '%s' from attribute_dict 'SU2RAD_VIEW':\n%s\n\n%s\n" % [name, $!.message,e.backtrace.join("\n")],2)
+                return false
+            end
+        end
     end
     
     def _setFloatValue(k, v)
@@ -81,8 +196,32 @@ class SketchupView
                 eval("@%s = %s" % [k,v])
                 uimessage("view '%s': new value for '%s' = '%s'" % [@name,k,v], 1)
             end
+            return true
         rescue
             uimessage("view '%s': value for '%s' not a float value [v='%s']" % [@name,k,v],-2)
+            return false
+        end
+    end
+    
+    def setPage(page)
+        ## update view from settings in page attribute_dict
+        @page = page
+        begin
+            d = @page.attribute_dictionary('SU2RAD_VIEW')
+        rescue => e
+            uimessage("Error getting attributes:\n%s\n\n%s\n" % [$!.message,e.backtrace.join("\n")],-2)
+        end
+        if d != nil
+            dict = Hash.new()
+            d.each_pair { |k,v|
+                dict[k] = v
+                @pageChanged = _compareSetting(k,v) || @pageChanged
+            }
+            if dict.has_key?('name')
+                dict.delete('name')
+            end
+            update(dict, false)
+            @pageChanged = false #XXX
         end
     end
     
@@ -113,6 +252,7 @@ class SketchupView
             uimessage("view '%s': new value for '%s' = '%s'" % [@name,k,vect], 1)
             eval("@%s = %s" % [k,vect])
         end
+        return true
     end
    
     def _setViewOption(k,v)
@@ -133,41 +273,7 @@ class SketchupView
                 eval("@%s = '%s'" % [k,v])
             end
         end
-    end
-    
-    def update(dict, store=true)
-        dict.each_pair { |k,v|
-            begin
-                if (k == 'vp' || k == 'vd' || k == 'vu')
-                    _setViewVector(k, v)
-                elsif (k == 'vo' || k == 'va' || k == 'vv' || k == 'vh')
-                    _setFloatValue(k, v)
-                else
-                    _setViewOption(k,v)
-                end
-            rescue => e
-                uimessage("view '%s' update(key='%s',v='%s'):\n%s" % [@name,k,v,$!.message], -2)
-            end
-        }
-        if store
-            storeSettings()
-        end
-    end
-    
-    def storeSettings
-        if not @page
-            return
-        end
-        begin
-            d = _getSettingsDict()
-            d.delete('current')
-            d.delete('pageChanged')
-            d.each_pair { |k,v|
-                @page.set_attribute('SU2RAD_VIEW', k, v)
-            }
-        rescue => e
-            uimessage("Error setting attributes:\n%s\n\n%s\n" % [$!.message,e.backtrace.join("\n")],-2)
-        end
+        return true
     end
     
     def setViewParameters(camera)
@@ -195,52 +301,59 @@ class SketchupView
         end
     end
     
-    def setPage(page)
-        @page = page
-        begin
-            d = @page.attribute_dictionary('SU2RAD_VIEW')
-        rescue => e
-            uimessage("Error getting attributes:\n%s\n\n%s\n" % [$!.message,e.backtrace.join("\n")],-2)
-        end
-        if d != nil
-            dict = Hash.new()
-            d.each_pair { |k,v|
-                dict[k] = v
-                @pageChanged = _compareSetting(k,v) || @pageChanged
-            }
-            if dict.has_key?('name')
-                dict.delete('name')
-            end
-            update(dict, false)
-        end
+    def show
+        printf "view: '#{@name}'  type=#{@vt}\n"
+        printf "  vp: %.3f  %.3f  %.3f\n" % @vp
+        printf "  vd: %.3f  %.3f  %.3f\n" % @vd
+        printf "  vu: %.3f  %.3f  %.3f\n" % @vu
+        printf "  vv: %.3f   vh:  %.3f\n" % [@vv, @vh]
     end
-
-    def _compareSetting(k,v)
-        begin
-            oldValue = eval("@%s" % k)
-        rescue => e
-            uimessage("error getting attribute '%s': %s" % [k, $!.message], -2)
-            return false
-        end
-        if k == 'vt' and (v == 'v' || v == 'l')
-            ## check only perspective and parallel
-            return (oldValue != v)
-        elsif (k == 'vp' || k == 'vd' || k == 'vu')
-            begin
-                oldVect = "%.3f %.3f %.3f" % oldValue
-                newVect = "%.3f %.3f %.3f" % v
-                return (oldVect != newVect)
-            rescue => e
-                msg = "\nError while converting to vector: %s\n%s\n\n" % [$!.message, e.backtrace.join("\n")]
-                uimessage(msg, -2)
-                return false
-            end
-        else
-            ## all other setting are not comparable
-            return false
+        
+    def showAttributes
+        overrides = @page.attribute_dictionary('SU2RAD_VIEW')
+        if overrides
+            printf "view '#{@name}' attributes:\n"
+            overrides.each_pair { |k,v| printf "  '%s' = '%s'\n" % [k,v] }
         end
     end
     
+    def showCamera(c)
+        unit = getConfig('UNIT')
+        printf "camera: #{c}\n"
+        printf " eye: %.3f  %.3f  %.3f\n" % [c.eye.x*unit, c.eye.y*unit, c.eye.z*unit]
+        printf " z-a: %.3f  %.3f  %.3f\n" % [c.zaxis.x, c.zaxis.y, c.zaxis.z]
+        printf "  up: %.3f  %.3f  %.3f\n" % [c.up.x, c.up.y, c.up.z]
+        printf " fov: %.3f\n" % c.fov
+    end
+    
+    def storeSettings(overrides={})
+        if not @page
+            return
+        end
+        begin
+            @page.delete_attribute('SU2RAD_VIEW')
+        rescue => e
+            uimessage("Error deleting attribute_dict 'SU2RAD_VIEW':\n%s\n\n%s\n" % [$!.message,e.backtrace.join("\n")],2)
+        end
+        if overrides == {}
+            overrides = {'vt'=>true, 'vo'=>true, 'va'=>true}
+        end
+        begin
+            d = _getSettingsDict()
+            d.each_pair { |k,v|
+                if overrides.has_key?(k)
+                    @page.set_attribute('SU2RAD_VIEW', k, v)
+                end
+            }
+        rescue => e
+            uimessage("Error setting attributes:\n%s\n\n%s\n" % [$!.message,e.backtrace.join("\n")],-2)
+            return false
+        end
+        if $SU2RAD_DEBUG
+            showAttributes()
+        end
+    end
+
     def _getFoVAngle(ang1, side1, side2)
         ang1_rad = ang1*Math::PI/180.0
         dist = side1 / (2.0*Math::tan(ang1_rad/2.0))
@@ -248,6 +361,43 @@ class SketchupView
         ang2 = (ang2_rad*180.0)/Math::PI
         return ang2
     end
+
+    def toJSON
+        json = toStringJSON(_getSettingsDict())
+        return json
+    end
+    
+    def update(dict, store=true)
+        overrides = {'vt'=>true, 'vo'=>true, 'va'=>true}
+        if dict.has_key?('vt')
+            if _setViewOption('vt', dict['vt']) == true
+                overrides['vt'] = true
+            end
+            dict.delete('vt')
+        end
+        dict.each_pair { |k,v|
+            begin
+                if (k == 'vp' || k == 'vd' || k == 'vu')
+                    if _setViewVector(k, v) == true 
+                        overrides[k] = true
+                    end
+                elsif (k == 'vv' || k == 'vh' || k == 'vo' || k == 'va')
+                    if _setFloatValue(k, v) == true 
+                        overrides[k] = true
+                    end
+                else
+                    _setViewOption(k, v)
+                end
+            rescue => e
+                uimessage("view '%s' update(key='%s',v='%s'):\n%s" % [@name,k,v,$!.message], -2)
+            end
+        }
+        applyToPage()
+        if store == true
+            storeSettings(overrides)
+        end
+    end
+    
 end
 
 
@@ -262,6 +412,28 @@ class SketchupViewsList
         initViews()
     end
 
+    def activateView(viewname)
+        if @_views.has_key?(viewname)
+            view = @_views[viewname]
+            view.activate()
+        else
+            uimessage("SketchupViewsList error: unknown view '%s'" % viewname, -2)
+            return false
+        end
+    end
+    
+    def applyViewSettings(dlg,p)
+        ## convert param to Ruby Hash object and update view
+        begin
+            vDict = eval(p)
+            updateView(vDict)
+        rescue => e 
+            uimessage("Error updateFromString(): %s\n\n%s\n" % [$!.message,e.backtrace.join("\n")], -2)
+            return false
+        end
+        dlg.execute_script("updateViewDetailsList()")
+    end
+ 
     def getViewLines
         lines = @_views.values.collect { |v| v.createViewFile() }
         return lines.join("\n")
@@ -288,6 +460,31 @@ class SketchupViewsList
                     @_views[view.name] = view
                 end
             }
+        end
+    end
+    
+    def removeViewOverride(dlg, params)
+        viewname, name = params.split('&')
+        if @_views.has_key?(viewname)
+            view = @_views[viewname]
+            begin
+                view.activate()
+                if view.removeOverride(name) == true
+                    json = "%s" % view.toJSON()
+                    dlg.execute_script("setViewJSON('%s','%s')" % [encodeJSON(viewname),encodeJSON(json)])
+                    uimessage("removed override '#{name}' from view '#{view.name}'", 2)
+                    return true
+                else
+                    return false
+                end
+            rescue => e
+                msg = "SketchupViewsList error:\n%s\n%s\n" % [$!.message, e.backtrace.join("\n")]
+                uimessage(msg,-2)
+                return false 
+            end
+        else
+            uimessage("SketchupViewsList error: unknown view '%s'" % viewname, -2)
+            return false
         end
     end
     
@@ -324,17 +521,6 @@ class SketchupViewsList
         }
     end
 
-    def updateFromString(d,p)
-        ## convert param to Ruby array and update view
-        begin
-            vDict = eval(p)
-            return updateView(vDict)
-        rescue => e 
-            uimessage("Error updateFromString(): %s\n\n%s\n" % [$!.message,e.backtrace.join("\n")], -2)
-            return false
-        end
-    end
- 
     def updateView(d)
         if not d.has_key?('name')
             uimessage("SketchupViewsList error: no 'name' for view", -2)
@@ -344,8 +530,9 @@ class SketchupViewsList
         if @_views.has_key?(viewname)
             view = @_views[viewname]
             begin
+                uimessage("updating view '#{view.name}'", 2)
                 view.update(d)
-                uimessage("updated view '#{view.name}'", 2)
+                view.activate()     ## updates display of view
                 return true
             rescue => e
                 msg = "SketchupViewsList error:\n%s\n%s\n" % [$!.message, e.backtrace.join("\n")]

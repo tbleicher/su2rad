@@ -235,7 +235,7 @@ class ExportBase
         else
             ref_text = references.join("\n")
             text = ref_text + "\n\n" + faces_text
-            filename = getFilename( File.join('objects', getNameContext()) )
+            filename = getFilename( File.join('objects', getNameContext()+".rad") )
             if not createFile(filename, text)
                 msg = "\n## ERROR: error creating file '%s'\n" % filename
                 uimessage(msg)
@@ -451,54 +451,13 @@ class ExportBase
             path = File.join(getConfig('SCENEPATH'),getConfig('SCENENAME'),"objects","")
         end 
         filename.sub!(path, '')
-        suffix = filename[filename.length-4,4].downcase()
         objname = @@nameContext[-1]
         if makeGlobal?()
             xform = "!xform -n #{objname} #{filename}"
         else
-            #TODO: mirror 
-            mirror = ""
-            
-            ## scale is calculated by replmarks
-            ## we just check for extrem values
-            a = trans.to_a
-            scale = Geom::Vector3d.new(a[0..2])
-            if scale.length > 10000 or scale.length < 0.0001
-                uimessage("Warning unusual scale (%.3f) for object '%s'" % [scale.length, objname]) 
-            end
-            
-            ## transformation
-            scaletrans = Geom::Transformation.new(1/getConfig('UNIT'))
-            trans = trans * scaletrans
-            a = trans.to_a
-            o = a[12..14]
-            vx = [o[0]+a[0], o[1]+a[1], o[2]+a[2]]
-            vy = [o[0]+a[4]*0.5, o[1]+a[5]*0.5, o[2]+a[6]*0.5]
-            marker = "replaceme polygon #{objname}\n0\n0\n9\n"
-            marker += "%.6f %.6f %.6f\n" % o
-            marker += "%.6f %.6f %.6f\n" % vx 
-            marker += "%.6f %.6f %.6f\n" % vy
-            
-            if suffix == '.oct'
-                cmd = "echo '#{marker}' | replmarks -s 1.0 -i #{filename} replaceme"
-            elsif suffix == '.msh'
-                cmd = "echo '#{marker}' | replmarks -s 1.0 -I #{filename} replaceme"
-            else
-                cmd = "echo '#{marker}' | replmarks -s 1.0 -x #{filename} replaceme"
-            end
-            f = IO.popen(cmd)
-            lines = f.readlines
-            f.close()
-            begin
-                xform = lines[2].strip()
-                parts = xform.split()
-                p1 = parts[0..2]
-                p2 = parts[3..30]
-                xform = p1.join(" ") + " #{mirror} " + p2.join(" ")
-            rescue
-                msg = "ERROR: could not generate '!xform' command for file '#{filename}'"
-                uimessage("%s\n" % msg)
-                xform = "## %s" % msg
+            xform = xformFromReplmarks(trans, filename, objname, getConfig('UNIT')) 
+            if xform =~ /error/i
+                uimessage("%s\n" % xform)
             end
         end
         return xform
@@ -508,7 +467,7 @@ class ExportBase
         if pattern == "" or pattern == nil
             pattern = "group"
         end
-        pattern = remove_spaces(pattern)
+        pattern = getRadianceIdentifier(pattern)
         if not @@uniqueFileNames.has_key?(pattern)
             @@uniqueFileNames[pattern] = nil
             return pattern
@@ -524,22 +483,6 @@ class ExportBase
             @@uniqueFileNames[newname] = nil
             return newname
         end
-    end
-    
-    def isRadianceTransform(trans)
-        ## test if trans can be created with xform (uniform scale only)
-        a = trans.to_a
-        vx = Geom::Vector3d.new(a[0..2])
-        vy = Geom::Vector3d.new(a[4..6])
-        vz = Geom::Vector3d.new(a[8..10])
-        lengths = [vx.length, vy.length, vz.length]
-        sorted = lengths.sort
-        diff = sorted[2] - sorted[0]
-        if diff > 0.01
-            uimessage("  scale not uniform: sx=%.2f sy=%.2f sz=%.2f\n" % lengths)
-            return false
-        end
-        return true
     end
     
     def showTransformation(trans)
