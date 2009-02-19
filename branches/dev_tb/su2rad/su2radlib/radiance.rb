@@ -388,10 +388,54 @@ module Radiance
             lines.compact!
             return lines
         end
-
-
+        
     end
  
+
+    class Radiance::RifFile
+
+        attr_reader :settings, :filename
+            
+        def initialize(path='')
+            @filename = ''
+            @_isValid = true
+            @settings = getDefaults()
+            if path != ''
+                readFile(path)
+            end
+        end
+
+        def isValid?
+            ## return true if file is a correct rif file
+            return false
+        end
+        
+        def getDefaults
+            d = Hash.new()
+            d["Quality"] = 'medium'
+            d["Detail"] = 'medium'
+            d["Variability"] = 'high'
+            d["Indirect"] = 2
+            d["Penumbras"] = true
+            d["ImageType"] = 'normal'
+            d["ImageSizeX"] = 512
+            d["ImageSizeY"] = 512
+            d["ZoneSize"] = 10.0
+            d["ZoneType"] = 'exterior'
+            d["Report"] = 0
+            d["ReportFile"] = getConfig('SCENENAME') + '.log'
+            d["render"] = '' 
+            return d
+        end
+        
+        def readFile(path)
+            @_isValid = false
+            printf "TODO: RifFile.parseFile('%s')\n" % path
+            #@_isValid = true
+            @filename = path
+        end
+    end
+    
 end
 
 

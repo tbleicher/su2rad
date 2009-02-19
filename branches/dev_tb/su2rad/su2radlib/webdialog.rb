@@ -44,6 +44,10 @@ class ExportDialogWeb < ExportBase
     
     def show(title="su2rad export")
         ## create and show WebDialog
+        if $SU2RAD_DIALOG_WINDOW
+            $SU2RAD_DIALOG_WINDOW.bring_to_front()
+            return
+        end
         dlg = UI::WebDialog.new(title, true, nil, 650, 800, 50, 50, true);
         #dlg.set_background_color("0000ff")
             
@@ -51,6 +55,7 @@ class ExportDialogWeb < ExportBase
         dlg.add_action_callback("onCancel") { |d,p|
             uimessage("closing dialog ...")
             d.close();
+            $SU2RAD_DIALOG_WINDOW = nil
         }
         dlg.add_action_callback("onExport") {|d,p|
             startExport(d,p)
@@ -95,6 +100,9 @@ class ExportDialogWeb < ExportBase
         dlg.add_action_callback("setViewsList") { |d,p|
             @viewsList.setViewsList(d,p)
         }
+        dlg.add_action_callback("activateView") { |d,p|
+            @viewsList.activateView(p)
+        }
         
         ## materials
         dlg.add_action_callback("setMaterialAlias") { |d,p|
@@ -107,6 +115,7 @@ class ExportDialogWeb < ExportBase
         ## final actions
         dlg.set_on_close {
             uimessage("TODO: webdialog closed", 1)
+            $SU2RAD_DIALOG_WINDOW = nil
         }
         
         ## set contents
@@ -114,6 +123,7 @@ class ExportDialogWeb < ExportBase
         dlg.set_file(html, nil)
         
         ## show dialog
+        $SU2RAD_DIALOG_WINDOW = dlg
         dlg.show {
             uimessage("setSketchup()", 2)
             dlg.execute_script("setSketchup()")

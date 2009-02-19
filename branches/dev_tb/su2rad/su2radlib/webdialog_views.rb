@@ -23,6 +23,7 @@ class SketchupView
         if current == true
             @selected = true
         end
+        @updatePageView = false
         @vt = "v"
         @vp = [0,0,1]
         @vd = [0,1,0]
@@ -33,13 +34,17 @@ class SketchupView
         @vh = 60.0
     end
 
-    def activate
-        ## necessary to update view
-        if @page
+    def activate(force=false)
+        ## update screen view
+        if not @page
+            return
+        end
+        if force || @updatePageView
             old_t = @page.transition_time
             @page.transition_time = 0.1
             Sketchup.active_model.pages.selected_page = @page
             @page.transition_time = old_t
+            @updatePageView = false
         end
     end
     
@@ -186,6 +191,8 @@ class SketchupView
                 uimessage("Error deleting override '%s' from attribute_dict 'SU2RAD_VIEW':\n%s\n\n%s\n" % [name, $!.message,e.backtrace.join("\n")],2)
                 return false
             end
+        else
+            return true
         end
     end
     
@@ -195,6 +202,9 @@ class SketchupView
             if oldValue != v
                 eval("@%s = %s" % [k,v])
                 uimessage("view '%s': new value for '%s' = '%s'" % [@name,k,v], 1)
+                if k == 'vv' || k == 'vh'
+                    @updatePageView = true
+                end
             end
             return true
         rescue
@@ -219,6 +229,9 @@ class SketchupView
             }
             if dict.has_key?('name')
                 dict.delete('name')
+            end
+            if @current
+                dict['selected'] = true
             end
             update(dict, false)
             @pageChanged = false #XXX
@@ -249,8 +262,9 @@ class SketchupView
         end
         oldVect = "[%.3f,%.3f,%.3f]" % eval("@%s" % k)
         if oldVect != vect
-            uimessage("view '%s': new value for '%s' = '%s'" % [@name,k,vect], 1)
             eval("@%s = %s" % [k,vect])
+            uimessage("view '%s': new value for '%s' = '%s'" % [@name,k,vect], 1)
+            @updatePageView = true
         end
         return true
     end
@@ -265,6 +279,9 @@ class SketchupView
         oldValue = eval("@%s" % k)
         if v != oldValue
             uimessage("view '%s': new value for '%s' = '%s'" % [@name,k,v], 1)
+            if k == 'vt'
+                @updatePageView = true
+            end
             if (v == 'true' || v == 'false')
                 eval("@%s = %s" % [k,v])
             elsif (v.class == TrueClass || v.class == FalseClass)
@@ -336,13 +353,17 @@ class SketchupView
             uimessage("Error deleting attribute_dict 'SU2RAD_VIEW':\n%s\n\n%s\n" % [$!.message,e.backtrace.join("\n")],2)
         end
         if overrides == {}
-            overrides = {'vt'=>true, 'vo'=>true, 'va'=>true}
+            overrides = {'selected'=>true,'vt'=>true, 'vo'=>true, 'va'=>true}
         end
         begin
             d = _getSettingsDict()
             d.each_pair { |k,v|
+                printf "#{@name} _settingsDict '#{k}' "
                 if overrides.has_key?(k)
+                    printf "set_attribute '#{v}'\n"
                     @page.set_attribute('SU2RAD_VIEW', k, v)
+                else 
+                    printf "\n"
                 end
             }
         rescue => e
@@ -376,6 +397,7 @@ class SketchupView
             dict.delete('vt')
         end
         dict.each_pair { |k,v|
+            printf "DEBUG view.update (#{@name})   '#{k}' : '#{v}'\n"
             begin
                 if (k == 'vp' || k == 'vd' || k == 'vu')
                     if _setViewVector(k, v) == true 
@@ -394,6 +416,7 @@ class SketchupView
         }
         applyToPage()
         if store == true
+            overrides['selected'] = @selected
             storeSettings(overrides)
         end
     end
@@ -415,7 +438,7 @@ class SketchupViewsList
     def activateView(viewname)
         if @_views.has_key?(viewname)
             view = @_views[viewname]
-            view.activate()
+            view.activate(true)
         else
             uimessage("SketchupViewsList error: unknown view '%s'" % viewname, -2)
             return false
@@ -464,17 +487,19 @@ class SketchupViewsList
     end
     
     def removeViewOverride(dlg, params)
+        printf "removeViewOverride\n"
         viewname, name = params.split('&')
         if @_views.has_key?(viewname)
             view = @_views[viewname]
             begin
-                view.activate()
+                view.activate(true)
                 if view.removeOverride(name) == true
                     json = "%s" % view.toJSON()
                     dlg.execute_script("setViewJSON('%s','%s')" % [encodeJSON(viewname),encodeJSON(json)])
                     uimessage("removed override '#{name}' from view '#{view.name}'", 2)
                     return true
                 else
+                    printf "removeViewOverride #{name} == false!\n"
                     return false
                 end
             rescue => e
@@ -531,8 +556,9 @@ class SketchupViewsList
             view = @_views[viewname]
             begin
                 uimessage("updating view '#{view.name}'", 2)
+                old_selected = view.selected
                 view.update(d)
-                view.activate()     ## updates display of view
+                view.activate()
                 return true
             rescue => e
                 msg = "SketchupViewsList error:\n%s\n%s\n" % [$!.message, e.backtrace.join("\n")]
