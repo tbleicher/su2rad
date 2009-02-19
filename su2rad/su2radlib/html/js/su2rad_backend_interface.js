@@ -127,7 +127,7 @@ function encodeJSON(json) {
 }
 
 function setViewJSON(name,text) {
-    log.error("DEBUG: setViewJSON: '" + name + "'<br/>" + text);
+    //log.error("DEBUG: setViewJSON: '" + name + "'<br/>" + text);
     var viewname = decodeJSON(name);
     var json = decodeJSON(text);
     var obj = {};
@@ -171,7 +171,7 @@ function getViewsList() {
 }
 
 function applyViewSettings(viewname) {
-    log.debug('applyViewSettings(' + viewname + ')');
+    //log.debug('applyViewSettings(' + viewname + ')');
     try {
         var view = viewsList[viewname];
     } catch(e) {
@@ -190,6 +190,7 @@ function applyViewSettings(viewname) {
 }
 
 function removeViewOverride(viewname, override) {
+    //log.debug("removeViewOverride('" + viewname + "','" + override + "')");
     var param = encodeURI(viewname) + "&" + encodeURI(override);
     if (SKETCHUP == true) {
         window.location = 'skp:removeViewOverride@' + param;

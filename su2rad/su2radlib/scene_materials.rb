@@ -83,13 +83,16 @@ class MaterialLists < ExportBase
         skmname, radname, mtype = param.split("&")
         uimessage("setting alias for %s '%s' to material '%s'" % [mtype,skmname,radname], 0)
         dictName = "SU2RAD_ALIAS_%s" % mtype.upcase()
-        printf "dictName=%s\n"  % dictName
+        printf "DEBUG dictName=%s\n"  % dictName
         Sketchup.active_model.set_attribute(dictName, skmname, radname)
     end
     
     def removeMaterialAlias(dlg, param)
         skmname, mtype = param.split("&")
         dictName = "SU2RAD_ALIAS_%s" % mtype.upcase()
+        if dictName != 'SU2RAD_ALIAS_SKM' && dictName != 'SU2RAD_ALIAS_LAYER'
+            printf "\nWARNING ALIAS dictName='#{dictName}'\n"
+        end
         radname = Sketchup.active_model.get_attribute(dictName, skmname)
         if radname
             attrDict = Sketchup.active_model.attribute_dictionary(dictName)

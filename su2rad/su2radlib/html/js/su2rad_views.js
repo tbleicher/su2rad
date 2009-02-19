@@ -547,7 +547,13 @@ ViewsListObject.prototype.toString = function (selection_only) {
 
 
 
-
+function onActivateView(viewname) {
+    if (SKETCHUP == true) {
+        window.location = 'skp:activateView@' + encodeJSON(viewname);
+    } else {
+        log.debug("dummy backend: no action for activateView(" + viewname + ")"); 
+    }
+}
 
 function deselectAllViews() {
     selectAllViews(false); 
@@ -661,6 +667,8 @@ function onViewVectorOptionChange(viewname, opt) {
 function showViewDetails(viewname) {
     viewsList[viewname].show_details = true;
     updateViewDetailsList();
+    log.debug("DEBUG: activateView('" + viewname + "')");
+    onActivateView(viewname);
 }
 
 function updateViewDetailsList() {
@@ -697,14 +705,15 @@ function _getViewSummaryDiv(view) {
     var text = '<div class="gridCell">';
     text += '<input id="' + view.getElementId('cb') + '"' 
     text += 'type="checkbox" onClick="onViewSelectionChange(\'' + view.name + '\')"'
-    if (view.selected == true || view.current == true) {
+    if (view.selected == true) {
         text += ' checked'
     }
-    text += '/> <a title="' + view.getToolTip() + '">'
+    text += "/> <a title=\"" + view.getToolTip() + "\" "
+    text += "onClick=\"onActivateView('" + view.name + "')\" >"
     if (view.current == true) {
-        text += '<i>' + view.name + '</i></a></div>';
+        text += "<i>" + view.name + "</i></a></div>";
     } else {
-        text += view.name + '</a></div>';
+        text += view.name + "</a></div>";
     }
     return text;
 }
