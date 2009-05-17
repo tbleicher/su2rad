@@ -188,8 +188,8 @@ div.fileinputs {
     height: 20px;
     margin: 0;
 }
-div.fakefile {
-    position: absolute;
+img.fileSelectorIcon {
+    position: relative;
     top: -2px;
     height: 20px;
     left: 3px;
