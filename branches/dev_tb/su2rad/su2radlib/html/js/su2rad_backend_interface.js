@@ -266,6 +266,3 @@ function setMaterialsListJSON(text, type) {
 
 
 
-
-
-

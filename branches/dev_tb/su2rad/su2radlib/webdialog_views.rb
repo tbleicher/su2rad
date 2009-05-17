@@ -49,7 +49,6 @@ class SketchupView
     end
     
     def applyToPage
-        printf "TEST: applyToPage('#{@name}')\n"
         begin
             if @page
                 camera = @page.camera
@@ -116,7 +115,6 @@ class SketchupView
     
     def fitFoV(camera)
         ## calculate page camera fov to fit view
-        printf "DEBUG: fitFoV\n"
         ## set flag to avoid export of modified fov 
         @_fitted = true
         imgW = Sketchup.active_model.active_view.vpwidth.to_f
@@ -142,11 +140,6 @@ class SketchupView
                 camera.fov = @vh
             end
         end
-    end
-    
-    def getOptions
-        printf "\nERROR: use of view.getOptions!\n\n"
-        return getViewLine()
     end
     
     def _getSettingsDict
@@ -319,11 +312,13 @@ class SketchupView
     end
     
     def show
-        printf "view: '#{@name}'  type=#{@vt}\n"
-        printf "  vp: %.3f  %.3f  %.3f\n" % @vp
-        printf "  vd: %.3f  %.3f  %.3f\n" % @vd
-        printf "  vu: %.3f  %.3f  %.3f\n" % @vu
-        printf "  vv: %.3f   vh:  %.3f\n" % [@vv, @vh]
+        s =  "view: '#{@name}'  type=#{@vt}\n"
+        s += "  vp: %.3f  %.3f  %.3f\n" % @vp
+        s += "  vd: %.3f  %.3f  %.3f\n" % @vd
+        s += "  vu: %.3f  %.3f  %.3f\n" % @vu
+        s += "  vv: %.3f   vh:  %.3f\n" % [@vv, @vh]
+        s += "  vo: %.3f   va:  %.3f\n" % [@vo, @va]
+        printf s    ## show()
     end
         
     def showAttributes
@@ -336,11 +331,12 @@ class SketchupView
     
     def showCamera(c)
         unit = getConfig('UNIT')
-        printf "camera: #{c}\n"
-        printf " eye: %.3f  %.3f  %.3f\n" % [c.eye.x*unit, c.eye.y*unit, c.eye.z*unit]
-        printf " z-a: %.3f  %.3f  %.3f\n" % [c.zaxis.x, c.zaxis.y, c.zaxis.z]
-        printf "  up: %.3f  %.3f  %.3f\n" % [c.up.x, c.up.y, c.up.z]
-        printf " fov: %.3f\n" % c.fov
+        s =  "camera: #{c}\n"
+        s += "   eye: %.3f  %.3f  %.3f\n" % [c.eye.x*unit, c.eye.y*unit, c.eye.z*unit]
+        s += "   z-a: %.3f  %.3f  %.3f\n" % [c.zaxis.x, c.zaxis.y, c.zaxis.z]
+        s += "    up: %.3f  %.3f  %.3f\n" % [c.up.x, c.up.y, c.up.z]
+        s += "   fov: %.3f\n" % c.fov
+        printf s    ## showCamera()
     end
     
     def storeSettings(overrides={})
@@ -358,12 +354,8 @@ class SketchupView
         begin
             d = _getSettingsDict()
             d.each_pair { |k,v|
-                printf "#{@name} _settingsDict '#{k}' "
                 if overrides.has_key?(k)
-                    printf "set_attribute '#{v}'\n"
                     @page.set_attribute('SU2RAD_VIEW', k, v)
-                else 
-                    printf "\n"
                 end
             }
         rescue => e
@@ -397,7 +389,6 @@ class SketchupView
             dict.delete('vt')
         end
         dict.each_pair { |k,v|
-            printf "DEBUG view.update (#{@name})   '#{k}' : '#{v}'\n"
             begin
                 if (k == 'vp' || k == 'vd' || k == 'vu')
                     if _setViewVector(k, v) == true 
@@ -487,7 +478,6 @@ class SketchupViewsList
     end
     
     def removeViewOverride(dlg, params)
-        printf "removeViewOverride\n"
         viewname, name = params.split('&')
         if @_views.has_key?(viewname)
             view = @_views[viewname]
@@ -499,7 +489,6 @@ class SketchupViewsList
                     uimessage("removed override '#{name}' from view '#{view.name}'", 2)
                     return true
                 else
-                    printf "removeViewOverride #{name} == false!\n"
                     return false
                 end
             rescue => e

@@ -15,27 +15,34 @@ var _currentStatusDiv = "status_tab-export"
 
 var map, marker, lastPoint;
 
-
+function logError(e) {
+    log.error(e.toString())
+    log.error("e.name " + e.name)
+    log.error("e.message " + e.message)
+    log.error("e.fileName " + e.fileName)
+    log.error("e.lineNumber " + e.lineNumber)
+}
 
 // object instances
 try {
-var exportSettings = new ExportSettingsObject();
-var skyOptions = new SkyOptionsObject(); // required by ModelLocationObject
-var skyDateTime = new SkyDateTimeObject();
-var modelLocation = new ModelLocationObject();
-var radOpts = new RadOptsObject();
-var viewsList = new ViewsListObject();
+    var exportSettings = new ExportSettingsObject();
+    var skyOptions = new SkyOptionsObject(); // required by ModelLocationObject
+    var skyDateTime = new SkyDateTimeObject();
+    var modelLocation = new ModelLocationObject();
+    var radOpts = new RadOptsObject();
+    var viewsList = new ViewsListObject();
 } catch (e) {
-    log.error(e.message)
+    logError(e)
 }
 
 function initPage() {
     //log.toggle();
     //window.resizeTo(640,800);
+    
     // hide file selectors if FF3
-    if (navigator.userAgent.indexOf('Firefox/3') != -1) {
-        document.getElementById("sceneFileSelection").style.display='none';
-    }
+    //if (navigator.userAgent.indexOf('Firefox/3') != -1) {
+    //    document.getElementById("sceneFileSelection").style.display='none';
+    //}
 }
 
 function loadTestData() {
@@ -94,14 +101,6 @@ function setStatusMsg (msg) {
     document.getElementById(_currentStatusDiv).innerHTML = msg;
 }
 
-function logError(e) {
-    log.error(e.toString())
-    log.error("e.name " + e.name)
-    log.error("e.message " + e.message)
-    log.error("e.fileName " + e.fileName)
-    log.error("e.lineNumber " + e.lineNumber)
-}
-
 function showProgressWindow() {
     try {
         $('#progressWindow').jqmShow();
@@ -114,11 +113,7 @@ function hideProgressWindow() {
     try {
         $('#progressWindow').jqmHide();
     } catch (e) {
-        log.error(e.toString())
-        log.error("e.name " + e.name)
-        log.error("e.message " + e.message)
-        log.error("e.fileName " + e.fileName)
-        log.error("e.lineNumber " + e.lineNumber)
+        logError(e)
     }
 }
 
@@ -129,7 +124,7 @@ function onExportButton() {
             log.info("starting export ...")
             window.location = 'skp:onExport@';
         } catch (e) {
-            log.error(e.toString())
+            logError(e)
             alert(e.toString())
         }
     } else {
@@ -181,24 +176,24 @@ function splitPath(val) {
     val = val.replace(/\\/g, "/");   
     val=encodeURI(val);
     var reversedsrc=reverseData(val);
-    text += "reversedsrc: " + reversedsrc + "<br/>";
     setStatusMsg(text);
     var nameEnd=reversedsrc.indexOf(PATHSEP);
     var name=reversedsrc.substring(0,nameEnd);
-    text += "name rev: '" + name + "'<br/>";
     name=reverseData(name);
-    text += "name esc: '" + name + "'<br/>";
     name=decodeURI(name);
     text += "name: '" + name + "'<br/>";
     setStatusMsg(text);
     var path=reversedsrc.substring(nameEnd, reversedsrc.length);
-    text += "path rev: '" + path + "'<br/>";
     path=reverseData(path);
-    text += "path esc: '" + path + "'<br/>";
     path=decodeURI(path);
     text += "path: '" + path + "'<br/>";
     setStatusMsg(text);
     return [path,name];
+    //text += "reversedsrc: " + reversedsrc + "<br/>";
+    //text += "name rev: '" + name + "'<br/>";
+    //text += "name esc: '" + name + "'<br/>";
+    //text += "path rev: '" + path + "'<br/>";
+    //text += "path esc: '" + path + "'<br/>";
 }
 
 function setValue(id, val) {
@@ -361,5 +356,4 @@ function updateFieldsPage() {
 function updateClimatePage() {
     log.debug("updating 'Climate' page ...");
 }
-
 

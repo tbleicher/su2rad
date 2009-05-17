@@ -17,14 +17,28 @@ ExportSettingsObject.prototype._setBool = function(name,value) {
 }
 
 ExportSettingsObject.prototype.setExportPath = function(path) {
+    // extract project path and scene name from <path>
+    // path = base directory for export
+    // name = scene name with out '.rif' extension
     var pf = splitPath(path);
     this.scenePath = pf[0];
-    if (pf[1].match(/.rif$/i)) {
+    
+    if (pf[1].match(/\.rif$/i)) {               // log.debug("2 match for '*.rif'");
         this.sceneName = pf[1].slice(0,-4);
-    } else {
+        
+    } else if (pf[1].match(/\.skp$/i)) {        // log.debug("2 match for '*.skp'");
+        // add directory to path? 
+        this.scenePath += pf[1].slice(0,-4);
+        // sceneName unchanged
+        
+    } else if (pf[1].match(/\.[a-z]{3}$/i)) {   // log.debug("2 match for any extension");
+        this.sceneName = pf[1].slice(0,-4) ;
+    
+    } else {                                    // log.debug("2 no match");
         this.sceneName = pf[1];
     }
 } 
+
 
 ExportSettingsObject.prototype.setMode = function(val) {
     var value = val.replace(/_/g," ");
@@ -102,8 +116,12 @@ function _setGlobalCoordsDisplay(val) {
     }
 }
 
-function setExportPath() {
-    exportSettings.setExportPath(_getExportPath());
+function setExportPath(path) {
+    if (path == null) {
+        path = _getExportPath()
+    }
+    log.debug("new path: '" + path + "'");
+    exportSettings.setExportPath(path);
     updateExportFormValues();
     applyExportOptions();
 }

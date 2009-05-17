@@ -4,8 +4,10 @@ require 'exportbase.rb'
 require 'radiance.rb'
 require 'radiance_entities.rb'
 require 'radiancescene.rb'
+require 'filesystemproxy.rb'
 #require 'webdialog_options.rb'
 #require 'webdialog_views.rb'
+
 
 
 class ExportDialogWeb < ExportBase
@@ -24,7 +26,7 @@ class ExportDialogWeb < ExportBase
     end
 
     def applyExportOptions(dlg, params='')
-        @exportOptions.applyExportOptions(dlg,params)
+        exportOptions.applyExportOptions(dlg,params)
         ## allow load of existing rif files
         filepath = File.join(@exportOptions.scenePath,@exportOptions.sceneName)
         if File.exists?(filepath) && (@renderOptions.loaded?(filepath) == false)
@@ -32,6 +34,18 @@ class ExportDialogWeb < ExportBase
         end
     end
 
+    def getDirectoryListing(dlg, dirpath)
+        dirpath,root = dirpath.split('&')
+        puts "DEBUG: listDirectory(#{dirpath}, #{root})"
+        if root == 'true'
+            dirs = FileSystemProxy.listDirectoryTree(dirpath)
+        else
+            dirs = FileSystemProxy.listDirectory(dirpath)
+        end
+        json = toStringJSON(dirs)
+        dlg.execute_script( "fileSelector.setFileTreeJSON('%s', '%s')" % [encodeJSON(json),root])
+    end
+    
     def loadTextFile(dlg, filepath)
         text = ''
         if File.exists?(filepath)
@@ -63,6 +77,10 @@ class ExportDialogWeb < ExportBase
         
         dlg.add_action_callback("loadTextFile") {|d,p|
             loadTextFile(d,p);
+        }
+        
+        dlg.add_action_callback("getDirectoryListing") {|d,p|
+            getDirectoryListing(d,p);
         }
         
         ## update of ...Options objects
