@@ -26,7 +26,7 @@ class ExportDialogWeb < ExportBase
     end
 
     def applyExportOptions(dlg, params='')
-        exportOptions.applyExportOptions(dlg,params)
+        @exportOptions.applyExportOptions(dlg,params)
         ## allow load of existing rif files
         filepath = File.join(@exportOptions.scenePath,@exportOptions.sceneName)
         if File.exists?(filepath) && (@renderOptions.loaded?(filepath) == false)
