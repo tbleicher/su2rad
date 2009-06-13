@@ -1,9 +1,12 @@
 # Sketchup To Radiance Exporter
 #
-# su2rad.rb - version 0.0d
-#
+# su2rad.rb 
+
+$SU2RAD_VERSION = "dev_tb"
+
 # Written by Thomas Bleicher
-# based on ogre_export by Kojack
+#
+# tbleicher@gmail.com
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU Lesser General Public License
@@ -23,6 +26,17 @@
 
 
 # revisions:
+# ===========
+#
+# branch 1.0:
+# -----------
+# v 1.0alpha - 18/01/09  :  pre-releas for feedback (including Windows)
+#                           new interface pages for views and materials
+# Xmas_special_2008      :  pre-releas for feedback (Mac only)
+#                           all new webdialog JavaScript interface
+#
+# branch 0.0:
+# -----------
 # v 0.0d - tbc       :  fixed bug in cleaning of colour names
 #                         (thanks to Rob Guglielmetti for reporting)
 #                       fixed export of hidden layers in components
@@ -38,61 +52,12 @@
 # v 0.0  - 28/10/07  :  initial release
 
 
-$su2rad_acknowledgement = <<-ACK_END
-
-ACKNOWLEDGEMENT
-
-This software distributes and makes use of the following
-software and material written and created by others and
-published under a free license.
-
-* Radiance by Greg Ward and others at LBNL 
-    Copyright (c) 1990 - 2002 The Regents of the University of California,
-    through Lawrence Berkeley National Laboratory. All rights reserved.
-    see LICENSE.Radiance for details
-
-- Windows binaries made available by Francesco Anselmo
-    see http://www.bozzograo.net/radiance/
-    
-* ImageMagick by ImageMagick Studio LLC
-    see http://www.imagemagick.org
-    and LICENSE.ImageMagick for details
-
-* jQuery 1.2.6 
-    Copyright (c) 2008 John Resig (jquery.com)
-    see http://jquery.com for contributors and licensing
-
-- jQuery.tabs and jQuery.history by Klaus Hartl
-    Copyright (c) 2006 Klaus Hartl (stilbuero.de)
-    see http://stilbuero.de/tabs/ for licensing details
-
-- jQuery.alphanumeric by Paulo P. Marinas
-    sponsored by IT Group, Inc.
-    see http://itgroup.com.ph/alphanumeric
-
-- jqModal by Brice Brugess
-    Copyright (c) 2007,2008 Brice Burgess <bhb@iceburg.net>
-    see http://dev.iceburg.net/jquery/jqModal/ for licensing details
-
-* blackbirdjs - by G Scott Olson
-    The MIT License - Copyright (c) 2008 Blackbird Project
-    see http://www.gscottolson.com/blackbirdjs/
-          
-* jsr_class.js by Jason Levitt
-
-* Sweety icon set by Joseph North
-    see http://sweetie.sublink.ca
-
-ACK_END
-
-
-
-
 
 if PLATFORM =~ /darwin/
-    $OS = 'MAC'
+    ##TODO add option for PPC
+    $SU2RAD_PLATFORM = 'MAC'
 else
-    $OS = 'WIN'
+    $SU2RAD_PLATFORM = 'WIN'
 end
 
 ## extend search path to subdirectories
@@ -101,10 +66,8 @@ $:.push(File.join(basedir, 'su2radlib'))
 #$:.push(File.join(basedir, 'su2radlib', 'rubylib'))
 
 require "sketchup.rb"
-#require "su2radlib/preferences.rb"
 require "su2radlib/exportbase.rb"
 require "su2radlib/context.rb"
-#require "su2radlib/interface.rb"
 require "su2radlib/numeric.rb"
 require "su2radlib/material.rb"
 require "su2radlib/radiance_entities.rb"
@@ -112,30 +75,9 @@ require "su2radlib/radiancescene.rb"
 require "su2radlib/webdialog.rb"
 require "su2radlib/config_class.rb"
 
-$RADPRIMITIVES = {  "plastic"    => 1,
-                    "glass"      => 1,
-                    "trans"      => 1, "trans2" => 1,
-                    "metal"      => 1, "metal2" => 1,
-                    "glow"       => 1,
-                    "light"      => 1,
-                    "source"     => 1,
-                    "mirror"     => 1,
-                    "dielectric" => 1, "dielectric2" => 1,
-                    "void"       => 1}
-
-$testdir = ""
 
 ## define defaults if config file is messed up
-$BUILD_MATERIAL_LIB = false
-$EXPORTALLVIEWS     = false 
-$SU2RAD_LOGLEVEL    = 2        ## report warnings and errors only
-$SHOWRADOPTS        = true
-$SUPPORTDIR         = '/Library/Application Support/Google Sketchup 6/Sketchup'
-$MATERIALLIB        = '/usr/local/lib/ray/lib/material.rad'
-$ZOFFSET            = nil     
-
-$CONFIRM_REPLACE    = true
-
+$SU2RAD_LOGLEVEL    = -1        #XXX report warnings and errors only
 
 ## load configuration from file
 #loadPreferences()
@@ -144,7 +86,6 @@ $CONFIRM_REPLACE    = true
 def startExport(selected_only=0)
     begin
         $SU2RAD_CONFIG = RunTimeConfig.new()
-        #$MatLib = MaterialLibrary.new()
         $SU2RAD_COUNTER = ProgressCounter.new()
         rs = RadianceScene.new()
         rs.startExport(selected_only)
@@ -157,11 +98,14 @@ end
 
 def startWebExport(selected_only=0)
     begin
-        $SU2RAD_CONFIG = RunTimeConfig.new()
-        #$MatLib = MaterialLibrary.new()
-        $SU2RAD_COUNTER = ProgressCounter.new()
-        edw = ExportDialogWeb.new()
-        edw.show()
+        if $SU2RAD_DIALOG_WINDOW
+            $SU2RAD_DIALOG_WINDOW.bring_to_front()
+        else 
+            $SU2RAD_CONFIG = RunTimeConfig.new()
+            $SU2RAD_COUNTER = ProgressCounter.new()
+            edw = ExportDialogWeb.new()
+            edw.show()
+        end
     rescue => e 
         msg = "%s\n\n%s" % [$!.message,e.backtrace.join("\n")]
         UI.messagebox msg            
@@ -203,13 +147,16 @@ def startImport(f='')
 end
 
 def aboutDialog
-    msg = "su2rad.rb\nSketchUp to Radiance exporter\nversion:  Xmas special 2008"
+    msg = "su2rad.rb\nSketchUp to Radiance exporter\nversion:  #{$SU2RAD_VERSION}"
     msg += "\n(c) Thomas Bleicher, 2008\ntbleicher@gmail.com"
     UI.messagebox(msg, MB_OK, 'su2rad.rb')
 end
 
 def acknowledgementDialog
-    UI.messagebox($su2rad_acknowledgement, MB_MULTILINE, 'Acknowledgement')
+    dlg = UI::WebDialog.new("su2rad - acknowledgement", true, nil, 650, 800, 50, 50, true);
+    html = File.join(File.dirname(__FILE__), "su2radlib", "html","acknowledgement.html")
+    dlg.set_file(html, nil)
+    dlg.show()
 end
     
 def preferencesDialog
@@ -226,11 +173,10 @@ end
 def su2rad_reload
     ## reload all script files for debugging
     printf "reloading modules ...\n"
-    # load "su2radlib/preferences.rb"
     load "su2radlib/export_modules.rb"
     load "su2radlib/exportbase.rb"
+    load "su2radlib/filesystemproxy.rb"
     load "su2radlib/context.rb"
-    # load "su2radlib/interface.rb"
     load "su2radlib/numeric.rb"
     load "su2radlib/material.rb"
     load "su2radlib/radiance.rb"
@@ -250,7 +196,7 @@ end
 def addRadianceMenu
     pmenu = UI.menu("Plugin")
     radmenu = pmenu.add_submenu("Radiance")
-    radmenu.add_item("export (test)") { startWebExport(0) }
+    radmenu.add_item("export (#{$SU2RAD_VERSION})") { startWebExport(0) }
     radmenu.add_separator()
     #radmenu.add_item("export scene") { startExport(0) }
     #radmenu.add_item("export selection") { startExport(1) }

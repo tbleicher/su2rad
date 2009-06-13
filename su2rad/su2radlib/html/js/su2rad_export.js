@@ -139,6 +139,7 @@ function _getExportPath() {
 }
 
 function onSelectExportPath() {
+    //XXX unused
     if (navigator.userAgent.indexOf('Firefox/3') != -1) {
         // FireFox 3 does not provide full path
         log.error('Firefox 3 can not be used to set export path. Sorry');
@@ -153,6 +154,9 @@ function onSelectExportPath() {
     updateExportFormValues();
     applyExportOptions();
 }
+
+
+
 
 function onLoadSceneFile() {
     // open scene file

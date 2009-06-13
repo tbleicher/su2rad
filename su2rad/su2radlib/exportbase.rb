@@ -210,7 +210,7 @@ class ExportBase
         faces.each_index { |i|
             f = faces[i]
             rp = RadiancePolygon.new(f)
-            if rp.isNumeric
+            if rp.isNumeric?
                 numpoints += rp.getNumericPoints()
             elsif makeGlobal?()
                 faces_text += rp.getText(parenttrans)

@@ -524,7 +524,7 @@ class RadiancePolygon < ExportBase
         return text
     end
     
-    def isNumeric
+    def isNumeric?
         if @face.layer.name.downcase == 'numeric'
             return true
         end
