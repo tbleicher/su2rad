@@ -122,12 +122,7 @@ module JSONUtils
 
     def toStringJSON(obj)
         if obj.class == Array
-            str = '['
-            obj.each { |e|
-                str += "%s," % toStringJSON(e)
-            }
-            str = str.chop()
-            str += ']'
+            str = "[%s]" % obj.collect{ |e| "%s" % toStringJSON(e) }.join(",")
         elsif obj.class == FalseClass
             str = 'false'
         elsif obj.class == Fixnum or obj.class == Bignum
@@ -135,12 +130,7 @@ module JSONUtils
         elsif obj.class == Float
             str = "%f" % obj
         elsif obj.class == Hash
-            str = '{'
-            obj.each_pair { |k,v|
-                str += "%s:%s," % [toStringJSON(k),toStringJSON(v)]
-            }
-            str = str.chop()
-            str += '}' 
+            str = "{%s}" % obj.collect{ |k,v| "%s:%s" % [toStringJSON(k),toStringJSON(v)] }.join(",")
         elsif obj.class == String
             str = "\"%s\"" % obj.to_s
         elsif obj.class == TrueClass

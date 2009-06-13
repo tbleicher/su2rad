@@ -1,4 +1,4 @@
-//XXX
+
 var fileSelector = {};
 
 fileSelector._filePath = "";    // full path of selected file or dir 
@@ -13,14 +13,18 @@ fileSelector.applyPath = function () {
         setExportPath()
     } else {
         setExportPath(this._filePath)
-    }
-        
+    } 
 }
 
-fileSelector.close = function (cancel) {
-    log.debug("fileSelectorWindow.close() ...");
+fileSelector.close = function () {
+    log.debug("file selction canceled");
     $('#fileSelectorWindow').jqmHide();
-    if (cancel != 1 && fileSelector._filePath != "") {
+}            
+
+fileSelector.select = function () {
+    log.debug("fileSelectorWindow.select() ...");
+    $('#fileSelectorWindow').jqmHide();
+    if (fileSelector._filePath != "") {
         fileSelector.applyPath();
     }
 }            
@@ -62,12 +66,15 @@ fileSelector.setFileTreeJSON = function (tree, setPosition) {
     }
     var listing = this.formatTree(entries); 
     this._callback( listing );
-    log.debug("setPostition='" + setPosition + "'")
     if (setPosition == 'true') {
-        log.debug('setting position');
         try {
+            log.debug("setting scroll position ...");
             var entry = document.getElementById('requestedPath')
-            entry.scrollTop = entry.offsetTop;
+            if (entry) {
+                document.getElementById('fileSelectorTree').scrollTop = entry.offsetTop-25;
+            } else {
+                log.error("setPosition: element with id 'requestedPath' not found");
+            }
         } catch (e) {
             logError(e)
         }
@@ -77,28 +84,30 @@ fileSelector.setFileTreeJSON = function (tree, setPosition) {
 
 fileSelector.formatTree = function (tree) {
     var d = "<ul class=\"jqueryFileTree\" style=\"display: none;\">"
+    try {
     for (var i=0; i<tree.length; i++) {
-        if (tree[i].access == false) {
-            d = d + "<li class=\"" + tree[i].type + " no_access\">" + tree[i].name + "</li>"
-            log.debug("no access for: " + tree[i].path)
+        var e = tree[i];
+        if (e.access == false) {
+            d = d + "<li class=\"" + e.type + " no_access\">" + e.name + "</li>"
+            //log.debug("no access for: " + e.path)
         } else {
             d = d + "<li "
-            if (tree[i].id) {
-                d = d + "id=\"" + tree[i].id + "\" "
-                log.debug("id=" + tree[i].id)
+            if (e.id) {
+                d = d + "id=\"" + e.id + "\" "
             }
-            if (tree[i].children) {
-                //log.debug("found children=" + tree[i].children.length())
-                d = d + "class=\"directory expanded\"><a href=\"#\" rel=\"" + tree[i].path + "/\">" + tree[i].name + "</a>"
-                d = d + this.formatTree(tree[i].children)
-            } else if (tree[i].type == "directory") {
-                //log.debug("dir=" + tree[i].name + " path=" + tree[i].path)
-                d = d + "class=\"directory collapsed\"><a href=\"#\" rel=\"" + tree[i].path + "/\">" + tree[i].name + "</a>"
-            } else if (tree[i].type == "file") {
-                d = d + "class=\"file " + tree[i].ext + "\"><a href=\"#\" rel=\"" + tree[i].path + "\">" + tree[i].name + "</a>"
+            if (e.children) {
+                d = d + "class=\"directory expanded\"><a href=\"#\" rel=\"" + e.path + "/\">" + e.name + "</a>"
+                d = d + this.formatTree(e.children)
+            } else if (e.type == "directory") {
+                d = d + "class=\"directory collapsed\"><a href=\"#\" rel=\"" + e.path + "/\">" + e.name + "</a>"
+            } else if (e.type == "file") {
+                d = d + "class=\"file " + e.ext + "\"><a href=\"#\" rel=\"" + e.path + "\">" + e.name + "</a>"
             }
             d = d + "</li>"
         }
+    }
+    } catch (e) {
+        logError(e)
     }
     d += "</ul>"
     return d
@@ -137,3 +146,4 @@ fileSelector.dummy = function (dir) {
     json += "{\"name\":\"fileD.jpg\",\"type\":\"file\",\"path\":\"" + dir + "fileD.jpg\",\"ext\":\"ext_jpg\"}]"
     return json;
 }
+

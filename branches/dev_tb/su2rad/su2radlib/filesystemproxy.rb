@@ -13,23 +13,26 @@ module FileSystemProxy
         end
         puts "DEBUG: directoryTree '#{abspath}'"
         children = FileSystemProxy.listDirectory(abspath,idPath)
+        puts children.collect{ |c| "'%s'" % c['name'] }.join('|')
         parent = File.basename(abspath)
         abspath = File.dirname(abspath)
         while abspath
             dirs = FileSystemProxy.listDirectory(abspath,idPath)
             dirs.each { |d|
+                #puts "d[name] = '#{d['name']}', parent='#{parent}'}"
                 if d['name'] == parent
+                    #puts "=> '#{parent}': adding children"
                     d['children'] = children
                 end
             }
             children = dirs
 	    if File.dirname(abspath) == abspath
-		puts "DEBUG: tree starts at '#{abspath}'"
+                #puts "DEBUG: tree starts at '#{abspath}'"
 		children = FileSystemProxy.addRoot(abspath, children)
         	return children
 	    else
-	        abspath = File.dirname(abspath)
                 parent = File.basename(abspath)
+	        abspath = File.dirname(abspath)
 	    end
         end
         return children
@@ -41,7 +44,7 @@ module FileSystemProxy
 		    'type' => File.ftype('/'),
 		    'path' => '/',
 		    'ext'  => 'ext_drive',
-		    'access' => FileTest.readable?(drive),
+		    'access' => FileTest.readable?('/'),
 	            'children'=> children}
 	    return [root]
 	else
@@ -114,6 +117,7 @@ module FileSystemProxy
                 entry['ext'] = "ext_%s" % p.slice(-3,3)
             end
             if p == idPath
+                puts "-- setting id='requestedPath' (path='#{p}')"
                 entry['id'] = 'requestedPath'
                 puts "DEBUG: path == idPath: #{p}"
             end

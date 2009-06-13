@@ -84,8 +84,8 @@
             <h3>Select file ...</h3>
             <div id="fileSelectorTree" class="fileSelector"></div>
             <div id="fileSelectorNote">selected: </div>
-            <input class="exportbutton" type="button" id="fileSelectorButtonSelect" value="select file" onclick="fileSelector.close()" disabled>
-            <input class="exportbutton" type="button" id="fileSelectorButtonCancel" value="cancel" onclick="fileSelector.close(1)">
+            <input class="exportbutton" type="button" id="fileSelectorButtonSelect" value="select file" onclick="fileSelector.select()" disabled>
+            <input class="exportbutton" type="button" id="fileSelectorButtonCancel" value="cancel" onclick="fileSelector.close()">
         </div>
         
         <input type="button" id="showLogButton" name="showLogButton" value="log" onclick="log.toggle()">
