@@ -6,6 +6,7 @@ function ExportSettingsObject() {
     this.global_coords = true;
     this.textures = false;
     this.triangulate = false;
+    this.daysim = false;
 }
 
 ExportSettingsObject.prototype._setBool = function(name,value) {
@@ -50,7 +51,30 @@ ExportSettingsObject.prototype.setMode = function(val) {
     }
 }
 
+ExportSettingsObject.prototype._setDaysim = function(value) {
+    if (value == true || value == 'true') {
+        this.daysim = true;
+        this.textures = false;
+        disableExportOption('textures');
+    } else {
+        this.daysim = false;
+        enableExportOption('textures');
+    }
+}
+
+ExportSettingsObject.prototype._setTextures = function(value) {
+    if (value == true || value == 'true') {
+        this.textures = true;
+        this.daysim = false;
+        disableExportOption('daysim');
+    } else {
+        this.textures = false;
+        enableExportOption('daysim');
+    }
+}
+
 ExportSettingsObject.prototype.setValue = function(name,value) {
+    //log.debug("setValue: '" + name + "' = '" + value + "'");
     switch (name) {
     case 'exportMode': 
         this.setMode(value);
@@ -62,7 +86,10 @@ ExportSettingsObject.prototype.setValue = function(name,value) {
         this._setBool(name,value);
         break;
     case 'textures':
-        this._setBool(name,value);
+        this._setTextures(value);
+        break;
+    case 'daysim':
+        this._setDaysim(value);
         break;
     default:
         this[name] = value;
@@ -77,6 +104,7 @@ ExportSettingsObject.prototype.toString = function() {
     text += '&textures='      + this.textures;
     text += '&exportMode='    + this.exportMode;
     text += '&global_coords=' + this.global_coords;
+    text += '&daysim='        + this.daysim;
     return text
 }
 
@@ -104,14 +132,12 @@ function _setGlobalCoordsDisplay(val) {
     var val = exportSettings.exportMode;
     if (val == 'by group') {
         document.getElementById("global_coords_display").style.display='';
-    }
-    else {
+    } else {
         document.getElementById("global_coords_display").style.display='none';
     }
     if (val == 'by color') {
         document.getElementById("textures_display").style.display='';
-    }
-    else {
+    } else {
         document.getElementById("textures_display").style.display='none';
     }
 }
@@ -228,6 +254,7 @@ function updateExportFormValues() {
     document.getElementById("sceneName").value = exportSettings.sceneName + ".rif";
     document.getElementById("triangulate").checked = exportSettings.triangulate;
     document.getElementById("textures").checked = exportSettings.textures;
+    document.getElementById("daysim").checked = exportSettings.daysim;
     setExportModeSelection();
 }
 

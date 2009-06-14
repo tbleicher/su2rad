@@ -148,6 +148,9 @@ input[type=checkbox] {
     font-weight: bold;
     width: 60px;
 }
+.optionLabelDisabled {
+    color: #27537a; /* blue-grey */
+}
 .controlValue {
     font-size: 12px;
     color: #27537a; /* blue-grey */

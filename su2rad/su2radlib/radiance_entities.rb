@@ -598,6 +598,29 @@ class RadianceSky < ExportBase
         @sinfo = nil
     end
     
+    def getDaysimSiteInfo
+        ## return site/sky information for Daysim *.hea file
+        if @sinfo == nil
+            sinfo = Sketchup.active_model.shadow_info
+        else
+            sinfo = @sinfo
+        end
+        city = sinfo['City'].gsub(/\s/, '_').gsub(/\W/, '')
+        text =  ""
+        text += "########################\n"
+        text += "### site information ###\n"
+        text += "########################\n"
+        text += "place %s\n"       % city
+        text += "latitude %.3f\n"  % sinfo['Latitude']
+        text += "longitude %.3f\n" % (sinfo['Longitude']*-1)
+        text += "time_zone %.2d\n" % sinfo['TZOffset']
+        text += "site_elevation 0.00\n"       
+        text += "scene_rotation_angle %.2d\n" % sinfo['NorthAngle']
+        text += "time_step 60\n"              
+        text += "#wea_data_short_file %s.wea" % city
+        return text
+    end
+
     def getSkyType
         sinfo = Sketchup.active_model.shadow_info
         type = "-c"

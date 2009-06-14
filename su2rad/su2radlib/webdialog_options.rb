@@ -18,6 +18,7 @@ class ExportOptions
         setExportDirectory()
         @scenePath     = getConfig('SCENEPATH')
         @sceneName     = getConfig('SCENENAME')
+        @daysim        = getConfig('DAYSIM')
         @triangulate   = getConfig('TRIANGULATE')
         @textures      = getConfig('TEXTURES')
         @exportMode    = getConfig('MODE')
@@ -36,6 +37,7 @@ class ExportOptions
         dict['scenePath'] = @scenePath
         dict['sceneName'] = @sceneName
         dict['triangulate'] = @triangulate
+        dict['daysim'] = @daysim
         dict['textures'] = @textures
         dict['exportMode'] = @exportMode
         dict['global_coords'] = @global_coords
@@ -66,19 +68,23 @@ class ExportOptions
             @global_coords = true
         end
         
+        ## check requirements for texture export
         convert = getConfig('CONVERT')
         ra_ppm = getConfig('RA_PPM')
         if convert != '' and ra_ppm != '' and File.exists?(convert) and File.exists?(ra_ppm)
             uimessage("'convert' found => keeping 'textures' options", 1)
         else
             uimessage("'convert' not found => disabling 'textures' options", -1)
-            dlg.execute_script('disableTextureOption()')
+            dlg.execute_script("disableTextureOption()")
+            dlg.execute_script("disableExportOption('textures')")
             @textures = false
         end
-            
         if @exportMode != 'by color'
             @textures = false
         end
+
+        ## check requirements for DAYSIM
+        #XXX
     end
     
     def setExportOptions(dlg, p='')
@@ -105,6 +111,8 @@ class ExportOptions
                     @triangulate = v
                 elsif k == 'textures'
                     @textures = v
+                elsif k == 'daysim'
+                    @daysim = v
                 elsif k == 'exportMode'
                     @exportMode = v
                 elsif k == 'global_coords'
@@ -118,6 +126,7 @@ class ExportOptions
         ## apply export options to global config
         setConfig('TRIANGULATE', @triangulate)
         setConfig('TEXTURES', @textures)
+        setConfig('DAYSIM', @daysim)
         setConfig('MODE', @exportMode)
         setConfig('MAKEGLOBAL', @global_coords)
         setConfig('SCENEPATH', @scenePath)

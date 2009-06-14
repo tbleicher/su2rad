@@ -57,7 +57,6 @@ function getExportOptions() {
     }
 }
 
-
 function getSkySettings() {
     // get SketchUp shadow_info settings and apply to modelLocation
     if (SKETCHUP == true) {
