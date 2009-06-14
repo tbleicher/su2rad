@@ -270,6 +270,13 @@ class RadianceScene < ExportBase
         uimessage("\nMATERIALS:", 0)
         @@materialContext.export(@materialLists.matLib)
         createRifFile()
+
+        uimessage("TEST: DAYSIM", 1)
+        if getConfig('DAYSIM') == true
+            uimessage("DAYSIM == true", 1)
+            createDaysimFiles()
+        end
+            
         writeLogFile()
         return true
     end
@@ -359,8 +366,117 @@ class RadianceScene < ExportBase
         end
         return text
     end
+  
+    def createDaysimFiles
+        ## create subdirectory 'daysim' with geometry and control files
+        dsdir = getFilename("Daysim")
+        uimessage("creating DAYSIM structure in '#{dsdir}'", 1)
+        createDirectory(dsdir)
+        ['res', 'rad', 'pts', 'tmp', 'wea'].each { |d|
+            createDirectory(File.join(dsdir, d))
+        }
+        radfile = _createDaysimRAD()
+        ptsfile = _createDaysimPTS()
+        if radfile != ''
+            _createDaysimHEA(radfile,ptsfile)
+        end
+    end
     
+    def _createDaysimRAD
+        ## create geometry by expanding (xform ...) scene file
+        radfile = _createDaysimTmpScene()
+        if not radfile
+            return ''
+        end
+        scenedir = File.dirname(radfile)
+        rootfile = getFilename("Daysim/%s.rad" % getConfig('SCENENAME'))
+        begin
+            cmd = "cd '#{scenedir}'; xform '#{radfile}' > '#{rootfile}'"
+            result = runSystemCmd(cmd)
+            if result == true and File.exists?(rootfile)
+                uimessage("created DAYSIM scene file '#{rootfile}'", 1)
+                return rootfile
+            else
+                uimessage("Error: Could not create DAYSIM scene file '#{rootfile}'", -2)
+                return ''
+            end
+        rescue => e
+            uimessage("Error: Could not expand scene file '#{radfile}'", -2)
+            return ''
+        end
+    end
+
+    def _createDaysimHEA(radfile, ptsfile='')
+        ## create Daysim/*.hea file
+        lines = ["project_name %s" % getConfig('SCENENAME'),
+                 @sky.getDaysimSiteInfo(),
+                 "\n########################\n# building information #\n########################",
+                 "material_file %s_material.rad" % getConfig('SCENENAME'),
+                 "geometry_file %s_geometry.rad" % getConfig('SCENENAME'),
+                 "radiance_source_files 1,%s"    % File.basename(radfile)]
+        if ptsfile != ''
+            lines.push("sensor_file %s" % File.basename(ptsfile))
+        end
+        lines.push("shading 0\nViewPoint 0\n")
+        
+        heafile = getFilename("Daysim/%s.hea" % getConfig('SCENENAME'))
+        text = lines.join("\n")
+        if not createFile(heafile, text)
+            uimessage("Error: Could not create DAYSIM hea file '#{heafile}'", -2)
+        else
+            uimessage("created DAYSIM hea file '#{heafile}'", 1)
+        end
+    end
+    
+    def _createDaysimPTS
+        ## add field descriptions
+        numdir = getFilename('numeric')
+        if not File.exists?(numdir)
+            return ''
+        end
+        Dir.foreach(numdir) { |f|
+            if f =~ /.fld$/
+                fullpath = File.join(numdir, f)
+                ptsfile = getFilename("Daysim/%s.pts" % getConfig('SCENENAME'))
+                if not createFile(ptsfile, File.open(fullpath).read())
+                    uimessage("Error: Could not create DAYSIM pts file '#{ptsfile}'", -2)
+                else
+                    uimessage("created DAYSIM pts file '#{ptsfile}'", 1)
+                    return ptsfile
+                end
+            end
+        }
+        ## default: empty string (no file copied)
+        return ''
+    end
+    
+    def _createDaysimTmpScene
+        ## remove sky from radiance scene file
+        radfile = getFilename(getConfig('SCENENAME') + ".rad")
+        lines = File.new(radfile).readlines()
+        newlines = []
+        lines.each { |l|
+            if l.strip() =~ /.sky$/
+                uimessage("stripping sky: '#{l.strip}'", 1)
+                next
+            elsif l.strip =~ /materials.rad$/
+                uimessage("identified materials file: '#{l.strip}'", 2)
+                newlines.push(l)
+            else
+                newlines.push(l)
+            end
+        }
+        radfile = radfile + '_tmp'
+        text = lines.join('')
+        if not createFile(radfile, text)
+            uimessage("Error: Could not create temporary scene file '#{radfile}'", -2)
+            return
+        end
+        return radfile
+    end
+     
     def createRifFile
+        ## last step in Radiance export: write radiance input file
         sceneName = getConfig('SCENENAME')
         text = @renderOptions.getRifOptionsText()
         text += "\n"
@@ -371,7 +487,7 @@ class RadianceScene < ExportBase
         
         filename = getFilename("%s.rif" % sceneName)
         if not createFile(filename, text)
-            uimessage("Error: Could not create rif file '#{filename}'")
+            uimessage("Error: Could not create rif file '#{filename}'", -2)
         end
     end
         

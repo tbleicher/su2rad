@@ -77,7 +77,7 @@ require "su2radlib/config_class.rb"
 
 
 ## define defaults if config file is messed up
-$SU2RAD_LOGLEVEL    = -1        #XXX report warnings and errors only
+$SU2RAD_LOGLEVEL    = 2        #XXX report warnings and errors only
 
 ## load configuration from file
 #loadPreferences()

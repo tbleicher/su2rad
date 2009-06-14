@@ -35,16 +35,17 @@ fileSelector.show = function () {
         fileSelector._filePath = "";    // reset to empty string
         var ftRoot = document.getElementById('scenePath').value;
         
+        //log.debug("fileSelector root='" + ftRoot + "'");
         $('#fileSelectorNote').text(ftRoot);
-        
-        log.debug("ftRoot='" + ftRoot + "'");
         $('#fileSelectorWindow').jqmShow();
         $('#fileSelectorTree').fileTree({ root: ftRoot, script: 'foo.php' }, function(file) { 
             
             $('#fileSelectorNote').text(file.toString());
             
             fileSelector._filePath = file.toString();   // store current selection
+            log.debug('TEST: ' + file.toString())
             document.getElementById("fileSelectorButtonSelect").disabled=false;
+            document.getElementById("fileSelectorButtonSelect").value="select file";
         });
     } catch (e) {
         logError(e)
@@ -59,6 +60,7 @@ fileSelector.setFileTreeJSON = function (tree, setPosition) {
     try {
         eval("entries = " + json);
         log.debug("eval(): entries=" + entries.length); 
+        document.getElementById("fileSelectorButtonSelect").value = "select dir";
     } catch (e) {
         log.error("setFileTreeJSON: error in eval() '" + e.name + "'");
         log.error("json= " + json.replace(/,/g,',<br/>'));
