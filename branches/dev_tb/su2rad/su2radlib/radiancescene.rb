@@ -369,6 +369,10 @@ class RadianceScene < ExportBase
   
     def createDaysimFiles
         ## create subdirectory 'daysim' with geometry and control files
+        if getConfig('XFORM') == ''
+            uimessage("Error: 'xform' not found! Daysim export not possible!", -2)
+            return
+        end 
         dsdir = getFilename("Daysim")
         uimessage("creating DAYSIM structure in '#{dsdir}'", 1)
         createDirectory(dsdir)
@@ -390,11 +394,11 @@ class RadianceScene < ExportBase
         end
         scenedir = File.dirname(radfile)
         rootfile = getFilename("Daysim/%s.rad" % getConfig('SCENENAME'))
+        xform = getConfig('XFORM')
         begin
-            cmd = "cd '#{scenedir}'; xform '#{radfile}' > '#{rootfile}'"
+            cmd = "cd '#{scenedir}'; #{xform} '#{radfile}' > '#{rootfile}'"
             result = runSystemCmd(cmd)
             if result == true and File.exists?(rootfile)
-                uimessage("created DAYSIM scene file '#{rootfile}'", 1)
                 return rootfile
             else
                 uimessage("Error: Could not create DAYSIM scene file '#{rootfile}'", -2)
@@ -423,8 +427,6 @@ class RadianceScene < ExportBase
         text = lines.join("\n")
         if not createFile(heafile, text)
             uimessage("Error: Could not create DAYSIM hea file '#{heafile}'", -2)
-        else
-            uimessage("created DAYSIM hea file '#{heafile}'", 1)
         end
     end
     
