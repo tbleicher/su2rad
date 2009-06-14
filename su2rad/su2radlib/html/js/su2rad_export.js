@@ -55,10 +55,10 @@ ExportSettingsObject.prototype._setDaysim = function(value) {
     if (value == true || value == 'true') {
         this.daysim = true;
         this.textures = false;
-        disableExportOption('textures');
+        hideExportOption('textures');
     } else {
         this.daysim = false;
-        enableExportOption('textures');
+        showExportOption('textures');
     }
 }
 
@@ -66,10 +66,10 @@ ExportSettingsObject.prototype._setTextures = function(value) {
     if (value == true || value == 'true') {
         this.textures = true;
         this.daysim = false;
-        disableExportOption('daysim');
+        hideExportOption('daysim');
     } else {
         this.textures = false;
-        enableExportOption('daysim');
+        showExportOption('daysim');
     }
 }
 

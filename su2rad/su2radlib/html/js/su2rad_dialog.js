@@ -72,20 +72,30 @@ function disableGlobalOption() {
     document.getElementById("global_coords_display").style.display='none';
 }
 
-function enableExportOption(opt) {
-    log.debug("enableExportOption('" + opt + "')")
+function showExportOption(opt) {
+    log.debug("showExportOption('" + opt + "')")
     try {
         document.getElementById(opt).style.display='';
         var opt_label = opt.toString() + "_label";
         document.getElementById(opt_label).className = '';
         document.getElementById(opt_label).innerHTML = ' ' + opt.toString();
     } catch (e) {
-        log.error("Error in enableExportOption('" + opt + "')")
+        log.error("Error in showExportOption('" + opt + "')")
         logError(e)
     }
 }
 
-function disableExportOption(opt) {
+function disableTextureOption() {
+    document.getElementById("textures").checked = false;
+    document.getElementById("global_coords_display").style.display='none';
+}
+
+function disableDaysimOption() {
+    document.getElementById("daysim").checked = false;
+    document.getElementById("daysim_display").style.display='none';
+}
+
+function hideExportOption(opt) {
     log.debug("disableExportOption('" + opt + "')")
     try {
         document.getElementById(opt).checked = false;
@@ -97,13 +107,6 @@ function disableExportOption(opt) {
         log.error("Error in disableExportOption('" + opt + "')")
         logError(e)
     }
-}
-
-function disableTextureOption() {
-    document.getElementById("textures").checked = false;
-    document.getElementById("textures").style.display='none';
-    document.getElementById("textures_label").className = 'optionLabelDisabled';
-    document.getElementById("textures_label").innerHTML = '<i>textures disabled</i>';
 }
 
 function toggleClimateTab() {

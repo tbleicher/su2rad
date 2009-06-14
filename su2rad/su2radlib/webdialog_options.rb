@@ -76,7 +76,6 @@ class ExportOptions
         else
             uimessage("'convert' not found => disabling 'textures' options", -1)
             dlg.execute_script("disableTextureOption()")
-            dlg.execute_script("disableExportOption('textures')")
             @textures = false
         end
         if @exportMode != 'by color'
@@ -84,7 +83,12 @@ class ExportOptions
         end
 
         ## check requirements for DAYSIM
-        #XXX
+        if getConfig('XFORM') == ''
+            uimessage("'xform' not found => disabling 'daysim' option", -1)
+            dlg.execute_script("disableDaysimOption()")
+            dlg.execute_script("showExportOption('textures')")
+            @daysim = false
+        end 
     end
     
     def setExportOptions(dlg, p='')
