@@ -272,7 +272,6 @@ class RadianceScene < ExportBase
         @@materialContext.export(@materialLists.matLib)
         createRifFile()
 
-        puts "TEST: DAYSIM"
         if getConfig('MODE') == 'daysim'
             puts "DAYSIM == true"
             hea = createDaysimFiles()
@@ -290,10 +289,10 @@ class RadianceScene < ExportBase
   
     def startDaysim(heafile)
         if $SU2RAD_PLATFORM != 'WIN'
-            puts "platform != 'WIN' ('%s') -> can't start daysim" % $SU2RAD_PLATFORM
+            uimessage("platform != 'WIN' ('%s') -> can't start daysim" % $SU2RAD_PLATFORM, 4)
             return
         end
-        puts "trying to start daysim ..."
+        uimessage("trying to start daysim ...", 1)
         daysim = "C:\\daysim\\bin_windows\\daysimExe.jar"
         heafile.gsub!(/\//, "\\")
         olddir = Dir.pwd()
@@ -378,8 +377,7 @@ class RadianceScene < ExportBase
             elsif f =~ /\.rtm\z/i
                 meshes.push("objects/#{f}")
             else
-                #XXX
-                printf "XXX object file: %s\n" % f
+                uimessage("XXX object file: %s\n" % f, 3)
             end
         }
         files += meshes
