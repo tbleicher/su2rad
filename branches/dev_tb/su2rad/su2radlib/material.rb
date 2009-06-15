@@ -28,7 +28,7 @@ class MaterialContext < ExportBase
         end
         @usedMaterials[material] = 1
         $SU2RAD_COUNTER.add(material.class.to_s)
-        if material.texture
+        if material.texture && getConfig('TEXTURES') == true
             loadTexture(material, entity, frontface)
         end
     end 
@@ -358,7 +358,7 @@ class MaterialContext < ExportBase
         if filename.index('/')
             filename = filename.split('/')[-1]
         end
-        filename.gsub!(' ', '_')    ## XXX better in path module
+        filename.gsub!(/\s+/, '_')    ## XXX better in path module
         ## TODO: check if first char is digit
         return filename
     end
