@@ -613,11 +613,12 @@ class RadianceSky < ExportBase
         text += "place %s\n"       % city
         text += "latitude %.3f\n"  % sinfo['Latitude']
         text += "longitude %.3f\n" % (sinfo['Longitude']*-1)
-        text += "time_zone %.2d\n" % sinfo['TZOffset']
-        text += "site_elevation 0.00\n"       
+        text += "time_zone %d\n"   % (sinfo['TZOffset']*-15.0)
+        text += "site_elevation 0.0\n"       
+        text += "ground_reflectance 0.2\n"       
         text += "scene_rotation_angle %.2d\n" % sinfo['NorthAngle']
         text += "time_step 60\n"              
-        text += "#wea_data_short_file %s.wea" % city
+        text += "#wea_data_file_short C:\\DAYSIM\\wea\\CAN_ON_Ottawa_CWEC_5min.wea"
         return text
     end
 

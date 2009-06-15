@@ -295,9 +295,19 @@ class RadianceScene < ExportBase
         end
         puts "trying to start daysim ..."
         daysim = "C:\\daysim\\bin_windows\\daysimExe.jar"
-        Thread.new do
-            system(`java -jar #{daysim} <"#{heafile}"`)
+        heafile.gsub!(/\//, "\\")
+        olddir = Dir.pwd()
+        Dir.chdir("C:/daysim/bin_windows")
+        begin
+            Thread.new do
+                #system(`java -jar #{daysim} <"#{heafile}"`)
+                system(`start #{daysim} "#{heafile}"`)
+            end
+        rescue
+            uimessage("Error starting 'daysimExe.jar' thread", -2)
+            uimessage("%s\n%s\n" % [$!.message, e.backtrace.join("\n")], -2)
         end
+        Dir.chdir(olddir)
     end
     
     def _saveFilesByColor(byColor)
