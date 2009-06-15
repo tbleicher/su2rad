@@ -4,16 +4,16 @@ module FileSystemProxy
         abspath = File.expand_path(path)
         idPath = abspath
         while not File.exists?(abspath)
-	    puts "DEBUG: dir '#{abspath}' not a directory! - using parent"
+            #puts "DEBUG: dir '#{abspath}' not a directory! - using parent"
 	    abspath = File.dirname(abspath)
             idPath = abspath
         end
         if File.file?(abspath)
             abspath = File.dirname(abspath)
         end
-        puts "DEBUG: directoryTree '#{abspath}'"
+        #puts "DEBUG: directoryTree '#{abspath}'"
         children = FileSystemProxy.listDirectory(abspath,idPath)
-        puts children.collect{ |c| "'%s'" % c['name'] }.join('|')
+        #puts children.collect{ |c| "'%s'" % c['name'] }.join('|')
         parent = File.basename(abspath)
         abspath = File.dirname(abspath)
         while abspath
@@ -53,7 +53,6 @@ module FileSystemProxy
 	    letters.each { |l|
 		drive = "%s:/" % l
 	        if File.exists?(drive)
-		    puts "TEST: found drive '#{drive}'"
 		    entry = {'name' => drive, 
 			     'type' => File.ftype(drive),
 			     'path' => drive,
@@ -81,10 +80,10 @@ module FileSystemProxy
     def FileSystemProxy.listDirectory(path,idPath='')
         abspath = File.expand_path(path)
         if File.directory?(abspath)
-            puts "DEBUG: listing directory '#{abspath}'"
-            puts "DEBUG:            idPath='#{idPath}'"
+            #puts "listing directory '#{abspath}'"
+            #puts "DEBUG:            idPath='#{idPath}'"
         elsif File.file?(abspath)
-            puts "DEBUG: listing parent dir of '#{abspath}'"
+            #puts "DEBUG: listing parent dir of '#{abspath}'"
             abspath = File.dirname(abspath)
 	end
          
@@ -117,9 +116,7 @@ module FileSystemProxy
                 entry['ext'] = "ext_%s" % p.slice(-3,3)
             end
             if p == idPath
-                puts "-- setting id='requestedPath' (path='#{p}')"
                 entry['id'] = 'requestedPath'
-                puts "DEBUG: path == idPath: #{p}"
             end
             dirList.push(entry)
         }

@@ -180,7 +180,6 @@ module JSONUtils
                 eval("@%s = %s" % [k,v])
                 msg = "#{self.class} new value for @%s: %s" % [k,v]
                 uimessage(msg)
-                puts "DEBUG: %s" % msg
             end
         }
     end

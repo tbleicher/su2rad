@@ -36,7 +36,6 @@ class ExportDialogWeb < ExportBase
 
     def getDirectoryListing(dlg, dirpath)
         dirpath,root = dirpath.split('&')
-        puts "DEBUG: listDirectory(#{dirpath}, #{root})"
         if root == 'true'
             dirs = FileSystemProxy.listDirectoryTree(dirpath)
         else
