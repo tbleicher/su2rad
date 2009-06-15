@@ -6,7 +6,6 @@ function ExportSettingsObject() {
     this.global_coords = true;
     this.textures = false;
     this.triangulate = false;
-    this.daysim = false;
 }
 
 ExportSettingsObject.prototype._setBool = function(name,value) {
@@ -46,30 +45,13 @@ ExportSettingsObject.prototype.setMode = function(val) {
     this.exportMode = value;
     if (value == 'by group') {
         this.global_coords = document.getElementById('global_coords').checked;
+    } else if (value == 'by color') {
+        this.global_coords = true;
+        showExportOption('textures'); 
     } else {
         this.global_coords = true;
-    }
-}
-
-ExportSettingsObject.prototype._setDaysim = function(value) {
-    if (value == true || value == 'true') {
-        this.daysim = true;
         this.textures = false;
         hideExportOption('textures');
-    } else {
-        this.daysim = false;
-        showExportOption('textures');
-    }
-}
-
-ExportSettingsObject.prototype._setTextures = function(value) {
-    if (value == true || value == 'true') {
-        this.textures = true;
-        this.daysim = false;
-        hideExportOption('daysim');
-    } else {
-        this.textures = false;
-        showExportOption('daysim');
     }
 }
 
@@ -86,10 +68,7 @@ ExportSettingsObject.prototype.setValue = function(name,value) {
         this._setBool(name,value);
         break;
     case 'textures':
-        this._setTextures(value);
-        break;
-    case 'daysim':
-        this._setDaysim(value);
+        this._setBool(name,value);
         break;
     default:
         this[name] = value;
@@ -104,7 +83,6 @@ ExportSettingsObject.prototype.toString = function() {
     text += '&textures='      + this.textures;
     text += '&exportMode='    + this.exportMode;
     text += '&global_coords=' + this.global_coords;
-    text += '&daysim='        + this.daysim;
     return text
 }
 
@@ -254,7 +232,6 @@ function updateExportFormValues() {
     document.getElementById("sceneName").value = exportSettings.sceneName + ".rif";
     document.getElementById("triangulate").checked = exportSettings.triangulate;
     document.getElementById("textures").checked = exportSettings.textures;
-    document.getElementById("daysim").checked = exportSettings.daysim;
     setExportModeSelection();
 }
 

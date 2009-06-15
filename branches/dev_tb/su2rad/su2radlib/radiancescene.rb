@@ -220,7 +220,7 @@ class RadianceScene < ExportBase
     def startExportWeb(selected_only=0)
         sceneDir = getConfig('SCENEPATH')
         if renameExisting(sceneDir) == false
-            return false
+            uimessage("Could not rename existing directory '#{sceneDir}' - files will be replaced", -1)
         end
         statusPage = showStatusPage()
         begin 
@@ -258,10 +258,11 @@ class RadianceScene < ExportBase
         
         uimessage("\nOBJECTS:", 0)
         sceneref = exportByGroup(entities, Geom::Transformation.new)
-        if getConfig('MODE') == 'by color'
+        emode = getConfig('MODE')
+        if emode == 'by color' || emode == 'daysim'
             refs = _saveFilesByColor(@@byColor)
             createMainScene(refs, '')
-        elsif getConfig('MODE') == 'by layer'
+        elsif emode == 'by layer' 
             refs = _saveFilesByLayer(@@byLayer)
             createMainScene(refs, '')
         end
@@ -271,16 +272,34 @@ class RadianceScene < ExportBase
         @@materialContext.export(@materialLists.matLib)
         createRifFile()
 
-        uimessage("TEST: DAYSIM", 1)
-        if getConfig('DAYSIM') == true
-            uimessage("DAYSIM == true", 1)
-            createDaysimFiles()
+        puts "TEST: DAYSIM"
+        if getConfig('MODE') == 'daysim'
+            puts "DAYSIM == true"
+            hea = createDaysimFiles()
+            if hea != ''
+                startDaysim(hea)
+            end
         end
             
         writeLogFile()
+        
+        if getConfig('MODE') == 'daysim'
+        end
         return true
     end
-   
+  
+    def startDaysim(heafile)
+        if $SU2RAD_PLATFORM != 'WIN'
+            puts "platform != 'WIN' ('%s') -> can't start daysim" % $SU2RAD_PLATFORM
+            return
+        end
+        puts "trying to start daysim ..."
+        daysim = "C:\\daysim\\bin_windows\\daysimExe.jar"
+        Thread.new do
+            system(`java -jar #{daysim} <"#{heafile}"`)
+        end
+    end
+    
     def _saveFilesByColor(byColor)
         references = []
         uimessage("\nSCENEFILES:", 0)
@@ -290,16 +309,16 @@ class RadianceScene < ExportBase
             end
             skm = @@materialContext.getByName(name)
             name = remove_spaces(name)
-            if doTextures(skm)
-                uimessage("material='#{skm}' texture='#{skm.texture}'", 2)
-                references.push(obj2mesh(name, lines))
-            else
+            if doTextures(skm) == false
                 filename = getFilename("objects/#{name}.rad")
                 if not createFile(filename, lines.join("\n"))
                     uimessage("Error: could not create file '#{filename}'")
                 else
                     references.push("!xform objects/#{name}.rad")
                 end
+            else
+                uimessage("material='#{skm}' texture='#{skm.texture}'", 2)
+                references.push(obj2mesh(name, lines))
             end
         }
         return references
@@ -369,10 +388,6 @@ class RadianceScene < ExportBase
   
     def createDaysimFiles
         ## create subdirectory 'daysim' with geometry and control files
-        if getConfig('XFORM') == ''
-            uimessage("Error: 'xform' not found! Daysim export not possible!", -2)
-            return
-        end 
         dsdir = getFilename("Daysim")
         uimessage("creating DAYSIM structure in '#{dsdir}'", 1)
         createDirectory(dsdir)
@@ -382,34 +397,48 @@ class RadianceScene < ExportBase
         radfile = _createDaysimRAD()
         ptsfile = _createDaysimPTS()
         if radfile != ''
-            _createDaysimHEA(radfile,ptsfile)
+            return _createDaysimHEA(radfile,ptsfile)
         end
+        return ''
     end
     
     def _createDaysimRAD
-        ## create geometry by expanding (xform ...) scene file
-        radfile = _createDaysimTmpScene()
-        if not radfile
-            return ''
-        end
-        scenedir = File.dirname(radfile)
-        rootfile = getFilename("Daysim/%s.rad" % getConfig('SCENENAME'))
-        xform = getConfig('XFORM')
+        ## remove sky from radiance scene and convert to single file
+        radfile = getFilename(getConfig('SCENENAME') + ".rad")
+        lines = File.new(radfile).readlines()
+        dspath = getFilename("Daysim/%s.rad" % getConfig('SCENENAME'))
         begin
-            cmd = "cd '#{scenedir}'; #{xform} '#{radfile}' > '#{rootfile}'"
-            result = runSystemCmd(cmd)
-            if result == true and File.exists?(rootfile)
-                return rootfile
-            else
-                uimessage("Error: Could not create DAYSIM scene file '#{rootfile}'", -2)
-                return ''
-            end
+            fDaysim = File.new(dspath, 'w')
+            lines.each { |l|
+                if l.strip() =~ /.sky$/
+                    uimessage("stripping sky: '#{l.strip}'", 1)
+                elsif l =~ /^!xform/
+                    if l.strip =~ /materials.rad$/
+                        uimessage("identified materials file: '#{l.strip}'", 2)
+                        uimessage("-> TODO: convert to greyscale", 2)
+                    end
+                    uimessage("adding scene file '%s'" % l.split()[-1], 2)
+                    scenefile = getFilename(l.split()[-1])
+                    if File.exists?(scenefile)
+                        fDaysim.write(File.open(scenefile).read())
+                        fDaysim.write("\n\n")
+                    else
+                        uimessage("Error: Could not locate  scene file '#{scenefile}'", -2)
+                    end
+                else
+                    fDaysim.write(l)
+                end
+            }
+            fDaysim.write("\n")
+            fDaysim.close()
         rescue => e
-            uimessage("Error: Could not expand scene file '#{radfile}'", -2)
+            uimessage("Error: Could not create daysim scene file '#{dspath}'", -2)
+            uimessage("error message: '%s'\n%s\n" % [$!.message, e.backtrace.join("\n")], -2)
             return ''
         end
+        return dspath
     end
-
+     
     def _createDaysimHEA(radfile, ptsfile='')
         ## create Daysim/*.hea file
         lines = ["project_name %s" % getConfig('SCENENAME'),
@@ -427,7 +456,9 @@ class RadianceScene < ExportBase
         text = lines.join("\n")
         if not createFile(heafile, text)
             uimessage("Error: Could not create DAYSIM hea file '#{heafile}'", -2)
+            return ''
         end
+        return heafile
     end
     
     def _createDaysimPTS
@@ -452,31 +483,6 @@ class RadianceScene < ExportBase
         return ''
     end
     
-    def _createDaysimTmpScene
-        ## remove sky from radiance scene file
-        radfile = getFilename(getConfig('SCENENAME') + ".rad")
-        lines = File.new(radfile).readlines()
-        newlines = []
-        lines.each { |l|
-            if l.strip() =~ /.sky$/
-                uimessage("stripping sky: '#{l.strip}'", 1)
-                next
-            elsif l.strip =~ /materials.rad$/
-                uimessage("identified materials file: '#{l.strip}'", 2)
-                newlines.push(l)
-            else
-                newlines.push(l)
-            end
-        }
-        radfile = radfile + '_tmp'
-        text = lines.join('')
-        if not createFile(radfile, text)
-            uimessage("Error: Could not create temporary scene file '#{radfile}'", -2)
-            return
-        end
-        return radfile
-    end
-     
     def createRifFile
         ## last step in Radiance export: write radiance input file
         sceneName = getConfig('SCENENAME')

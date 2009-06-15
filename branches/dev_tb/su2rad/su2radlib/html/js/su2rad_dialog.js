@@ -90,11 +90,6 @@ function disableTextureOption() {
     document.getElementById("global_coords_display").style.display='none';
 }
 
-function disableDaysimOption() {
-    document.getElementById("daysim").checked = false;
-    document.getElementById("daysim_display").style.display='none';
-}
-
 function hideExportOption(opt) {
     log.debug("disableExportOption('" + opt + "')")
     try {

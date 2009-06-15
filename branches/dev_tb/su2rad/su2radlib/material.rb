@@ -334,7 +334,7 @@ class MaterialContext < ExportBase
     def convertSketchupMaterial(skm, name)
         text = "## material conversion from Sketchup rgb color"
         text += getBaseMaterial(skm, name)
-        if doTextures(skm)
+        if doTextures(skm) == true
             uimessage("creating texture material for '#{skm}'", 2)
             if @textureHash.has_key?(skm) && @textureHash[skm] != ''
                 pic = @textureHash[skm]
