@@ -23,7 +23,6 @@ class RunTimeConfig
         'CONVERT'   => '',
         'RA_PPM'    => '',
         'OBJ2MESH'  => '',
-        'XFORM'     => '',
 
         ## misc and unused options
         'ZOFFSET'         => nil,
@@ -31,7 +30,7 @@ class RunTimeConfig
         'RAD'             => '',
         'PREVIEW'         => false}
 
-    @@_paths = ['REPLMARKS', 'CONVERT', 'RA_PPM', 'OBJ2MESH', 'XFORM',
+    @@_paths = ['REPLMARKS', 'CONVERT', 'RA_PPM', 'OBJ2MESH',
                 'MATERIALLIB', 'SUPPORTDIR']
         
     def initialize
@@ -58,7 +57,7 @@ class RunTimeConfig
     def initPaths
         uimessage("RunTimeConfig: initPaths() ...", 1)
         bindir = File.join(File.dirname(__FILE__), 'bin', $SU2RAD_PLATFORM)
-        keys = ['REPLMARKS', 'CONVERT', 'RA_PPM', 'OBJ2MESH', 'XFORM']
+        keys = ['REPLMARKS', 'CONVERT', 'RA_PPM', 'OBJ2MESH']
         keys.each { |k|
             app = k.downcase()
 	    if $SU2RAD_PLATFORM == 'WIN'

@@ -18,7 +18,6 @@ class ExportOptions
         setExportDirectory()
         @scenePath     = getConfig('SCENEPATH')
         @sceneName     = getConfig('SCENENAME')
-        @daysim        = getConfig('DAYSIM')
         @triangulate   = getConfig('TRIANGULATE')
         @textures      = getConfig('TEXTURES')
         @exportMode    = getConfig('MODE')
@@ -37,7 +36,6 @@ class ExportOptions
         dict['scenePath'] = @scenePath
         dict['sceneName'] = @sceneName
         dict['triangulate'] = @triangulate
-        dict['daysim'] = @daysim
         dict['textures'] = @textures
         dict['exportMode'] = @exportMode
         dict['global_coords'] = @global_coords
@@ -81,14 +79,11 @@ class ExportOptions
         if @exportMode != 'by color'
             @textures = false
         end
-
-        ## check requirements for DAYSIM
-        if getConfig('XFORM') == ''
-            uimessage("'xform' not found => disabling 'daysim' option", -1)
-            dlg.execute_script("disableDaysimOption()")
-            dlg.execute_script("showExportOption('textures')")
-            @daysim = false
-        end 
+        
+        if @exportMode == 'daysim'
+            @textures = false
+            dlg.execute_script("hideExportOption(\"textures\")")
+        end      
     end
     
     def setExportOptions(dlg, p='')
@@ -115,8 +110,6 @@ class ExportOptions
                     @triangulate = v
                 elsif k == 'textures'
                     @textures = v
-                elsif k == 'daysim'
-                    @daysim = v
                 elsif k == 'exportMode'
                     @exportMode = v
                 elsif k == 'global_coords'
@@ -130,7 +123,6 @@ class ExportOptions
         ## apply export options to global config
         setConfig('TRIANGULATE', @triangulate)
         setConfig('TEXTURES', @textures)
-        setConfig('DAYSIM', @daysim)
         setConfig('MODE', @exportMode)
         setConfig('MAKEGLOBAL', @global_coords)
         setConfig('SCENEPATH', @scenePath)

@@ -453,7 +453,7 @@ class RadiancePolygon < ExportBase
         if not @@byColor.has_key?(matname)
             @@byColor[matname] = []
         end
-        if doTextures(skm)
+        if doTextures(skm) == true
             #XXX $globaltrans or trans?
             @@byColor[matname].push(getTexturePolygon($globaltrans, matname,skm))
         else

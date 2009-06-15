@@ -228,7 +228,7 @@ class ExportBase
         uimessage("exported entities [refs=%d, faces=%d]" % [references.length, faces.length], 1)
 
         ## create 'by group' files or stop here
-        if getConfig('MODE') == 'by layer' or getConfig('MODE') == 'by color'
+        if getConfig('MODE') != 'by group'
             return "## mode = '%s' -> no export" % getConfig('MODE')
         elsif @@nameContext.length <= 1
             return createMainScene(references, faces_text, parenttrans)
@@ -347,11 +347,11 @@ class ExportBase
     end
 
     def doTextures(skm)
-        if skm == nil
+        if getConfig('TEXTURES') == false
+            return false
+        elsif skm == nil
             return false
         elsif skm.texture == nil
-            return false
-        elsif getConfig('TEXTURES') == false
             return false
         else
             return true
