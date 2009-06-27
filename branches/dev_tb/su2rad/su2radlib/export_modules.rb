@@ -33,7 +33,7 @@ module InterfaceBase
                 $SU2RAD_COUNTER.add('warnings')
             end
         rescue
-            printf "uimessage rescue: #{msg}\n"
+            printf "[uimessage rescue] #{msg}\n"
         end
     end
     
