@@ -77,7 +77,7 @@ require "su2radlib/config_class.rb"
 
 
 ## define defaults if config file is messed up
-$SU2RAD_LOGLEVEL    = -1        #XXX report warnings and errors only
+$SU2RAD_LOGLEVEL    = 4        #XXX report warnings and errors only
 
 ## load configuration from file
 #loadPreferences()
@@ -132,14 +132,15 @@ def resolveConflicts
     $matConflicts.resolve()
 end
 
-def startImport(f='')
+def startImport(f='/Users/ble/tmp/numimport/ADF_medium.lux') 
     $SU2RAD_CONFIG = RunTimeConfig.new()
     ni = NumericImport.new()
     if $SU2RAD_DEBUG
         ni.loadFile(f)
-        ni.createMesh
-        ni.addContourLines
-        ni.addLabels
+        ni.confirmDialog
+        #ni.createMesh
+        #ni.addContourLines
+        #ni.addLabels
     else
         ni.loadFile
         ni.confirmDialog
@@ -205,8 +206,8 @@ def addRadianceMenu
     #matmenu.add_item("count conflicts") { countConflicts }
     #matmenu.add_item("resolve conflicts") { resolveConflicts }
     
-    #importmenu = radmenu.add_submenu("Import")
-    #importmenu.add_item("numeric results") { startImport }
+    importmenu = radmenu.add_submenu("Import")
+    importmenu.add_item("lux values") { startImport() }
     
     #radmenu.add_item("Preferences") { preferencesDialog() }
     radmenu.add_item("About") { aboutDialog() }
