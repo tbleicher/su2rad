@@ -80,7 +80,7 @@ class ExportBase
     include RadiancePath
     include RadianceUtils
     
-    @@_log = []
+    @@_log = [] #XXX make singleton class instance
     @@materialContext = nil
     
     @@materialstack = MaterialStack.new()

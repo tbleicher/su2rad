@@ -25,15 +25,21 @@ module InterfaceBase
             if loglevel <= $SU2RAD_LOGLEVEL
                 Sketchup.set_status_text(line.strip())
                 printf "#{line}\n"
-                @@_log.push(line)
+                begin
+                    @@_log.push(line)
+                rescue
+                    printf "error in uimessage at '@@_log.push(line)'\n" 
+                end
             end
             if loglevel == -2
                 $SU2RAD_COUNTER.add('errors')
             elsif loglevel == -1
                 $SU2RAD_COUNTER.add('warnings')
             end
-        rescue
-            printf "[uimessage rescue] #{msg}\n"
+        rescue => e
+            printf "## %s" % $!.message
+            printf "## %s" % e.backtrace.join("\n## ")
+            printf "\n[uimessage rescue] #{msg}\n"
         end
     end
     
