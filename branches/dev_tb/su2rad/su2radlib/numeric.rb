@@ -322,6 +322,9 @@ class NumericImport < ExportBase
     def cleanLines
         newlines = []
         @lines.each { |l|
+            if l.index('#') == 0
+                next
+            end
             parts = l.split()
             begin
                 parts.collect! { |p| p.to_f }

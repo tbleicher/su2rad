@@ -2,7 +2,7 @@
 #
 # su2rad.rb 
 
-$SU2RAD_VERSION = "daysim r01"
+$SU2RAD_VERSION = "daysim r02" #XXX
 
 # Written by Thomas Bleicher
 #
@@ -30,6 +30,10 @@ $SU2RAD_VERSION = "daysim r01"
 #
 # branch 1.0:
 # -----------
+# daysim r02 - 28/06/09  :  basic features for DAYSIM support
+#                           creation of DAYSIM scene description files
+#                           import of rtrace values as colored contour plot
+# daysim r01 - 15/06/09  :  non-public - for feedback from C. Reinhart only
 # v 1.0alpha - 18/01/09  :  pre-releas for feedback (including Windows)
 #                           new interface pages for views and materials
 # Xmas_special_2008      :  pre-releas for feedback (Mac only)
@@ -77,7 +81,7 @@ require "su2radlib/config_class.rb"
 
 
 ## define defaults if config file is messed up
-$SU2RAD_LOGLEVEL    = 4        #XXX report warnings and errors only
+$SU2RAD_LOGLEVEL    = -1        #XXX report warnings and errors only
 
 ## load configuration from file
 #loadPreferences()
@@ -132,18 +136,20 @@ def resolveConflicts
     $matConflicts.resolve()
 end
 
-def startImport(f='/Users/ble/tmp/numimport/ADF_medium.lux') 
+def startImport()
     $SU2RAD_CONFIG = RunTimeConfig.new()
     ni = NumericImport.new()
     if $SU2RAD_DEBUG
-        ni.loadFile(f)
-        ni.confirmDialog
-        #ni.createMesh
-        #ni.addContourLines
-        #ni.addLabels
+        if ni.loadFile('/Users/ble/tmp/numimport/ADF_medium.df') == true
+            ni.confirmDialog
+            #ni.createMesh
+            #ni.addContourLines
+            #ni.addLabels
+        end
     else
-        ni.loadFile
-        ni.confirmDialog
+        if ni.loadFile() == true
+            ni.confirmDialog
+        end
     end
 end
 
@@ -207,7 +213,8 @@ def addRadianceMenu
     #matmenu.add_item("resolve conflicts") { resolveConflicts }
     
     importmenu = radmenu.add_submenu("Import")
-    importmenu.add_item("lux values") { startImport() }
+    importmenu.add_item("rtrace values") { startImport() }
+    radmenu.add_separator()
     
     #radmenu.add_item("Preferences") { preferencesDialog() }
     radmenu.add_item("About") { aboutDialog() }
