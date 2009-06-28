@@ -5,6 +5,8 @@ class NumericImport < ExportBase
     
     include Delauney
     
+    @@_log = [] #XXX make singleton class instance
+    
     def initialize(filename='')
         @bbox = [0,0,1,1]   ## [xmin,ymin,xmax,ymax]
         @clevels = []       ## list of contour level heights
@@ -14,7 +16,7 @@ class NumericImport < ExportBase
         @_labelText = 'lux'
         @labelLeaderLength = 4
         @colorStyle = 'roygbiv'
-        @alpha = 0.6        ## transparancy of surface colors 
+        @lightness = 0.4    ## intensity of contour colors
         @lines = []         ## raw lines in values file
         @maxvalue = 0.0     ## max in values
         @scalevalue = 1     ## scale of surface 'height' (e.g. 500lx/m)
@@ -39,7 +41,6 @@ class NumericImport < ExportBase
     end
     
     def addContourLines
-        printf "DEBUG: addContourLines\n"
         if @surface == nil
             return
         end
@@ -75,7 +76,6 @@ class NumericImport < ExportBase
     end
     
     def _addContourGroups
-        printf "DEBUG: _addContourGroups\n"
         ## create groups for contour bands and 'sort' faces into groups
         unit = getConfig('UNIT')
         levels = @clevels.collect { |z,v| z/unit } 
@@ -89,7 +89,7 @@ class NumericImport < ExportBase
             z -= 0.01                   ## reduce z for idx rounding
             idx = Integer( (z/unit)/step )
             g = @surface.entities.add_group()
-            g.name = "%s_faces_%d" % [@_labelText, v]
+            g.name = "%s_faces_%05d" % [@_labelText, v] ## format with leading '0's for sorting
             groupsHash["%02d" % idx] = g
         }
         
@@ -113,53 +113,43 @@ class NumericImport < ExportBase
         
         ## print some stats for debugging
         if $SU2RAD_DEBUG
-            printf "surface stats:\n"
+            msg = "surface stats:\n"
             classes_in_surface = Hash.new(0)
             @surface.entities.each { |e|
                 classes_in_surface["%s" % e.class] += 1
             }
-            classes_in_surface.each { |k,v| printf " > class '%s': %d\n" % [k,v] }
+            classes_in_surface.each { |k,v| msg += " > class '%s': %d\n" % [k,v] }
+            uimessage(msg,2)
         end
     end
 
     def addFalsecolor
-        puts "DEBUG: addFalsecolor"
+        ## assign colors based on color gradient to contour groups
         if @surface == nil
             return
         end
-        begin
-            bands = {}
-            pattern = "%s_faces" % @_labelText
-            @surface.entities.each { |e|
-                if e.class == Sketchup::Group
-                    #puts "group.name='#{e.name}'"
-                    if e.name and e.name.index(pattern) == 0
-                        bands[e.name] = e
-                    end
+        bands = {}
+        pattern = "%s_faces" % @_labelText
+        @surface.entities.each { |e|
+            if e.class == Sketchup::Group
+                if e.name and e.name.index(pattern) == 0
+                    bands[e.name] = e
                 end
-            }
-            
-            ## get r,g,b for n materials from color gradient
-            materials = Sketchup.active_model.materials
-            names = bands.keys()
-            names.sort!()
-            names.each_index { |i|
-                name = names[i]
-                v = (i+0.5) / names.length
-                r,g,b = _getColorByValue(v)
-                m = materials[name] || materials.add(name)
-                c = Sketchup::Color.new(r,g,b)
-                c.alpha=@alpha
-                m.color = c 
-                printf "material: %s\n" % m
-                bands[name].material = m
-                #printf "%s (%.2f): %.2f %.2f %.2f\n" % [name,v,r,g,b] 
-            }
-            
-        rescue => e
-            uimessage("Error:\n%s\n\n%s\n" % [$!.message,e.backtrace.join("\n")])
-        end 
-        puts "DEBUG: end addFalsecolor"
+            end
+        }
+        
+        ## get r,g,b for n materials from color gradient
+        materials = Sketchup.active_model.materials
+        names = bands.keys()
+        names.sort!()
+        names.each_index { |i|
+            name = names[i]
+            v = (i+0.5) / names.length
+            r,g,b = _getColorByValue(v)
+            m = materials[name] || materials.add(name)
+            m.color = Sketchup::Color.new(r,g,b)
+            bands[name].material = m
+        }
     end
 
     def _getColorByValue(value)
@@ -179,26 +169,19 @@ class NumericImport < ExportBase
         period = 2*Math::PI
         ## x is place along x axis of cosine wave
         x = shft + value * period
-        r = colorGradientProcess( ((Math.cos(x) + 1) * scale).floor )
-        g = colorGradientProcess( ((Math.cos(x+Math::PI/2) + 1) * scale).floor  )
-        b = colorGradientProcess( ((Math.cos(x+Math::PI) + 1) * scale).floor )
+        r = _lightenColor( ((Math.cos(x)            + 1) * scale).floor )
+        g = _lightenColor( ((Math.cos(x+Math::PI/2) + 1) * scale).floor )
+        b = _lightenColor( ((Math.cos(x+Math::PI)   + 1) * scale).floor )
         return [r,g,b]
     end
     
-    def colorGradientProcess(num)
-        ## adjust lightness
-        lightness = 0.4
-        n = num + lightness * (256 - num)
+    def _lightenColor(num)
+        ## adjust lightness of color component
+        n = num + @lightness*(256-num)
         return n.floor
-        ## turn to hex
-        s = n.toString(16);
-        ## if no first char, prepend 0
-        s = s.length == 1 ? '0' + s : s;
-        return s;		
     end
     
     def addLabels
-        printf "DEBUG: addLabels\n"
         if @surface == nil
             return
         end
@@ -254,16 +237,26 @@ class NumericImport < ExportBase
         end
         if not filename
             uimessage("import canceled", 0)
-            return
+            return false
         end
-        f = File.new(filename)
-        text = f.read()
-        @lines = text.split("\n")
-        f.close()
-        @filename = filename
-        cleanLines()
-        getMaxValue()
-        setCLStep()
+        begin
+            f = File.new(filename)
+            text = f.read()
+            @lines = text.split("\n")
+            f.close()
+            @filename = filename
+            if @filename.rindex('.')
+                @_labelText = @filename.slice(@filename.rindex('.')+1,@filename.length)
+                @_labelText.upcase!()
+            end
+            cleanLines()
+            getMaxValue()
+            setCLStep()
+        rescue => e
+            uimessage("Error loading file '%s':\n%s\n\n%s\n" % [filename,$!.message,e.backtrace.join("\n")])
+            return false
+        end
+        return true
     end
     
     def confirmDialog
@@ -272,15 +265,23 @@ class NumericImport < ExportBase
         end
         
         ## prepare options
+        if ['DA', 'DF', 'ADF', 'UDI'].index(@_labelText) != nil
+            @_labelText = "% " + @_labelText
+        end
         options = [['contour step', @_clstep,    ''],
                    ['add lables',   'yes',       'yes|no'],
                    ['label text',   @_labelText, ''],
-                   ['label side',   @_labelSide, '+x|-x'],
                    ['add colour',   'yes',       'yes|no'],
-                   ['alpha value',  @alpha,      '0.1|0.2|0.3|0.4|0.5|0.6|0.7|0.8|0.9|1.0']] 
+                   ['lightness',    @lightness,  '0.0|0.1|0.2|0.3|0.4|0.5|0.6|0.7|0.8']]
         prompts = options.collect { |o| o[0] }
         values  = options.collect { |o| o[1] }
         choices = options.collect { |o| o[2] }
+        
+        ## set status bar to provide basic information
+        msg =  "%d values - " % @lines.length
+        msg += "maximum: %.2f - " % @maxvalue 
+        msg += "step: %.2f" % @_clstep
+        Sketchup.set_status_text(msg)
         
         ## show and evaluate dialog
         dlg = UI.inputbox(prompts,values,choices, 'graph options')
@@ -295,9 +296,8 @@ class NumericImport < ExportBase
         end
         _doLables = dlg[1]
         @_labelText = dlg[2]
-        @_labelSide = dlg[3]
-        _doFalsecolor = dlg[4]
-        @alpha = dlg[5].to_f
+        _doFalsecolor = dlg[3]
+        @lightness = dlg[4].to_f
         
         ## crate graph with new options
         begin
@@ -319,20 +319,6 @@ class NumericImport < ExportBase
         end
     end
     
-    def confirmDialog_OLD
-        msg =  "import mesh of #{@lines.length} values?"
-        msg += "\nmax = %.2f" % @maxvalue
-        msg += "\nscale = %.2f/m" % @scalevalue
-        result = UI.messagebox msg, MB_OKCANCEL, "confirm import"
-        if result == 1
-            createMesh()
-            addContourLines()
-            addLabels()
-        else
-            uimessage("import canceled", 0)
-        end
-    end
-    
     def cleanLines
         newlines = []
         @lines.each { |l|
@@ -347,13 +333,31 @@ class NumericImport < ExportBase
         ## find index of column with illum values (4 or 7)
         h = Hash.new(0)
         newlines.each { |l|
-            h[l.length] = h[l.length] + 1
+            h[l.length] += 1
         }
-        if h[4] > h[7]
-            @index_value = 3
+        colindex = 0
+        maxlines = 0
+        h.each_pair { |i,ml|
+            if ml >= maxlines
+                colindex = i-1
+                maxlines = ml
+            end
+        }
+        if colindex == 3 || colindex == 6 
+            @index_value = colindex
+            uimessage("values found at column index %d" % @index_value, 1) 
+            @lines = newlines
+        else
+            if UI
+                msg = "ArgumentError:\n\nInput lines are in an unknown format!\n\n"
+                msg += "Aborting import ...\n\n"
+                msg += "Please check the import file\n'%s'\n\n" % @filename
+                msg += "These are the first lines:\n\n"
+                msg += @lines[0..4].join("\n")
+                UI.messagebox(msg, MB_MULTILINE)
+            end
+            raise ArgumentError, "input lines in wrong format", caller
         end
-        uimessage("values found at column index %d" % @index_value, 1) 
-        @lines = newlines
     end
     
     def getMaxValue
