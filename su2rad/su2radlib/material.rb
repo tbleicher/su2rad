@@ -16,7 +16,7 @@ class MaterialContext < ExportBase
         @nameStack = ['sketchup_default_material']
         @materialsByName = Hash.new()
         @materialHash = Hash[nil => 'sketchup_default_material']
-        @materialDescriptions = Hash.new()
+        @materialConversions = Hash.new()
         @usedMaterials = Hash.new()
         @aliasHash = Hash.new()
         @textureHash = Hash.new()
@@ -63,7 +63,7 @@ class MaterialContext < ExportBase
         end
         
         text = "## materials.rad\n\n"
-        text += getMaterialDescription(nil)
+        text += defaultMaterial()
         text += "\n\n"
         marray = defined.sort()
         marray.each { |a|
@@ -75,6 +75,7 @@ class MaterialContext < ExportBase
         if not createFile(filename, text)
             uimessage("ERROR creating material file '#{filename}'")
         end
+        printf "\n\n#{text}\n" #XXX
         @texturewriter = nil
         @textureHash = {}
     end
@@ -151,7 +152,7 @@ class MaterialContext < ExportBase
             end 
         rescue => e
             msg = "%s\n%s" % [$!.message,e.backtrace.join("\n")]
-            uimessage("Error: conversion to *.pic failed\n\n#{msg}", -2)
+            uimessage("Conversion to *.pic failed.\n#{msg}", -2)
             return false
         end
     end
@@ -182,7 +183,7 @@ class MaterialContext < ExportBase
                 @textureHash[skm] = ''
             end
         rescue => e
-            printf "%s\n%s\n" % [$!.message,e.backtrace.join("\n")]
+            uimessage("%s\n%s\n" % [$!.message,e.backtrace.join("\n"), -2]
         end
     end
     
@@ -249,7 +250,7 @@ class MaterialContext < ExportBase
             name = @materialHash[material]
             return "void alias #{material} #{name}"
         else
-            uimessage("WARNING: material '#{material} undefined; adding alias")
+            uimessage("material '#{material} undefined; adding alias", -1)
             s  = "## undefined material #{material}"
             s += "\nvoid alias #{material} sketchup_default_material"
             return s
@@ -263,41 +264,74 @@ class MaterialContext < ExportBase
         return s
     end
     
+    def getAliasFromAttribute(material)
+        ['SKM', 'LAYER'].each { |adict|
+            mAlias = Sketchup.active_model.get_attribute("SU2RAD_ALIAS_#{adict}", material)
+            if mAlias
+                uimessage("#{adict.downcase()} alias from attribute: '#{material}' => '#{mAlias}'", 2)
+                radname = getRadianceIdentifier(material)
+                txt = getMaterialDescription(mAlias)
+                txt += "\nvoid alias #{radname} #{mAlias}"
+                return txt
+            end
+        }
+        return nil
+    end
+    
     def getMaterialDescription(material)
+        ## always return a Radiance definition for <material>
         if material == nil
-            return defaultMaterial
-        elsif material.class == String
+            return defaultMaterial()
+        elsif _getMaterialDescription(material)
+            return _getMaterialDescription(material)
+        else
+            radname = getRadianceIdentifier(material)
+            s  = "## undefined material #{material}"
+            s += "\nvoid alias #{radname} sketchup_default_material"
+            return s
+        end
+    end
+    
+    def _getMaterialDescription(material)
+        ## search definition for <material>
+        if material.class == String
             ## could be alias, layer name or undefined material
             if @aliasHash.has_key?(material)
-                return getMaterialDescription(@aliasHash[material])
+                return _getMaterialDescription(@aliasHash[material])
+            elsif getAliasFromAttribute(material)
+                txt = getAliasFromAttribute(material)
+                return txt
+            elsif @newMatLib.get(material)
+                txt = @newMatLib.getMaterialWithDependencies(material)
+                return txt
+            end
+            
+        elsif material.class == Sketchup::Material
+            txt = _getMaterialDescription(material.name)
+            if txt
+                return txt
             else
-                s  = "## undefined material #{material}"
-                s += "\nvoid alias #{material} sketchup_default_material"
-                return s
+                ## last option: convert SU material
+                name = getSaveMaterialName(material)
+                if @materialConversions.has_key?(name)
+                    return @materialConversions[name]
+                else
+                    text = convertSketchupMaterial(material, name)
+                    @materialConversions[name] = text
+                    return text
+                end
             end
-        end
         
-        ## search in library if available
-        if @newMatLib
-            text = _searchMaterialLibrary(material)
-            if text
-                return text
-            end
-        end
-        
-        ## finally convert SU material
-        name = getSaveMaterialName(material)
-        text = @materialDescriptions[name]
-        if text != nil
-            return text
-        else
-            text = convertSketchupMaterial(material, name)
-            @materialDescriptions[name] = text
-            return text
+        else 
+            uimessage("unknown object type for _getMaterialDescription(): '#{material.class}'", -2)
         end
     end
     
     def _searchMaterialLibrary(material)
+        ## unused!
+        if not @newMatLib
+            return
+        end
         ## first search alias in attribute_dictionary
         skmAlias = Sketchup.active_model.get_attribute("SU2RAD_ALIAS_SKM", material.name)
         layerAlias = Sketchup.active_model.get_attribute("SU2RAD_ALIAS_LAYER", material.name)
@@ -313,10 +347,10 @@ class MaterialContext < ExportBase
             end
         end 
         ## or search for material name
-        name = getRadianceIdentifier(material.name)
+        name = getRadianceIdentifier(material)
         return @newMatLib.getMaterialWithDependencies(name)
-        
     end
+    
     
     def getSaveMaterialName(mat)
         ## generate a name that's save to use in Radiance
@@ -351,16 +385,15 @@ class MaterialContext < ExportBase
     end
    
     def _cleanTextureFilename(filename)
-        ## strip texture filename to basename
+        ## strip texture filename from file path
         if filename.index('\\')
             filename = filename.split('\\')[-1]
         end
         if filename.index('/')
             filename = filename.split('/')[-1]
         end
-        filename.gsub!(/\s+/, '_')    ## XXX better in path module
         ## TODO: check if first char is digit
-        return filename
+        return filename.gsub(/\s+/, '_')    ## XXX better in path module
     end
     
     def getBaseMaterial(skm, name)

@@ -5,8 +5,10 @@ class NumericImport < ExportBase
     
     include Delauney
     
-    @@_log = [] #XXX make singleton class instance
-    
+    if not $SU2RAD_LOG
+        $SU2RAD_LOG = [] #XXX make singleton class instance
+    end
+
     def initialize(filename='')
         @bbox = [0,0,1,1]   ## [xmin,ymin,xmax,ymax]
         @clevels = []       ## list of contour level heights
@@ -17,12 +19,16 @@ class NumericImport < ExportBase
         @labelLeaderLength = 4
         @colorStyle = 'roygbiv'
         @lightness = 0.4    ## intensity of contour colors
-        @lines = []         ## raw lines in values file
-        @maxvalue = 0.0     ## max in values
         @scalevalue = 1     ## scale of surface 'height' (e.g. 500lx/m)
-        @surface = nil      ## replaced with Sketchup group
         @zOffset = 0.0      ## config for offset of value scale
         @_clstep = 100.0
+        
+        @lines = []         ## raw lines in values file
+        @maxvalue = 0.0     ## max in values
+        
+        @surface = nil      ## group for graph entities
+        @legend = nil       ## group for legend entities
+        @materials = []
         if filename != ''
             loadFile(filename)
         end
@@ -111,7 +117,7 @@ class NumericImport < ExportBase
             @surface.entities.erase_entities([g_dflt])
         end
         
-        ## print some stats for debugging
+        ## show some stats for debugging
         if $SU2RAD_DEBUG
             msg = "surface stats:\n"
             classes_in_surface = Hash.new(0)
@@ -139,6 +145,7 @@ class NumericImport < ExportBase
         }
         
         ## get r,g,b for n materials from color gradient
+        @materials = []
         materials = Sketchup.active_model.materials
         names = bands.keys()
         names.sort!()
@@ -149,6 +156,7 @@ class NumericImport < ExportBase
             m = materials[name] || materials.add(name)
             m.color = Sketchup::Color.new(r,g,b)
             bands[name].material = m
+            @materials.push(m)
         }
     end
 
@@ -269,10 +277,11 @@ class NumericImport < ExportBase
             @_labelText = "% " + @_labelText
         end
         options = [['contour step', @_clstep,    ''],
-                   ['add lables',   'yes',       'yes|no'],
-                   ['label text',   @_labelText, ''],
                    ['add colour',   'yes',       'yes|no'],
-                   ['lightness',    @lightness,  '0.0|0.1|0.2|0.3|0.4|0.5|0.6|0.7|0.8']]
+                   ['lightness',    @lightness,  '0.0|0.1|0.2|0.3|0.4|0.5|0.6|0.7|0.8'],
+                   ['legend',       'right',      'none|left|right|top|bottom'],
+                   ['add lables',   'no',       'yes|no'],
+                   ['label text',   @_labelText, '']]
         prompts = options.collect { |o| o[0] }
         values  = options.collect { |o| o[1] }
         choices = options.collect { |o| o[2] }
@@ -294,10 +303,11 @@ class NumericImport < ExportBase
         rescue => e
             uimessage("Error evaluating option:\n%s\n\n%s\n" % [$!.message,e.backtrace.join("\n")])
         end
-        _doLables = dlg[1]
-        @_labelText = dlg[2]
-        _doFalsecolor = dlg[3]
-        @lightness = dlg[4].to_f
+        falsecolor = dlg[1]
+        @lightness = dlg[2].to_f
+        legend = dlg[3]
+        lables = dlg[4]
+        @_labelText = dlg[5]
         
         ## crate graph with new options
         begin
@@ -307,11 +317,14 @@ class NumericImport < ExportBase
                 return
             end
             addContourLines()
-            if _doLables == 'yes'
+            if lables == 'yes'
                 addLabels()
             end
-            if _doFalsecolor == 'yes'
+            if falsecolor == 'yes'
                 addFalsecolor()
+            end
+            if legend != 'none'
+                createLegend(legend)
             end
         rescue => e
             msg = "Error creating graph:\n%s\n\n%s\n" % [$!.message,e.backtrace.join("\n")]
@@ -431,6 +444,102 @@ class NumericImport < ExportBase
         name = remove_spaces(File.basename(@filename))
         @surface.name = name
         uimessage("added surface group '#{name}' to scene", 2) 
+    end
+        
+    def createLegend(side)
+        if @surface == nil or @materials == []
+            return
+        end
+        if side == 'none'
+            return
+        end
+        @legend = Sketchup.active_model.entities.add_group()
+        if @legend != nil
+            @legend.name = "legend %s" % @_labelText 
+            x,y,w,h,dx,dy = getLegendExtents(side)
+            _createLegendFaces(x,y,w,h,dx,dy)
+            _createLegendText(x,y,w,h,dx,dy)
+        end
+    end
+    
+    def _createLegendFaces(x,y,w,h,dx,dy)
+        matnames = @materials.collect { |m| m.name }
+        matnames.sort!()
+        f_grp = @legend.entities.add_group()
+        matnames.each { |mname|
+            pt1 = [x,y,0]
+            pt2 = [x+w,y,0]
+            pt3 = [x+w,y+h,0]
+            pt4 = [x,y+h,0]
+            f = f_grp.entities.add_face([pt1,pt2,pt3,pt4])
+            m = Sketchup.active_model.materials[mname]
+            if f and m
+                f.material = m
+                f.back_material = m
+            end
+            x += dx
+            y += dy
+        }
+    end 
+    
+    def _createLegendText(x,y,w,h,dx,dy)
+        tt_grp = @legend.entities.add_group()
+        m = Sketchup.active_model.materials['Black'] || Sketchup.active_model.materials.add('Black')
+        m.color = Sketchup::Color.new('Black')
+        tt_grp.material = m
+        values = @clevels.collect { |z,v| v }
+        if values.max < 100.0
+            fmt = "%%.2f %s" % @_labelText.gsub(/%/, '%%')
+        else
+            fmt = "%%d %s" % @_labelText.gsub(/%/, '%%')
+        end
+        values.sort!()
+        values.each { |v|
+            t_grp = tt_grp.entities.add_group()
+            ## 3d text options:  string, alignment (constant),    font, bold, italic, h,     tol, z, fill, extrusion
+            t_grp.entities.add_3d_text(fmt % v, TextAlignLeft, "Arial", true, false,  h/3.0, 0.0, 1, true, 0.0)
+            t_grp.transform!( Geom::Transformation.new([x+0.05*w, y+0.05*h, 0]) )
+            x += dx
+            y += dy
+        }
+    end
+    
+    def getLegendExtents(side)
+        bl = @surface.bounds.corner(0)
+        tr = @surface.bounds.corner(3)
+        if side == 'right'
+            w = (tr.x-bl.x)/8.0
+            h = (tr.y-bl.y)
+            x = tr.x + 2.5*w
+            y = bl.y
+        elsif side == 'left'
+            w = (tr.x-bl.x)/8.0
+            h = (tr.y-bl.y)
+            x = bl.x - 3.75*w
+            y = bl.y
+        elsif side == 'top'
+            w = tr.x - bl.x
+            h = (tr.y - bl.y)/8.0
+            x = bl.x
+            y = tr.y + 2.5*h
+        elsif side == 'bottom'
+            w = tr.x - bl.x
+            h = (tr.y - bl.y)/8.0
+            x = bl.x
+            y = bl.y - 3.75*h
+        else
+            raise ValueError, "wrong value for side: '%s' (expected one of left,right,top,bottom)" % side
+        end
+        if w > h
+            dx = w/@materials.length
+            dy = 0
+            w = dx
+        else
+            dx = 0
+            dy = h/@materials.length
+            h = dy
+        end
+        return x,y,w,h,dx,dy
     end
         
 end

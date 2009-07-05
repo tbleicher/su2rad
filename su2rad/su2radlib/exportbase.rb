@@ -80,7 +80,9 @@ class ExportBase
     include RadiancePath
     include RadianceUtils
     
-    @@_log = [] #XXX make singleton class instance
+    if not $SU2RAD_LOG
+        $SU2RAD_LOG = [] #XXX make singleton class instance
+    end
     @@materialContext = nil
     
     @@materialstack = MaterialStack.new()
@@ -380,7 +382,7 @@ class ExportBase
                 b = entity.back_material
                 if f and b
                     m = f
-                    uimessage("WARNING: front vs. back material: '%s' - '%s'" % [f,b])
+                    uimessage("WARNING: front vs. back material: '%s' - '%s'" % [f,b], 2)
                 elsif f
                     m = f
                 else
@@ -415,7 +417,7 @@ class ExportBase
                 front = getMaterialName(entity.material)
                 back = getMaterialName(entity.back_material)
                 if front != back
-                    uimessage("WARNING: front vs. back material: '%s' - '%s'" % [front, back])
+                    uimessage("WARNING: front vs. back material: '%s' - '%s'" % [front, back], 2)
                 end
             end
         end

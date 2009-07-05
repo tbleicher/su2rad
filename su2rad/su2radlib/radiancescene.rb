@@ -222,7 +222,11 @@ class RadianceScene < ExportBase
         if renameExisting(sceneDir) == false
             uimessage("Could not rename existing directory '#{sceneDir}' - files will be replaced", -1)
         end
-        statusPage = showStatusPage()
+        if getConfig('SHOW_STATUS_PAGE')
+            statusPage = showStatusPage()
+        else
+            statusPage = nil
+        end
         begin 
             prepareSceneDir(sceneDir)
             $SU2RAD_COUNTER.setStartTime()

@@ -207,7 +207,8 @@ module Radiance
         end
         
         def get(mname)
-            return @materials[mname]
+            radname = mname.gsub(/\s+/, '_').gsub(/\W/, '')
+            return @materials[radname]
         end
         
         def getByName(mname)
@@ -443,9 +444,7 @@ end
 module RadianceUtils
 
     def getRadianceIdentifier(name)
-        name = name.gsub(/[\[(}\]<>]/, '')
-        name = name.gsub(/\s+/, '_')
-        return name
+        return name.gsub(/\s+/, '_').gsub(/\W/, '')
     end
     
     def isRadianceKeyword?(word)
@@ -499,9 +498,9 @@ module RadianceUtils
         marker += "%.6f %.6f %.6f\n" % vx 
         marker += "%.6f %.6f %.6f\n" % vy
         
-        if filname =~ /\.oct\z/i
+        if filename =~ /\.oct\z/i
             cmd = "echo '#{marker}' | replmarks -s 1.0 -i #{filename} replaceme"
-        elsif filname =~ /\.msh\z/i
+        elsif filename =~ /\.msh\z/i
             cmd = "echo '#{marker}' | replmarks -s 1.0 -I #{filename} replaceme"
         else
             cmd = "echo '#{marker}' | replmarks -s 1.0 -x #{filename} replaceme"

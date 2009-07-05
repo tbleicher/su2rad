@@ -79,9 +79,9 @@ require "su2radlib/radiancescene.rb"
 require "su2radlib/webdialog.rb"
 require "su2radlib/config_class.rb"
 
-
 ## define defaults if config file is messed up
-$SU2RAD_LOGLEVEL    = -1        #XXX report warnings and errors only
+$SU2RAD_LOGLEVEL    = 3        #XXX report warnings and errors only
+$SU2RAD_LOG = []
 
 ## load configuration from file
 #loadPreferences()
