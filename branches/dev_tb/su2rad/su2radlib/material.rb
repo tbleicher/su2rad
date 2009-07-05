@@ -183,7 +183,7 @@ class MaterialContext < ExportBase
                 @textureHash[skm] = ''
             end
         rescue => e
-            uimessage("%s\n%s\n" % [$!.message,e.backtrace.join("\n"), -2]
+            uimessage("%s\n%s\n" % [$!.message,e.backtrace.join("\n"), -2])
         end
     end
     
