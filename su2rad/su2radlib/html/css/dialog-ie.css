@@ -28,3 +28,9 @@
     background: none;
     background-color: #cc0000;
 }
+input[type=checkbox] {
+    postition: relative;
+    top: -1px;
+    padding: 0px;
+    height: 16px;
+}
