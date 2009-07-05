@@ -2,7 +2,7 @@
 module InterfaceBase
 
     def initLog(lines=[])
-        @@_log = lines
+        $SU2RAD_LOG = lines
     end
    
     def getConfig(key)
@@ -20,16 +20,12 @@ module InterfaceBase
     def uimessage(msg, loglevel=0)
         begin
             prefix = "  " * getNestingLevel()
-            levels = ["I", "V", "D", "D", "D", "D", "E", "W"]  ## [0,1,2,-2,-1]
+            levels = ["I", "V", "D", "3", "4", "5", "E", "W"]  ## [0,1,2,-2,-1]
             line = "%s[%s] %s" % [prefix, levels[loglevel], msg]
             if loglevel <= $SU2RAD_LOGLEVEL
                 Sketchup.set_status_text(line.strip())
-                printf "#{line}\n"
-                begin
-                    @@_log.push(line)
-                rescue
-                    printf "error in uimessage at '@@_log.push(line)'\n" 
-                end
+                msg.split("\n").each { |l|  printf "%s[%s] %s\n" % [prefix,levels[loglevel],l] }
+                $SU2RAD_LOG.push(line)
             end
             if loglevel == -2
                 $SU2RAD_COUNTER.add('errors')
@@ -46,13 +42,13 @@ module InterfaceBase
     def writeLogFile
         line  = "###  finished: %s  ###" % Time.new()
         line2 = "###  %s  ###" % $SU2RAD_COUNTER.getStatusLine()
-        @@_log.push(line)
-        @@_log.push(line2)
+        $SU2RAD_LOG.push(line)
+        $SU2RAD_LOG.push(line2)
         logname = File.join('logfiles', "%s_export.log" % getConfig('SCENENAME'))
         logname = getFilename(logname)
-        if not createFile(logname, @@_log.join("\n"))
+        if not createFile(logname, $SU2RAD_LOG.join("\n"))
             uimessage("Error: Could not create log file '#{logname}'")
-            line = "### export failed: %s  ###" % Time.new()
+            line = "### creating log file failed: %s  ###" % Time.new()
             printf "%s\n" % line
             Sketchup.set_status_text(line)
         else
