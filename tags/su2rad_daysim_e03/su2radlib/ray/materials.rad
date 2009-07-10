@@ -1,0 +1,546 @@
+#########################################################
+# Material description file for RADIANCE models         #
+#                                                       #
+# This file is provided with PLINK version 1.2 (Feb 92) #
+#########################################################
+
+#
+# white_roughcast / Crepi_blanc
+#
+void plastic white_roughcast
+0
+0
+5 0.726 0.706 0.633     0     0
+
+#
+# new_galvanised_sheet_metal / Tole_galvanisee_jeune
+#
+void metal new_galvanised_sheet_metal
+0
+0
+5 0.623 0.672 0.692   0.5   0.1
+
+#
+# greenish-white_ALBA / ALBA_blanc-verdatre
+#
+void plastic greenish-white_ALBA
+0
+0
+5 0.612 0.683 0.628     0     0
+
+#
+# cellular_concrete_YTONG / Beton_cellulaire_YTONG
+#
+void plastic cellular_concrete_YTONG
+0
+0
+5 0.576 0.549  0.53     0     0
+
+#
+# maple_wood / Bois_Erable
+#
+void plastic maple_wood
+0
+0
+5 0.689 0.511 0.298     0     0
+
+#
+# poplar_wood / Bois_Peuplier
+#
+void plastic poplar_wood
+0
+0
+5 0.653 0.497 0.291     0     0
+
+#
+# white_pine_wood / Bois_Sapin_blanc
+#
+void plastic white_pine_wood
+0
+0
+5 0.683 0.477  0.26     0     0
+
+#
+# light_painted_concrete / Beton_couche_dispersion
+#
+void plastic light_painted_concrete
+0
+0
+5 0.493  0.51 0.499     0     0
+
+#
+# hornbeam_wood / Bois_Charme
+#
+void plastic hornbeam_wood
+0
+0
+5 0.619 0.473 0.286     0     0
+
+#
+# red_pine_wood / Bois_Sapin_rouge
+#
+void plastic red_pine_wood
+0
+0
+5 0.667 0.452 0.231     0     0
+
+#
+# chalky_silicate_brick / Brique_silico-calcaire
+#
+void plastic chalky_silicate_brick
+0
+0
+5 0.499 0.487 0.458     0     0
+
+#
+# oxidized_aluminium /  Alu_oxyde
+#
+void metal oxidized_aluminium
+0
+0
+5 0.487 0.481 0.436   0.3   0.2
+
+#
+# dirty-white_ALBA / ALBA_blanc-sale
+#
+void plastic dirty-white_ALBA
+0
+0
+5  0.51 0.473 0.412     0     0
+
+#
+# Scots_pine_wood / Bois_Pin_sylvestre
+#
+void plastic Scots_pine_wood
+0
+0
+5  0.64 0.415 0.195     0     0
+
+#
+# arolle_wood / Bois_Arolle
+#
+void plastic arolle_wood
+0
+0
+5 0.645 0.374 0.162     0     0
+
+#
+# linden_wood / Bois_Tilleul
+#
+void plastic linden_wood
+0
+0
+5 0.591 0.382 0.196     0     0
+
+#
+# light_concrete / Beton_clair
+#
+void plastic light_concrete
+0
+0
+5  0.47 0.403 0.337     0     0
+
+#
+#   ash_wood / Bois_Frene
+#
+void plastic   ash_wood
+0
+0
+5 0.544 0.362 0.208     0     0
+
+#
+# blue-gray_ETERNIT / ETERNIT_gris-bleu
+#
+void plastic blue-gray_ETERNIT
+0
+0
+5 0.287 0.429 0.372     0     0
+
+#
+# Oregon_pine_wood / Bois_Pin_Oregon
+#
+void plastic Oregon_pine_wood
+0
+0
+5 0.588 0.329 0.154     0     0
+
+#
+# cream-white_gravel / Gravier_chemin_blanc-creme
+#
+void plastic cream-white_gravel
+0
+0
+5 0.452 0.369 0.259     0     0
+
+#
+# chesnut_wood / Bois_Chataignier
+#
+void plastic chesnut_wood
+0
+0
+5 0.525 0.344  0.19     0     0
+
+#
+# limba_wood / Bois_Limba
+#
+void plastic limba_wood
+0
+0
+5 0.485 0.344  0.17     0     0
+
+#
+# light_Simplon_granite / Granit_Simplon_clair
+#
+void plastic light_Simplon_granite
+0
+0
+5 0.355 0.361 0.348     0     0
+
+#
+# birch_wood / Bois_Bouleau
+#
+void plastic birch_wood
+0
+0
+5 0.494 0.313 0.181     0     0
+
+#
+# hemlock_wood / Bois_Hemlock
+#
+void plastic hemlock_wood
+0
+0
+5 0.503 0.309 0.168     0     0
+
+#
+# larch_wood / Bois_Meleze
+#
+void plastic larch_wood
+0
+0
+5 0.528 0.294  0.14     0     0
+
+#
+# pink_ETERNIT / ETERNIT_rose
+#
+void plastic pink_ETERNIT
+0
+0
+5 0.473 0.287 0.259     0     0
+
+#
+#   elm_wood /  Bois_Orme
+#
+void plastic   elm_wood
+0
+0
+5  0.46 0.271 0.134     0     0
+
+#
+# light_blue_ETERNIT / ETERNIT_bleu-clair
+#
+void plastic light_blue_ETERNIT
+0
+0
+5 0.249   0.3 0.332     0     0
+
+#
+# cement_brick_2 / Briques_ciment_2
+#
+void plastic cement_brick_2
+0
+0
+5 0.356 0.269 0.225     0     0
+
+#
+# light_terra_cotta_brick / Brique_terre_cuite_claire
+#
+void plastic light_terra_cotta_brick
+0
+0
+5 0.427 0.242 0.146     0     0
+
+#
+# old_galvanised_sheet_metal / Tole_galvanisee_vieille
+#
+void metal old_galvanised_sheet_metal
+0
+0
+5 0.259 0.276  0.27   0.3   0.2
+
+#
+# beech_wood / Bois_Hetre
+#
+void plastic beech_wood
+0
+0
+5 0.413 0.214 0.125     0     0
+
+#
+# blue_ETERNIT / ETERNIT_bleu
+#
+void plastic blue_ETERNIT
+0
+0
+5 0.234 0.251  0.26     0     0
+
+#
+# cement_block / Plots_ciment
+#
+void plastic cement_block
+0
+0
+5  0.27 0.226 0.203     0     0
+
+#
+#   oak_wood / Bois_Chene
+#
+void plastic   oak_wood
+0
+0
+5 0.329 0.199   0.1     0     0
+
+#
+# textured_dark_terra_cotta_brick / Brique_terre_cuite_structuree_claire
+#
+void plastic textured_dark_terra_cotta_brick
+0
+0
+5 0.392 0.163 0.087     0     0
+
+#
+# dark_terra_cotta_brick / Brique_terre_cuite_foncee
+#
+void plastic dark_terra_cotta_brick
+0
+0
+5 0.364 0.155 0.097     0     0
+
+#
+# medium_concrete / Beton_moyen
+#
+void plastic medium_concrete
+0
+0
+5 0.244 0.194 0.145     0     0
+
+#
+# cherry_wood / Bois_Cerisier
+#
+void plastic cherry_wood
+0
+0
+5 0.334  0.16 0.077     0     0
+
+#
+# cement_brick_1 / Briques_ciment_1
+#
+void plastic cement_brick_1
+0
+0
+5 0.196   0.2 0.189     0     0
+
+#
+# auburn_ETERNIT / ETERNIT_brun-roux
+#
+void plastic auburn_ETERNIT
+0
+0
+5 0.341 0.148 0.113     0     0
+
+#
+# parquet_wood / Bois_parquet
+#
+void plastic parquet_wood
+0
+0
+5 0.309 0.165 0.083     0     0
+
+#
+#  teak_wood /  Bois_Teck
+#
+void plastic  teak_wood
+0
+0
+5  0.28 0.153 0.071     0     0
+
+#
+# textured_light_terra_cotta_brick / Brique_terre_cuite_structuree_foncee
+#
+void plastic textured_light_terra_cotta_brick
+0
+0
+5 0.252 0.145 0.097     0     0
+
+#
+# violet_ETERNIT / ETERNIT_violet
+#
+void plastic violet_ETERNIT
+0
+0
+5 0.189 0.155 0.159     0     0
+
+#
+# dark_concrete / Beton_fonce
+#
+void plastic dark_concrete
+0
+0
+5 0.216 0.145 0.106     0     0
+
+#
+# dark_Ticino_granite / Granit_Tessin_fonce
+#
+void plastic dark_Ticino_granite
+0
+0
+5 0.194 0.143 0.123     0     0
+
+#
+# agglomerate_wood_fiber / Laine_bois_agglomere
+#
+void plastic agglomerate_wood_fiber
+0
+0
+5  0.17 0.147 0.107     0     0
+
+#
+#  pear_wood / Bois_Poirier
+#
+void plastic  pear_wood
+0
+0
+5 0.246   0.1 0.068     0     0
+
+#
+# oxidized_copper / Cuivre_oxyde
+#
+void metal oxidized_copper
+0
+0
+5 0.136 0.102 0.083   0.3   0.2
+
+#
+# walnut_wood / Bois_Noyer
+#
+void plastic walnut_wood
+0
+0
+5 0.156 0.093 0.068     0     0
+
+#
+# shiny_black_granite / Granit_noir_brillant
+#
+void plastic shiny_black_granite
+0
+0
+5 0.101 0.098 0.103  0.03  0.01
+
+#
+# clear_glass_4 / Verre_clair_4
+#
+void glass clear_glass_4
+0
+0
+3      1      1      1
+
+#
+# float_glass_3 / Verre_Float_3
+#
+void glass float_glass_3
+0
+0
+3 0.989889      1 0.984464
+
+#
+# float_glass_6 / Verre_Float_6
+#
+void glass float_glass_6
+0
+0
+3 0.982293      1 0.987719
+
+#
+# granular_glass_6 / Verre_granule_6
+#
+void texfunc gran_tex
+4 gran_dx gran_dy gran_dz plink.cal
+0
+0
+gran_tex glass granular_glass_6
+0
+0
+3 0.982293      1 0.987719
+
+#
+# hammered_glass_4 / Verre_martele_4
+#
+void texfunc mar_tex
+4 mar_dx mar_dy mar_dz plink.cal
+0
+0
+mar_tex glass hammered_glass_4
+0
+0
+3 0.999655 0.999655 0.999655
+
+#
+# safety_glass_8 / Verre_feuillete_8
+#
+void glass safety_glass_8
+0
+0
+3 0.982293      1 0.987719
+
+#
+# rough_wire-reinforced_glass_7 / Verre_arme_7
+#
+void brightfunc arm_pat
+2 arm_wire plink.cal
+0
+0
+arm_pat glass rough_wire-reinforced_glass_7
+0
+0
+3 0.90304 0.97144 0.918244
+
+#
+# smooth_wire-reinforced_glass_6.5 / Verre_glace_armee_6.5
+#
+void glass smooth_wire-reinforced_glass_6.5
+0
+0
+3 0.804159 0.99857 0.866106
+
+#
+# DIAPLUS_glass_6 / Verre_DIAPLUS_6
+#
+void glass DIAPLUS_glass_6
+0
+0
+3 0.868279 0.883488 0.834593
+
+#
+# light_gray_tinted_glass_6 / Verre_Antelio_gris-clair_6
+#
+void glass light_gray_tinted_glass_6
+0
+0
+3 0.453656 0.500507 0.456925
+
+#
+# light_brown_tinted_glass_6 / Verre_Antelio_brun-clair_6
+#
+void glass light_brown_tinted_glass_6
+0
+0
+3 0.480896 0.467821 0.362101
+
+#
+# bronze_tinted_glass_10 / Verre_Parsol_bronze_10
+#
+void glass bronze_tinted_glass_10
+0
+0
+3 0.400253 0.390443 0.290142
+

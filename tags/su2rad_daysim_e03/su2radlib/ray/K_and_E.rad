@@ -1,0 +1,1048 @@
+#########################################################
+# Material description file for RADIANCE models         #
+#                                                       #
+# This file is provided with PLINK version 1.2 (Feb 92) #
+#########################################################
+
+#
+#  2K216 :      beige paint / peinture      Beige
+#
+void plastic  2K216
+0
+0
+5 0.741 0.716 0.557     0     0
+
+#
+#  2K218 :      beige paint / peinture      Beige
+#
+void plastic  2K218
+0
+0
+5 0.751 0.704 0.456     0     0
+
+#
+#  1K117 :  off-white paint / peinture Blanc casse
+#
+void plastic  1K117
+0
+0
+5 0.691 0.696 0.615     0     0
+
+#
+#  2K217 :  yellowish paint / peinture   Jaunatre
+#
+void plastic  2K217
+0
+0
+5 0.743 0.684  0.48     0     0
+
+#
+#  2K205 :  off-white paint / peinture Blanc casse
+#
+void plastic  2K205
+0
+0
+5 0.719 0.672 0.558     0     0
+
+#
+#  6K605 : light gray paint / peinture Gris clair
+#
+void plastic  6K605
+0
+0
+5 0.662 0.687 0.613     0     0
+
+#
+#  4E400 : sulfur-yellow paint / peinture Jaune-soufre
+#
+void plastic  4E400
+0
+0
+5 0.895 0.653 0.114  0.03  0.02
+
+#
+#  1K105 : light gray paint / peinture Gris clair
+#
+void plastic  1K105
+0
+0
+5 0.687 0.665  0.62     0     0
+
+#
+#  1E101 : white-gray paint / peinture Gris-blanc
+#
+void plastic  1E101
+0
+0
+5 0.737 0.646 0.602  0.03  0.02
+
+#
+#  1K101 : light gray paint / peinture Gris clair
+#
+void plastic  1K101
+0
+0
+5 0.683 0.668 0.585     0     0
+
+#
+#  2K206 :      cream paint / peinture      Creme
+#
+void plastic  2K206
+0
+0
+5 0.743 0.659 0.456     0     0
+
+#
+#  2K201 :      beige paint / peinture      Beige
+#
+void plastic  2K201
+0
+0
+5 0.689 0.669 0.544     0     0
+
+#
+#  2K208 :      beige paint / peinture      Beige
+#
+void plastic  2K208
+0
+0
+5 0.756  0.65 0.417     0     0
+
+#
+#  7K701 : pastel green paint / peinture Vert pastel
+#
+void plastic  7K701
+0
+0
+5 0.635 0.672 0.594     0     0
+
+#
+#  1K122 : light gray paint / peinture Gris clair
+#
+void plastic  1K122
+0
+0
+5 0.679  0.64 0.597     0     0
+
+#
+#  2K219 :      ivory paint / peinture     Ivoire
+#
+void plastic  2K219
+0
+0
+5 0.676 0.652 0.475     0     0
+
+#
+#  4K403 :      beige paint / peinture      Beige
+#
+void plastic  4K403
+0
+0
+5  0.76 0.627 0.358     0     0
+
+#
+#  7K707 : pastel green paint / peinture Vert pastel
+#
+void plastic  7K707
+0
+0
+5 0.642 0.646 0.509     0     0
+
+#
+#  1K109 : light gray paint / peinture Gris clair
+#
+void plastic  1K109
+0
+0
+5 0.636 0.633 0.626     0     0
+
+#
+#  4K401 : light yellow paint / peinture Jaune clair
+#
+void plastic  4K401
+0
+0
+5 0.702 0.638 0.319     0     0
+
+#
+#  1K113 : light gray paint / peinture Gris clair
+#
+void plastic  1K113
+0
+0
+5 0.613 0.634 0.627     0     0
+
+#
+#  7K709 : greenish-white paint / peinture Blanc-verdatre
+#
+void plastic  7K709
+0
+0
+5 0.635 0.632 0.514     0     0
+
+#
+#  4K402 :     yellow paint / peinture      Jaune
+#
+void plastic  4K402
+0
+0
+5 0.758 0.619 0.191     0     0
+
+#
+#  8K801 : yellow-green paint / peinture Vert-jaune
+#
+void plastic  8K801
+0
+0
+5 0.651 0.664 0.176     0     0
+
+#
+#  2K202 :      beige paint / peinture      Beige
+#
+void plastic  2K202
+0
+0
+5 0.636 0.597 0.444     0     0
+
+#
+#  6K601 : light blue paint / peinture Bleu clair
+#
+void plastic  6K601
+0
+0
+5  0.55 0.601 0.593     0     0
+
+#
+#  2K209 :      beige paint / peinture      Beige
+#
+void plastic  2K209
+0
+0
+5 0.675 0.566 0.434     0     0
+
+#
+#  2K220 :      cream paint / peinture      Creme
+#
+void plastic  2K220
+0
+0
+5 0.641 0.581 0.348     0     0
+
+#
+#  4K407 :     yellow paint / peinture      Jaune
+#
+void plastic  4K407
+0
+0
+5 0.682 0.559 0.323     0     0
+
+#
+#  7K710 : light green paint / peinture Vert clair
+#
+void plastic  7K710
+0
+0
+5 0.538 0.602 0.445     0     0
+
+#
+#  1K102 : light gray paint / peinture Gris clair
+#
+void plastic  1K102
+0
+0
+5 0.583 0.573 0.507     0     0
+
+#
+#  4K405 :     yellow paint / peinture      Jaune
+#
+void plastic  4K405
+0
+0
+5 0.687 0.557 0.268     0     0
+
+#
+#  7K702 :      green paint / peinture       Vert
+#
+void plastic  7K702
+0
+0
+5 0.473 0.607 0.525     0     0
+
+#
+#  1K106 : light gray paint / peinture Gris clair
+#
+void plastic  1K106
+0
+0
+5  0.57 0.562 0.546     0     0
+
+#
+#  4K404 :     yellow paint / peinture      Jaune
+#
+void plastic  4K404
+0
+0
+5 0.697 0.546 0.227     0     0
+
+#
+#  7K704 :      green paint / peinture       Vert
+#
+void plastic  7K704
+0
+0
+5 0.532 0.564 0.498     0     0
+
+#
+#  6K608 : light blue paint / peinture Bleu clair
+#
+void plastic  6K608
+0
+0
+5  0.51 0.556 0.605     0     0
+
+#
+#  8K804 :     yellow paint / peinture      Jaune
+#
+void plastic  8K804
+0
+0
+5 0.805  0.51  0.02     0     0
+
+#
+#  1K119 : green-gray paint / peinture  Gris-vert
+#
+void plastic  1K119
+0
+0
+5  0.52 0.567 0.466     0     0
+
+#
+#  6K609 :  blue-gray paint / peinture  Gris-bleu
+#
+void plastic  6K609
+0
+0
+5 0.511 0.547  0.59     0     0
+
+#
+#  1K114 :       gray paint / peinture       Gris
+#
+void plastic  1K114
+0
+0
+5 0.503 0.543 0.552     0     0
+
+#
+#  4K408 :     yellow paint / peinture      Jaune
+#
+void plastic  4K408
+0
+0
+5 0.673 0.509 0.263     0     0
+
+#
+#  1K110 : light gray paint / peinture Gris clair
+#
+void plastic  1K110
+0
+0
+5  0.52 0.536 0.525     0     0
+
+#
+#  2K203 :      cream paint / peinture      Creme
+#
+void plastic  2K203
+0
+0
+5 0.588 0.525 0.347     0     0
+
+#
+#  2K222 :      beige paint / peinture      Beige
+#
+void plastic  2K222
+0
+0
+5 0.578 0.522 0.321     0     0
+
+#
+#  4K406 : ochre-yellow paint / peinture Jaune-ocre
+#
+void plastic  4K406
+0
+0
+5 0.686 0.482 0.192     0     0
+
+#
+#  6K602 : light blue-gray paint / peinture Gris-bleu clair
+#
+void plastic  6K602
+0
+0
+5 0.466 0.523 0.569     0     0
+
+#
+#  1K111 : light gray paint / peinture Gris clair
+#
+void plastic  1K111
+0
+0
+5 0.495 0.509 0.508     0     0
+
+#
+#  7K708 :      green paint / peinture       Vert
+#
+void plastic  7K708
+0
+0
+5 0.472 0.528 0.331     0     0
+
+#
+#  1K103 : light gray paint / peinture Gris clair
+#
+void plastic  1K103
+0
+0
+5 0.511 0.498 0.431     0     0
+
+#
+#  1K125 : beige-gray paint / peinture Gris-beige
+#
+void plastic  1K125
+0
+0
+5 0.518 0.467 0.351     0     0
+
+#
+#  3K305 : beige-gray paint / peinture Gris-beige
+#
+void plastic  3K305
+0
+0
+5 0.478 0.467 0.396     0     0
+
+#
+#  1K120 : green-gray paint / peinture  Gris-vert
+#
+void plastic  1K120
+0
+0
+5 0.446 0.476 0.403     0     0
+
+#
+#  8K802 :      green paint / peinture       Vert
+#
+void plastic  8K802
+0
+0
+5 0.473 0.505 0.079     0     0
+
+#
+#  4K409 :     yellow paint / peinture      Jaune
+#
+void plastic  4K409
+0
+0
+5 0.569 0.459 0.119     0     0
+
+#
+#  2K221 : greenish-yellow paint / peinture Jaune-verdatre
+#
+void plastic  2K221
+0
+0
+5 0.528 0.461 0.219     0     0
+
+#
+#  3K301 : light gray paint / peinture Gris clair
+#
+void plastic  3K301
+0
+0
+5 0.489 0.445 0.377     0     0
+
+#
+#  2K204 :      beige paint / peinture      Beige
+#
+void plastic  2K204
+0
+0
+5 0.506 0.449 0.279     0     0
+
+#
+#  2K210 :      beige paint / peinture      Beige
+#
+void plastic  2K210
+0
+0
+5  0.54 0.425 0.277     0     0
+
+#
+#  1E123 : pebble-gray paint / peinture Gris-caillou
+#
+void plastic  1E123
+0
+0
+5 0.492 0.418 0.351  0.03  0.02
+
+#
+#  1K107 : light gray paint / peinture Gris clair
+#
+void plastic  1K107
+0
+0
+5 0.433 0.435 0.405     0     0
+
+#
+#  1K104 : light gray paint / peinture Gris clair
+#
+void plastic  1K104
+0
+0
+5 0.451  0.43 0.365     0     0
+
+#
+#  2K213 :      beige paint / peinture      Beige
+#
+void plastic  2K213
+0
+0
+5 0.516 0.416 0.243     0     0
+
+#
+#  3K308 :      beige paint / peinture      Beige
+#
+void plastic  3K308
+0
+0
+5  0.48 0.421 0.302     0     0
+
+#
+#  7K705 : green-blue paint / peinture  Bleu-vert
+#
+void plastic  7K705
+0
+0
+5 0.383 0.442 0.386     0     0
+
+#
+#  1K115 :  blue-gray paint / peinture  Gris-bleu
+#
+void plastic  1K115
+0
+0
+5 0.383 0.426 0.468     0     0
+
+#
+#  2K223 :     yellow paint / peinture      Jaune
+#
+void plastic  2K223
+0
+0
+5 0.464 0.416 0.222     0     0
+
+#
+#  7K711 :      green paint / peinture       Vert
+#
+void plastic  7K711
+0
+0
+5 0.346 0.452 0.306     0     0
+
+#
+#  6K603 : light blue paint / peinture Bleu clair
+#
+void plastic  6K603
+0
+0
+5  0.33 0.428 0.488     0     0
+
+#
+#  2K214 :     yellow paint / peinture      Jaune
+#
+void plastic  2K214
+0
+0
+5 0.504 0.395 0.175     0     0
+
+#
+#  2K212 : brownish-beige paint / peinture Beige-brunatre
+#
+void plastic  2K212
+0
+0
+5 0.529 0.369 0.205     0     0
+
+#
+#  1K124 :       gray paint / peinture       Gris
+#
+void plastic  1K124
+0
+0
+5  0.42 0.389  0.36     0     0
+
+#
+#  1K112 :       gray paint / peinture       Gris
+#
+void plastic  1K112
+0
+0
+5 0.379 0.396 0.419     0     0
+
+#
+#  1K108 : light gray paint / peinture Gris clair
+#
+void plastic  1K108
+0
+0
+5 0.391  0.39 0.367     0     0
+
+#
+#  2K215 :     yellow paint / peinture      Jaune
+#
+void plastic  2K215
+0
+0
+5 0.461 0.373 0.162     0     0
+
+#
+#  1K116 :  blue-gray paint / peinture  Gris-bleu
+#
+void plastic  1K116
+0
+0
+5 0.344 0.386 0.427     0     0
+
+#
+#  4E404 : chrome-yellow paint / peinture Jaune-chrome
+#
+void plastic  4E404
+0
+0
+5 0.636 0.316 0.029  0.03  0.02
+
+#
+#  2K225 :      brown paint / peinture       Brun
+#
+void plastic  2K225
+0
+0
+5 0.467 0.363 0.171     0     0
+
+#
+#  4K410 :     yellow paint / peinture      Jaune
+#
+void plastic  4K410
+0
+0
+5 0.584 0.326 0.084     0     0
+
+#
+#  1K126 :       gray paint / peinture       Gris
+#
+void plastic  1K126
+0
+0
+5 0.396 0.368 0.283     0     0
+
+#
+#  1K127 :      beige paint / peinture      Beige
+#
+void plastic  1K127
+0
+0
+5 0.408 0.365  0.25     0     0
+
+#
+#  4K411 :      ochre paint / peinture       Ocre
+#
+void plastic  4K411
+0
+0
+5 0.576  0.29 0.117     0     0
+
+#
+#  2K211 : brownish-yellow paint / peinture Jaune-brunatre
+#
+void plastic  2K211
+0
+0
+5 0.421 0.323  0.18     0     0
+
+#
+#  7K713 : light green paint / peinture Vert clair
+#
+void plastic  7K713
+0
+0
+5 0.361 0.346  0.15     0     0
+
+#
+#  6K604 :       blue paint / peinture       Bleu
+#
+void plastic  6K604
+0
+0
+5 0.256 0.344  0.41     0     0
+
+#
+#  7K712 :      green paint / peinture       Vert
+#
+void plastic  7K712
+0
+0
+5 0.304 0.335 0.191     0     0
+
+#
+#  3K306 :       gray paint / peinture       Gris
+#
+void plastic  3K306
+0
+0
+5 0.317 0.316 0.265     0     0
+
+#
+#  4K412 : orange-beige paint / peinture Beige-orange
+#
+void plastic  4K412
+0
+0
+5 0.497 0.257 0.095     0     0
+
+#
+#  7K706 : green-blue paint / peinture  Bleu-vert
+#
+void plastic  7K706
+0
+0
+5 0.262 0.327 0.264     0     0
+
+#
+#  3K309 :       gray paint / peinture       Gris
+#
+void plastic  3K309
+0
+0
+5 0.322 0.297 0.255     0     0
+
+#
+#  1E121 : silver-gray paint / peinture Gris-argent
+#
+void plastic  1E121
+0
+0
+5 0.305 0.293 0.319  0.03  0.02
+
+#
+#  2K224 :      olive paint / peinture      Olive
+#
+void plastic  2K224
+0
+0
+5 0.331 0.297 0.128     0     0
+
+#
+#  7E712 : pale green paint / peinture  Vert pale
+#
+void plastic  7E712
+0
+0
+5 0.308  0.29 0.198  0.03  0.02
+
+#
+#  2K229 :      green paint / peinture       Vert
+#
+void plastic  2K229
+0
+0
+5 0.311 0.285 0.165     0     0
+
+#
+#  2K228 :      brown paint / peinture       Brun
+#
+void plastic  2K228
+0
+0
+5  0.37 0.262 0.134     0     0
+
+#
+#  1K128 :      beige paint / peinture      Beige
+#
+void plastic  1K128
+0
+0
+5 0.308 0.277 0.192     0     0
+
+#
+#  2K227 :      brown paint / peinture       Brun
+#
+void plastic  2K227
+0
+0
+5  0.37  0.26 0.126     0     0
+
+#
+#  2K226 :      brown paint / peinture       Brun
+#
+void plastic  2K226
+0
+0
+5 0.358 0.244 0.123     0     0
+
+#
+#  1E122 : stone-gray paint / peinture Gris-pierre
+#
+void plastic  1E122
+0
+0
+5 0.291 0.251 0.224  0.03  0.02
+
+#
+#  4K413 : orange-brown paint / peinture Brun-orange
+#
+void plastic  4K413
+0
+0
+5 0.446 0.198 0.075     0     0
+
+#
+#  8K803 :      olive paint / peinture      Olive
+#
+void plastic  8K803
+0
+0
+5 0.275  0.27 0.023     0     0
+
+#
+#  1K129 :       gray paint / peinture       Gris
+#
+void plastic  1K129
+0
+0
+5 0.264 0.252 0.177     0     0
+
+#
+#  3K302 : light gray paint / peinture Gris clair
+#
+void plastic  3K302
+0
+0
+5 0.247 0.249  0.22     0     0
+
+#
+#  3K311 :       gray paint / peinture       Gris
+#
+void plastic  3K311
+0
+0
+5 0.257 0.244 0.212     0     0
+
+#
+#  4K414 : light brown paint / peinture Brun clair
+#
+void plastic  4K414
+0
+0
+5 0.385 0.187 0.087     0     0
+
+#
+#  5K505 :  red-brown paint / peinture Brun-rouge
+#
+void plastic  5K505
+0
+0
+5 0.364 0.187 0.143     0     0
+
+#
+#  7K714 :      green paint / peinture       Vert
+#
+void plastic  7K714
+0
+0
+5 0.216 0.237 0.094     0     0
+
+#
+#  3K303 :       gray paint / peinture       Gris
+#
+void plastic  3K303
+0
+0
+5 0.218  0.22 0.191     0     0
+
+#
+#  8K806 :       blue paint / peinture       Bleu
+#
+void plastic  8K806
+0
+0
+5 0.121 0.222 0.391     0     0
+
+#
+#  1E105 : concrete-gray paint / peinture Gris-beton
+#
+void plastic  1E105
+0
+0
+5 0.224 0.196 0.173  0.03  0.02
+
+#
+#  8K805 : orange-red paint / peinture Rouge-orange
+#
+void plastic  8K805
+0
+0
+5 0.433 0.118 0.073     0     0
+
+#
+#  3K310 :       gray paint / peinture       Gris
+#
+void plastic  3K310
+0
+0
+5 0.199 0.182 0.153     0     0
+
+#
+#  3K312 : brown-gray paint / peinture  Gris-brun
+#
+void plastic  3K312
+0
+0
+5  0.21 0.173 0.129     0     0
+
+#
+#  3K313 : beige-brown paint / peinture Brun-beige
+#
+void plastic  3K313
+0
+0
+5  0.21 0.173 0.125     0     0
+
+#
+#  7E704 : reseda-green paint / peinture Vert-reseda
+#
+void plastic  7E704
+0
+0
+5 0.181 0.173 0.099  0.03  0.02
+
+#
+#  5E520 : lilac-blue paint / peinture  Bleu-lila
+#
+void plastic  5E520
+0
+0
+5 0.168 0.154 0.292  0.03  0.02
+
+#
+#  3K307 :       gray paint / peinture       Gris
+#
+void plastic  3K307
+0
+0
+5 0.174 0.171 0.137     0     0
+
+#
+#  3K304 :  dark gray paint / peinture Gris fonce
+#
+void plastic  3K304
+0
+0
+5 0.158 0.148 0.124     0     0
+
+#
+#  1K130 :       gray paint / peinture       Gris
+#
+void plastic  1K130
+0
+0
+5 0.134 0.153 0.141     0     0
+
+#
+#  1K134 :  dark gray paint / peinture Gris fonce
+#
+void plastic  1K134
+0
+0
+5 0.133 0.137 0.158     0     0
+
+#
+#  1E119 :  blue-gray paint / peinture  Gris-bleu
+#
+void plastic  1E119
+0
+0
+5 0.118 0.121 0.136  0.03  0.02
+
+
+#
+#  5E509 :   fire-red paint / peinture  Rouge-feu
+#
+void plastic  5E509
+0
+0
+5  0.25 0.078 0.031  0.03  0.02
+
+#
+#  7E706 : emerald-green paint / peinture Vert-emeraude
+#
+void plastic  7E706
+0
+0
+5 0.077 0.097  0.03  0.03  0.02
+
+#
+#  7E711 : olive-green paint / peinture Vert-olive
+#
+void plastic  7E711
+0
+0
+5 0.082  0.07 0.039  0.03  0.02
+
+#
+#  5E504 :   ruby-red paint / peinture Rouge-rubis
+#
+void plastic  5E504
+0
+0
+5 0.147 0.038 0.016  0.03  0.02
+
+#
+#  6E610 : gentian-blue paint / peinture Bleu-gentiane
+#
+void plastic  6E610
+0
+0
+5 0.004 0.057 0.173  0.03  0.02
+
+
+#
+#  5E505 : purple-red paint / peinture Rouge-pourpre
+#
+void plastic  5E505
+0
+0
+5  0.09 0.026 0.014  0.03  0.02
+
+#
+#  3E311 : mahogany-brown paint / peinture Brun-acajou
+#
+void plastic  3E311
+0
+0
+5 0.052 0.027 0.013  0.03  0.02
+
+#
+#  5E506 :   wine-red paint / peinture  Rouge-vin
+#
+void plastic  5E506
+0
+0
+5 0.059 0.018 0.012  0.03  0.02
+
+#
+#  6E605 : sapphire-blue paint / peinture Bleu-saphir
+#
+void plastic  6E605
+0
+0
+5 0.008 0.027 0.077  0.03  0.02
+
