@@ -105,7 +105,7 @@ function ColorGradient() {
     this.minValue = 0.0;
 }
 
-ColorGradient.prototype.getColorByValue = function (value) {
+ColorGradient.prototype.getColorByValue = function (value, lightness) {
     if (value == 0.0) {
         return "#ffffff";
     }
@@ -122,15 +122,18 @@ ColorGradient.prototype.getColorByValue = function (value) {
     var period = 2*Math.PI;
     // x is place along x axis of cosine wave
     var x = shft + position * period;
-    var r = this.process( Math.floor((Math.cos(x) + 1) * scale) );
-    var g = this.process( Math.floor((Math.cos(x+Math.PI/2) + 1) * scale) );
-    var b = this.process( Math.floor((Math.cos(x+Math.PI) + 1) * scale) );
+    var r = this.process( Math.floor((Math.cos(x)           + 1) * scale), lightness );
+    var g = this.process( Math.floor((Math.cos(x+Math.PI/2) + 1) * scale), lightness );
+    var b = this.process( Math.floor((Math.cos(x+Math.PI)   + 1) * scale), lightness );
     return '#' + r + g + b;
 }
 
-ColorGradient.prototype.process = function (num) {
+ColorGradient.prototype.process = function (num, lightness) {
+        if (lightness ==  null) {
+            lightness = this.lightness;
+        }
         // adjust lightness
-        var n = Math.floor( num + this.lightness * (256 - num));
+        var n = Math.floor( num + lightness * (256 - num));
         // turn to hex
         var s = n.toString(16);
         // if no first char, prepend 0
@@ -157,13 +160,13 @@ function GridArray() {
 }
 
 GridArray.prototype.init = function () {
-    log.debug("GridArray.init()")
     this.bbox = null;
     this.cols = new UniqueArray();
     this.gridByY = {};
     this.rows = [];
     this.stats = {};
     this.values = [];
+    this._contourCache = {};
 }
 
 GridArray.prototype.addPoint = function (p) {
@@ -290,6 +293,98 @@ GridArray.prototype.getArrayIndex = function (a,v) {
     return -1;
 }
 
+
+GridArray.prototype.getContourLinesAt = function (level) {
+    // return array of contour line segments 
+    
+    // check cache first
+    if (this._contourCache[level] != null) {
+        return this._contourCache[level]
+    }
+    
+    var lines = []
+    // some checks to avoid useless loops later
+    if (this.empty() || this.rows.length < 3) {
+        log.warn("not enough rows for contour line calculation")
+        return lines;
+    }
+    
+    // start loop over rows
+    for (var i=0; i<this.rows.length-1; i++) {
+        var row1 = this.getRowAt(this.rows[i]);
+        var row2 = this.getRowAt(this.rows[i+1]);
+        for (var ix=0; ix<row1.length-1; ix++) {
+            var points = [];
+            var ll = row2[ix];
+            var lr = row2[ix+1];
+            var ur = row1[ix+1];
+            var ul = row1[ix];
+            if (ll.v == -1 || lr.v == -1 || ur.v == -1 || ul.v == -1) {
+                continue
+            }
+            
+            // skip tiles where on corner was 'filled in'
+            var values = [ll.v, lr.v, ur.v, ul.v]
+            values.sort();
+            if (values[0] == -1 || values[0] > level || values[-1] < level) {
+                continue;
+            }
+            
+            // case contour line goes through point
+            if (ll.v == level) { points.push([ll.x,ll.y]) };
+            if (lr.v == level) { points.push([lr.x,ll.y]) };
+            if (ur.v == level) { points.push([ur.x,ur.y]) };
+            if (ul.v == level) { points.push([ul.x,ul.y]) };
+            
+            var edges = [[ll,lr],[lr,ur],[ur,ul],[ul,ll]];
+            for (var e=0; e<edges.length; e++) {
+                var p1 = edges[e][0]
+                var p2 = edges[e][1]
+                if (p1.v > level && p2.v < level) {
+                    var DV = p1.v-p2.v
+                } else if (p1.v < level && p2.v > level) {
+                    var DV = p1.v-p2.v
+                } else {
+                    continue
+                }
+                var DX = p2.x-p1.x
+                var DY = p2.y-p1.y
+                var dx = DX*(p1.v-level) / DV
+                var dy = DY*(p1.v-level) / DV
+                points.push( [p1.x+dx,p1.y+dy] );
+            }
+            
+            // append line segment to array
+            if (points.length == 2) {
+                lines.push( [points[0], points[1]] )
+            }
+            
+        } // end ix loop (points in rows)
+    
+    } // end i loop (rows)
+    
+    // add lines to cache and return array
+    this._contourCache[level] = lines;
+    return lines;
+            
+            /*
+            if (ll.v > level) {
+                if (lr.v < level) {
+                    var dx = (lr.x-ll.x)*(ll.v-level) / (ll.v-lr.v)
+                    points.push( [ll.x+dx,ll.y] );
+                }
+                if (ul.v < level) {
+                    var dy = (ul.y-ll.y)*(ll.v-level) / (ll.v-ul.v)
+                    points.push( [ll.x,ll.y+dy] );
+            }
+            if (lr.v > level) {
+                if (ll.v < level) {
+                    var dx = (lr.x-ll.x)*(lr.v-level) / (lr.v-ll.v)
+                    points.push( [lr.x-dx,lr.y] );
+                }
+            }
+            */
+}
 
 GridArray.prototype.getRows = function () {
     return this.rows
@@ -426,6 +521,32 @@ GridCanvas.prototype.draw = function () {
     }
 }
 
+GridCanvas.prototype.drawContourLines = function (ctx) {
+    var dValue = (this.gradient.maxValue - this.gradient.minValue) / this.legendSteps
+    ctx.save()
+    ctx.lineWidth = 2/this.canvasscale;;
+    ctx.strokeStyle = '#000000'
+    for (var n=1; n<=Math.floor(this.gradient.maxValue/dValue); n++) {
+        try {
+            var lines = this.array.getContourLinesAt(n*dValue);
+        } catch(e) {
+            logError(e)
+            continue
+        }
+        if (lines.length > 0) {
+            var color = this.gradient.getColorByValue(n*dValue, 0.0);
+            ctx.strokeStyle = color;
+            ctx.beginPath()
+            for (var i=0; i<lines.length; i++) {
+                ctx.moveTo(lines[i][0][0], lines[i][0][1]);
+                ctx.lineTo(lines[i][1][0], lines[i][1][1]);
+            }
+            ctx.stroke()
+        }
+    }
+    ctx.restore()
+}
+
 GridCanvas.prototype.drawGrid = function (ctx) {
     if ( this.array.bbox == null ) {
         return
@@ -454,6 +575,7 @@ GridCanvas.prototype.drawGrid = function (ctx) {
             }
         }
     }
+    this.drawContourLines(ctx)
     ctx.restore()
 }
 
