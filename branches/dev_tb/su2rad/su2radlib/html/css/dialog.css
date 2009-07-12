@@ -78,6 +78,23 @@ code {
     width: 50px;
     margin-right: 10px;
 }
+
+#graphOptionsPanel {
+    float: left;
+    height: 360px;
+    width: 150px;
+    border: 1px solid black;
+    background-color: #ffffdd;
+    margin-left: 10px;
+    padding: 0px;
+}
+
+#graphOptionsPanel .gridRow {
+    width: 145px;
+    margin: 0px;
+    /* outline: 1px solid #27537a; */
+}
+
 h1 {
     margin: 1em 0 1.5em;
     font-size: 18px;
@@ -256,10 +273,12 @@ input.file {
     padding: 0;
     margin: 0;
 }
+
 .defaultValue {
     font-weight: normal;
     width: 40px;
 }
+
 .gridRow {
     width: 580px;
     height: 20px;

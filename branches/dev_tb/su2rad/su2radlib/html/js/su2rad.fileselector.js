@@ -29,11 +29,10 @@ fileSelector.select = function () {
     }
 }            
 
-fileSelector.show = function () {
+fileSelector.show = function(ftRoot) {
     try {
         log.debug("fileSelectorWindow.show() ...");
         fileSelector._filePath = "";    // reset to empty string
-        var ftRoot = document.getElementById('scenePath').value;
         
         //log.debug("fileSelector root='" + ftRoot + "'");
         $('#fileSelectorNote').text(ftRoot);

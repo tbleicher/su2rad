@@ -31,6 +31,7 @@
         <!-- su2rad specific javascript files -->
         <script type="text/javascript" src="./js/su2rad_tooltip.js"></script>
         <script type="text/javascript" src="./js/su2rad_test.js"></script>
+        <script type="text/javascript" src="./js/su2rad.dialog.common.js"></script>
         <script type="text/javascript" src="./js/su2rad_backend_interface.js"></script>
         <script type="text/javascript" src="./js/su2rad.fileselector.js"></script>
         <script type="text/javascript" src="./js/su2rad_export.js"></script>
@@ -127,7 +128,7 @@
                         <div class="gridLabel">path:</div>
                         <div class="gridCell" style="width:305px;">
                             <input type="text" style="width:275px;" name="scenePath" id="scenePath" value="." onchange="setExportPath()"/>
-                            <a onclick="fileSelector.show()">
+                            <a onclick="fileSelector.show(document.getElementById('scenePath').value)">
                                 <img class="fileSelectorIcon" src="./css/24-zoom.png"/>
                             </a>
                         </div>
