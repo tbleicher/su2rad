@@ -142,6 +142,9 @@
             $().ready(function() {
                 $('#fileSelectorWindow').jqm();
                 $('#fileSelectorWindow').jqmAddTrigger('.selectButton');
+                $('#legendMaxInput').numeric({allow:".-"});
+                $('#legendMinInput').numeric({allow:".-"});
+                $('#legendStepsInput').numeric();
             });
 
 
