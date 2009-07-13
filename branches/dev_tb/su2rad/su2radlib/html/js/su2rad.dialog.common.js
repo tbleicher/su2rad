@@ -4,6 +4,7 @@ function setSketchup() {
     log.info('using Sketchup backend ...'); 
     log.debug('browser: ' + navigator.userAgent);
     SKETCHUP = true;
+    evaluateSketchup();
 }
 
 function setTest() {
@@ -15,6 +16,10 @@ function setTest() {
         // log might not be defined yet
     }
     SKETCHUP = false;
+    evaluateSketchup();
+}
+
+function evaluateSketchup() {
 }
 
 function decodeJSON(text) {
@@ -26,7 +31,7 @@ function decodeText(encText) {
     // text file is encoded via urlEncode - replace '+'
     var text = unescape(encText)
     text = text.replace(/\+/g,' ');
-    return json;
+    return text;
 }
 
 function encodeJSON(json) {

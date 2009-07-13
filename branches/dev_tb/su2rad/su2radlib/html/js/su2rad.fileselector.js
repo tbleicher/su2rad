@@ -3,21 +3,21 @@ var fileSelector = {};
 
 fileSelector._filePath = "";    // full path of selected file or dir 
 
+fileSelector.callback = function (path) {
+    // this should be overriden for each occasion
+    log.error("fileSelector.callback() path='" + path + "'");
+}
+
 fileSelector.applyPath = function () {
-    log.debug("selected file: " + this._filePath);
-    var lastchar = this._filePath.charAt(this._filePath.length-1);
-    if (lastchar == PATHSEP) {
-        // apply only directory path
-        log.debug("directory: '" + this._filePath + "'");
-        document.getElementById("scenePath").value = this._filePath;
-        setExportPath()
-    } else {
-        setExportPath(this._filePath)
-    } 
+    this.callback(this._filePath);
+}
+
+fileSelector.getFilepath = function () {
+    return this._filePath
 }
 
 fileSelector.close = function () {
-    log.debug("file selction canceled");
+    log.info("file selction canceled");
     $('#fileSelectorWindow').jqmHide();
 }            
 
@@ -81,7 +81,6 @@ fileSelector.setFileTreeJSON = function (tree, setPosition) {
         }
     }
 }
-
 
 fileSelector.formatTree = function (tree) {
     var d = "<ul class=\"jqueryFileTree\" style=\"display: none;\">"
