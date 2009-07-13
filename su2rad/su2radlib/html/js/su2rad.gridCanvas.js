@@ -106,8 +106,10 @@ function ColorGradient() {
 }
 
 ColorGradient.prototype.getColorByValue = function (value, lightness) {
-    if (value == 0.0) {
-        return "#ffffff";
+    if (value < this.minValue) {
+        value = this.minValue;
+    } else if (value > this.maxValue) {
+        value = this.maxValue;
     }
     // value between 1 and 0
     var position = (value - this.minValue) / (this.maxValue - this.minValue); 
@@ -175,7 +177,7 @@ GridArray.prototype.addPoint = function (p) {
     } else if (p.length == 7) {
         var value = p[6];
     } else {
-        log.error("line too short: '" + p.toString() + "'");
+        log.error("unknown format: '[" + p.join("][") + "]'");
         return;
     }
     var x = p[0];
@@ -201,6 +203,12 @@ GridArray.prototype.addMinMax = function (x,y,v) {
         if ( v < this.bbox[4] ) { this.bbox[4] = v };
         if ( v > this.bbox[5] ) { this.bbox[5] = v };
     }
+}
+
+GridArray.prototype.analyzeGrid = function () {
+    this.calcStats();
+    this.fillRows();
+    this.sortArray();
 }
 
 GridArray.prototype.calcStats = function () {
@@ -414,14 +422,36 @@ GridArray.prototype.sortArray = function () {
     }
 }
 
-GridArray.prototype.readArray = function (gridarray) {
-    this.init()
-    for (var i=0; i<gridarray.length; i++) {
-        this.addPoint(gridarray[i]);
+GridArray.prototype.parseText = function (text) {
+    var re_cr = /\r/g
+    var re_sp = /\s+/
+    text = text.replace(re_cr, '');
+    var lines = text.split("\n")
+    for (i=0; i<lines.length; i++) {
+        try {
+            var line = lines[i];
+            var idx = line.indexOf('#');
+            if (idx == 0) {
+                log.info('comment: ' + line);
+                continue;
+            } else if (idx > 0) {
+                line = line.slice(0, idx);
+            }
+            var values = [];
+            var rawparts = line.split(re_sp);
+            for (var j=0; j<rawparts.length; j++) {
+                var v = parseFloat(rawparts[j]);
+                if ( ! isNaN(v) ) {
+                    values.push(v);
+                }
+            }
+            this.addPoint(values); 
+        } catch (e) {
+            logError(e)
+        }
     }
-    this.calcStats();
-    this.fillRows();
-    this.sortArray();
+    // finally create stats etc.
+    this.analyzeGrid()
 }
 
 GridArray.prototype.printStats = function () {
@@ -433,6 +463,14 @@ GridArray.prototype.printStats = function () {
     text += "rows[-1]= " + this.rows[this.rows.length-1] + "\n";
     //text += "this[this.rows[0]]= " + this[this.rows[0]];
     addDebugText(text);
+}
+
+GridArray.prototype.readArray = function (gridarray) {
+    this.init()
+    for (var i=0; i<gridarray.length; i++) {
+        this.addPoint(gridarray[i]);
+    }
+    this.analyzeGrid()
 }
 
 GridArray.prototype.getTable = function (tableid) {

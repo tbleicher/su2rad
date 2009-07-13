@@ -1,5 +1,76 @@
+require 'export_modules.rb'
 require "exportbase.rb"
 require "delauney_mod.rb"
+require 'filesystemproxy.rb'
+
+
+class NumericImportDialog < ExportBase
+
+    include JSONUtils
+    include InterfaceBase
+
+    def initialize()
+
+    end
+
+    def show() 
+        if $SU2RAD_DIALOG_WINDOW
+            $SU2RAD_DIALOG_WINDOW.bring_to_front()
+            return
+        end
+        dlg = UI::WebDialog.new("su2rad - acknowledgement", true, nil, 900, 700, 50, 50, true);
+        
+        dlg.add_action_callback("onCancel") { |d,p|
+            uimessage("closing dialog ...")
+            d.close();
+            $SU2RAD_DIALOG_WINDOW = nil
+        }
+        dlg.add_action_callback("getDirectoryListing") {|d,p|
+            getDirectoryListing(d,p);
+        }
+        dlg.add_action_callback("loadTextFile") {|d,p|
+            loadTextFile(d,p);
+        }
+        
+        ## clean up actions
+        dlg.set_on_close {
+            uimessage("TODO: webdialog closed", 1)
+            $SU2RAD_DIALOG_WINDOW = nil
+        }
+        
+        ## load html file and show dialog
+        html = File.join(File.dirname(__FILE__), "html","importGrid.html")
+        dlg.set_file(html, nil)
+        $SU2RAD_DIALOG_WINDOW = dlg
+        dlg.show {
+            dlg.execute_script("setSketchup()")
+        }
+    end
+
+    def getDirectoryListing(dlg, dirpath)
+        dirpath,root = dirpath.split('&')
+        if root == 'true'
+            dirs = FileSystemProxy.listDirectoryTree(dirpath)
+        else
+            dirs = FileSystemProxy.listDirectory(dirpath)
+        end
+        json = toStringJSON(dirs)
+        dlg.execute_script( "fileSelector.setFileTreeJSON('%s', '%s')" % [encodeJSON(json),root])
+    end
+    
+    def loadTextFile(dlg, filepath)
+        text = ''
+        if File.exists?(filepath)
+            f = File.open(filepath, 'r')
+            text = f.read()
+            text = urlEncode(text)
+        end
+        dlg.execute_script("loadFileCallback('%s')" % text)
+    end
+
+end 
+
+
 
 class NumericImport < ExportBase
     
@@ -33,7 +104,7 @@ class NumericImport < ExportBase
             loadFile(filename)
         end
     end
-
+ 
     def setCLStep
         steps = [0.1,0.2,0.5,1.0,2.0,5.0,10,20,50,100,200,500,1000,2000,5000,10000]
         step = 100.0
@@ -541,7 +612,12 @@ class NumericImport < ExportBase
         end
         return x,y,w,h,dx,dy
     end
-        
+    
+    def showWebDialog()
+        wDlg = NumericImportDialog.new()
+        wDlg.show()
+    end
+    
 end
 
 

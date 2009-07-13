@@ -61,6 +61,11 @@
                 $('#fileSelectorWindow').jqmAddTrigger('.selectButton');
                 
             });
+            
+            function initPage() {
+                // bind fileSelector to setExportPath
+                fileSelector.callback = setExportPath
+            }
             //log.toggle();
         </script>
 

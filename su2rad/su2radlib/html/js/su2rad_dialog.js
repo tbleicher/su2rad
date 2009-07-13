@@ -35,16 +35,6 @@ try {
     logError(e)
 }
 
-function initPage() {
-    //log.toggle();
-    //window.resizeTo(640,800);
-    
-    // hide file selectors if FF3
-    //if (navigator.userAgent.indexOf('Firefox/3') != -1) {
-    //    document.getElementById("sceneFileSelection").style.display='none';
-    //}
-}
-
 function loadTestData() {
     setTest();
     if (SKETCHUP == false) {

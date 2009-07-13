@@ -121,9 +121,14 @@ function _setGlobalCoordsDisplay(val) {
 }
 
 function setExportPath(path) {
-    if (path == null) {
+    // callback for fileSelector
+    var lastchar = path.charAt(path.length-1);
+    if (lastchar == PATHSEP) {
+        // apply only directory path
+        log.debug("new directory: '" + path + "'");
+        document.getElementById("scenePath").value = path;
         path = _getExportPath()
-    }
+    } 
     log.debug("new path: '" + path + "'");
     exportSettings.setExportPath(path);
     updateExportFormValues();
