@@ -28,6 +28,9 @@ class NumericImportDialog < ExportBase
         dlg.add_action_callback("getDirectoryListing") {|d,p|
             getDirectoryListing(d,p);
         }
+        dlg.add_action_callback("importFromWebDialog") {|d,p|
+            importFromWebDialog(d,p);
+        }
         dlg.add_action_callback("loadTextFile") {|d,p|
             loadTextFile(d,p);
         }
@@ -56,6 +59,20 @@ class NumericImportDialog < ExportBase
         end
         json = toStringJSON(dirs)
         dlg.execute_script( "fileSelector.setFileTreeJSON('%s', '%s')" % [encodeJSON(json),root])
+    end
+    
+    def importFromWebDialog(dlg, opts)
+        items = opts.split('&')
+        items.each { |txt|
+            k,v = txt.split('=')
+            uimessage("TEST option '#{k}' = '#{v}'", 2)
+            if k == 'elementId'
+                values = dlg.get_element_value(v)
+                lines = values.split("\n")
+                print lines[0] + "\n"
+                print lines[1] + "\n"
+            end
+        }
     end
     
     def loadTextFile(dlg, filepath)

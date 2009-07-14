@@ -32,11 +32,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-function addDebugText(txt) {
-    var text = document.getElementById('messagearea').value;
-    document.getElementById('messagearea').value = text + "\n" + txt;
-} 
-
 function sortPointsByX (a,b) {
     if (a.x < b.x) {
         return -1;
@@ -456,13 +451,12 @@ GridArray.prototype.parseText = function (text) {
 
 GridArray.prototype.printStats = function () {
     var text = "";
-    text += "minValue= " + this.bbox[4].toFixed(2) + "\n";
-    text += "maxValue= " + this.bbox[5].toFixed(2) + "\n";
-    text += "rows= " + this.rows.length + "\n";
-    text += "rows[0]= " + this.rows[0] + "\n";
-    text += "rows[-1]= " + this.rows[this.rows.length-1] + "\n";
-    //text += "this[this.rows[0]]= " + this[this.rows[0]];
-    addDebugText(text);
+    text += "minValue= " + this.bbox[4].toFixed(2) + "<br/>";
+    text += "maxValue= " + this.bbox[5].toFixed(2) + "<br/>";
+    text += "rows= " + this.rows.length + "<br/>";
+    text += "rows[0]= " + this.rows[0] + "<br/>";
+    text += "rows[-1]= " + this.rows[this.rows.length-1];
+    log.debug(text);
 }
 
 GridArray.prototype.readArray = function (gridarray) {
@@ -696,6 +690,14 @@ GridCanvas.prototype.drawRulers = function (ctx) {
     ctx.restore()    
 }
 
+GridCanvas.prototype.getLegendOptions = function () {
+    var opts = {}
+    opts.maxValue = this.gradient.maxValue;
+    opts.minValue = this.gradient.minValue;
+    opts.steps = this.legendSteps;
+    return opts
+}
+
 GridCanvas.prototype.setArray = function (array) {
     this.array = array;
     if ( this.array.empty() == false ) {
@@ -723,14 +725,6 @@ GridCanvas.prototype.setLegend = function (position) {
         this.ruler.bottom = 138;
         this.legend = true;
     }
-}
-
-GridCanvas.prototype.getLegendOptions = function () {
-    var opts = {}
-    opts.maxValue = this.gradient.maxValue;
-    opts.minValue = this.gradient.minValue;
-    opts.steps = this.legendSteps;
-    return opts
 }
 
 GridCanvas.prototype.setLegendMax = function (value) {
@@ -815,11 +809,6 @@ GridCanvas.prototype.setScale = function () {
     } else {
         this.canvasscale = scaleY
     }
-    
-    var txt = document.getElementById('messagearea').value;
-    txt += "scaleX=" + scaleX.toFixed(3) + " scaleY=" + scaleY.toFixed(3) + "\n"
-    txt += 'this.array.bbox=' + this.array.bbox[0] + ' ' + this.array.bbox[1] + ' ' + this.array.bbox[2] + ' ' + this.array.bbox[3] + "\n"
-    document.getElementById('messagearea').value = txt;
 }
 
 

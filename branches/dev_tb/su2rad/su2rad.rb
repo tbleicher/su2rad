@@ -142,15 +142,17 @@ def startImport()
     if $SU2RAD_DEBUG
         if ni.loadFile('/Users/ble/tmp/numimport/ADF_medium.df') == true
             ni.confirmDialog
-            #ni.createMesh
-            #ni.addContourLines
-            #ni.addLabels
         end
     else
         if ni.loadFile() == true
             ni.confirmDialog
         end
     end
+end
+
+def startImportWeb()
+    ni = NumericImport.new()
+    ni.showWebDialog()
 end
 
 def aboutDialog
@@ -214,6 +216,7 @@ def addRadianceMenu
     
     importmenu = radmenu.add_submenu("Import")
     importmenu.add_item("rtrace values") { startImport() }
+    importmenu.add_item("rtrace values (web)") { startImportWeb() }
     radmenu.add_separator()
     
     #radmenu.add_item("Preferences") { preferencesDialog() }
