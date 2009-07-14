@@ -151,6 +151,7 @@ def startImport()
 end
 
 def startImportWeb()
+    $SU2RAD_CONFIG = RunTimeConfig.new()
     ni = NumericImport.new()
     ni.showWebDialog()
 end

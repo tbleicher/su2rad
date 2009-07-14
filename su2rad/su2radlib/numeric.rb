@@ -62,17 +62,32 @@ class NumericImportDialog < ExportBase
     end
     
     def importFromWebDialog(dlg, opts)
+        ## get options from URL string
+        optsDict = {'filename' => 'unknown'}
         items = opts.split('&')
         items.each { |txt|
             k,v = txt.split('=')
+            optsDict[k] = v
             uimessage("TEST option '#{k}' = '#{v}'", 2)
-            if k == 'elementId'
-                values = dlg.get_element_value(v)
-                lines = values.split("\n")
-                print lines[0] + "\n"
-                print lines[1] + "\n"
-            end
         }
+
+        ## try to get values, set options and create graph
+        begin
+            values = dlg.get_element_value(optsDict['elementId'])
+            lines = values.split("\n")
+            ni = NumericImport.new()
+            if ni.setLines(lines) == true
+                ni.applyOptions(optsDict)
+                ni.createGraph()
+            end
+            ## if successfull close the web dialog
+            dlg.close()
+        rescue => e
+            msg = "Error importing graph:\n%s\n\n%s\n" % [$!.message,e.backtrace.join("\n")]
+            uimessage(msg, -2)
+            ## set error message in dialog
+            dlg.close()  #XXX dlg.setErrorMessage(msg)
+        end
     end
     
     def loadTextFile(dlg, filepath)
@@ -103,16 +118,21 @@ class NumericImport < ExportBase
         @filename = ''      ## values file to be read
         @index_value = 6    ## index of column of df/lux values
         @_labelSide = '+x'  ## display labels to the left (-x) or right (+x)
-        @_labelText = 'lux'
         @labelLeaderLength = 4
         @colorStyle = 'roygbiv'
-        @lightness = 0.4    ## intensity of contour colors
         @scalevalue = 1     ## scale of surface 'height' (e.g. 500lx/m)
         @zOffset = 0.0      ## config for offset of value scale
         @_clstep = 100.0
         
+        @doFalsecolor = 'yes'
+        @doLabels = 'no'
+        @labelText = ''
+        @legendPos = 'right'
+        @lightness = 0.4    ## intensity of contour colors
+        
         @lines = []         ## raw lines in values file
         @maxvalue = 0.0     ## max in values
+        @minvalue = 0.0     ## min in values
         
         @surface = nil      ## group for graph entities
         @legend = nil       ## group for legend entities
@@ -134,12 +154,27 @@ class NumericImport < ExportBase
         @_clstep = step
     end
     
+    def applyOptions(opts)
+        uimessage("min=#{@minvalue} max=#{@maxvalue} @_clstep=#{@_clstep}")
+        @minvalue = Float(opts['minValue'])
+        @maxvalue = Float(opts['maxValue'])
+        @_clstep  = (@maxvalue-@minvalue) / Integer(opts['steps'])
+        uimessage("min=#{@minvalue} max=#{@maxvalue} @_clstep=#{@_clstep}")
+        
+        #XXX @doFalsecolor = dlg[1]
+        #XXX @lightness = dlg[2].to_f
+        #XXX @legendPos = dlg[3]
+        #XXX @doLables = dlg[4]
+        #XXX @labelText = dlg[5]
+        #XXX @filename
+    end
+    
     def addContourLines
         if @surface == nil
             return
         end
         @clevels = []
-        v = 0
+        v = @minvalue
         while v < @maxvalue
             v += @_clstep
             z = v/@scalevalue + @zOffset
@@ -183,7 +218,7 @@ class NumericImport < ExportBase
             z -= 0.01                   ## reduce z for idx rounding
             idx = Integer( (z/unit)/step )
             g = @surface.entities.add_group()
-            g.name = "%s_faces_%05d" % [@_labelText, v] ## format with leading '0's for sorting
+            g.name = "%s_faces_%05d" % [@labelText, v] ## format with leading '0's for sorting
             groupsHash["%02d" % idx] = g
         }
         
@@ -223,7 +258,7 @@ class NumericImport < ExportBase
             return
         end
         bands = {}
-        pattern = "%s_faces" % @_labelText
+        pattern = "%s_faces" % @labelText
         @surface.entities.each { |e|
             if e.class == Sketchup::Group
                 if e.name and e.name.index(pattern) == 0
@@ -314,7 +349,7 @@ class NumericImport < ExportBase
                 end
                 begin
                     point = Geom::Point3d.new(p[0], p[1], p[2])
-                    text = @surface.entities.add_text("%d %s" % [values[z], @_labelText], point)
+                    text = @surface.entities.add_text("%d %s" % [values[z], @labelText], point)
                     text.vector = vector
                     text.leader_type = 1
                     text.display_leader = true
@@ -338,18 +373,32 @@ class NumericImport < ExportBase
         begin
             f = File.new(filename)
             text = f.read()
-            @lines = text.split("\n")
+            lines = text.split("\n")
             f.close()
-            @filename = filename
-            if @filename.rindex('.')
-                @_labelText = @filename.slice(@filename.rindex('.')+1,@filename.length)
-                @_labelText.upcase!()
-            end
+        rescue => e
+            uimessage("Error loading file '%s':\n%s\n\n%s\n" % [filename,$!.message,e.backtrace.join("\n")])
+            return false
+        end
+        setFilename(filename)
+        return setLines(lines)
+    end
+    
+    def setFilename(filename)
+        @filename = filename
+        if @filename.rindex('.')
+            @labelText = @filename.slice(@filename.rindex('.')+1,@filename.length)
+            @labelText.upcase!()
+        end
+    end
+
+    def setLines(lines)
+        @lines = lines
+        begin
             cleanLines()
             getMaxValue()
             setCLStep()
         rescue => e
-            uimessage("Error loading file '%s':\n%s\n\n%s\n" % [filename,$!.message,e.backtrace.join("\n")])
+            uimessage("Error loading file '%s':\n%s\n\n%s\n" % [@filename,$!.message,e.backtrace.join("\n")])
             return false
         end
         return true
@@ -361,15 +410,15 @@ class NumericImport < ExportBase
         end
         
         ## prepare options
-        if ['DA', 'DF', 'ADF', 'UDI'].index(@_labelText) != nil
-            @_labelText = "% " + @_labelText
+        if ['DA', 'DF', 'ADF', 'UDI'].index(@labelText) != nil
+            @labelText = "% " + @labelText
         end
-        options = [['contour step', @_clstep,    ''],
-                   ['add colour',   'yes',       'yes|no'],
-                   ['lightness',    @lightness,  '0.0|0.1|0.2|0.3|0.4|0.5|0.6|0.7|0.8'],
-                   ['legend',       'right',      'none|left|right|top|bottom'],
-                   ['add lables',   'no',       'yes|no'],
-                   ['label text',   @_labelText, '']]
+        options = [['contour step', @_clstep,      ''],
+                   ['add colour',   @doFalsecolor, 'yes|no'],
+                   ['lightness',    @lightness,    '0.0|0.1|0.2|0.3|0.4|0.5|0.6|0.7|0.8'],
+                   ['legend',       @legendPos,    'none|left|right|top|bottom'],
+                   ['add lables',   @doLabels,     'yes|no'],
+                   ['label text',   @labelText,    '']]
         prompts = options.collect { |o| o[0] }
         values  = options.collect { |o| o[1] }
         choices = options.collect { |o| o[2] }
@@ -391,13 +440,23 @@ class NumericImport < ExportBase
         rescue => e
             uimessage("Error evaluating option:\n%s\n\n%s\n" % [$!.message,e.backtrace.join("\n")])
         end
-        falsecolor = dlg[1]
+        @doFalsecolor = dlg[1]
         @lightness = dlg[2].to_f
-        legend = dlg[3]
-        lables = dlg[4]
-        @_labelText = dlg[5]
+        @legendPos = dlg[3]
+        @doLables = dlg[4]
+        @labelText = dlg[5]
+
+        ## kick of import
+        createGraph()
+    end
+    
+    def createGraph()
+        ## create graph with new options
         
-        ## crate graph with new options
+        if @lines.length == 0
+            return
+        end
+        
         begin
             createMesh()
             if @surface == nil
@@ -405,14 +464,14 @@ class NumericImport < ExportBase
                 return
             end
             addContourLines()
-            if lables == 'yes'
+            if @doLables == 'yes'
                 addLabels()
             end
-            if falsecolor == 'yes'
+            if @doFalsecolor == 'yes'
                 addFalsecolor()
             end
-            if legend != 'none'
-                createLegend(legend)
+            if @legendPos != 'none'
+                createLegend()
             end
         rescue => e
             msg = "Error creating graph:\n%s\n\n%s\n" % [$!.message,e.backtrace.join("\n")]
@@ -447,6 +506,7 @@ class NumericImport < ExportBase
                 maxlines = ml
             end
         }
+
         if colindex == 3 || colindex == 6 
             @index_value = colindex
             uimessage("values found at column index %d" % @index_value, 1) 
@@ -534,17 +594,17 @@ class NumericImport < ExportBase
         uimessage("added surface group '#{name}' to scene", 2) 
     end
         
-    def createLegend(side)
+    def createLegend()
         if @surface == nil or @materials == []
             return
         end
-        if side == 'none'
+        if @legendPos == 'none'
             return
         end
         @legend = Sketchup.active_model.entities.add_group()
         if @legend != nil
-            @legend.name = "legend %s" % @_labelText 
-            x,y,w,h,dx,dy = getLegendExtents(side)
+            @legend.name = "legend %s" % @labelText 
+            x,y,w,h,dx,dy = getLegendExtents()
             _createLegendFaces(x,y,w,h,dx,dy)
             _createLegendText(x,y,w,h,dx,dy)
         end
@@ -577,9 +637,9 @@ class NumericImport < ExportBase
         tt_grp.material = m
         values = @clevels.collect { |z,v| v }
         if values.max < 100.0
-            fmt = "%%.2f %s" % @_labelText.gsub(/%/, '%%')
+            fmt = "%%.2f %s" % @labelText.gsub(/%/, '%%')
         else
-            fmt = "%%d %s" % @_labelText.gsub(/%/, '%%')
+            fmt = "%%d %s" % @labelText.gsub(/%/, '%%')
         end
         values.sort!()
         values.each { |v|
@@ -592,31 +652,31 @@ class NumericImport < ExportBase
         }
     end
     
-    def getLegendExtents(side)
+    def getLegendExtents()
         bl = @surface.bounds.corner(0)
         tr = @surface.bounds.corner(3)
-        if side == 'right'
+        if @legendPos == 'right'
             w = (tr.x-bl.x)/8.0
             h = (tr.y-bl.y)
             x = tr.x + 2.5*w
             y = bl.y
-        elsif side == 'left'
+        elsif @legendPos == 'left'
             w = (tr.x-bl.x)/8.0
             h = (tr.y-bl.y)
             x = bl.x - 3.75*w
             y = bl.y
-        elsif side == 'top'
+        elsif @legendPos == 'top'
             w = tr.x - bl.x
             h = (tr.y - bl.y)/8.0
             x = bl.x
             y = tr.y + 2.5*h
-        elsif side == 'bottom'
+        elsif @legendPos == 'bottom'
             w = tr.x - bl.x
             h = (tr.y - bl.y)/8.0
             x = bl.x
             y = bl.y - 3.75*h
         else
-            raise ValueError, "wrong value for side: '%s' (expected one of left,right,top,bottom)" % side
+            raise ValueError, "wrong value for @legendPos: '%s' (expected one of left,right,top,bottom)" % @legendPos
         end
         if w > h
             dx = w/@materials.length
