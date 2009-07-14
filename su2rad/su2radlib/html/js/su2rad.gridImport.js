@@ -39,6 +39,19 @@ function evaluateSketchup() {
 
 function importGraphToSketchup () {
     log.debug("DEBUG: importGraphToSketchup")
+    if (gCanvas.array == null || gCanvas.array.empty() == true) {
+        log.info("nothing to import")
+        return;
+    }
+    opts = gCanvas.getLegendOptions();
+    opts.elementId = 'messagearea';
+    txt  = 'maxValue=' + opts.maxValue.toFixed(2) + '&'
+    txt += 'minValue=' + opts.maxValue.toFixed(2) + '&'
+    txt += 'steps=' + opts.maxValue.toFixed() + '&'
+    txt += 'elementId=' + opts.elementId 
+    if (SKETCHUP == true) {
+        window.location = 'skp:importFromWebDialog@' + txt;
+    }
 }
 
 function loadFileIDOM() {
@@ -53,26 +66,6 @@ function loadFileIDOM() {
         alert(e)
     }
 }
-
-function parseFileText(text, filename) {
-    log.debug("DEBUG parseFileText(): received " + text.length + " bytes")
-    document.getElementById('messagearea').value = text;
-    gArray = new GridArray();
-    gArray.parseText(text);
-    if (gArray.empty() == false) {
-        setGridArray(gArray);
-        if (filename != null) {
-            // set new title
-            var title = document.getElementById("pageTitle")
-            while (title.hasChildNodes() == true) {
-                title.removeChild(title.firstChild)
-            }
-            var txt = document.createTextNode("file: " + filename);
-            title.appendChild(txt);
-        }
-    }
-}
-
 
 function loadFileSU() {
     // function to be called with encoded text from SU
@@ -100,6 +93,25 @@ function logError(e) {
     log.error("e.message " + e.message)
     log.error("e.fileName " + e.fileName)
     log.error("e.lineNumber " + e.lineNumber)
+}
+
+function parseFileText(text, filename) {
+    log.debug("DEBUG parseFileText(): received " + text.length + " bytes")
+    document.getElementById('messagearea').value = text;
+    gArray = new GridArray();
+    gArray.parseText(text);
+    if (gArray.empty() == false) {
+        setGridArray(gArray);
+        if (filename != null) {
+            // set new title
+            var title = document.getElementById("pageTitle")
+            while (title.hasChildNodes() == true) {
+                title.removeChild(title.firstChild)
+            }
+            var txt = document.createTextNode("file: " + filename);
+            title.appendChild(txt);
+        }
+    }
 }
 
 function simulateGrid() {
