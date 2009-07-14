@@ -45,9 +45,9 @@ function importGraphToSketchup () {
     }
     opts = gCanvas.getLegendOptions();
     opts.elementId = 'messagearea';
-    txt  = 'maxValue=' + opts.maxValue.toFixed(2) + '&'
-    txt += 'minValue=' + opts.maxValue.toFixed(2) + '&'
-    txt += 'steps=' + opts.maxValue.toFixed() + '&'
+    txt  = 'maxValue='  + opts.maxValue.toFixed(2) + '&'
+    txt += 'minValue='  + opts.minValue.toFixed(2) + '&'
+    txt += 'steps='     + opts.steps.toFixed() + '&'
     txt += 'elementId=' + opts.elementId 
     if (SKETCHUP == true) {
         window.location = 'skp:importFromWebDialog@' + txt;
