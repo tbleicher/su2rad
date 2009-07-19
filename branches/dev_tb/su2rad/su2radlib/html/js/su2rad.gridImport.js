@@ -55,6 +55,7 @@ function importGraphToSketchup () {
 }
 
 function loadFileIDOM() {
+    log.debug("loadFileIDOM()")
     try {
         // access file contents via nsIDOMFileList (FireFox, Mozilla)
         var files = document.getElementById("loadFileSelection").files;
@@ -110,6 +111,21 @@ function parseFileText(text, filename) {
             }
             var txt = document.createTextNode("file: " + filename);
             title.appendChild(txt);
+            // extract extension for label
+            var ridx = filename.lastIndexOf('.');
+            if (ridx != -1) {
+                var ext = filename.slice(ridx+1, filename.length);
+                if ( ext != '') {
+                    ext = ext.toUpperCase();
+                    if ( ext == 'DA' || ext == 'ADF' || ext == 'DF' ) {
+                        ext = "% " + ext;
+                    }
+                    document.getElementById("legendLabelInput").value = ext;
+                    gCanvas.setLegendLabel(ext);
+                }
+            } else {
+                gCanvas.setLegendLabel('');
+            }
         }
     }
 }
@@ -131,6 +147,17 @@ function setGridArray(gArray) {
     showStats();
 }
 
+function setLegendLabel(label) {
+    gCanvas.setLegendLabel(label)
+    updateUI()
+}
+function setLegendLightness(lightness) {
+    var value = parseFloat(lightness)
+    if ( ! isNaN(value) ) {
+        gCanvas.setLegendLightness(value)
+    }
+    updateUI()
+}
 function setLegendMax(v) {
     var value = parseFloat(v)
     if ( ! isNaN(value) ) {
@@ -138,7 +165,6 @@ function setLegendMax(v) {
     }
     updateUI()
 }
-
 function setLegendMin(v) {
     var value = parseFloat(v)
     if ( ! isNaN(value) ) {
@@ -146,17 +172,16 @@ function setLegendMin(v) {
     }
     updateUI()
 }
-
 function setLegendSteps(v) {
     var value = parseFloat(v)
     if ( ! isNaN(value) ) {
         gCanvas.setLegendSteps(value)
     }
-    updateUI()
+    updateUI();
 }
 
 function showStats() {
-    statsDiv = document.getElementById('statsTable');
+    var statsDiv = document.getElementById('statsTable');
     while (statsDiv.hasChildNodes() == true) {
         statsDiv.removeChild(statsDiv.firstChild)
     }
@@ -164,26 +189,30 @@ function showStats() {
     var keys = ['average', 'uniform', 'minValue', 'maxValue', 'values', 'median'];
     for (i=0; i<keys.length; i++) {
         var k = "stats_" + keys[i];
-        var row = document.createElement('div');
-        row.setAttribute('class', "gridRow")
-        var label = document.createElement('span');
-        // TODO: add span style
-        label.setAttribute('class', "gridLabel")
-        var ltxt = document.createTextNode(keys[i]);
-        label.appendChild(ltxt);
-        row.appendChild(label);
-        var value = document.createElement('span');
-        // TODO: add span style
         var v = stats[keys[i]];
         if ( keys[i] == "values" ) {
             v = v.toFixed()
         } else {
             v = v.toFixed(2)
         }
+        var label = document.createElement('span');
+        var ltxt = document.createTextNode(keys[i]);
+        label.appendChild(ltxt);
+        var value = document.createElement('span');
         var vtxt = document.createTextNode(v);
         value.appendChild(vtxt);
+        var row = document.createElement('div');
+        row.appendChild(label);
         row.appendChild(value);
         statsDiv.appendChild(row);
+        //row.setAttribute('class', "gridRow")
+        //label.setAttribute('class', "gridLabel")
+    }
+    try {
+        $("#statsTable > div").attr("class", "gridRow")
+        $("#statsTable > div > span:first-child").attr("class", "gridLabel")
+    } catch (e) {
+        log.error(e);
     }
 }
 
@@ -193,4 +222,6 @@ function updateUI() {
     document.getElementById("legendMinInput").value = opts.minValue.toFixed(2);
     document.getElementById("legendMaxInput").value = opts.maxValue.toFixed(2);
     document.getElementById("legendStepsInput").value = opts.steps.toFixed();
+    document.getElementById("legendLabelInput").value = opts.label;
+    document.getElementById("legendLightnessInput").value = opts.lightness.toFixed(2);
 }
