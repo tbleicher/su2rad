@@ -79,22 +79,6 @@ code {
     margin-right: 10px;
 }
 
-#graphOptionsPanel {
-    float: left;
-    height: 360px;
-    width: 150px;
-    border: 1px solid black;
-    background-color: #ffffdd;
-    margin-left: 10px;
-    padding: 0px;
-}
-
-#graphOptionsPanel .gridRow {
-    width: 145px;
-    margin: 0px;
-    /* outline: 1px solid #27537a; */
-}
-
 h1 {
     margin: 1em 0 1.5em;
     font-size: 18px;
@@ -193,11 +177,11 @@ input[type=checkbox] {
     margin-left: 75px;
 }
 p {
-    padding: 0.2;
-    margin: 0.2 0 0.2;
+    padding: 0.2em;
+    margin: 0.2em 0em 0.2em;
 }
 pre, pre+p, p+p {
-    margin: 0.2 0 0.2;
+    margin: 0.2em 0em 0.2em;
 }
 
 div.fileinputs {
@@ -229,6 +213,103 @@ input.file {
     margin: 0;
 }
 
+.importOptionHeader {
+    background-color: lightblue;
+    height: 24px;
+    margin: 0;
+    margin-bottom 10px;
+}
+
+.importOptionHeader div {
+    font-weight: bold;
+    padding: 0;
+    padding-left: 5px;
+    padding-top: 3px;
+    margin-bottom: 3px;
+}
+
+#importToSketchup, #loadFileSU, #simulateGrid {
+    width: 130px;
+    margin: 0;
+    margin-top: 5px;
+    margin-left: 7px;
+}
+
+#loadFileButton {
+    width: 130px;
+    margin: 0;
+    margin-left: 7px;
+    position: relative; 
+    top: -22px; 
+}
+#loadFileWarning {
+    margin: 3px;
+    border: 2px solid darkred;
+    text-align: center;
+}
+#loadFileWarning span {
+    font-weight: bold;
+    font-size: 12px;
+    color: darkred;
+}
+
+#graphOptions, #statsDiv {
+    background-color: #eef;
+    margin-top: 10px;
+}
+
+#graphOptions .gridRow {
+    margin-top: 2px;
+    height: 20px;
+}
+
+#graphOptions * .gridLabel, #statsTable span {
+    font-size: 12px;
+}
+
+#graphOptions * input {
+    height: 16px;
+    margin: 0;
+    padding: 0;
+    width: 50px;
+    color: blue;
+    vertical-align: middle;
+    /* position: relative; */
+    /* top: 1px; */
+    border: 1px dotted #888;
+}
+
+#canvasContainer {
+    width: 600px;
+    height: 400px;
+    float: left;
+    margin: 0px;
+    margin-right: 20px;
+    margin-bottom: 20px;
+    border: 1px solid lightblue;
+    background: url(arrow_se_blue.gif) no-repeat right bottom; 
+}
+
+#graphOptionsPanel {
+    float: left;
+    /* min-height: 200px; */
+    width: 145px;
+    padding: 0px;
+    margin: 0px;
+}
+
+#graphOptionsPanel .gridRow {
+    width: 145px;
+    margin: 0px;
+    /* outline: 1px solid #27537a; */
+}
+
+#messagearea {
+    border: 0;
+    color: lightblue;
+    font-size: 11px;
+}
+
 
 
 .gridCell {
@@ -239,7 +320,6 @@ input.file {
     padding: 0;
     margin: 0;
 }
-
 .gridColumn {
     float:left;
     width: 190px;
@@ -263,7 +343,6 @@ input.file {
 .gridColumn  .gridCell {
     width: 90px;
 }
-
 .gridLabel, .defaultValue {
     font-weight: bold;
     float: left;
