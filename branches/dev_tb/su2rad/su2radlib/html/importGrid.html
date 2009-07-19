@@ -187,10 +187,10 @@
                     <!-- load button options --> 
                     <div class="importOptionHeader" id="loadFileSelectionDiv" style="display: none;">
                         <input type="file" class="file" size="5" id="loadFileSelection" onchange="loadFileIDOM()" />
-                        <input type="button" id="loadFileButton" value="load file IDOM">
+                        <input type="button" id="loadFileButton" value="load file">
                     </div>
                     <div class="importOptionHeader" id="loadFileSUDiv">
-                        <input type="button" id="loadFileSU" value="load file SU" onclick="loadFileSU()" />
+                        <input type="button" id="loadFileSU" value="load file" onclick="loadFileSU()" />
                     </div>
                     <div id="loadFileWarning">
                         <span>You need Firefox/Mozilla or Sketchup to load a results file.</span>
@@ -210,15 +210,15 @@
                                 <span class="gridLabel">max value</span>
                                 <input type="text" width="10" value="100" id="legendMaxInput" onchange="setLegendMax(this.value)"/>
                             </div>
-                            <div class="gridRow"
+                            <div class="gridRow">
                                 <span class="gridLabel">steps</span>
                                 <input type="text" width="3" value="10" id="legendStepsInput" onchange="setLegendSteps(this.value)"/>
                             </div>
-                            <div class="gridRow"
+                            <div class="gridRow">
                                 <span class="gridLabel">label</span>
                                 <input type="text" width="20" value="" id="legendLabelInput" onchange="setLegendLabel(this.value)"/>
                             </div>
-                            <div class="gridRow"
+                            <div class="gridRow">
                                 <span class="gridLabel">lightness</span>
                                 <input type="text" width="4" value="0.4" id="legendLightnessInput" onchange="setLegendLightness(this.value)" />
                             </div>
