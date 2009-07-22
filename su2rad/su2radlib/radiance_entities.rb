@@ -641,7 +641,8 @@ class RadianceSky < ExportBase
             skycmd += " | xform -rz %.1f\n\n" % (-1*sinfo['NorthAngle']) #XXX
         else
             sinfo = @sinfo
-            skycmd = "!%s\n\n" % sinfo['SkyCommand']
+            skycmd = "!%s" % sinfo['SkyCommand']
+            skycmd += " | xform -rz %.1f\n\n" % (-1*sinfo['NorthAngle']) #XXX
         end
         
         text =  "## sky description for %s, %s\n" % [sinfo['City'], sinfo['Country']]
