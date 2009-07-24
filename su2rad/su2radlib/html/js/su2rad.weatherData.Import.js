@@ -81,11 +81,18 @@ function loadFileSU() {
 }
 
 function _loadFileSU(encText) {
-    log.debug("DEBUG _loadFileSU: received " + encText.length + " bytes")
+    // function called from SU with encoded text
+    log.debug("_loadFileSU: received " + encText.length + " bytes")
     // text received from 
     var text = decodeText(encText);
+    var lines = text.split("\n")
+    log.debug("_loadFileSU: lines=" + lines.length)
     var filename = fileSelector.getFilepath();
-    parseFileText(text, filename);
+    try {
+        parseFileText(text, filename);
+    } catch (e) {
+        logError(e)
+    }
 }
 
 function logError(e) {
@@ -97,8 +104,8 @@ function logError(e) {
 }
 
 function parseFileText(text, filename) {
-    log.debug("DEBUG parseFileText(): received " + text.length + " bytes")
-    document.getElementById('messagearea').value = text;
+    log.debug("parseFileText(): received " + text.length + " bytes")
+    //document.getElementById('messagearea').value = text;
     gArray = new GridArray();
     gArray.parseText(text);
     
@@ -112,7 +119,7 @@ function parseFileText(text, filename) {
             }
             var txt = document.createTextNode("file: " + filename);
             title.appendChild(txt);
-            // extract extension for label
+            /* extract extension for label
             var ridx = filename.lastIndexOf('.');
             if (ridx != -1) {
                 var ext = filename.slice(ridx+1, filename.length);
@@ -126,7 +133,7 @@ function parseFileText(text, filename) {
                 }
             } else {
                 gCanvas.setLegendLabel('');
-            }
+            } */
         }
     }
 }

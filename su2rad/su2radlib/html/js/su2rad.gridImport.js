@@ -81,7 +81,7 @@ function loadFileSU() {
 }
 
 function _loadFileSU(encText) {
-    log.debug("DEBUG _loadFileSU: received " + encText.length + " bytes")
+    log.debug("DEBUG YY _loadFileSU: received " + encText.length + " bytes")
     // text received from 
     var text = decodeText(encText);
     var filename = fileSelector.getFilepath();

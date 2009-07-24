@@ -484,6 +484,7 @@ GridArray.prototype.parseText = function (text) {
             logError(e)
         }
     }
+    log.debug("this.values.length=" + this.values.length)
     // finally create stats etc.
     this.analyzeGrid()
 }
@@ -659,8 +660,8 @@ GridCanvas.prototype.drawGrid = function (ctx) {
     ctx.save()
     // draw grey background
     ctx.scale(1.5,1.0)
-    ctx.fillStyle = '#bbbbbb'
-    ctx.fillRect(0,0,365,-360);
+    //ctx.fillStyle = '#bbbbbb'
+    //ctx.fillRect(0,0,365,-340);
     ctx.lineWidth=1;  
     var cnt = 0;
     var rows = this.array.getRows()
@@ -673,9 +674,6 @@ GridCanvas.prototype.drawGrid = function (ctx) {
                     var color = this.gradient.getColorByValue(point.v, 0.0);
                     try {
                         cnt += 1;
-                        if (cnt < 10) {
-                            log.error("point.x=" + point.x + " point.y=" + point.y)
-                        }
                         ctx.strokeStyle = color;
                         ctx.beginPath()
                         ctx.moveTo(point.x, point.y*-15);
@@ -913,12 +911,17 @@ GridCanvas.prototype.setOrigin = function (ctx) {
     var frameY = this.ruler.top + this.ruler.bottom + this.margin.top + this.margin.bottom
     var maxGraphHeight = this.canvas.height-frameY
     log.debug("graphHeight=" + graphHeight + " maxGraphHeight=" + maxGraphHeight) 
-    ctx.translate(this.margin.left, this.margin.top)
-    if (graphHeight < maxGraphHeight) {
-        ctx.translate(this.ruler.left, graphHeight + this.margin.top)
-    } else {
-        ctx.translate(this.ruler.left, maxGraphHeight + this.margin.top)
-    } 
+    try {
+        ctx.translate(this.margin.left, this.margin.top)
+        if (graphHeight < maxGraphHeight) {
+            ctx.translate(this.ruler.left, graphHeight + this.margin.top)
+        } else {
+            ctx.translate(this.ruler.left, maxGraphHeight + this.margin.top)
+        }
+    } catch (e) {
+        logError(e)
+    }
+    log.debug("end setOrigin()")
 }
 
 GridCanvas.prototype.setRulerFont = function (ctx) {
