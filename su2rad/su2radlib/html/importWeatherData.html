@@ -6,7 +6,7 @@
         <meta http-equiv="Content-Style-Type" content="text/css">
         <meta http-equiv="Content-Script-Type" content="text/javascript">
 
-        <title>Import Weather Data</title>
+        <title>Import Climate Data</title>
         
         <!-- log panel for debugging -->
         <script type="text/javascript" src="./blackbirdjs/blackbird.js"></script>
@@ -49,6 +49,7 @@
         <script type="text/javascript" src="./js/su2rad_radopts.js"></script>
         <script type="text/javascript" src="./js/su2rad_materials.js"></script>
         <script type="text/javascript" src="./js/su2rad_dialog.js"></script>
+        <script type="text/javascript" src="./js/su2rad.gridCanvas.js"></script>
         <script type="text/javascript" src="./js/su2rad.weatherData.Canvas.js"></script>
         <script type="text/javascript" src="./js/su2rad.weatherData.Import.js"></script>
 
@@ -132,6 +133,7 @@
         <!-- style sheet for the rest of the dialog -->
         <link rel="stylesheet" href="./blackbirdjs/blackbird.css" type="text/css" media="screen">
         <link rel="stylesheet" href="./css/dialog.css"            type="text/css" media="print, projection, screen">
+        <link rel="stylesheet" href="./css/dialog.import.css"     type="text/css" media="print, projection, screen">
         <link rel="stylesheet" href="./css/jqModal.css"           type="text/css" media="screen">
         <link rel="stylesheet" href="./css/jquery.tabs.css"       type="text/css" media="print, projection, screen">
         <link rel="stylesheet" href="./css/jquery.filetree.css"   type="text/css" media="screen" />
@@ -159,7 +161,7 @@
     
         <div id="tab-container">
             <ul class="tabs-nav">
-                <li><a href="#tab-fields"><span>Fields</span></a></li>
+                <li><a href="#tab-fields"><span>Import Climate Data</span></a></li>
                 <!-- <li><a href="#tab-render"><span>Render</span></a></li> -->
             </ul>
 
@@ -172,10 +174,8 @@
                 <h3 id="pageTitle">import grid results</h3>
                 
                 <!-- the canvas -->
-                <div style="clear: both;">
-                    <div id="canvasContainer" style="width: 700px; padding:0;">
-                        <canvas id="cv" width="700" height="400" style="border: 1px solid red; margin:0;></canvas>
-                        <!-- <div class="ui-resizable-handle ui-resizable-se ui-icon ui-icon-gripsmall-diagonall-se" style="z-index: 1001; -moz-user-seelct: none;" unselectable="on" /> -->
+                <div id="canvasContainer" style="width: 700px; padding:0;">
+                    <canvas id="cv" width="700" height="400"></canvas>
                 </div>
                 
                 <!-- graph options -->
@@ -235,10 +235,9 @@
                     </div>
                     
                 </div>
-                </div>
                 
                 <!-- for debugging -->
-                <textarea id="messagearea" name="messagearea" cols=120 rows=8></textarea>
+                <textarea id="messagearea" name="messagearea" cols=120 rows=8 style="border: 1px solid red"></textarea>
             
             </div>
             

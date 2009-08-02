@@ -25,9 +25,6 @@
         <script type="text/javascript" src="./js/lib/jquery.alphanumeric.js"></script>
         <script type="text/javascript" src="./js/lib/jquery.filetree.js"></script>
         <script type="text/javascript" src="./js/lib/jqModal.js"></script>
-        <!--<script type="text/javascript" src="./js/lib/ui/ui.core.1.5.3.js"></script>
-        <script type="text/javascript" src="./js/lib/ui/ui.draggable.1.5.3.js"></script>
-        <script type="text/javascript" src="./js/lib/ui/ui.droppable.1.5.3.js"></script> -->
         <script type="text/javascript" src="./js/lib/ui/ui.core.1.7.2.js"></script>
         <script type="text/javascript" src="./js/lib/ui/ui.draggable.1.7.2.js"></script>
         <script type="text/javascript" src="./js/lib/ui/ui.droppable.1.7.2.js"></script>
@@ -135,6 +132,7 @@
         <!-- style sheet for the rest of the dialog -->
         <link rel="stylesheet" href="./blackbirdjs/blackbird.css" type="text/css" media="screen">
         <link rel="stylesheet" href="./css/dialog.css"            type="text/css" media="print, projection, screen">
+        <link rel="stylesheet" href="./css/dialog.import.css"     type="text/css" media="print, projection, screen">
         <link rel="stylesheet" href="./css/jqModal.css"           type="text/css" media="screen">
         <link rel="stylesheet" href="./css/jquery.tabs.css"       type="text/css" media="print, projection, screen">
         <link rel="stylesheet" href="./css/jquery.filetree.css"   type="text/css" media="screen" />
@@ -175,15 +173,14 @@
                 <h3 id="pageTitle">import grid results</h3>
                 
                 <!-- the canvas -->
-                <div style="clear: both;">
-                <div id="canvasContainer">
-                    <canvas id="cv" width="600" height="400"></canvas>
+                <div id="canvasContainer" style="padding:0;">
+                    <canvas id="cv" width="600" height="400" style="margin: 0; padding:0"></canvas>
                     <!-- <div class="ui-resizable-handle ui-resizable-se ui-icon ui-icon-gripsmall-diagonall-se" style="z-index: 1001; -moz-user-seelct: none;" unselectable="on" /> -->
                 </div>
-                
+
                 <!-- graph options -->
                 <div id="graphOptionsPanel">
-                    
+
                     <!-- load button options --> 
                     <div class="importOptionHeader" id="loadFileSelectionDiv" style="display: none;">
                         <input type="file" class="file" size="5" id="loadFileSelection" onchange="loadFileIDOM()" />
@@ -197,6 +194,7 @@
                         <input type="button" id="simulateGrid" value="simulate" onclick="simulateGrid()">
                     </div>
 
+                    <!-- options for graph and legend--> 
                     <div id="graphOptions"> 
                         <div class="importOptionHeader">
                             <div>legend options</div>
@@ -225,6 +223,7 @@
                         </div>
                     </div>
                     
+                    <!-- statistics table (filled in via JS) --> 
                     <div id="statsDiv"> 
                         <div class="importOptionHeader">
                             <div>statistics</div>
@@ -238,7 +237,8 @@
                     </div>
                     
                 </div>
-                </div>
+                <!-- end of graphOptionsPanel -->
+                
                 
                 <!-- for debugging -->
                 <textarea id="messagearea" name="messagearea" cols=80 rows=4></textarea>
