@@ -112,17 +112,37 @@ DataRecord.prototype.evaluate = function () {
         this.x = this.getJulianDay();
         this.y = this.hour
         this.z = 0
-        this.v = this.global_horizontal
-        this.value = this.global_horizontal
-        if ( isNaN(this.x) || isNaN(this.y) || isNaN(this.v) ) {
-            return false
-        }
-        return true
+        this.valuesByIndex = []
+        return this._checkValues()
     } catch(e) {
         log.error("Error evaluating data record:<br/>" + this.fields.join("'")) 
         logError(e)
         return false
     }
+}
+
+DataRecord.prototype._checkValues = function () {
+    var values = [this.global_horizontal, this.direct_normal, this.diffuse_horizontal, this.global_hor_ill, this.direct_normal_ill, this.diffuse_hor_ill]    
+    for (var i=0; i<values.length; i+=1) {
+        if (isNaN(values[i]) ) {
+            return false
+            this.valuesByIndex.push(0)
+        } else {
+            this.valuesByIndex.push(values[i])
+        }
+    }
+    this.v = this.valuesByIndex[0]
+    this.value = this.valuesByIndex[0]
+    if ( isNaN(this.x) || isNaN(this.y) ) {
+        return false
+    }
+    return true
+} 
+
+DataRecord.prototype.getDataByIndex = function (idx) {
+    this.v = this.valuesByIndex[idx]
+    this.value = this.valuesByIndex[idx]
+    return this.valuesByIndex[idx]
 }
 
 DataRecord.prototype.getJulianDay = function () {
@@ -137,6 +157,7 @@ DataRecord.prototype.getJulianDay = function () {
 DataRecord.prototype.toString = function () {
     return "M=" + this.month + " D=" + this.day + " H=" + this.hour + " v=" + this.v.toFixed(2)
 }
+
 
 
 function ColorGradient() {
@@ -208,6 +229,7 @@ GridArray.prototype.init = function () {
     this.gridByY = {};
     this.rows = [];
     this.stats = {};
+    this.units = "unit"
     this.values = [];
     this.commentLines = [];
     this._contourCache = {};
@@ -261,13 +283,33 @@ GridArray.prototype.addRecord = function (p) {
     this.values.push(p.value)
 }
 
-
-
-
 GridArray.prototype.analyzeGrid = function () {
     this.calcStats();
     this.fillRows();
     this.sortArray();
+}
+
+GridArray.prototype.setDataTypeIndex = function (idx) {
+    this.values = [];
+    for (var i=0; i<this.rows.length; i+=1) {
+        var y = this.rows[i];
+        var row = this.gridByY[y];
+        for (j=0; j<row.length; j+=1) {
+            var p = row[j]
+            this.values.push(p.getDataByIndex(idx))
+        }
+    }
+    if (idx < 3) {
+        this.units = "kWh/m^2"
+    } else {
+        this.units = "lux"
+    }
+    
+    this.values.sort(sortByFloatValue);
+    this.bbox[4] = this.values[0]
+    this.bbox[5] = this.values[this.values.length-1]
+    log.debug("new value range: " + this.bbox[4].toFixed(2) + " - " + this.bbox[5].toFixed(2))
+    this.calcStats();
 }
 
 GridArray.prototype.calcStats = function () {
@@ -365,7 +407,7 @@ GridArray.prototype.generate = function () {
     }
     // now read in like file based grid
     this.readArray(grid);
-    this.printStats();
+    //this.printStats();
 }
 
 GridArray.prototype.getArrayIndex = function (a,v) {
@@ -494,9 +536,7 @@ GridArray.prototype.parseText = function (text) {
             var line = lines[i];
             var idx = line.indexOf('#');
             if (idx == 0) {
-                log.info('comment: ' + line);
                 this.commentLines.push(line);
-                log.debug("cLines.length=" + this.commentLines.length)
             } else if (idx > 0) {
                 line = line.slice(0, idx);
             }
@@ -628,7 +668,7 @@ GridCanvas.prototype.draw = function () {
         }
         this.setRulerWidth(ctx) // adjust width of left ruler
         this.setScale()         // work out scale based on available graph area
-        this.drawOutlines(ctx)
+        //this.drawOutlines(ctx)
         this.drawGrid(ctx)  
         this.drawRulers(ctx)
         if (this.legend == true) {
@@ -640,17 +680,19 @@ GridCanvas.prototype.draw = function () {
 GridCanvas.prototype.getFrameCoords = function (position) {
     if (position == "left") {
         var x = this.margin.left
-        var y = this.margin.top + this.ruler.top 
-        if (this.ruler.top != 0) { y += this.padding; }
+        var y = this.margin.top
+        if (this.ruler.top != 0) {  y = y + this.ruler.top  + this.padding }
         var w = this.ruler.left
-        var h = this.getGraphHeight();
+        var h = this.canvas.height - (y + this.margin.bottom)
+        if (this.ruler.bottom != 0) { h = h - (this.ruler.bottom + this.padding) }
         
     } else if (position == "right") {
-        var y = this.margin.top + this.ruler.top
-        if (this.ruler.top != 0) { y += this.padding; }
+        var x = this.canvas.width - this.margin.right - this.ruler.right
+        var y = this.margin.top
+        if (this.ruler.top != 0) {  y = y + this.ruler.top  + this.padding }
         var w = this.ruler.right
-        var h = this.getGraphHeight();
-        var x = this.canvas.width - this.margin.right - w
+        var h = this.canvas.height - (y + this.margin.bottom)
+        if (this.ruler.bottom != 0) { h = h - (this.ruler.bottom + this.padding) }
     
     } else if (position == "top") {
         var x = this.margin.left
@@ -691,12 +733,12 @@ GridCanvas.prototype.drawOutlines = function (ctx) {
         var side = frames[i];
         if (this.ruler[side] != 0) {
             var f = this.getFrameCoords(side);
-            log.debug("drawOutline() pos=" + side + " x=" + f[0] + " y=" + f[1] + "w=" + f[2] + " h=" + f[3])
+            //log.debug("drawOutline() pos=" + side + " x=" + f[0] + " y=" + f[1] + " w=" + f[2] + " h=" + f[3])
             ctx.strokeRect(f[0],f[1],f[2],f[3]);
         }
     }
     var center = this.getFrameCoords("center");
-    log.debug("drawOutline() pos=center" + " x=" + center[0] + " y=" + center[1] + "w=" + center[2] + " h=" + center[3])
+    //log.debug("drawOutline() pos=center" + " x=" + center[0] + " y=" + center[1] + "w=" + center[2] + " h=" + center[3])
     ctx.strokeRect(center[0],center[1],center[2],center[3]);
     ctx.restore()
 }
@@ -769,6 +811,16 @@ GridCanvas.prototype.drawLegend = function (ctx) {
     var y = frame[1]+frame[3]
     var w = frame[2]
     var h = frame[3]
+    var graphH = this.getGraphHeight()
+    if (h > graphH) {
+        // reduce height of legend but keep it readable
+        var minHeight = this.legendSteps * 20
+        if (graphH < this.legendSteps*20) {
+            h = this.legendSteps*20
+        } else {
+            h = graphH
+        }   
+    } 
     var dH = h/this.legendSteps
     
     // start at bottom (y=0)
@@ -780,12 +832,13 @@ GridCanvas.prototype.drawLegend = function (ctx) {
         var color = this.gradient.getColorByValue(value);
         ctx.fillStyle = color;
         ctx.fillRect(x,y,w,dH);
-        var ltext = this.getLegendText(dValue*i + this.gradient.minValue);
+        var ltext = this.getLegendText(dValue*(i+1) + this.gradient.minValue);
         ctx.fillStyle = this.fgcolor;
-        this.labelText(ctx,ltext,"right",x+5,y+dH-4,w-10,12);
-        // draw line in dark shade at <value> level
+        this.labelText(ctx,ltext,"right",x+5,y+14,w-10,12);
+        // draw dark line at <value> level
         if (this.gradient.lightness >= 0.2) {
-            var color = this.gradient.getColorByValue(value, 0.0);
+            var lineValue = (i+1) * dValue + this.gradient.minValue
+            var color = this.gradient.getColorByValue(lineValue, 0.0);
         } else {
             var color = this.fgcolor;
         }
@@ -799,6 +852,7 @@ GridCanvas.prototype.drawLegend = function (ctx) {
 }
 
 GridCanvas.prototype.labelText = function (ctx,text,pos,x,y,w,h) {
+    //log.debug("labelText(): text=" + text + " x=" + x + " y=" + y + " w=" + w + " h=" + h)
     var width = this.getLabelWidth(ctx,text);
     if (pos == "right") {
         x = x + w - width
@@ -806,7 +860,11 @@ GridCanvas.prototype.labelText = function (ctx,text,pos,x,y,w,h) {
         x = x + w/2.0 - width/2.0
     }
     var nText = this._splitSuperscript(text);
-    ctx.fillText(nText[0], x, y);
+    try {
+        ctx.fillText(nText[0], x, y);
+    } catch (e) {
+        log.error("ERROR: text=" + nText[0] + " x=" + x + " y=" + y)
+    }
     if (nText[1] != "") {
         var newX = x + ctx.measureText(nText[0]).width;
         var newY = y - 4;
@@ -879,19 +937,34 @@ GridCanvas.prototype._drawRulerX = function (ctx) {
     
     ctx.lineWidth = 1.0;
     ctx.beginPath()
+    var cnt=0;
     for (var x=Math.round(this.array.bbox[0]+0.4); x<=Math.floor(this.array.bbox[1]); x++) {
         var xtick = (x-xbase)*this.canvasscale;
-        ctx.moveTo(xtick, 0);
-        ctx.lineTo(xtick, ticksize );             
-        labels.push([x.toFixed(1), xtick+4, frame[3]]);
+        if (((xmax - xtick) < 20) && (cnt > 4)) {
+            cnt += 1; 
+        } else {
+            ctx.moveTo(xtick, 0);
+            ctx.lineTo(xtick, ticksize );
+            if ((xmax - xtick) > 35) {
+                labels.push([x.toFixed(1), xtick+4, frame[3]]);
+            }
+            cnt += 1;
+        }
     }
     ctx.stroke()
     
     // add labels
+    var xUnit = xmax - 20;
     for (var i=0; i<labels.length; i++) {
         var p=labels[i]
         ctx.fillText(p[0], p[1], p[2]);
+        //log.debug("TEST xtick=" + p[1] + " xmax=" + xmax)
+        var wText = this.getLabelWidth(ctx,p[0])
+        if ((p[1] + wText) > xUnit) {
+            xUnit = p[1] + wText;
+        }
     }
+    this.labelText(ctx,"[m]","right",xUnit,frame[3]-2,20,12);
     ctx.restore()    
 }
 
@@ -905,29 +978,35 @@ GridCanvas.prototype._drawRulerY = function (ctx) {
     var labels = new Array();   // stores [label,x,y] for ctx.fillText() loop
     
     // draw ruler along y
-    var ymax = (this.array.bbox[3]-this.array.bbox[2] + this.gridstep) * this.canvasscale
+    var ymax = (this.array.bbox[3] - this.array.bbox[2] + this.gridstep) * this.canvasscale
     var ybase = this.array.bbox[2] - this.gridstep/2;
     ctx.lineWidth = 1.5;
     ctx.beginPath()
     ctx.moveTo(0, 0);
-    ctx.lineTo(0, -1*frame[3]);
+    ctx.lineTo(0, -1*ymax);
     ctx.stroke()
     ctx.lineWidth = 1.0;
     
     ctx.beginPath()
+    var xlabel = -1*this.ruler.left;
     for (var y=Math.round(this.array.bbox[2]+0.4); y<=Math.floor(this.array.bbox[3]); y++) {
         var ytick = (y-ybase)*this.canvasscale*-1;
-        ctx.moveTo(-1*ticksize, ytick);          
-        ctx.lineTo(0,ytick);
-        var xlabel = -1*this.ruler.left;                      // lable starts at 
-        labels.push([y.toFixed(1), xlabel, ytick-4]);
+        if ( (ytick+ymax) > 12 ) {   // p[2] is negative, ymax positive (height) 
+            ctx.moveTo(-1*ticksize, ytick);          
+            ctx.lineTo(0,ytick);
+            if ( (ytick+ymax) > 28 ) {   // p[2] is negative, ymax positive (height) 
+                labels.push([y.toFixed(1), xlabel, ytick-4]);
+            }
+        }
     }
     ctx.stroke()
     
     // add labels
+    var lwidth = this.ruler.left - 3;
+    this.labelText(ctx,"[m]","right",xlabel,-1*ymax+10,lwidth,12);
     for (var i=0; i<labels.length; i++) {
         var p=labels[i]
-        ctx.fillText(p[0], p[1], p[2]);
+        this.labelText(ctx,p[0],"right",p[1],p[2],lwidth,12);
     }
     ctx.restore()    
 }
@@ -949,8 +1028,7 @@ GridCanvas.prototype.getLegendOptions = function () {
 GridCanvas.prototype.setArray = function (array) {
     this.array = array;
     if ( this.array.empty() == false ) {
-        this.gradient.setMinValue(this.array.bbox[4])
-        this.gradient.setMaxValue(this.array.bbox[5])
+        this.setDataRange()
     }
 }
 
@@ -960,6 +1038,49 @@ GridCanvas.prototype.setCanvas = function (canvas) {
 
 GridCanvas.prototype.setCanvasId = function (canvasid) {
     this.canvas = document.getElementById(canvasid);
+}
+
+GridCanvas.prototype.setDataTypeIndex = function (idx) {
+    this.array.setDataTypeIndex(idx)
+    this.setLegendLabel(this.array.units)
+    if ( this.array.empty() == false ) {
+        this.setDataRange()
+    }
+}
+
+GridCanvas.prototype.setDataRange = function () {
+    var minValue = this.array.bbox[4]
+    var maxValue = this.array.bbox[5]
+    var delta = maxValue - minValue;
+    var steps = this._setDataStep(delta)
+    var stepsize = steps[0]
+    var nSteps = steps[1]
+    if (minValue != 0) {
+        minValue = minValue - (minValue % stepsize)
+    }
+    var tmpMax = minValue + stepsize*nSteps
+    if (tmpMax < maxValue) {
+        nSteps += 1
+    }
+    maxValue = minValue + stepsize*nSteps
+    this.gradient.setMinValue(minValue)
+    this.gradient.setMaxValue(maxValue)
+    this.legendSteps = nSteps;
+}
+
+GridCanvas.prototype._setDataStep = function (delta) {
+    var sizes = [1,2,2.5,5]
+    for (var m=1; m<1000000; m*=10) {
+        for (var i=0; i<sizes.length; i+=1) {
+            for (var steps=5; steps<=15; steps+=1) {
+                var stepsize = sizes[i]
+                if (stepsize*steps*m > delta) {
+                    return [stepsize*m, steps]
+                }
+            }
+        }
+    }
+    return [stepsize*m, steps]
 }
 
 GridCanvas.prototype.setLegend = function (position) {
@@ -1067,25 +1188,21 @@ GridCanvas.prototype.setRulerWidth = function (ctx) {
     var maxW = 0;
     for (var i=Math.floor(this.array.bbox[2]); i<this.array.bbox[3]; i++) {
         var label=i.toFixed(1);
-        var dim = ctx.measureText(label);
-        if (dim.width > maxW) {
-            maxW = dim.width;
+        var width = this.getLabelWidth(ctx,label);
+        if (width > maxW) {
+            maxW = width;
         }
     }
-    maxW = maxW + 3;
-    if (this.ruler.left < maxW) {
-        this.ruler.left = Math.floor(maxW);
-        log.debug("new width for ruler.left: " + this.ruler.left) 
-    }
+    this.ruler.left = Math.floor(maxW+3);
+    log.debug("new width for ruler.left: " + this.ruler.left) 
     
     // legend width
     maxW = 0;
     var dValue = (this.gradient.maxValue - this.gradient.minValue) / this.legendSteps
-    for (var i=0; i<this.legendSteps; i++) {
-        var ltext = this.getLegendText(dValue*i + this.gradient.minValue);
-        //var dim = ctx.measureText(ltext);
-        var width = this.getLabelWidth(ctx,ltext);
-        log.debug("ltext='" + ltext + "' width=" + width.toFixed(1))
+    for (var i=1; i<=this.legendSteps; i++) {
+        var label = this.getLegendText(dValue*i + this.gradient.minValue);
+        var width = this.getLabelWidth(ctx,label);
+        //log.debug("label='" + label + "' width=" + width.toFixed(1))
         if (width > maxW) {
             maxW = width;
         }

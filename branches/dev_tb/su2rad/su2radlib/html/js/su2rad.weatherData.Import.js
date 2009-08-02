@@ -155,12 +155,24 @@ function simulateGrid() {
     setGridArray(gArray)
 }
 
+function setDataType() {
+    var v = document.getElementById('weatherDataType').value;
+    v = parseInt(v);
+    gCanvas.setDataTypeIndex(v)
+    gCanvas.draw();
+    updateUI();
+    updateStats();
+}
+
 function setGridArray(gArray) {
     gCanvas.setArray(gArray);
     gCanvas.setLegend('right');
+    gCanvas.setDataTypeIndex(0);
+    document.getElementById('weatherDataType').selectedIndex = 0;
+    document.getElementById("messagearea").value = gArray.commentLines.join("\n");
     gCanvas.draw();
     updateUI();
-    showStats();
+    updateStats();
 }
 
 function setLegendLabel(label) {
@@ -200,7 +212,7 @@ function setLegendSteps(v) {
     updateUI();
 }
 
-function showStats() {
+function updateStats() {
     var statsDiv = document.getElementById('statsTable');
     while (statsDiv.hasChildNodes() == true) {
         statsDiv.removeChild(statsDiv.firstChild)
@@ -229,7 +241,7 @@ function showStats() {
 }
 
 function updateUI() {
-    log.debug("updateUI()")
+    //log.debug("updateUI()")
     var opts = gCanvas.getLegendOptions();
     document.getElementById("legendMinInput").value = opts.minValue.toFixed(2);
     document.getElementById("legendMaxInput").value = opts.maxValue.toFixed(2);

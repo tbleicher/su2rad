@@ -46,8 +46,12 @@ GridArray.prototype.parseText = function (text) {
     var re_cr = /\r/g
     text = text.replace(re_cr, '');
     var lines = text.split("\n")
-    log.debug("records: " + lines[7])
-    for (i=8; i<lines.length; i++) {
+    //log.debug("records: " + lines[7])
+    for (var i=0; i<8; i++) {
+        this.commentLines.push(lines[i]);
+    }
+    log.debug(this.commentLines.join("\n"))
+    for (var i=8; i<lines.length; i++) {
         try {
             var record = new DataRecord(lines[i]);
             if ( record.evaluate() == true ) {
@@ -59,7 +63,6 @@ GridArray.prototype.parseText = function (text) {
             logError(e)
         }
     }
-    log.debug("this.values.length=" + this.values.length)
     // finally create stats etc.
     this.analyzeGrid()
 }
@@ -88,7 +91,7 @@ GridCanvas.prototype.drawGrid = function (ctx) {
             for (var j=0; j<row.length; j++) {
                 var point = row[j]
                 if (point.v != 0.0) {
-                    var color = this.gradient.getColorByValue(point.v, 0.0);
+                    var color = this.gradient.getColorByValue(point.v);
                     try {
                         cnt += 1;
                         ctx.strokeStyle = color;
@@ -102,38 +105,6 @@ GridCanvas.prototype.drawGrid = function (ctx) {
                     }
                 }
             }
-        }
-    }
-    ctx.restore()
-}
-
-GridCanvas.prototype.drawLegendOLD = function (ctx) {
-    var dValue = (this.gradient.maxValue - this.gradient.minValue) / this.legendSteps
-    var xmax = 540;
-    var ymax = 360;
-    var x = xmax + 20;
-    var w = this.ruler.right - 20
-    var h = 200;
-    (ymax > 200) ? h = ymax : h = 200;
-    var dH = h/this.legendSteps
-    
-    // start at bottom (y=0 or >0)
-    var y = -1*ymax + h
-    
-    ctx.save() 
-    for (var i=0; i<this.legendSteps; i++) {
-        y -= h/this.legendSteps;    // y values decrease to go up
-        var value = (i+0.5) * dValue + this.gradient.minValue
-        var color = this.gradient.getColorByValue(value, 0.0);
-        ctx.fillStyle = color;
-        try {
-            ctx.fillRect(x,y,w,dH);
-            var ltext = this.getLegendText(dValue*i + this.gradient.minValue);
-            ctx.fillStyle = this.fgcolor;
-            ctx.fillText(ltext, x+4, y+dH-4);
-        } catch (e) {
-            log.debug("x,y=" + x + " " + y)
-            logError(e)
         }
     }
     ctx.restore()
@@ -158,6 +129,7 @@ GridCanvas.prototype._drawRulerX = function (ctx) {
     ctx.moveTo(0, 0);
     ctx.lineTo(xmax*scaleX, 0);
     ctx.stroke()
+    this.labelText(ctx,"[days]","right",xmax*scaleX-40,-6,38,12);
     
     ctx.lineWidth = 1.0;
     var months = ['Jan','Feb','Mar','Apr','May','June','July','Aug','Sep','Oct','Nov','Dec']
@@ -168,9 +140,9 @@ GridCanvas.prototype._drawRulerX = function (ctx) {
         ctx.moveTo(xtick, 0);
         ctx.lineTo(xtick, ticksize);                     
         if ( x<12 ) {
-            var dim = ctx.measureText(months[x]);
-            var wLabel = dim.width
-            labels.push([months[x], xtick+15*scaleX-wLabel/2, frame[3]]);
+            var wLabel = ctx.measureText(months[x]).width;
+            var dDays = (ndays[x+1]-ndays[x]) / 2.0
+            labels.push([months[x], xtick+dDays*scaleX-wLabel/2, frame[3]]);
         }
     }
     ctx.stroke()
@@ -200,6 +172,7 @@ GridCanvas.prototype._drawRulerY = function (ctx) {
     ctx.lineTo(0, -1*frame[3]);
     ctx.stroke()
     ctx.lineWidth = 1.0;
+    this.labelText(ctx,"[hours]","left",4,-1*frame[3]+10,40,12);
     
     ctx.beginPath()
     var xlabel = -1*this.ruler.left+2;
