@@ -81,7 +81,7 @@ function loadFileSU() {
 }
 
 function _loadFileSU(encText) {
-    log.debug("DEBUG YY _loadFileSU: received " + encText.length + " bytes")
+    log.debug("DEBUG _loadFileSU: received " + encText.length + " bytes")
     // text received from 
     var text = decodeText(encText);
     var filename = fileSelector.getFilepath();
@@ -117,7 +117,22 @@ function parseFileText(text, filename) {
                 var ext = filename.slice(ridx+1, filename.length);
                 if ( ext != '') {
                     ext = ext.toUpperCase();
-                    if ( ext == 'DA' || ext == 'ADF' || ext == 'DF' ) {
+                    if ( ext == 'DA') {
+                        var comments = gArray.getCommentLines();
+                        log.debug("comments = '" + comments + "'")
+                        if (comments != []) {
+                            try {
+                                var line1 = comments[0]
+                                log.debug("line1=" + line1)
+                                ext = line1.split(' ')[4];
+                                ext = ext.replace(/_/g, " ");
+                                ext = ext.replace(/,/g, "");
+                            } catch(e) {
+                                logError(e)
+                            }
+                        }
+                        ext = "% " + ext; 
+                    } else if (ext == 'ADF' || ext == 'DF' ) {
                         ext = "% " + ext;
                     }
                     document.getElementById("legendLabelInput").value = ext;

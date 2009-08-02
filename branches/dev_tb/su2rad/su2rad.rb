@@ -73,6 +73,7 @@ require "sketchup.rb"
 require "su2radlib/exportbase.rb"
 require "su2radlib/context.rb"
 require "su2radlib/numeric.rb"
+require "su2radlib/weatherdata.rb"
 require "su2radlib/material.rb"
 require "su2radlib/radiance_entities.rb"
 require "su2radlib/radiancescene.rb"
@@ -156,6 +157,12 @@ def startImportWeb()
     ni.showWebDialog()
 end
 
+def showWeatherDataDialog()
+    $SU2RAD_CONFIG = RunTimeConfig.new()
+    wDlg = WeatherDataImportDialog.new()
+    wDlg.show()
+end
+
 def aboutDialog
     msg = "su2rad.rb\nSketchUp to Radiance exporter\nversion:  #{$SU2RAD_VERSION}"
     msg += "\n(c) Thomas Bleicher, 2008\ntbleicher@gmail.com"
@@ -188,6 +195,7 @@ def su2rad_reload
     load "su2radlib/filesystemproxy.rb"
     load "su2radlib/context.rb"
     load "su2radlib/numeric.rb"
+    load "su2radlib/weatherdata.rb"
     load "su2radlib/material.rb"
     load "su2radlib/radiance.rb"
     load "su2radlib/radiance_entities.rb"
@@ -218,6 +226,9 @@ def addRadianceMenu
     importmenu = radmenu.add_submenu("Import")
     importmenu.add_item("rtrace values") { startImport() }
     importmenu.add_item("rtrace values (web)") { startImportWeb() }
+    radmenu.add_separator()
+    
+    radmenu.add_item("weather data") { showWeatherDataDialog() }
     radmenu.add_separator()
     
     #radmenu.add_item("Preferences") { preferencesDialog() }

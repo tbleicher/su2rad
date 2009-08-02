@@ -93,6 +93,52 @@ GridPoint.prototype.toString = function () {
 
 
 
+function DataRecord(line) {
+    this.fields = line.split(',')
+}
+
+DataRecord.prototype.evaluate = function () {
+    try {
+        this.month = parseInt(this.fields[1])
+        this.day = parseInt(this.fields[2])
+        this.hour = parseInt(this.fields[3])
+        this.minute = parseInt(this.fields[4])
+        this.global_horizontal  = parseFloat(this.fields[13]) // Wh/m^2
+        this.direct_normal      = parseFloat(this.fields[14]) // Wh/m^2
+        this.diffuse_horizontal = parseFloat(this.fields[15]) // Wh/m^2
+        this.global_hor_ill     = parseFloat(this.fields[16]) // lux
+        this.direct_normal_ill  = parseFloat(this.fields[17]) // lux
+        this.diffuse_hor_ill    = parseFloat(this.fields[18]) // lux 
+        this.x = this.getJulianDay();
+        this.y = this.hour
+        this.z = 0
+        this.v = this.global_horizontal
+        this.value = this.global_horizontal
+        if ( isNaN(this.x) || isNaN(this.y) || isNaN(this.v) ) {
+            return false
+        }
+        return true
+    } catch(e) {
+        log.error("Error evaluating data record:<br/>" + this.fields.join("'")) 
+        logError(e)
+        return false
+    }
+}
+
+DataRecord.prototype.getJulianDay = function () {
+    var ndays = [0,31,59,90,120,151,181,212,243,273,304,334,365];
+    if ( this.leapyear == true  && this.month > 2) {
+        return ndays[this.month-1] + this.day + 1
+    } else {
+        return ndays[this.month-1] + this.day
+    }
+}
+
+DataRecord.prototype.toString = function () {
+    return "M=" + this.month + " D=" + this.day + " H=" + this.hour + " v=" + this.v.toFixed(2)
+}
+
+
 function ColorGradient() {
     this.colorStyle = 'roygbiv';
     this.lightness = 0.4;
@@ -163,6 +209,7 @@ GridArray.prototype.init = function () {
     this.rows = [];
     this.stats = {};
     this.values = [];
+    this.commentLines = [];
     this._contourCache = {};
 }
 
@@ -202,6 +249,21 @@ GridArray.prototype.addMinMax = function (x,y,v) {
     }
 }
 
+
+GridArray.prototype.addRecord = function (p) {
+    this.addMinMax(p.x, p.y, p.value)
+    this.cols.push(p.x);
+    if (this.gridByY[p.y] == null) {
+        this.gridByY[p.y] = [];
+        this.rows.push(p.y);
+    }
+    this.gridByY[p.y].push( p );
+    this.values.push(p.value)
+}
+
+
+
+
 GridArray.prototype.analyzeGrid = function () {
     this.calcStats();
     this.fillRows();
@@ -225,6 +287,23 @@ GridArray.prototype.calcStats = function () {
         this.stats.uniform = 0
         this.stats.median  = 0
     }
+}
+
+GridArray.prototype.getStatsAsText = function () {
+    var lines = new Array();
+    var stats = this.getStats();
+    var keys = ['average', 'minValue', 'maxValue', 'values', 'median'];
+    for (i=0; i<keys.length; i++) {
+        var k = keys[i];
+        var v = stats[keys[i]];
+        if ( keys[i] == "values" ) {
+            v = v.toFixed()
+        } else {
+            v = v.toFixed(2)
+        }
+        lines.push( k + " " + v );
+    }
+    return lines
 }
 
 GridArray.prototype.empty = function () {
@@ -298,6 +377,9 @@ GridArray.prototype.getArrayIndex = function (a,v) {
     return -1;
 }
 
+GridArray.prototype.getCommentLines = function () {
+    return this.commentLines;
+}
 
 GridArray.prototype.getContourLinesAt = function (level) {
     // return array of contour line segments 
@@ -413,7 +495,8 @@ GridArray.prototype.parseText = function (text) {
             var idx = line.indexOf('#');
             if (idx == 0) {
                 log.info('comment: ' + line);
-                continue;
+                this.commentLines.push(line);
+                log.debug("cLines.length=" + this.commentLines.length)
             } else if (idx > 0) {
                 line = line.slice(0, idx);
             }
@@ -494,27 +577,40 @@ GridArray.prototype.getTable = function (tableid) {
 function GridCanvas() {
     this.array = null;
     this.canvas = null;
-    this.canvasscale = 80;  // scale for 20px per 0.25m 
+    this.canvasscale = 1;   // will be changed in setScale()
     this.gridstep = 0.25;   // TODO: evaluate grid data
     this.legend = false;
     this.legendSteps = 10
     this.lightness = 0.4;
     this.legendLabel = '';
+
+    this.bgcolor = '#ffffff'
+    this.fgcolor = '#333333'
+    
+    this.fontNormal = "12px 'arial'";
+    this.fontSuperscript = "8px 'arial'";
     
     this.gradient = new ColorGradient()
     this.gradient.setLightness(this.lightness)
     
     this.ruler = {};
-    this.ruler.left = 40;
-    this.ruler.right = 0;
-    this.ruler.bottom = 38;      
+    this.ruler.left = 15;
+    this.ruler.right = 40;
+    this.ruler.bottom = 15;      
     this.ruler.top = 0;      
     
     this.margin = {};
     this.margin.left = 2;
     this.margin.right = 2;
     this.margin.bottom = 2;      
-    this.margin.top = 2;      
+    this.margin.top = 7;
+    
+    this.margin.left = 5;
+    this.margin.right = 5;
+    this.margin.bottom = 5;      
+    this.margin.top = 5;
+
+    this.padding = 15;
 }
 
 GridCanvas.prototype.draw = function () {
@@ -526,24 +622,90 @@ GridCanvas.prototype.draw = function () {
     var ctx = this.canvas.getContext('2d');
     if (ctx) {
         ctx.clearRect(0,0,this.canvas.width,this.canvas.height);
+        if (this.bgcolor != "#ffffff") {
+            ctx.fillStyle = this.bgcolor;
+            ctx.fillRect(0,0,this.canvas.width,this.canvas.height);
+        }
         this.setRulerWidth(ctx) // adjust width of left ruler
         this.setScale()         // work out scale based on available graph area
-        ctx.save()
-        this.setOrigin(ctx)
+        this.drawOutlines(ctx)
         this.drawGrid(ctx)  
         this.drawRulers(ctx)
         if (this.legend == true) {
             this.drawLegend(ctx)
         }
-        ctx.restore()
     }
+}
+
+GridCanvas.prototype.getFrameCoords = function (position) {
+    if (position == "left") {
+        var x = this.margin.left
+        var y = this.margin.top + this.ruler.top 
+        if (this.ruler.top != 0) { y += this.padding; }
+        var w = this.ruler.left
+        var h = this.getGraphHeight();
+        
+    } else if (position == "right") {
+        var y = this.margin.top + this.ruler.top
+        if (this.ruler.top != 0) { y += this.padding; }
+        var w = this.ruler.right
+        var h = this.getGraphHeight();
+        var x = this.canvas.width - this.margin.right - w
+    
+    } else if (position == "top") {
+        var x = this.margin.left
+        var y = this.margin.top
+        var w = this.canvas.width - this.margin.left - this.margin.right
+        var h = this.ruler.top
+    
+    } else if (position == "bottom") {
+        var x = this.margin.left
+        var y = this.canvas.height - this.margin.bottom - this.ruler.bottom
+        var w = this.canvas.width - this.margin.left - this.margin.right
+        var h = this.ruler.bottom
+    
+    } else {
+        // center
+        var x = this.margin.left
+        if (this.ruler.left != 0) { x = x + this.ruler.left + this.padding }
+        
+        var y = this.margin.top
+        if (this.ruler.top != 0) {  y = y + this.ruler.top  + this.padding }
+        
+        var w = this.canvas.width - (x+this.margin.right)
+        if (this.ruler.right != 0) { w = w - (this.ruler.right+this.padding) }
+        
+        var h = this.canvas.height - (y+this.margin.bottom)
+        if (this.ruler.bottom != 0) { h = h - (this.ruler.bottom+this.padding) }
+    }
+    return [x,y,w,h]
+}
+
+GridCanvas.prototype.drawOutlines = function (ctx) {
+    ctx.save()
+    ctx.strokeStyle = "#FF00FF"
+    ctx.lineWidth = 1;
+    ctx.strokeRect(0,0,this.canvas.width, this.canvas.height);
+    var frames = ["left", "right", "top", "bottom"];
+    for (var i=0; i<frames.length; i+=1) {
+        var side = frames[i];
+        if (this.ruler[side] != 0) {
+            var f = this.getFrameCoords(side);
+            log.debug("drawOutline() pos=" + side + " x=" + f[0] + " y=" + f[1] + "w=" + f[2] + " h=" + f[3])
+            ctx.strokeRect(f[0],f[1],f[2],f[3]);
+        }
+    }
+    var center = this.getFrameCoords("center");
+    log.debug("drawOutline() pos=center" + " x=" + center[0] + " y=" + center[1] + "w=" + center[2] + " h=" + center[3])
+    ctx.strokeRect(center[0],center[1],center[2],center[3]);
+    ctx.restore()
 }
 
 GridCanvas.prototype.drawContourLines = function (ctx) {
     var dValue = (this.gradient.maxValue - this.gradient.minValue) / this.legendSteps
     ctx.save()
-    ctx.lineWidth = 2/this.canvasscale;;
-    ctx.strokeStyle = '#000000'
+    ctx.lineWidth = 2/this.canvasscale;
+    ctx.strokeStyle = this.fgcolor
     for (var n=1; n<=Math.floor(this.gradient.maxValue/dValue); n++) {
         try {
             var lines = this.array.getContourLinesAt(n*dValue);
@@ -571,6 +733,7 @@ GridCanvas.prototype.drawGrid = function (ctx) {
     }
 
     ctx.save()
+    this.setOrigin(ctx)
     ctx.scale(this.canvasscale, -1*this.canvasscale);               // scale to size and mirror y (up=positive)
     ctx.translate(this.gridstep/2,this.gridstep/2)                  // translate by half a tile
     ctx.translate(-1*this.array.bbox[0],-1*this.array.bbox[2]);     // set origin to match first tile at lower left
@@ -598,45 +761,83 @@ GridCanvas.prototype.drawGrid = function (ctx) {
 }
 
 GridCanvas.prototype.drawLegend = function (ctx) {
+    var frame = this.getFrameCoords("right");
     var dValue = (this.gradient.maxValue - this.gradient.minValue) / this.legendSteps
     var xmax = (this.array.bbox[1]-this.array.bbox[0] + this.gridstep) * this.canvasscale
     var ymax = (this.array.bbox[3]-this.array.bbox[2] + this.gridstep) * this.canvasscale
-    var x = xmax + 20
-    var w = this.ruler.right - 20
-    var h = 200;
-    (ymax > 200) ? h = ymax : h = 200;
+    var x = frame[0]
+    var y = frame[1]+frame[3]
+    var w = frame[2]
+    var h = frame[3]
     var dH = h/this.legendSteps
     
-    // start at bottom (y=0 or >0)
-    var y = -1*ymax + h
-    
-    ctx.save() 
+    // start at bottom (y=0)
+    ctx.save()
+    ctx.lineWidth = 2;
     for (var i=0; i<this.legendSteps; i++) {
-        y -= h/this.legendSteps;    // y values decrease to go up
+        y -= dH;    // y values decrease to go up
         var value = (i+0.5) * dValue + this.gradient.minValue
         var color = this.gradient.getColorByValue(value);
         ctx.fillStyle = color;
         ctx.fillRect(x,y,w,dH);
         var ltext = this.getLegendText(dValue*i + this.gradient.minValue);
-        ctx.fillStyle = '#000000';
-        ctx.fillText(ltext, x+4, y+dH-4);
-        try {
-            // draw line in dark shade at <value> level
+        ctx.fillStyle = this.fgcolor;
+        this.labelText(ctx,ltext,"right",x+5,y+dH-4,w-10,12);
+        // draw line in dark shade at <value> level
+        if (this.gradient.lightness >= 0.2) {
             var color = this.gradient.getColorByValue(value, 0.0);
-            ctx.strokeStyle = color;
-            ctx.beginPath()
-            ctx.moveTo(x, y);
-            ctx.lineTo(x+w, y);
-            ctx.stroke()
-        } catch (e) {
-            logError(e)
+        } else {
+            var color = this.fgcolor;
         }
+        ctx.strokeStyle = color;
+        ctx.beginPath()
+        ctx.moveTo(x, y+1);    // offset 0.5*linewidth (down) to avoid
+        ctx.lineTo(x+w, y+1);  // overlap by following rectangle
+        ctx.stroke()
     }
     ctx.restore()
 }
 
+GridCanvas.prototype.labelText = function (ctx,text,pos,x,y,w,h) {
+    var width = this.getLabelWidth(ctx,text);
+    if (pos == "right") {
+        x = x + w - width
+    } else if (pos == "center") {
+        x = x + w/2.0 - width/2.0
+    }
+    var nText = this._splitSuperscript(text);
+    ctx.fillText(nText[0], x, y);
+    if (nText[1] != "") {
+        var newX = x + ctx.measureText(nText[0]).width;
+        var newY = y - 4;
+        ctx.font = this.fontSuperscript;
+        ctx.fillText(nText[1], newX, newY);
+        ctx.font = this.fontNormal;
+    }
+}
+
+GridCanvas.prototype._splitSuperscript = function (text) {
+    var superscript = "";
+    var exp = text.slice(-2,text.length)
+    if (exp == "^2" || exp == "^3" || exp == "^4") {
+        superscript = text.slice(-1,text.length);
+        text = text.slice(0,-2); 
+    }
+    return [text,superscript];
+}
+
+GridCanvas.prototype.getLabelWidth = function (ctx, text) {
+    var nText = this._splitSuperscript(text);
+    var width = ctx.measureText(nText[0]).width;
+    if (nText[1] != "") {
+        ctx.font = this.fontSuperscript;
+        width += ctx.measureText(nText[1]).width;
+        ctx.font = this.fontNormal;
+    }
+    return width;
+}
+
 GridCanvas.prototype.getLegendText = function (value) {
-    
     if ( this.gradient.maxValue > 100 ) {
         var text = value.toFixed();
     } else {
@@ -649,50 +850,81 @@ GridCanvas.prototype.getLegendText = function (value) {
 }
 
 GridCanvas.prototype.drawRulers = function (ctx) {
-    
     // draw ruler, tick marks and labels in canvas space (pixels!)
     ctx.save()
     this.setRulerFont(ctx)
+    this._drawRulerX(ctx)
+    this._drawRulerY(ctx)
+    ctx.restore()    
+}
     
-    // draw rulers along x and y 
-    ctx.lineWidth = 1.5;
-    var xmax = (this.array.bbox[1]-this.array.bbox[0] + this.gridstep) * this.canvasscale
-    var ymax = (this.array.bbox[3]-this.array.bbox[2] + this.gridstep) * this.canvasscale
-    var xoffset = -20;       // 20px distance to graph
-    var yoffset =  20;       // 20px distance to graph
-    ctx.beginPath()
-    ctx.moveTo(   0, yoffset);
-    ctx.lineTo(xmax, yoffset);
-    ctx.moveTo(xoffset,    0);
-    ctx.lineTo(xoffset, -1*ymax);
-    ctx.stroke()
+GridCanvas.prototype._drawRulerX = function (ctx) {
+    ctx.save()
+    var frame = this.getFrameCoords("bottom") 
+    var x = this.getFrameCoords("center")[0] 
+    ctx.translate(x,frame[1]);
 
+    // draw ruler along x  
+    var ticksize = 8;
     var labels = new Array();   // stores [label,x,y] for ctx.fillText() loop
     
     // draw tick marks and store pixel positions for lables
-    ctx.lineWidth = 1.0;
-    
-    // x-axis
+    var xmax = (this.array.bbox[1]-this.array.bbox[0] + this.gridstep) * this.canvasscale
     var xbase = this.array.bbox[0] - this.gridstep/2;
+    ctx.lineWidth = 1.5;
+    ctx.beginPath()
+    ctx.moveTo(   0, 0);
+    ctx.lineTo(xmax, 0);
+    ctx.stroke()
+    
+    ctx.lineWidth = 1.0;
     ctx.beginPath()
     for (var x=Math.round(this.array.bbox[0]+0.4); x<=Math.floor(this.array.bbox[1]); x++) {
         var xtick = (x-xbase)*this.canvasscale;
-        ctx.moveTo(xtick, yoffset);
-        ctx.lineTo(xtick, yoffset+10 );                     // 10 px for ticks
-        labels.push([x.toFixed(1), xtick+4, yoffset+15]);   // 15 px down for text
+        ctx.moveTo(xtick, 0);
+        ctx.lineTo(xtick, ticksize );             
+        labels.push([x.toFixed(1), xtick+4, frame[3]]);
     }
+    ctx.stroke()
     
-    // y-axis
+    // add labels
+    for (var i=0; i<labels.length; i++) {
+        var p=labels[i]
+        ctx.fillText(p[0], p[1], p[2]);
+    }
+    ctx.restore()    
+}
+
+   
+GridCanvas.prototype._drawRulerY = function (ctx) {
+    ctx.save()
+    var frame = this.getFrameCoords("left") 
+    ctx.translate(frame[0]+frame[2],frame[1]+frame[3]);
+
+    var ticksize = 8;
+    var labels = new Array();   // stores [label,x,y] for ctx.fillText() loop
+    
+    // draw ruler along y
+    var ymax = (this.array.bbox[3]-this.array.bbox[2] + this.gridstep) * this.canvasscale
     var ybase = this.array.bbox[2] - this.gridstep/2;
+    ctx.lineWidth = 1.5;
+    ctx.beginPath()
+    ctx.moveTo(0, 0);
+    ctx.lineTo(0, -1*frame[3]);
+    ctx.stroke()
+    ctx.lineWidth = 1.0;
+    
+    ctx.beginPath()
     for (var y=Math.round(this.array.bbox[2]+0.4); y<=Math.floor(this.array.bbox[3]); y++) {
         var ytick = (y-ybase)*this.canvasscale*-1;
-        ctx.moveTo(xoffset-10, ytick);                      // 10 px for ticks
-        ctx.lineTo(xoffset,ytick);
+        ctx.moveTo(-1*ticksize, ytick);          
+        ctx.lineTo(0,ytick);
         var xlabel = -1*this.ruler.left;                      // lable starts at 
         labels.push([y.toFixed(1), xlabel, ytick-4]);
     }
     ctx.stroke()
     
+    // add labels
     for (var i=0; i<labels.length; i++) {
         var p=labels[i]
         ctx.fillText(p[0], p[1], p[2]);
@@ -731,9 +963,11 @@ GridCanvas.prototype.setCanvasId = function (canvasid) {
 }
 
 GridCanvas.prototype.setLegend = function (position) {
+    this.legend = true;
+    return
+
     this.ruler.right = 0;
-    this.ruler.bottom = 38;
-    this.legend = false;
+    this.ruler.bottom = 15;
     if (position == "right") {
         this.ruler.right = 100;
         this.legend = true;
@@ -791,34 +1025,45 @@ GridCanvas.prototype.setLegendSteps = function (value) {
     }
 }
 
-GridCanvas.prototype.setOrigin = function (ctx) {
-    // translate to lower left corner off graph area 
+GridCanvas.prototype.getGraphHeight = function () {
     if ( this.array.bbox == null ) {
-        return
-    } 
+        return 0.0;
+    }
+    // actual size based on bbox and scale
     var dy = this.array.bbox[3] - this.array.bbox[2] + this.gridstep
     var graphHeight = dy * this.canvasscale
     
-    var frameY = this.ruler.top + this.ruler.bottom + this.margin.top + this.margin.bottom
-    var maxGraphHeight = this.canvas.height-frameY
+    // maximum based on canvas height
+    var maxHeight = this.canvas.height - this.margin.top - this.margin.bottom
+    if (this.ruler.top != 0) { maxHeight = maxHeight - this.ruler.top - this.padding }
+    if (this.ruler.bottom != 0) { maxHeight = maxHeight - this.ruler.bottom - this.padding }
     
-    ctx.translate(this.margin.left, this.margin.top)
-    if (graphHeight < maxGraphHeight) {
-        ctx.translate(this.ruler.left, graphHeight)
+    // return smaller of the two
+    if (graphHeight < maxHeight) {
+        return graphHeight
     } else {
-        ctx.translate(this.ruler.left, maxGraphHeight)
-    } 
+        return maxHeight
+    }
+    
+}
+
+GridCanvas.prototype.setOrigin = function (ctx) {
+    // translate to lower left corner off graph area 
+    var frame = this.getFrameCoords("center");
+    ctx.translate(frame[0], frame[1]+frame[3]);
 }
 
 GridCanvas.prototype.setRulerFont = function (ctx) {
-    ctx.strokeStyle = "#000000";
-    ctx.fillStyle = "#000000";
-    ctx.font = "12px 'arial'";
+    ctx.strokeStyle = this.fgcolor;
+    ctx.fillStyle = this.fgcolor;
+    ctx.font = this.fontNormal 
 }
 
 GridCanvas.prototype.setRulerWidth = function (ctx) {
     ctx.save()
     this.setRulerFont(ctx)
+    
+    // ruler left
     var maxW = 0;
     for (var i=Math.floor(this.array.bbox[2]); i<this.array.bbox[3]; i++) {
         var label=i.toFixed(1);
@@ -827,18 +1072,41 @@ GridCanvas.prototype.setRulerWidth = function (ctx) {
             maxW = dim.width;
         }
     }
-    maxW = maxW + 20 + 5;
+    maxW = maxW + 3;
     if (this.ruler.left < maxW) {
         this.ruler.left = Math.floor(maxW);
+        log.debug("new width for ruler.left: " + this.ruler.left) 
     }
+    
+    // legend width
+    maxW = 0;
+    var dValue = (this.gradient.maxValue - this.gradient.minValue) / this.legendSteps
+    for (var i=0; i<this.legendSteps; i++) {
+        var ltext = this.getLegendText(dValue*i + this.gradient.minValue);
+        //var dim = ctx.measureText(ltext);
+        var width = this.getLabelWidth(ctx,ltext);
+        log.debug("ltext='" + ltext + "' width=" + width.toFixed(1))
+        if (width > maxW) {
+            maxW = width;
+        }
+    }
+    this.ruler.right = Math.floor(maxW+10);
+    log.debug("new width for legend: " + this.ruler.right) 
+    
     ctx.restore()
 }
 
 GridCanvas.prototype.setScale = function () {    
     var dimX = this.array.bbox[1] - this.array.bbox[0] + this.gridstep;
     var dimY = this.array.bbox[3] - this.array.bbox[2] + this.gridstep;
-    var frameX = this.ruler.left + this.ruler.right + this.margin.left + this.margin.right
-    var frameY = this.ruler.top + this.ruler.bottom + this.margin.top + this.margin.bottom
+    
+    var frameX = this.margin.left + this.margin.right
+    if (this.ruler.left != 0) { frameX = frameX + this.ruler.left + this.padding }
+    if (this.ruler.right != 0) { frameX = frameX + this.ruler.right + this.padding }
+    var frameY = this.margin.top + this.margin.bottom
+    if (this.ruler.top != 0) { frameY = frameY + this.ruler.top + this.padding }
+    if (this.ruler.bottom != 0) { frameY = frameY + this.ruler.bottom + this.padding }
+    
     var scaleX = (this.canvas.width-frameX) / dimX
     var scaleY = (this.canvas.height-frameY) / dimY
     if ( scaleX < scaleY) {

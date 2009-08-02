@@ -110,32 +110,40 @@ function parseFileText(text, filename) {
     gArray.parseText(text);
     
     if (gArray.empty() == false) {
-        setGridArray(gArray);
         if (filename != null) {
-            // set new title
-            var title = document.getElementById("pageTitle")
-            while (title.hasChildNodes() == true) {
-                title.removeChild(title.firstChild)
-            }
-            var txt = document.createTextNode("file: " + filename);
-            title.appendChild(txt);
-            /* extract extension for label
-            var ridx = filename.lastIndexOf('.');
-            if (ridx != -1) {
-                var ext = filename.slice(ridx+1, filename.length);
-                if ( ext != '') {
-                    ext = ext.toUpperCase();
-                    if ( ext == 'DA' || ext == 'ADF' || ext == 'DF' ) {
-                        ext = "% " + ext;
-                    }
-                    document.getElementById("legendLabelInput").value = ext;
-                    gCanvas.setLegendLabel(ext);
-                }
-            } else {
-                gCanvas.setLegendLabel('');
-            } */
+            setFilename(filename)
+            //setLabelFromFilename(filename)
         }
+        setGridArray(gArray);
     }
+}
+
+function setFilename(filename) {
+    // set new title
+    var title = document.getElementById("pageTitle")
+    while (title.hasChildNodes() == true) {
+        title.removeChild(title.firstChild)
+    }
+    var txt = document.createTextNode("file: " + filename);
+    title.appendChild(txt);
+}
+
+function setLabelFromFilename(filename) {
+    // extract extension for label
+    var ridx = filename.lastIndexOf('.');
+    if (ridx != -1) {
+        var ext = filename.slice(ridx+1, filename.length);
+        if ( ext != '') {
+            ext = ext.toUpperCase();
+            if ( ext == 'EPW') {
+                
+                document.getElementById("legendLabelInput").value = ext;
+                gCanvas.setLegendLabel(ext);
+            }
+        }
+    } else {
+        gCanvas.setLegendLabel('');
+    } 
 }
 
 function simulateGrid() {
@@ -159,6 +167,7 @@ function setLegendLabel(label) {
     gCanvas.setLegendLabel(label)
     updateUI()
 }
+
 function setLegendLightness(lightness) {
     var value = parseFloat(lightness)
     if ( ! isNaN(value) ) {
@@ -166,6 +175,7 @@ function setLegendLightness(lightness) {
     }
     updateUI()
 }
+
 function setLegendMax(v) {
     var value = parseFloat(v)
     if ( ! isNaN(value) ) {
@@ -173,6 +183,7 @@ function setLegendMax(v) {
     }
     updateUI()
 }
+
 function setLegendMin(v) {
     var value = parseFloat(v)
     if ( ! isNaN(value) ) {
@@ -180,6 +191,7 @@ function setLegendMin(v) {
     }
     updateUI()
 }
+
 function setLegendSteps(v) {
     var value = parseFloat(v)
     if ( ! isNaN(value) ) {
@@ -193,18 +205,12 @@ function showStats() {
     while (statsDiv.hasChildNodes() == true) {
         statsDiv.removeChild(statsDiv.firstChild)
     }
-    var stats = gArray.getStats();
-    var keys = ['average', 'uniform', 'minValue', 'maxValue', 'values', 'median'];
-    for (i=0; i<keys.length; i++) {
-        var k = "stats_" + keys[i];
-        var v = stats[keys[i]];
-        if ( keys[i] == "values" ) {
-            v = v.toFixed()
-        } else {
-            v = v.toFixed(2)
-        }
+    var stats = gArray.getStatsAsText();
+    for (i=0; i<stats.length; i++) {
+        var k = stats[i].split(' ')[0]
+        var v = stats[i].split(' ')[1]
         var label = document.createElement('span');
-        var ltxt = document.createTextNode(keys[i]);
+        var ltxt = document.createTextNode(k);
         label.appendChild(ltxt);
         var value = document.createElement('span');
         var vtxt = document.createTextNode(v);
@@ -213,8 +219,6 @@ function showStats() {
         row.appendChild(label);
         row.appendChild(value);
         statsDiv.appendChild(row);
-        //row.setAttribute('class', "gridRow")
-        //label.setAttribute('class', "gridLabel")
     }
     try {
         $("#statsTable > div").attr("class", "gridRow")
