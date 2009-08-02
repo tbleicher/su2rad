@@ -193,8 +193,24 @@
                         <span>You need Firefox/Mozilla or Sketchup to load a results file.</span>
                         <input type="button" id="simulateGrid" value="simulate" onclick="simulateGrid()">
                     </div>
-
+                    
+                    <!-- select data to display --> 
+                    <div id="dataTypeDiv">
+                        <div class="importOptionHeader">
+                            <select id="weatherDataType" onchange="setDataType()">
+                                <option value="0" selected>global hor</option>
+                                <option value="1" >direct normal</option>
+                                <option value="2" >diffuse hor</option>
+                                <option value="3" >glob hor ill</option>
+                                <option value="4" >dir norm ill</option>
+                                <option value="5" >diff hor ill</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <!-- options for display --> 
                     <div id="graphOptions"> 
+                    
                         <div class="importOptionHeader">
                             <div>legend options</div>
                         </div>
@@ -237,7 +253,7 @@
                 </div>
                 
                 <!-- for debugging -->
-                <textarea id="messagearea" name="messagearea" cols=120 rows=8 style="border: 1px solid red"></textarea>
+                <textarea id="messagearea" name="messagearea" cols=120 rows=8"></textarea>
             
             </div>
             

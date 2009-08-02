@@ -98,7 +98,7 @@ function logError(e) {
 
 function parseFileText(text, filename) {
     log.debug("DEBUG parseFileText(): received " + text.length + " bytes")
-    document.getElementById('messagearea').value = text;
+    //document.getElementById('messagearea').value = text;
     gArray = new GridArray();
     gArray.parseText(text);
     if (gArray.empty() == false) {
@@ -119,11 +119,9 @@ function parseFileText(text, filename) {
                     ext = ext.toUpperCase();
                     if ( ext == 'DA') {
                         var comments = gArray.getCommentLines();
-                        log.debug("comments = '" + comments + "'")
                         if (comments != []) {
                             try {
                                 var line1 = comments[0]
-                                log.debug("line1=" + line1)
                                 ext = line1.split(' ')[4];
                                 ext = ext.replace(/_/g, " ");
                                 ext = ext.replace(/,/g, "");
@@ -157,9 +155,10 @@ function simulateGrid() {
 function setGridArray(gArray) {
     gCanvas.setArray(gArray);
     gCanvas.setLegend('right');
+    document.getElementById('messagearea').value = gArray.commentLines.join("\n");
     gCanvas.draw();
     updateUI();
-    showStats();
+    updateStats();
 }
 
 function setLegendLabel(label) {
@@ -195,7 +194,7 @@ function setLegendSteps(v) {
     updateUI();
 }
 
-function showStats() {
+function updateStats() {
     var statsDiv = document.getElementById('statsTable');
     while (statsDiv.hasChildNodes() == true) {
         statsDiv.removeChild(statsDiv.firstChild)
