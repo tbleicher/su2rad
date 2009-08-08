@@ -229,8 +229,10 @@ GridArray.prototype.init = function () {
     this.gridByY = {};
     this.rows = [];
     this.stats = {};
+    this.triangles = []
     this.units = "unit"
     this.values = [];
+    this.vertices = [];
     this.commentLines = [];
     this._contourCache = {};
 }
@@ -256,6 +258,7 @@ GridArray.prototype.addPoint = function (p) {
     }
     this.gridByY[y].push( new GridPoint(x,y,p[2],value) );
     this.values.push(value)
+    this.vertices.push( new DelaunayVertex(x,y,value) );
 }
 
 GridArray.prototype.addMinMax = function (x,y,v) {
@@ -284,6 +287,8 @@ GridArray.prototype.addRecord = function (p) {
 }
 
 GridArray.prototype.analyzeGrid = function () {
+    this.triangles = DelaunayTriangulate( this.vertices );
+    log.debug("triangles.length=" + this.triangles.length)
     this.calcStats();
     this.fillRows();
     this.sortArray();
@@ -618,7 +623,7 @@ function GridCanvas() {
     this.array = null;
     this.canvas = null;
     this.canvasscale = 1;   // will be changed in setScale()
-    this.gridstep = 0.25;   // TODO: evaluate grid data
+    this.gridstep = 0.0;   // TODO: evaluate grid data
     this.legend = false;
     this.legendSteps = 10
     this.lightness = 0.4;
@@ -780,6 +785,38 @@ GridCanvas.prototype.drawGrid = function (ctx) {
     ctx.translate(this.gridstep/2,this.gridstep/2)                  // translate by half a tile
     ctx.translate(-1*this.array.bbox[0],-1*this.array.bbox[2]);     // set origin to match first tile at lower left
                                                                     // of graph area
+    ctx.lineWidth = 1.0/this.canvasscale;
+    ctx.strokeStyle = '#000000' // this.fgcolor
+    var triangles = this.array.triangles;
+    for (var i=0; i<triangles.length; i++) {
+        var t = triangles[i];
+        var color = this.gradient.getColorByValue(t.z);
+        ctx.fillStyle = color;
+        ctx.strokeStyle = color;
+        ctx.beginPath()
+        ctx.moveTo(t.v0.x, t.v0.y);
+        ctx.lineTo(t.v1.x, t.v1.y);
+        ctx.lineTo(t.v2.x, t.v2.y);
+        ctx.fill()
+        ctx.stroke()
+        ctx.closePath();
+    }
+    
+    this.drawContourLines(ctx)
+    ctx.restore()
+}
+
+GridCanvas.prototype.drawGrid_OLD = function (ctx) {
+    if ( this.array.bbox == null ) {
+        return
+    }
+
+    ctx.save()
+    this.setOrigin(ctx)
+    ctx.scale(this.canvasscale, -1*this.canvasscale);               // scale to size and mirror y (up=positive)
+    ctx.translate(this.gridstep/2,this.gridstep/2)                  // translate by half a tile
+    ctx.translate(-1*this.array.bbox[0],-1*this.array.bbox[2]);     // set origin to match first tile at lower left
+                                                                    // of graph area
     ctx.lineWidth=1.0/this.canvasscale;                             // set line width according to scale
     
     var gs = this.gridstep;
@@ -792,14 +829,18 @@ GridCanvas.prototype.drawGrid = function (ctx) {
                 var point = row[j]
                 if (point.v != -1) {
                     var color = this.gradient.getColorByValue(point.v);
-                    ctx.fillStyle = color;
-                    ctx.fillRect(point.x-gs2, point.y-gs2, gs, gs);
+                    //ctx.fillStyle = color;
+                    //ctx.fillRect(point.x-gs2, point.y-gs2, gs, gs);
                 }
             }
         }
     }
+    this.drawTriangles(ctx)
     this.drawContourLines(ctx)
     ctx.restore()
+}
+
+GridCanvas.prototype.drawTriangles = function (ctx) {
 }
 
 GridCanvas.prototype.drawLegend = function (ctx) {

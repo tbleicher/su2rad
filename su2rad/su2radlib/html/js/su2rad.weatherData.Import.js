@@ -169,10 +169,56 @@ function setGridArray(gArray) {
     gCanvas.setLegend('right');
     gCanvas.setDataTypeIndex(0);
     document.getElementById('weatherDataType').selectedIndex = 0;
-    document.getElementById("messagearea").value = gArray.commentLines.join("\n");
+    setComment(gArray.commentLines);
     gCanvas.draw();
     updateUI();
     updateStats();
+}
+
+function setComment(lines) {
+    try {
+        // DESIGN CONDITIONS
+        lines[1] = lines[1].replace(/Heating/g, "\n\tHeating");
+        lines[1] = lines[1].replace(/Cooling/g, "\n\tCooling");
+        lines[1] = lines[1].replace(/Extremes/g, "\n\tExtremes");
+        var conditions = lines[1].split("\n")
+        var values = conditions[2].split(",")
+        var middle = parseInt(values.length/2)
+        var newcool = values.slice(0,middle).join(",")
+        newcool += "\n\t\t" + values.slice(middle,-1).join(",")
+        conditions[2] = newcool;
+        lines[1] = conditions.join("\n")
+        // TYPICAL/EXTREME PERIODS
+        var periods = lines[2].split(",")
+        var nline = []
+        nline.push( periods[0] + " (" + periods[1] + "):" )
+        for (var i=2; i<periods.length; i+=4) {
+            nline.push( "\t" + periods.slice(i,i+4).join(", ") )
+        }
+        lines[2] = nline.join("\n");   
+        // GROUND TEMPERATURES
+        lines[3] = _splitLongLine(lines[3], ",", 70);   
+        lines[5] = _splitLongLine(lines[5], " ", 70);   
+        
+    } catch (e) {
+        logError(e)
+    }
+    document.getElementById("messagearea").value = lines.join("\n\n"); 
+}
+
+function _splitLongLine(line, sep, maxl) {
+    var offset = 0;
+    var parts = line.split(sep);
+    var nline = parts[0]
+    for (var i=1; i<parts.length; i++ ) {
+        nline += sep;
+        if ( (nline.length-offset) > maxl ) {
+            nline += "\n\t";
+            offset = nline.length;
+        }
+        nline += parts[i];
+    }
+    return nline;   
 }
 
 function setLegendLabel(label) {
