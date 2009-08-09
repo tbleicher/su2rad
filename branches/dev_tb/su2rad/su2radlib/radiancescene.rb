@@ -227,39 +227,39 @@ class RadianceScene < ExportBase
         else
             statusPage = nil
         end
-        begin 
-            prepareSceneDir(sceneDir)
-            $SU2RAD_COUNTER.setStartTime()
-            success = export(selected_only)
-        rescue => e
-            uimessage($!.message, -2)
-            printf e.backtrace.join("\n")
-            success = false
-        ensure
-            if statusPage
-                $SU2RAD_COUNTER.updateStatus() 
-                statusPage.showFinal()
-            end
-        end
-        return success
-    end 
-    
-    def export(selected_only=0)
-       
-        ## write sky first for <scene>.rad file
-        #@sky.skytype = @radOpts.skytype
-        @sky.export()
         
-        ## export geometry
+        ## collect entities to export
         if selected_only != 0
             entities = []
             Sketchup.active_model.selection.each{|e| entities = entities + [e]}
         else
             entities = Sketchup.active_model.entities
         end
+        $SU2RAD_COUNTER.countEntities(entities)
+        
+        begin 
+            prepareSceneDir(sceneDir)
+            $SU2RAD_COUNTER.setStartTime()
+            success = export(entities)
+        rescue => e
+            uimessage($!.message, -2)
+            printf e.backtrace.join("\n")
+            success = false
+        ensure
+            $SU2RAD_COUNTER.updateFinal() 
+        end
+        return success
+    end 
+    
+    def export(entities)
+       
+        ## write sky first for <scene>.rad file
+        #@sky.skytype = @radOpts.skytype
+        @sky.export()
+        
+        ## export geometry
         $globaltrans = Geom::Transformation.new
         @@nameContext.push(getConfig('SCENENAME')) 
-        
         uimessage("\nOBJECTS:", 0)
         sceneref = exportByGroup(entities, Geom::Transformation.new)
         emode = getConfig('MODE')
