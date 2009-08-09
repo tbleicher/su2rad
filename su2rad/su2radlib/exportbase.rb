@@ -3,13 +3,18 @@ require 'export_modules.rb'
 require 'context.rb'
 require 'radiance.rb'
 
+
+
 class ProgressCounter
     
     def initialize
+        @progressDialog = nil
         @stats = {'status' => 'running'}
         @stats.default = 0
         @statusPage = nil
         @timeStart = Time.now()
+        @totalFaces = 10000
+        @updateInterval = 1000
     end
 
     def add(key)
@@ -19,11 +24,42 @@ class ProgressCounter
         key.strip!()
         @stats[key] += 1
         val = @stats[key]
-        if key == 'faces' && val.divmod(1000)[1] == 0
+        if key == 'faces' && val.divmod(@updateInterval)[1] == 0
             updateStatus()
         elsif val.divmod(10)[1] == 0
             updateStatus()
         end
+    end
+    
+    def countEntities(entities)
+        if @progressDialog == nil
+            begin
+                load 'ProgressDialog.rb'
+                #XXX enable cancel option after it's implemented in the export loop
+                #@progressDialog = ProgressDialog.new("export progress", "preparing export", true)
+                @progressDialog = ProgressDialog.new("export progress", "preparing export", false)
+            rescue
+                printf "could not load progress dialog"
+            end
+        else
+            @progressDialog.update_progress(1, "export progress", "preparing export")
+        end
+        $SU2RAD_EXPORT_CANCELED = false;
+        @totalFaces = _countFaces(entities)
+    end
+    
+    def _countFaces(entities)
+        cnt = 0
+        entities.each { |e| 
+            if e.class == Sketchup::Face
+                cnt += 1
+            elsif e.class == Sketchup::Group
+                cnt += _countFaces(e.entities)
+            elsif e.class == Sketchup::ComponentInstance
+                cnt += _countFaces(e.definition.entities)
+            end
+        }
+        return cnt       
     end
     
     def getCount(key)
@@ -32,6 +68,7 @@ class ProgressCounter
     
     def setStartTime
         @timeStart = Time.now()
+        @progressDialog.update_progress(1, "starting export")
     end
     
     def setStatusPage(page)
@@ -52,15 +89,47 @@ class ProgressCounter
         Sketchup.set_status_text("%.1f sec" % sec, SB_VCB_VALUE)
     end
     
+    def updateFinal
+        updateStatus()
+        if @statusPage != nil
+            @statusPage.showFinal()
+        end
+        if @progressDialog != nil
+            @progressDialog.update_progress(101, "export finished", "--")
+            @progressDialog.hide
+            @progressDialog.destroy
+        end
+        
+    end
+    
+    def updateProgressDialog
+        if @progressDialog == nil
+            return
+        end
+        faces = @stats['Sketchup::Faces'] + @stats['faces'] 
+        facecnt = "exported #{faces} of #{@totalFaces}"
+        summary = ""
+        if @stats.has_key?('errors')
+            summary += "#{@stats['errors']} errors - "
+        end
+        if @stats.has_key?('warnings')
+            summary += "#{@stats['warnings']} warnings"
+        end
+        percent = faces*100 / @totalFaces
+        $SU2RAD_EXPORT_CANCELED = @progressDialog.update_progress(percent.to_i, facecnt, summary)
+    end
+    
     def updateStatus
         if @stats.has_key?('errors')
             @stats['status'] = 'running (errors)'
         elsif @stats.has_key?('warnings')
             @stats['status'] = 'running (warnings)'
         end
+        
         if @statusPage != nil
             @statusPage.update(@stats)
         end
+        updateProgressDialog
         setStatusText()
     end
     
