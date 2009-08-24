@@ -180,7 +180,7 @@ su2rad.grid.GridArray.prototype.addPoint = function (p) {
     }
     this.gridByY[y].push( new su2rad.grid.GridPoint(x,y,p[2],value) );
     this.values.push(value)
-    this.vertices.push( new DelaunayVertex(x,y,value) );
+    this.vertices.push( new su2rad.geom.Delaunay.Vertex(x,y,value) );
 }
 
 su2rad.grid.GridArray.prototype.addMinMax = function (x,y,v) {
@@ -208,8 +208,13 @@ su2rad.grid.GridArray.prototype.addRecord = function (p) {
 }
 
 su2rad.grid.GridArray.prototype.analyzeGrid = function () {
-    this.triangles = DelaunayTriangulate( this.vertices );
-    log.debug("triangles.length=" + this.triangles.length)
+    log.debug("analyzeGrid: " + this.vertices.length + " vertices")
+    try {
+        this.triangles = su2rad.geom.Delaunay.Triangulate( this.vertices );
+        log.debug("analyzeGrid: " + this.triangles.length + " triangles")
+    } catch (e) {
+        logError(e)
+    }
     this.calcStats();
     this.fillRows();
     this.sortArray();
@@ -322,14 +327,20 @@ su2rad.grid.GridArray.prototype.generate = function () {
     var maxX = minX*2 + Math.floor(Math.random()*44) * 0.25
     var minY =          Math.floor(Math.random()*11) * 0.25
     var maxY = minY*2 + Math.floor(Math.random()*44) * 0.25
+    
     var mag  = Math.pow(Math.random()*10, 3)
     var dz   = Math.random()
     var grid = new Array();
-    for (var x=minX; x<maxX; x+=0.25) {
-        for (var y=minY; y<maxY; y+=0.25) {
-            z = mag * ( dz + 0.2 * ( 1+Math.sin(x*2) ) / ( 1.3+Math.cos(y+1) ) )
+    
+    var x=minX;
+    while ( x < maxX ) {
+        var y=minY;
+        while ( y < maxY ) {
+            var z = mag * ( dz + 0.2 * ( 1+Math.sin(x*2) ) / ( 1.3+Math.cos(y+1) ) )
             grid.push( [x,y,0.75,0,0,1,z] );
+            y = y + 0.25;
         }
+        x = x + 0.25;
     }
     // now read in like file based grid
     this.readArray(grid);
@@ -482,6 +493,7 @@ su2rad.grid.GridArray.prototype.parseText = function (text) {
     var re_sp = /\s+/
     text = text.replace(re_cr, '');
     var lines = text.split("\n")
+    log.debug("parseText(): " + lines.length + " lines")
     for (i=0; i<lines.length; i++) {
         try {
             var line = lines[i];

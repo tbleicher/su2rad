@@ -14,18 +14,18 @@ su2rad.dialog.gridImport = function () {
 su2rad.dialog.gridImport.evaluateSketchup = function () {
     log.debug("evaluateSketchup() su2rad.SKETCHUP='" + su2rad.SKETCHUP + "'")
     
-    // hide buttons and show warning by default
+    // show warning/simulate and hide file load buttons by default
     document.getElementById("loadFileWarning").style.display='';
+    document.getElementById("loadFileSelectionDiv").style.display='none'; 
     document.getElementById("loadFileSUDiv").style.display='none';
     document.getElementById("graphOptions").style.display='none';
     document.getElementById("statsDiv").style.display='none';
+    document.getElementById("importGraphToSketchupDiv").style.display='none';
     
     // show 'load file' button depending on browser and Sketchup
-    var idomFileList = document.getElementById("loadFileSelection").files;
-    if (idomFileList == null && su2rad.SKETCHUP == false) {
+    if ( su2rad.SKETCHUP == false && su2rad.BROWSER != "Gecko" ) {
         // this is not Firefox/Mozilla
         log.warn("nsIDOMFileList and Sketchup not available - no functionality");
-        log.debug("broser: " + navigator.userAgent);
     
     } else if (su2rad.SKETCHUP == true) {
         // started within Sketchup
@@ -37,11 +37,9 @@ su2rad.dialog.gridImport.evaluateSketchup = function () {
         document.getElementById("graphOptions").style.display='';
         document.getElementById("statsDiv").style.display='';
     
-    } else {
-        // this is Firefox -> enable direct load of file text
+    } else if (su2rad.NSIDOM == true ) {
+        // enable direct load of file text but no 'import' button
         log.info("nsIDOMFileList available");
-        log.debug("broser: " + navigator.userAgent);
-        su2rad.NSIDOM = true;
         document.getElementById("loadFileWarning").style.display='none';
         document.getElementById("loadFileSelectionDiv").style.display=''; 
         document.getElementById("graphOptions").style.display='';
@@ -56,7 +54,7 @@ su2rad.dialog.gridImport.initPage = function () {
     this.gCanvas.setCanvasId('cv');
     this.evaluateSketchup(); 
     this.updateUI();
-    log.debug("gCanvas=" + this.gCanvas)
+    //log.debug("gCanvas=" + this.gCanvas)
 }
 
 su2rad.dialog.gridImport.importGraphToSketchup = function () {
@@ -86,7 +84,9 @@ su2rad.dialog.gridImport.loadFileIDOM = function () {
         this.parseFileText(text, filename);
     } catch (e) {
         logError(e)
-        alert(e)
+        alert("Sorry, your browser does not support this feature.\n\n" + e)
+        document.getElementById("loadFileSelectionDiv").style.display='none'; 
+        document.getElementById("loadFileWarning").style.display='';
     }
 }
 
