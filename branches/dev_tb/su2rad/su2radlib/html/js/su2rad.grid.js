@@ -485,12 +485,20 @@ su2rad.grid.GridArray.prototype.parseText = function (text) {
     for (i=0; i<lines.length; i++) {
         try {
             var line = lines[i];
+            // only whitespace
+            var trimmed = line.replace(/^\s+|\s+$/g, '') ;
+            if ( trimmed == "" ) {
+                continue
+            }
+            // comment lines
             var idx = line.indexOf('#');
             if (idx == 0) {
                 this.commentLines.push(line);
+                continue;
             } else if (idx > 0) {
                 line = line.slice(0, idx);
             }
+            // split and parse fields
             var values = [];
             var rawparts = line.split(re_sp);
             for (var j=0; j<rawparts.length; j++) {
@@ -499,7 +507,12 @@ su2rad.grid.GridArray.prototype.parseText = function (text) {
                     values.push(v);
                 }
             }
-            this.addPoint(values); 
+            // only accept format we know
+            if (values.length == 4 || values.length == 7) {
+                this.addPoint(values);
+            } else {
+                log.error("parseText: unknown format of record (line " + (i+1) + "):<br/>'" + lines[i] + "'")
+            }
         } catch (e) {
             logError(e)
         }

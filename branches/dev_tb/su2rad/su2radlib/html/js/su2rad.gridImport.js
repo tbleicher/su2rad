@@ -231,7 +231,8 @@ su2rad.dialog.gridImport.updateStats = function () {
     while (statsDiv.hasChildNodes() == true) {
         statsDiv.removeChild(statsDiv.firstChild)
     }
-    var stats = this.gCanvas.array.getStats();
+    var gArray = this.gCanvas.array;
+    var stats = gArray.getStats();
     var keys = ['average', 'uniform', 'minValue', 'maxValue', 'values', 'median'];
     for (i=0; i<keys.length; i++) {
         var k = "stats_" + keys[i];
