@@ -162,7 +162,7 @@ function _dropAction (ev, ui) {
     setAlias(skmId, radId);
     
     // repeated dragging messes up div content on Windows
-    if (PLATFORM != "Windows") {
+    if (su2rad.PLATFORM != "Windows") {
         dragClone.draggable({
             helper:'clone',
             start: function (ev,ui) {
@@ -333,7 +333,7 @@ function showMaterialDetails(matname) {
 
 function getSkmInnerHTML(skm) {
     var html = "";
-    if (PLATFORM == "Windows") {
+    if (su2rad.PLATFORM == "Windows") {
         html += "<div style=\"float:right;font-size:12px;cursor:pointer;\"><a onclick=\"clearAlias('" + skm.id + "')\""
         html += "title=\"remove alias\">[X]</a></div>";
     } else {

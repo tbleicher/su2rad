@@ -4,32 +4,44 @@
 // .
 // Copyright (c) 2009 Thomas Bleicher
 
+var su2rad = su2rad ? su2rad : new Object();
+su2rad.dialog = su2rad.dialog ? su2rad.dialog : new Object()
 
-function evaluateSketchup() {
-    log.debug("evaluateSketchup() SKETCHUP='" + SKETCHUP + "'")
+su2rad.dialog.gridImport = function () {
+    this.gCanvas = null;
+}
+
+su2rad.dialog.gridImport.evaluateSketchup = function () {
+    log.debug("evaluateSketchup() su2rad.SKETCHUP='" + su2rad.SKETCHUP + "'")
     
+    // hide buttons and show warning by default
     document.getElementById("loadFileWarning").style.display='';
     document.getElementById("loadFileSUDiv").style.display='none';
     document.getElementById("graphOptions").style.display='none';
     document.getElementById("statsDiv").style.display='none';
+    
     // show 'load file' button depending on browser and Sketchup
     var idomFileList = document.getElementById("loadFileSelection").files;
-    if (idomFileList == null && SKETCHUP == false) {
+    if (idomFileList == null && su2rad.SKETCHUP == false) {
         // this is not Firefox/Mozilla
         log.warn("nsIDOMFileList and Sketchup not available - no functionality");
         log.debug("broser: " + navigator.userAgent);
-    } else if (SKETCHUP == true) {
+    
+    } else if (su2rad.SKETCHUP == true) {
+        // started within Sketchup
         log.info("Sketchup available");
         document.getElementById("loadFileWarning").style.display='none';
+        document.getElementById("loadFileSelectionDiv").style.display='none'; 
         document.getElementById("loadFileSUDiv").style.display='';
         document.getElementById("importGraphToSketchupDiv").style.display='';
         document.getElementById("graphOptions").style.display='';
         document.getElementById("statsDiv").style.display='';
+    
     } else {
         // this is Firefox -> enable direct load of file text
         log.info("nsIDOMFileList available");
         log.debug("broser: " + navigator.userAgent);
-        NSIDOM = true;
+        su2rad.NSIDOM = true;
         document.getElementById("loadFileWarning").style.display='none';
         document.getElementById("loadFileSelectionDiv").style.display=''; 
         document.getElementById("graphOptions").style.display='';
@@ -37,40 +49,50 @@ function evaluateSketchup() {
     }
 }
 
-function importGraphToSketchup () {
-    log.debug("DEBUG: importGraphToSketchup")
-    if (gCanvas.array == null || gCanvas.array.empty() == true) {
+su2rad.dialog.gridImport.initPage = function () {
+    // set up canvas
+    document.getElementById("messagearea").value = '';
+    this.gCanvas = new su2rad.canvas.GridCanvas;
+    this.gCanvas.setCanvasId('cv');
+    this.evaluateSketchup(); 
+    this.updateUI();
+    log.debug("gCanvas=" + this.gCanvas)
+}
+
+su2rad.dialog.gridImport.importGraphToSketchup = function () {
+    //log.debug("DEBUG: importGraphToSketchup")
+    if (this.gCanvas.array == null || this.gCanvas.array.empty() == true) {
         log.info("nothing to import")
         return;
     }
-    opts = gCanvas.getLegendOptions();
-    opts.elementId = 'messagearea';
+    opts = this.gCanvas.getLegendOptions();
+    opts.elementId = 'textfilecontent';
     txt  = 'maxValue='  + opts.maxValue.toFixed(2) + '&'
     txt += 'minValue='  + opts.minValue.toFixed(2) + '&'
     txt += 'steps='     + opts.steps.toFixed() + '&'
     txt += 'elementId=' + opts.elementId 
-    if (SKETCHUP == true) {
+    if (su2rad.SKETCHUP == true) {
         window.location = 'skp:importFromWebDialog@' + txt;
     }
 }
 
-function loadFileIDOM() {
+su2rad.dialog.gridImport.loadFileIDOM = function () {
     log.debug("loadFileIDOM()")
     try {
         // access file contents via nsIDOMFileList (FireFox, Mozilla)
         var files = document.getElementById("loadFileSelection").files;
         var text = files.item(0).getAsText('UTF-8');
         var filename = files.item(0).fileName
-        parseFileText(text, filename)
+        this.parseFileText(text, filename);
     } catch (e) {
         logError(e)
         alert(e)
     }
 }
 
-function loadFileSU() {
+su2rad.dialog.gridImport.loadFileSU = function () {
     // function to be called with encoded text from SU
-    loadFileCallback = _loadFileSU
+    loadFileCallback = this._loadFileSU
     // function to be called with fielpath in JS
     fileSelector.callback = loadTextFile; 
     try {
@@ -80,29 +102,34 @@ function loadFileSU() {
     }
 }
 
-function _loadFileSU(encText) {
+su2rad.dialog.gridImport._loadFileSU = function (encText) {
     log.debug("DEBUG _loadFileSU: received " + encText.length + " bytes")
-    // text received from 
-    var text = decodeText(encText);
-    var filename = fileSelector.getFilepath();
-    parseFileText(text, filename);
+    // text received from
+    try {
+        var text = decodeText(encText);
+        var filename = fileSelector.getFilepath();
+        // can't use 'this' because function is call in fileselector context
+        su2rad.dialog.gridImport.parseFileText(text, filename);
+    } catch(e) {
+        logError(e)
+    }
 }
 
-function logError(e) {
-    log.error(e.toString())
-    log.error("e.name " + e.name)
-    log.error("e.message " + e.message)
-    log.error("e.fileName " + e.fileName)
-    log.error("e.lineNumber " + e.lineNumber)
+su2rad.dialog.gridImport.onResizeCanvas = function () {
+    var newW = document.getElementById("canvasContainer").clientWidth;
+    var newH = document.getElementById("canvasContainer").clientHeight;
+    document.getElementById("cv").width = newW;
+    document.getElementById("cv").height = newH;
+    this.gCanvas.draw()
 }
-
-function parseFileText(text, filename) {
-    log.debug("DEBUG parseFileText(): received " + text.length + " bytes")
-    //document.getElementById('messagearea').value = text;
-    gArray = new GridArray();
+                
+su2rad.dialog.gridImport.parseFileText = function (text, filename) {
+    var gArray = new su2rad.grid.GridArray();
     gArray.parseText(text);
     if (gArray.empty() == false) {
-        setGridArray(gArray);
+        // import successfull; set filetext
+        document.getElementById('textfilecontent').value = text;
+        this.setGridArray(gArray);
         if (filename != null) {
             // set new title
             var title = document.getElementById("pageTitle")
@@ -134,72 +161,77 @@ function parseFileText(text, filename) {
                         ext = "% " + ext;
                     }
                     document.getElementById("legendLabelInput").value = ext;
-                    gCanvas.setLegendLabel(ext);
+                    this.gCanvas.setLegendLabel(ext);
                 }
             } else {
-                gCanvas.setLegendLabel('');
+                this.gCanvas.setLegendLabel('');
             }
         }
+    } else {
+        // TODO: disable import button
     }
 }
 
-function simulateGrid() {
+su2rad.dialog.gridImport.simulateGrid = function () {
     document.getElementById('messagearea').value = '';
     document.getElementById("graphOptions").style.display='';
     document.getElementById("statsDiv").style.display='';
-    gArray = new GridArray();
+    var gArray = new su2rad.grid.GridArray();
     gArray.generate();
-    setGridArray(gArray)
+    this.setGridArray(gArray)
 }
 
-function setGridArray(gArray) {
-    gCanvas.setArray(gArray);
-    gCanvas.setLegend('right');
-    document.getElementById('messagearea').value = gArray.commentLines.join("\n");
-    gCanvas.draw();
-    updateUI();
-    updateStats();
+su2rad.dialog.gridImport.setGridArray = function (gArray) {
+    this.gCanvas.setArray(gArray);
+    this.gCanvas.setLegend('right');
+    this.gCanvas.draw();
+    this.updateUI();
+    this.updateStats();
 }
 
-function setLegendLabel(label) {
-    gCanvas.setLegendLabel(label)
-    updateUI()
+su2rad.dialog.gridImport.setLegendLabel = function (label) {
+    this.gCanvas.setLegendLabel(label)
+    this.updateUI()
 }
-function setLegendLightness(lightness) {
+
+su2rad.dialog.gridImport.setLegendLightness = function (lightness) {
     var value = parseFloat(lightness)
     if ( ! isNaN(value) ) {
-        gCanvas.setLegendLightness(value)
+        this.gCanvas.setLegendLightness(value)
     }
-    updateUI()
-}
-function setLegendMax(v) {
-    var value = parseFloat(v)
-    if ( ! isNaN(value) ) {
-        gCanvas.setLegendMax(value)
-    }
-    updateUI()
-}
-function setLegendMin(v) {
-    var value = parseFloat(v)
-    if ( ! isNaN(value) ) {
-        gCanvas.setLegendMin(value)
-    }
-    updateUI()
-}
-function setLegendSteps(v) {
-    var value = parseFloat(v)
-    if ( ! isNaN(value) ) {
-        gCanvas.setLegendSteps(value)
-    }
-    updateUI();
+    this.updateUI()
 }
 
-function updateStats() {
+su2rad.dialog.gridImport.setLegendMax = function (v) {
+    var value = parseFloat(v)
+    if ( ! isNaN(value) ) {
+        this.gCanvas.setLegendMax(value)
+    }
+    this.updateUI()
+}
+
+su2rad.dialog.gridImport.setLegendMin = function (v) {
+    var value = parseFloat(v)
+    if ( ! isNaN(value) ) {
+        this.gCanvas.setLegendMin(value)
+    }
+    this.updateUI()
+}
+
+su2rad.dialog.gridImport.setLegendSteps = function (v) {
+    var value = parseFloat(v)
+    if ( ! isNaN(value) ) {
+        this.gCanvas.setLegendSteps(value)
+    }
+    this.updateUI();
+}
+
+su2rad.dialog.gridImport.updateStats = function () {
     var statsDiv = document.getElementById('statsTable');
     while (statsDiv.hasChildNodes() == true) {
         statsDiv.removeChild(statsDiv.firstChild)
     }
-    var stats = gArray.getStats();
+    var stats = this.gCanvas.array.getStats();
     var keys = ['average', 'uniform', 'minValue', 'maxValue', 'values', 'median'];
     for (i=0; i<keys.length; i++) {
         var k = "stats_" + keys[i];
@@ -219,8 +251,6 @@ function updateStats() {
         row.appendChild(label);
         row.appendChild(value);
         statsDiv.appendChild(row);
-        //row.setAttribute('class', "gridRow")
-        //label.setAttribute('class', "gridLabel")
     }
     try {
         $("#statsTable > div").attr("class", "gridRow")
@@ -228,11 +258,12 @@ function updateStats() {
     } catch (e) {
         log.error(e);
     }
+    document.getElementById('messagearea').value = gArray.commentLines.join("\n");
 }
 
-function updateUI() {
+su2rad.dialog.gridImport.updateUI = function () {
     log.debug("updateUI()")
-    var opts = gCanvas.getLegendOptions();
+    var opts = this.gCanvas.getLegendOptions();
     document.getElementById("legendMinInput").value = opts.minValue.toFixed(2);
     document.getElementById("legendMaxInput").value = opts.maxValue.toFixed(2);
     document.getElementById("legendStepsInput").value = opts.steps.toFixed();

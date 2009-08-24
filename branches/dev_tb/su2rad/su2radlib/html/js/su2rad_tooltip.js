@@ -58,7 +58,7 @@ tooltips.rpict.w  = "suppress warning messages"
 
 function getToolTip(app, opt) {
     var text = "";
-    if (false && PLATFORM == "Windows") {
+    if (false && su2rad.PLATFORM == "Windows") {
         return text;
     } else {
         var s = tooltips[app][opt];

@@ -34,15 +34,15 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
 
-// replace GridArray methods
-GridArray.prototype.analyzeGrid = function () {
-    log.debug("GridArray.weatherData.analyzeGrid()")
+// replace su2rad.grid.GridArray methods
+su2rad.grid.GridArray.prototype.analyzeGrid = function () {
+    log.debug("su2rad.grid.GridArray.weatherData.analyzeGrid()")
     this.calcStats();
     this.sortArray();
 }
 
-GridArray.prototype.parseText = function (text) {
-    log.debug("GridArray.weatherData.parseText()")
+su2rad.grid.GridArray.prototype.parseText = function (text) {
+    log.debug("su2rad.grid.GridArray.weatherData.parseText()")
     var re_cr = /\r/g
     text = text.replace(re_cr, '');
     var lines = text.split("\n")
@@ -51,6 +51,8 @@ GridArray.prototype.parseText = function (text) {
         this.commentLines.push(lines[i]);
     }
     log.debug(this.commentLines.join("\n"))
+    
+    var DataRecord = su2rad.grid.DataRecord;
     for (var i=8; i<lines.length; i++) {
         try {
             var record = new DataRecord(lines[i]);
@@ -70,7 +72,7 @@ GridArray.prototype.parseText = function (text) {
 
 
 // modified draw methods for weather data plots
-GridCanvas.prototype.drawGrid = function (ctx) {
+su2rad.canvas.GridCanvas.prototype.drawGrid = function (ctx) {
     if ( this.array.bbox == null ) {
         return
     }
@@ -110,7 +112,7 @@ GridCanvas.prototype.drawGrid = function (ctx) {
     ctx.restore()
 }
 
-GridCanvas.prototype._drawRulerX = function (ctx) {
+su2rad.canvas.GridCanvas.prototype._drawRulerX = function (ctx) {
     ctx.save()
     var frame = this.getFrameCoords("bottom") 
     var cFrame = this.getFrameCoords("center")
@@ -155,7 +157,7 @@ GridCanvas.prototype._drawRulerX = function (ctx) {
     ctx.restore()    
 }
 
-GridCanvas.prototype._drawRulerY = function (ctx) {
+su2rad.canvas.GridCanvas.prototype._drawRulerY = function (ctx) {
     ctx.save()
     var frame = this.getFrameCoords("left") 
     ctx.translate(frame[0]+frame[2],frame[1]+frame[3]);
@@ -192,7 +194,7 @@ GridCanvas.prototype._drawRulerY = function (ctx) {
     ctx.restore()    
 }
 
-GridCanvas.prototype.drawRulersOLD = function (ctx) {
+su2rad.canvas.GridCanvas.prototype.drawRulersOLD = function (ctx) {
     // draw ruler, tick marks and labels in canvas space (pixels!)
     ctx.save()
     this.setRulerFont(ctx)
@@ -258,7 +260,7 @@ GridCanvas.prototype.drawRulersOLD = function (ctx) {
 }
 
 // return available height for graph
-GridCanvas.prototype.getGraphHeight = function () {    
+su2rad.canvas.GridCanvas.prototype.getGraphHeight = function () {    
     var maxHeight = this.canvas.height - this.margin.top - this.margin.bottom
     if (this.ruler.top != 0) { maxHeight = maxHeight - this.ruler.top - this.padding }
     if (this.ruler.bottom != 0) { maxHeight = maxHeight - this.ruler.bottom - this.padding }
@@ -266,7 +268,7 @@ GridCanvas.prototype.getGraphHeight = function () {
 }
 
 // return fixed scale
-GridCanvas.prototype.setScale = function () {    
+su2rad.canvas.GridCanvas.prototype.setScale = function () {    
     this.canvasscale = 1.0;
 }
 

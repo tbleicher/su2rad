@@ -201,6 +201,7 @@ img.fileSelectorIcon {
     margin: 0;
     border-color: red;
 }
+
 input.file {
     width: 20px;
     height: 24px;
@@ -212,23 +213,6 @@ input.file {
     z-index: 2;
     margin: 0;
 }
-
-.importOptionHeader {
-    background-color: lightblue;
-    height: 24px;
-    margin: 0;
-    margin-bottom 10px;
-}
-
-.importOptionHeader div {
-    font-weight: bold;
-    padding: 0;
-    padding-left: 5px;
-    padding-top: 3px;
-    margin-bottom: 3px;
-}
-
-
 
 .gridCell {
     float: left;

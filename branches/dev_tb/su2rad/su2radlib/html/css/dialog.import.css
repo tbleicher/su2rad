@@ -1,3 +1,18 @@
+.importOptionHeader {
+    background-color: lightblue;
+    height: 24px;
+    margin: 0;
+    margin-bottom 10px;
+}
+
+.importOptionHeader div {
+    font-weight: bold;
+    padding: 0;
+    padding-left: 5px;
+    padding-top: 3px;
+    margin-bottom: 3px;
+}
+
 
 #loadFileButton {
     width: 130px;
@@ -17,7 +32,7 @@
     color: darkred;
 }
 
-#importToSketchup, #loadFileSU, #weatherDataType {
+#importToSketchup, #loadFileSU, #useEPWInSU, #weatherDataType {
     width: 130px;
     margin: 0;
     margin-top: 5px;
@@ -35,6 +50,10 @@
 
 #graphOptions, #statsDiv, #dataTypeDiv {
     background-color: #eef;
+    margin-top: 10px;
+}
+
+#useEPWInSUDiv {
     margin-top: 10px;
 }
 

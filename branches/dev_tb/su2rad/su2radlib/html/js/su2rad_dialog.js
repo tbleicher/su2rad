@@ -1,43 +1,24 @@
 
 // set environment
-if (navigator.userAgent.indexOf("Windows") != -1) {
-    var PATHSEP = "/";    // helps with file handling in Ruby
-    var PLATFORM = "Windows";
-} else {
-    var PATHSEP = "/";
-    var PLATFORM = "Mac";
-}
-
-
-// flag for backend 
-var SKETCHUP = false;
 var _currentStatusDiv = "status_tab-export"
 
 var map, marker, lastPoint;
 
-function logError(e) {
-    log.error(e.toString())
-    log.error("e.name " + e.name)
-    log.error("e.message " + e.message)
-    log.error("e.fileName " + e.fileName)
-    log.error("e.lineNumber " + e.lineNumber)
-}
-
 // object instances
 try {
     var exportSettings = new ExportSettingsObject();
-    var skyOptions = new SkyOptionsObject(); // required by ModelLocationObject
-    var skyDateTime = new SkyDateTimeObject();
-    var modelLocation = new ModelLocationObject();
-    var radOpts = new RadOptsObject();
-    var viewsList = new ViewsListObject();
+    var skyOptions     = new SkyOptionsObject();      // required by ModelLocationObject
+    var skyDateTime    = new SkyDateTimeObject();
+    var modelLocation  = new ModelLocationObject();
+    var radOpts        = new RadOptsObject();
+    var viewsList      = new ViewsListObject();
 } catch (e) {
     logError(e)
 }
 
 function loadTestData() {
     setTest();
-    if (SKETCHUP == false) {
+    if (su2rad.SKETCHUP == false) {
         // fill dialog with test data
         getExportOptions();
         getViewsList();
@@ -47,6 +28,14 @@ function loadTestData() {
         updateMaterialsPage()
     } else {
         alert("no testdata within Sketchup!")
+    }
+}
+
+function hideProgressWindow() {
+    try {
+        $('#progressWindow').jqmHide();
+    } catch (e) {
+        logError(e)
     }
 }
 
@@ -60,6 +49,44 @@ function disableGlobalOption() {
     }
     exportSettings.setMode('by color');
     document.getElementById("global_coords_display").style.display='none';
+}
+
+function onExportButton() {
+    log.debug("onExportButton()...")
+    if (su2rad.SKETCHUP != false) {
+        try {
+            log.info("starting export ...")
+            window.location = 'skp:onExport@';
+        } catch (e) {
+            logError(e)
+            alert(e.toString())
+        }
+    } else {
+        showBusy()
+        log.warn('Sketchup not available; no export action');
+        msg  = '{"status"  :"success"';
+        msg += ',"messages":"0"';
+        msg += ',"files"   :"31"';
+        msg += ',"groups"  :"345"';
+        msg += ',"faces"   :"45678"}';
+        showResults(encodeJSON(msg));
+    }
+}
+
+function onCancelButton() {
+    try {
+        if (su2rad.SKETCHUP != false) {
+                //log.info("export canceled by user")
+                window.location = 'skp:onCancel@';
+        } else {
+            hideProgressWindow();
+            document.body.innerHTML = "";
+            //window.opener='x';
+            window.close();
+        }
+    } catch (e) {
+        logError(e)
+    }
 }
 
 function showExportOption(opt) {
@@ -124,91 +151,10 @@ function showProgressWindow() {
     }
 }
 
-function hideProgressWindow() {
-    try {
-        $('#progressWindow').jqmHide();
-    } catch (e) {
-        logError(e)
-    }
-}
-
-function onExportButton() {
-    log.debug("onExportButton()...")
-    if (SKETCHUP != false) {
-        try {
-            log.info("starting export ...")
-            window.location = 'skp:onExport@';
-        } catch (e) {
-            logError(e)
-            alert(e.toString())
-        }
-    } else {
-        showBusy()
-        log.warn('Sketchup not available; no export action');
-        msg  = '{"status"  :"success"';
-        msg += ',"messages":"0"';
-        msg += ',"files"   :"31"';
-        msg += ',"groups"  :"345"';
-        msg += ',"faces"   :"45678"}';
-        showResults(encodeJSON(msg));
-    }
-}
-
-function onCancelButton() {
-    try {
-        if (SKETCHUP != false) {
-                //log.info("export canceled by user")
-                window.location = 'skp:onCancel@';
-        } else {
-            hideProgressWindow();
-            document.body.innerHTML = "";
-            //window.opener='x';
-            window.close();
-        }
-    } catch (e) {
-        logError(e)
-    }
-}
-
 function switch_to_tab(id) {
     return
     $('#tab-container').triggerTab(id);
     //updatePageById(id);
-}
-
-function reverseData(val) {
-    var d="";
-    var temp="";
-    for (var x=val.length; x>0; x--) {
-        d+=val.substring(x,eval(x-1));
-    }
-    return d;
-}
-
-function splitPath(val) {
-    var text="fileselection: '" + val + "'<br/>";
-    setStatusMsg(text);
-    val = val.replace(/\\/g, "/");   
-    val=encodeURI(val);
-    var reversedsrc=reverseData(val);
-    setStatusMsg(text);
-    var nameEnd=reversedsrc.indexOf(PATHSEP);
-    var name=reversedsrc.substring(0,nameEnd);
-    name=reverseData(name);
-    name=decodeURI(name);
-    text += "name: '" + name + "'<br/>";
-    setStatusMsg(text);
-    var path=reversedsrc.substring(nameEnd, reversedsrc.length);
-    path=reverseData(path);
-    path=decodeURI(path);
-    text += "path: '" + path + "'<br/>";
-    setStatusMsg(text);
-    return [path,name];
-    //text += "reversedsrc: " + reversedsrc + "<br/>";
-    //text += "name rev: '" + name + "'<br/>";
-    //text += "name esc: '" + name + "'<br/>";
-    //text += "path rev: '" + path + "'<br/>";
-    //text += "path esc: '" + path + "'<br/>";
 }
 
 function setValue(id, val) {
@@ -234,15 +180,10 @@ function setSelectionValue(id, value) {
     return false;
 }
 
-function replaceChars(text) {
-    text = text.replace(/"/g,"");
-    text = text.replace(/'/g,"");
-    text = text.replace(/\(/g,"");
-    text = text.replace(/\)/g,"");
-    text = text.replace(/ /g,"_");
-    text = text.replace(/</g,"");
-    text = text.replace(/>/g,"");
-    return text;
+    
+function showBusy() {
+    log.error("TODO: showBusy()")
+    showProgressWindow()
 }
 
 function JSON2HTML (obj, title, level) {
@@ -267,11 +208,6 @@ function JSON2HTML (obj, title, level) {
         }
     }
     return text;
-}
-    
-function showBusy() {
-    log.error("TODO: showBusy()")
-    showProgressWindow()
 }
 
 function showResults(msg) {

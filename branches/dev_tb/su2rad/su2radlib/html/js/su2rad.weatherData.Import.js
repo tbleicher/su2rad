@@ -5,31 +5,55 @@
 // Copyright (c) 2009 Thomas Bleicher
 
 
-function evaluateSketchup() {
-    log.debug("evaluateSketchup() SKETCHUP='" + SKETCHUP + "'")
-    
+su2rad.dialog.weatherdata = function () {
+    this.gCanvas = null;
+};
+
+su2rad.dialog.weatherdata.initPage = function () {
+    // set up canvas
+    document.getElementById("messagearea").value = '';
+    this.gCanvas = new su2rad.canvas.GridCanvas();
+    this.gCanvas.setCanvasId('cv');
+    this.evaluateSketchup(); 
+    this.updateUI();
+}
+
+su2rad.dialog.weatherdata.onResizeCanvas = function () {
+    try {
+        var newW = document.getElementById("canvasContainer").clientWidth;
+        var newH = document.getElementById("canvasContainer").clientHeight;
+        document.getElementById("cv").width = newW;
+        document.getElementById("cv").height = newH;
+        this.gCanvas.draw()
+    } catch (e) {
+        logError(e)
+    }
+}
+
+su2rad.dialog.weatherdata.evaluateSketchup = function () {
+    log.debug("evaluateSketchup() su2rad.SKETCHUP='" + su2rad.SKETCHUP + "'")
     document.getElementById("loadFileWarning").style.display='';
     document.getElementById("loadFileSUDiv").style.display='none';
     document.getElementById("graphOptions").style.display='none';
     document.getElementById("statsDiv").style.display='none';
+    document.getElementById("useEPWInSUDiv").style.display='none';
     // show 'load file' button depending on browser and Sketchup
     var idomFileList = document.getElementById("loadFileSelection").files;
-    if (idomFileList == null && SKETCHUP == false) {
+    if (idomFileList == null && su2rad.SKETCHUP == false) {
         // this is not Firefox/Mozilla
         log.warn("nsIDOMFileList and Sketchup not available - no functionality");
         log.debug("broser: " + navigator.userAgent);
-    } else if (SKETCHUP == true) {
+    } else if (su2rad.SKETCHUP == true) {
         log.info("Sketchup available");
         document.getElementById("loadFileWarning").style.display='none';
         document.getElementById("loadFileSUDiv").style.display='';
-        document.getElementById("importGraphToSketchupDiv").style.display='';
         document.getElementById("graphOptions").style.display='';
         document.getElementById("statsDiv").style.display='';
     } else {
         // this is Firefox -> enable direct load of file text
         log.info("nsIDOMFileList available");
         log.debug("broser: " + navigator.userAgent);
-        NSIDOM = true;
+        su2rad.NSIDOM = true;
         document.getElementById("loadFileWarning").style.display='none';
         document.getElementById("loadFileSelectionDiv").style.display=''; 
         document.getElementById("graphOptions").style.display='';
@@ -37,40 +61,33 @@ function evaluateSketchup() {
     }
 }
 
-function importGraphToSketchup () {
-    log.debug("DEBUG: importGraphToSketchup")
-    if (gCanvas.array == null || gCanvas.array.empty() == true) {
-        log.info("nothing to import")
-        return;
-    }
-    opts = gCanvas.getLegendOptions();
-    opts.elementId = 'messagearea';
-    txt  = 'maxValue='  + opts.maxValue.toFixed(2) + '&'
-    txt += 'minValue='  + opts.minValue.toFixed(2) + '&'
-    txt += 'steps='     + opts.steps.toFixed() + '&'
-    txt += 'elementId=' + opts.elementId 
-    if (SKETCHUP == true) {
-        window.location = 'skp:importFromWebDialog@' + txt;
+su2rad.dialog.weatherdata.importEPWToSketchup = function () {
+    var filename = this.gCanvas.array.filename;
+    if (filename != "") {
+        log.debug("TEST: importing file '" + filename + "'");
+        if (su2rad.SKETCHUP == true) {
+            window.location = 'skp:setEPWFilePathFromDialog@' + encodeURI(filename);
+        }
     }
 }
 
-function loadFileIDOM() {
+su2rad.dialog.weatherdata.loadFileIDOM = function () {
     log.debug("loadFileIDOM()")
     try {
         // access file contents via nsIDOMFileList (FireFox, Mozilla)
         var files = document.getElementById("loadFileSelection").files;
         var text = files.item(0).getAsText('UTF-8');
         var filename = files.item(0).fileName
-        parseFileText(text, filename)
+        this.parseFileText(text, filename)
     } catch (e) {
         logError(e)
         alert(e)
     }
 }
 
-function loadFileSU() {
+su2rad.dialog.weatherdata.loadFileSU = function () {
     // function to be called with encoded text from SU
-    loadFileCallback = _loadFileSU
+    loadFileCallback = this._loadFileSU
     // function to be called with fielpath in JS
     fileSelector.callback = loadTextFile; 
     try {
@@ -80,7 +97,7 @@ function loadFileSU() {
     }
 }
 
-function _loadFileSU(encText) {
+su2rad.dialog.weatherdata._loadFileSU = function (encText) {
     // function called from SU with encoded text
     log.debug("_loadFileSU: received " + encText.length + " bytes")
     // text received from 
@@ -89,7 +106,7 @@ function _loadFileSU(encText) {
     log.debug("_loadFileSU: lines=" + lines.length)
     var filename = fileSelector.getFilepath();
     try {
-        parseFileText(text, filename);
+        this.parseFileText(text, filename);
     } catch (e) {
         logError(e)
     }
@@ -103,32 +120,57 @@ function logError(e) {
     log.error("e.lineNumber " + e.lineNumber)
 }
 
-function parseFileText(text, filename) {
+su2rad.dialog.weatherdata.parseFileText = function (text, filename) {
     log.debug("parseFileText(): received " + text.length + " bytes")
+    if (text == "") {
+        return
+    }
     //document.getElementById('messagearea').value = text;
-    gArray = new GridArray();
+    var gArray = new su2rad.grid.GridArray();
     gArray.parseText(text);
     
     if (gArray.empty() == false) {
         if (filename != null) {
-            setFilename(filename)
-            //setLabelFromFilename(filename)
+            gArray.filename = filename;
+            //this.setLabelFromFilename(filename)
         }
-        setGridArray(gArray);
+        this.setGridArray(gArray);
     }
 }
 
-function setFilename(filename) {
+su2rad.dialog.weatherdata.setFilename = function (filename) {
     // set new title
     var title = document.getElementById("pageTitle")
     while (title.hasChildNodes() == true) {
         title.removeChild(title.firstChild)
     }
-    var txt = document.createTextNode("file: " + filename);
-    title.appendChild(txt);
+    if (filename != "") {
+        var tNode = document.createTextNode("file: " + filename);
+        if (su2rad.SKETCHUP == true) {
+            document.getElementById("useEPWInSUDiv").style.display='';
+        }
+    } else {
+        var tNode = document.createTextNode("file: [simulated values]");
+        document.getElementById("useEPWInSUDiv").style.display='none';
+    }
+    title.appendChild(tNode);
 }
 
-function setLabelFromFilename(filename) {
+su2rad.dialog.weatherdata.setFileFromSketchup = function (encText,filename) {
+    // function called from SU with encoded text and encoded filename
+    // TODO: set fileselector root
+    var text = decodeText(encText);
+    filename = decodeText(filename);
+    log.debug("setFileFromSketchup: " + text.length + " bytes")
+    try {
+        this.parseFileText(text, filename);
+        // TODO: call parseFileText() with timeout
+    } catch (e) {
+        logError(e)
+    }
+}
+
+su2rad.dialog.weatherdata.setLabelFromFilename = function (filename) {
     // extract extension for label
     var ridx = filename.lastIndexOf('.');
     if (ridx != -1) {
@@ -138,44 +180,45 @@ function setLabelFromFilename(filename) {
             if ( ext == 'EPW') {
                 
                 document.getElementById("legendLabelInput").value = ext;
-                gCanvas.setLegendLabel(ext);
+                this.gCanvas.setLegendLabel(ext);
             }
         }
     } else {
-        gCanvas.setLegendLabel('');
+        this.gCanvas.setLegendLabel('');
     } 
 }
 
-function simulateGrid() {
+su2rad.dialog.weatherdata.simulateGrid = function () {
     document.getElementById('messagearea').value = '';
     document.getElementById("graphOptions").style.display='';
     document.getElementById("statsDiv").style.display='';
-    gArray = new GridArray();
+    var gArray = new su2rad.grid.GridArray();
     gArray.generate();
-    setGridArray(gArray)
+    gArray.filename = ""
+    this.setGridArray(gArray)
 }
 
-function setDataType() {
+su2rad.dialog.weatherdata.setDataType = function () {
     var v = document.getElementById('weatherDataType').value;
-    v = parseInt(v);
-    gCanvas.setDataTypeIndex(v)
-    gCanvas.draw();
-    updateUI();
-    updateStats();
+    this.gCanvas.setDataTypeIndex( parseInt(v) );
+    this.gCanvas.draw();
+    this.updateUI();
+    this.updateStats();
 }
 
-function setGridArray(gArray) {
-    gCanvas.setArray(gArray);
-    gCanvas.setLegend('right');
-    gCanvas.setDataTypeIndex(0);
+su2rad.dialog.weatherdata.setGridArray = function (gArray) {
+    this.setFilename(gArray.filename)
+    this.gCanvas.setArray(gArray);
+    this.gCanvas.setLegend('right');
+    this.gCanvas.setDataTypeIndex(0);
     document.getElementById('weatherDataType').selectedIndex = 0;
-    setComment(gArray.commentLines);
-    gCanvas.draw();
-    updateUI();
-    updateStats();
+    this.setComment(gArray.commentLines);
+    this.gCanvas.draw();
+    this.updateUI();
+    this.updateStats();
 }
 
-function setComment(lines) {
+su2rad.dialog.weatherdata.setComment = function (lines) {
     try {
         // DESIGN CONDITIONS
         lines[1] = lines[1].replace(/Heating/g, "\n\tHeating");
@@ -197,8 +240,8 @@ function setComment(lines) {
         }
         lines[2] = nline.join("\n");   
         // GROUND TEMPERATURES
-        lines[3] = _splitLongLine(lines[3], ",", 70);   
-        lines[5] = _splitLongLine(lines[5], " ", 70);   
+        lines[3] = this._splitLongLine(lines[3], ",", 70);   
+        lines[5] = this._splitLongLine(lines[5], " ", 70);   
         
     } catch (e) {
         logError(e)
@@ -206,7 +249,7 @@ function setComment(lines) {
     document.getElementById("messagearea").value = lines.join("\n\n"); 
 }
 
-function _splitLongLine(line, sep, maxl) {
+su2rad.dialog.weatherdata._splitLongLine = function (line, sep, maxl) {
     var offset = 0;
     var parts = line.split(sep);
     var nline = parts[0]
@@ -221,49 +264,49 @@ function _splitLongLine(line, sep, maxl) {
     return nline;   
 }
 
-function setLegendLabel(label) {
-    gCanvas.setLegendLabel(label)
-    updateUI()
+su2rad.dialog.weatherdata.setLegendLabel = function (label) {
+    this.gCanvas.setLegendLabel(label)
+    this.updateUI()
 }
 
-function setLegendLightness(lightness) {
+su2rad.dialog.weatherdata.setLegendLightness = function (lightness) {
     var value = parseFloat(lightness)
     if ( ! isNaN(value) ) {
-        gCanvas.setLegendLightness(value)
+        this.gCanvas.setLegendLightness(value)
     }
-    updateUI()
+    this.updateUI()
 }
 
-function setLegendMax(v) {
+su2rad.dialog.weatherdata.setLegendMax = function (v) {
     var value = parseFloat(v)
     if ( ! isNaN(value) ) {
-        gCanvas.setLegendMax(value)
+        this.gCanvas.setLegendMax(value)
     }
-    updateUI()
+    this.updateUI()
 }
 
-function setLegendMin(v) {
+su2rad.dialog.weatherdata.setLegendMin = function (v) {
     var value = parseFloat(v)
     if ( ! isNaN(value) ) {
-        gCanvas.setLegendMin(value)
+        this.gCanvas.setLegendMin(value)
     }
-    updateUI()
+    this.updateUI()
 }
 
-function setLegendSteps(v) {
+su2rad.dialog.weatherdata.setLegendSteps = function (v) {
     var value = parseFloat(v)
     if ( ! isNaN(value) ) {
-        gCanvas.setLegendSteps(value)
+        this.gCanvas.setLegendSteps(value)
     }
-    updateUI();
+    this.updateUI();
 }
 
-function updateStats() {
+su2rad.dialog.weatherdata.updateStats = function () {
     var statsDiv = document.getElementById('statsTable');
     while (statsDiv.hasChildNodes() == true) {
         statsDiv.removeChild(statsDiv.firstChild)
     }
-    var stats = gArray.getStatsAsText();
+    var stats = this.gCanvas.array.getStatsAsText();
     for (i=0; i<stats.length; i++) {
         var k = stats[i].split(' ')[0]
         var v = stats[i].split(' ')[1]
@@ -286,9 +329,9 @@ function updateStats() {
     }
 }
 
-function updateUI() {
+su2rad.dialog.weatherdata.updateUI = function () {
     //log.debug("updateUI()")
-    var opts = gCanvas.getLegendOptions();
+    var opts = this.gCanvas.getLegendOptions();
     document.getElementById("legendMinInput").value = opts.minValue.toFixed(2);
     document.getElementById("legendMaxInput").value = opts.maxValue.toFixed(2);
     document.getElementById("legendStepsInput").value = opts.steps.toFixed();
