@@ -13,9 +13,27 @@ if (navigator.userAgent.indexOf("Windows") != -1) {
 // flag for backend 
 su2rad.SKETCHUP = false;
 su2rad.NSIDOM = false;
+su2rad.BROWSER = "";
+su2rad.NSIDOM = false;
+
+// set BROWSER var 
+var userAgent = navigator.userAgent;
+log.debug("userAgent: " + userAgent);
+var engine = "";
+var engine = userAgent.match(/AppleWebKit/i)
+if ( engine == "AppleWebKit" ) {
+    su2rad.BROWSER = "Safari";
+} else {
+    var engine = userAgent.match(/Gecko/i)
+    if ( engine == "Gecko" ) {
+        su2rad.BROWSER = "Gecko";
+        su2rad.NSIDOM = true;
+    }
+}
+log.debug("browser: " + su2rad.BROWSER);
 
 
-su2rad.dialog = new Object();
+su2rad.dialog = su2rad.dialog ? su2rad.dialog : new Object()
 
 function setSketchup() {
     // switch to actions for Sketchup (skp:...)
