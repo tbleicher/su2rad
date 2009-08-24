@@ -123,7 +123,7 @@ function _setGlobalCoordsDisplay(val) {
 function setExportPath(path) {
     // callback for fileSelector
     var lastchar = path.charAt(path.length-1);
-    if (lastchar == PATHSEP) {
+    if (lastchar == su2rad.PATHSEP) {
         // apply only directory path
         log.debug("new directory: '" + path + "'");
         document.getElementById("scenePath").value = path;
@@ -139,10 +139,10 @@ function _getExportPath() {
     var p = document.getElementById("scenePath").value;
     var f = document.getElementById("sceneName").value;
     p = p.replace(/\\/g, "/");   
-    if (p.charAt(p.length-1) == PATHSEP) {
+    if (p.charAt(p.length-1) == su2rad.PATHSEP) {
         var path = p + f;
     } else {
-        var path = p + PATHSEP + f;
+        var path = p + su2rad.PATHSEP + f;
     }
     return path;
 }

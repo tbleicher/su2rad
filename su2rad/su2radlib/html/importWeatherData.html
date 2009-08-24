@@ -49,54 +49,16 @@
         <script type="text/javascript" src="./js/su2rad_radopts.js"></script>
         <script type="text/javascript" src="./js/su2rad_materials.js"></script>
         <script type="text/javascript" src="./js/su2rad_dialog.js"></script>
-        <script type="text/javascript" src="./js/su2rad.gridCanvas.js"></script>
+        <script type="text/javascript" src="./js/su2rad.grid.js"></script>
+        <script type="text/javascript" src="./js/su2rad.canvas.js"></script>
         <script type="text/javascript" src="./js/su2rad.weatherData.Canvas.js"></script>
         <script type="text/javascript" src="./js/su2rad.weatherData.Import.js"></script>
 
         <script type="text/javascript">
             
-            function initPage() {
-                // bind fileSelector to setExportPath
-                //fileSelector.callback = setExportPath
-            }
-            //log.toggle();
-        </script>
-
-        <script type="text/javascript">
-            // set environment
-            if (navigator.userAgent.indexOf("Windows") != -1) {
-                var PATHSEP = "/";    // helps with file handling in Ruby
-                var PLATFORM = "Windows";
-            } else {
-                var PATHSEP = "/";
-                var PLATFORM = "Mac";
-            }
-            var SKETCHUP = false;
-            var NSIDOM = false;
-            
-            // relevant for grid 
-            var canvas, ctx, gArray;
-
-            function initPage() {
-                // set up canvas
-                document.getElementById("messagearea").value = '';
-                gCanvas = new GridCanvas();
-                gCanvas.setCanvasId('cv');
-                evaluateSketchup(); 
-                updateUI();
-            }
-
-            function onResizeCanvas() {
-                try {
-                    var newW = document.getElementById("canvasContainer").clientWidth;
-                    var newH = document.getElementById("canvasContainer").clientHeight;
-                    document.getElementById("cv").width = newW;
-                    document.getElementById("cv").height = newH;
-                    gCanvas.draw()
-                } catch (e) {
-                    logError(e)
-                }
-            }
+            // base variable for dialog functions 
+            var wd = su2rad.dialog.weatherdata;
+            evaluateSketchup = wd.evaluateSketchup;
                 
             /* create tabs */
             $(function() {
@@ -146,7 +108,7 @@
     
     </head>
     
-    <body style="background-color: white" onLoad="initPage()">
+    <body style="background-color: white" onLoad="wd.initPage()">
         
         <!-- file selector popup -->
         <div class="jqmWindow2" id="fileSelectorWindow">
@@ -162,7 +124,6 @@
         <div id="tab-container">
             <ul class="tabs-nav">
                 <li><a href="#tab-fields"><span>Import Climate Data</span></a></li>
-                <!-- <li><a href="#tab-render"><span>Render</span></a></li> -->
             </ul>
 
             
@@ -174,8 +135,8 @@
                 <h3 id="pageTitle">import grid results</h3>
                 
                 <!-- the canvas -->
-                <div id="canvasContainer" style="width: 700px; padding:0;">
-                    <canvas id="cv" width="700" height="400"></canvas>
+                <div id="canvasContainer" style="width: 680px; padding:0;">
+                    <canvas id="cv" width="680" height="400"></canvas>
                 </div>
                 
                 <!-- graph options -->
@@ -183,21 +144,21 @@
                     
                     <!-- load button options --> 
                     <div class="importOptionHeader" id="loadFileSelectionDiv" style="display: none;">
-                        <input type="file" class="file" size="5" id="loadFileSelection" onchange="loadFileIDOM()" />
+                        <input type="file" class="file" size="5" id="loadFileSelection" onchange="wd.loadFileIDOM()" />
                         <input type="button" id="loadFileButton" value="load file">
                     </div>
                     <div class="importOptionHeader" id="loadFileSUDiv">
-                        <input type="button" id="loadFileSU" value="load file" onclick="loadFileSU()" />
+                        <input type="button" id="loadFileSU" value="load file" onclick="wd.loadFileSU()" />
                     </div>
                     <div id="loadFileWarning">
                         <span>You need Firefox/Mozilla or Sketchup to load a results file.</span>
-                        <input type="button" id="simulateGrid" value="simulate" onclick="simulateGrid()">
+                        <input type="button" id="simulateGrid" value="simulate" onclick="wd.simulateGrid()">
                     </div>
                     
                     <!-- select data to display --> 
                     <div id="dataTypeDiv">
                         <div class="importOptionHeader">
-                            <select id="weatherDataType" onchange="setDataType()">
+                            <select id="weatherDataType" onchange="wd.setDataType()">
                                 <option value="0" selected>global horizontal</option>
                                 <option value="1" >direct normal</option>
                                 <option value="2" >diffuse horizontal</option>
@@ -217,23 +178,23 @@
                         <div>
                             <div class="gridRow">
                                 <span class="gridLabel">min value</span>
-                                <input type="text" width="10" value="0" id="legendMinInput" onchange="setLegendMin(this.value)"/>
+                                <input type="text" width="10" value="0" id="legendMinInput" onchange="wd.setLegendMin(this.value)"/>
                             </div>
                             <div class="gridRow">
                                 <span class="gridLabel">max value</span>
-                                <input type="text" width="10" value="100" id="legendMaxInput" onchange="setLegendMax(this.value)"/>
+                                <input type="text" width="10" value="100" id="legendMaxInput" onchange="wd.setLegendMax(this.value)"/>
                             </div>
                             <div class="gridRow">
                                 <span class="gridLabel">steps</span>
-                                <input type="text" width="3" value="10" id="legendStepsInput" onchange="setLegendSteps(this.value)"/>
+                                <input type="text" width="3" value="10" id="legendStepsInput" onchange="wd.setLegendSteps(this.value)"/>
                             </div>
                             <div class="gridRow">
                                 <span class="gridLabel">label</span>
-                                <input type="text" width="20" value="" id="legendLabelInput" onchange="setLegendLabel(this.value)"/>
+                                <input type="text" width="20" value="" id="legendLabelInput" onchange="wd.setLegendLabel(this.value)"/>
                             </div>
                             <div class="gridRow">
                                 <span class="gridLabel">lightness</span>
-                                <input type="text" width="4" value="0.4" id="legendLightnessInput" onchange="setLegendLightness(this.value)" />
+                                <input type="text" width="4" value="0.4" id="legendLightnessInput" onchange="wd.setLegendLightness(this.value)" />
                             </div>
                         </div>
                     </div>
@@ -246,26 +207,19 @@
                     </div>
                     
                     <!-- import button option only within Sketchup --> 
-                    <div class="importOptionHeader" id="importGraphToSketchupDiv" style="display: none; margin-top: 10px;">
-                        <input type="button" value="import to SU" id="importToSketchup" onclick="importGraphToSketchup()" />
+                    <div class="importOptionHeader" id="useEPWInSUDiv">
+                        <input type="button" id="useEPWInSU" value="use in SketchUp" onclick="wd.importEPWToSketchup()" />
                     </div>
                     
                 </div>
                 
-                <!-- for debugging -->
-                <textarea id="messagearea" name="messagearea" cols=120 rows=8"></textarea>
-            
-            </div>
-            
-
-            <!-- TAB render -->
-            
-            <div id="tab-render">
-                <div class="statusMessage" id="status_tab-render" style="display:none;">
-                    msg
+                <!-- text area to show file header -->
+                <div style="width: 100%;">
+                    <textarea id="messagearea" name="messagearea" cols=120 rows=8"></textarea>
                 </div>
+            
             </div>
-             
+            
         </div>
         <!-- end of tabs -->
 

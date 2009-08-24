@@ -115,7 +115,7 @@ fileSelector.formatTree = function (tree) {
 
 
 fileSelector.listDirectory = function (dir, root) {
-    if (SKETCHUP == true) {
+    if (su2rad.SKETCHUP == true) {
         log.info("listing directory '" + dir + "' (root=" + root + ") ...");
         window.location = 'skp:getDirectoryListing@' + dir + "&" + root.toString(); 
         // setViewsListJSON() called by Sketchup
@@ -130,8 +130,8 @@ fileSelector.listDirectory = function (dir, root) {
 fileSelector.dummy = function (dir) {
     //alert('fileTreeDummy(\''+dir+'\')');
     dir = dir.replace(/\\/g, '/');
-    if (dir.charAt(dir.length-1) != PATHSEP) {
-        dir += PATHSEP;
+    if (dir.charAt(dir.length-1) != su2rad.PATHSEP) {
+        dir += su2rad.PATHSEP;
     }
     var json = "[{\"name\":\"directoryA\",\"type\":\"directory\",\"path\":\"" + dir + "directoryA\"},"
     json += "{\"name\":\"directoryB\",\"type\":\"directory\",\"path\":\"" + dir + "directoryB\",children:["

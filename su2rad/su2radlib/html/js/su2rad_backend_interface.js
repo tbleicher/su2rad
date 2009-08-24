@@ -2,7 +2,7 @@
 function applySkySettings() {
     // send back location and sky settings
     var params = modelLocation.toParamString();
-    if (SKETCHUP == true) {
+    if (su2rad.SKETCHUP == true) {
         // log.debug("applySkySettings():<br/>" + params.replace(/&/g,"<br/>"));
         window.location = 'skp:applySkySettings@' + params;
     } else {
@@ -12,7 +12,7 @@ function applySkySettings() {
 
 function onApplySkySettingsToModel() {
     // apply settings to Sketchup shadow_info
-    if (SKETCHUP == true) {
+    if (su2rad.SKETCHUP == true) {
         log.info("applying settings to Sketchup model ...");
         window.location = 'skp:writeSkySettingsToShadowInfo@';
     } else {
@@ -28,7 +28,7 @@ function onApplySkySettingsToModel() {
     
 function getExportOptions() {
     // collect and set export option values
-    if (SKETCHUP == true) {
+    if (su2rad.SKETCHUP == true) {
         log.info("getting shadowInfo from SketchUp ...");
         window.location = 'skp:getExportOptions@';
         // setExportOptionsJSON() called by Sketchup
@@ -40,7 +40,7 @@ function getExportOptions() {
 
 function getSkySettings() {
     // get SketchUp shadow_info settings and apply to modelLocation
-    if (SKETCHUP == true) {
+    if (su2rad.SKETCHUP == true) {
         log.info("getting shadowInfo from SketchUp ...");
         window.location = 'skp:getSkySettings@';
         // setShadowInfoJSON() called by Sketchup
@@ -53,7 +53,7 @@ function getSkySettings() {
 
 function applyExportOptions() {
     var param = exportSettings.toString();
-    if (SKETCHUP == true) {
+    if (su2rad.SKETCHUP == true) {
         // log.debug("applyExportOptions:<br/>" + param.replace(/&/g,"<br/>") );
         window.location = 'skp:applyExportOptions@' + param;
     } else {
@@ -65,7 +65,7 @@ function applyExportOptions() {
 
 function applyRenderOptions() {
     param = radOpts.toString();
-    if (SKETCHUP == true) {
+    if (su2rad.SKETCHUP == true) {
         // log.debug("applyRenderOptions:<br/>" + param.replace(/&/g,"<br/>") );
         window.location = 'skp:applyRenderOptions@' + param;
     } else {
@@ -108,7 +108,7 @@ function setViewsListJSON(text) {
 }
 
 function getViewsList() {
-    if (SKETCHUP == true) {
+    if (su2rad.SKETCHUP == true) {
         log.info("getting views from SketchUp ...");
         window.location = 'skp:setViewsList@'; 
         // setViewsListJSON() called by Sketchup
@@ -130,7 +130,7 @@ function applyViewSettings(viewname) {
     //log.debug('applyViewSettings(view=' + view + ')');
     var text = view.toRubyString();
     var param = encodeURI(text);
-    if (SKETCHUP == true) {
+    if (su2rad.SKETCHUP == true) {
         window.location = 'skp:applyViewSettings@' + param;
     } else {
         log.debug("using dummy backend.applyViewSettings()"); 
@@ -141,7 +141,7 @@ function applyViewSettings(viewname) {
 function removeViewOverride(viewname, override) {
     //log.debug("removeViewOverride('" + viewname + "','" + override + "')");
     var param = encodeURI(viewname) + "&" + encodeURI(override);
-    if (SKETCHUP == true) {
+    if (su2rad.SKETCHUP == true) {
         window.location = 'skp:removeViewOverride@' + param;
     } else {
         log.debug("using dummy backend.removeViewOverride()"); 
@@ -162,7 +162,7 @@ function removeViewOverride(viewname, override) {
 function skpRemoveMaterialAlias(skmname, skmgroup) {
     var text = skmname + "&" + skmgroup;
     var param = encodeURI(text);
-    if (SKETCHUP == true) {
+    if (su2rad.SKETCHUP == true) {
         window.location = 'skp:removeMaterialAlias@' + param;
     } else {
         log.debug("using dummy backend.skpSetMaterialAlias()"); 
@@ -172,7 +172,7 @@ function skpRemoveMaterialAlias(skmname, skmgroup) {
 function skpSetMaterialAlias(skmname, radname, mtype) {
     var text = skmname + "&" + radname + "&" + mtype;
     var param = encodeURI(text);
-    if (SKETCHUP == true) {
+    if (su2rad.SKETCHUP == true) {
         window.location = 'skp:setMaterialAlias@' + param;
     } else {
         log.debug("using dummy backend.skpSetMaterialAlias()"); 

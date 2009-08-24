@@ -548,7 +548,7 @@ ViewsListObject.prototype.toString = function (selection_only) {
 
 
 function onActivateView(viewname) {
-    if (SKETCHUP == true) {
+    if (su2rad.SKETCHUP == true) {
         window.location = 'skp:activateView@' + encodeJSON(viewname);
     } else {
         log.debug("dummy backend: no action for activateView(" + viewname + ")"); 
@@ -570,7 +570,7 @@ function selectAllViews(selected) {
     }
     viewsList.selectAllViews(selected);
     updateViewsSummary();
-    if (SKETCHUP == true) {
+    if (su2rad.SKETCHUP == true) {
         window.location = 'skp:selectAllViews@' + selected;
     } else {
         log.debug("no action for selectAllViews(" + selected + ")"); 
