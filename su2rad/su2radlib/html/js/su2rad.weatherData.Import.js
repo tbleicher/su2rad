@@ -106,7 +106,7 @@ su2rad.dialog.weatherdata._loadFileSU = function (encText) {
     log.debug("_loadFileSU: lines=" + lines.length)
     var filename = fileSelector.getFilepath();
     try {
-        this.parseFileText(text, filename);
+        su2rad.dialog.weatherdata.parseFileText(text, filename);
     } catch (e) {
         logError(e)
     }

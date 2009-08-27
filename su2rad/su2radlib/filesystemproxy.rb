@@ -1,8 +1,10 @@
 module FileSystemProxy
    
     def FileSystemProxy.listDirectoryTree(path)
+        #puts "listDirectoryTree(path=#{path})"
         abspath = File.expand_path(path)
         idPath = abspath
+        #puts "(abspath=#{abspath})"
         while not File.exists?(abspath)
             #puts "DEBUG: dir '#{abspath}' not a directory! - using parent"
 	    abspath = File.dirname(abspath)
@@ -19,9 +21,9 @@ module FileSystemProxy
         while abspath
             dirs = FileSystemProxy.listDirectory(abspath,idPath)
             dirs.each { |d|
-                #puts "d[name] = '#{d['name']}', parent='#{parent}'}"
+                #puts "d[name] = '#{d['name']}', parent='#{parent}'"
                 if d['name'] == parent
-                    #puts "=> '#{parent}': adding children"
+                    puts "=> '#{parent}': adding children"
                     d['children'] = children
                 end
             }
@@ -39,6 +41,7 @@ module FileSystemProxy
     end
     
     def FileSystemProxy.addRoot(abspath, children)
+        #puts "addRoot() abspath=#{abspath} children=#{children.length}"
         if abspath == '/'
 	    root = {'name' => '/', 
 		    'type' => File.ftype('/'),
@@ -58,7 +61,7 @@ module FileSystemProxy
 			     'path' => drive,
 			     'ext'  => 'ext_drive',
 			     'access' => FileTest.readable?(drive)}
-		    if drive == abspath
+		    if drive.downcase() == abspath.downcase()
 			entry['children'] = children
 		    end
 		    drives.push(entry)
@@ -70,7 +73,7 @@ module FileSystemProxy
 
     def FileSystemProxy.printDirectoryTree(entries, indent="")
         entries.each { |e|
-            printf "DEBUG: #{indent}#{e['name']}\n"
+            #printf "DEBUG: #{indent}#{e['name']}\n"
             if e.has_key?('children')
                 FileSystemProxy.printDirectoryTree(e['children'], indent+"    ")
             end 
@@ -78,6 +81,7 @@ module FileSystemProxy
     end 
     
     def FileSystemProxy.listDirectory(path,idPath='')
+        #puts "listDirectory() path=#{path}"
         abspath = File.expand_path(path)
         if File.directory?(abspath)
             #puts "listing directory '#{abspath}'"
