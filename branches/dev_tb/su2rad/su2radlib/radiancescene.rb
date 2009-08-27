@@ -7,6 +7,162 @@ require 'webdialog_views.rb'
 require 'scene_materials.rb'
 
 
+module Daysim
+
+    def startDaysim(heafile)
+        if $SU2RAD_PLATFORM != 'WIN'
+            uimessage("platform != 'WIN' ('%s') -> can't start daysim" % $SU2RAD_PLATFORM, 4)
+            return
+        end
+        uimessage("trying to start daysim ...", 1)
+        daysim = "C:\\daysim\\bin_windows\\daysimExe.jar"
+        heafile.gsub!(/\//, "\\")
+        olddir = Dir.pwd()
+        Dir.chdir("C:/daysim/bin_windows")
+        begin
+            Thread.new do
+                #system(`java -jar #{daysim} <"#{heafile}"`)
+                system(`start #{daysim} "#{heafile}"`)
+            end
+        rescue
+            uimessage("Error starting 'daysimExe.jar' thread", -2)
+            uimessage("%s\n%s\n" % [$!.message, e.backtrace.join("\n")], -2)
+        end
+        Dir.chdir(olddir)
+    end
+    
+    def createDaysimFiles
+        ## create subdirectory 'daysim' with geometry and control files
+        dsdir = getFilename("Daysim")
+        uimessage("creating DAYSIM structure in '#{dsdir}'", 1)
+        createDirectory(dsdir)
+        ['res', 'rad', 'pts', 'tmp', 'wea'].each { |d|
+            createDirectory(File.join(dsdir, d))
+        }
+        radfile = _createDaysimRAD()
+        ptsfile = _createDaysimPTS()
+        if radfile != ''
+            return _createDaysimHEA(radfile,ptsfile)
+        end
+        return ''
+    end
+    
+    def convertWEPtoWEA
+        dict = Sketchup.active_model.attribute_dictionaries['SU2RAD_WEATHERDATA']
+        if not dict or not dict['filepath']
+            return ""
+        else
+            epw_path = dict['filepath']
+            if File.exists?(epw_path)
+                epw_name = File.basename(epw_path)
+                wea_name = epw_name.slice(0, epw_name.rindex('.')) 
+                wea_path = getFilename("Daysim/wea/%s_60min.wea" % wea_name)
+                epw2wea = getConfig('EPW2WEA')
+                cmd = "\"#{epw2wea}\" \"#{epw_path}\" \"#{wea_path}\""
+                result = runSystemCmd(cmd)
+                if result == true
+                    win_path = wea_path.gsub("/", "\\")
+                    uimessage("converted '#{epw_path}' to '#{win_path}'")
+                    return "wea_data_file #{win_path}"
+                else
+                    uimessage("failed to convert '#{epw_path}' to '#{win_path}'", -2)
+                    return ""
+                end
+            else
+                uimessage("climate data file not found '#{epw_path}'", -1)
+            end
+        end
+        return ""
+    end
+
+    def _createDaysimHEA(radfile, ptsfile='')
+        ## create Daysim/*.hea file
+        sky = getSky()
+        siteinfo = sky.getDaysimSiteInfo()
+        siteinfo += convertWEPtoWEA
+
+        lines = ["project_name %s" % getConfig('SCENENAME'),
+                 siteinfo,
+                 "\n########################\n# building information #\n########################",
+                 "material_file %s_material.rad" % getConfig('SCENENAME'),
+                 "geometry_file %s_geometry.rad" % getConfig('SCENENAME'),
+                 "radiance_source_files 1,%s"    % File.basename(radfile)]
+        if ptsfile != ''
+            lines.push("sensor_file %s" % File.basename(ptsfile))
+        end
+        lines.push("shading 0\nViewPoint 0\n")
+        
+        heafile = getFilename("Daysim/%s.hea" % getConfig('SCENENAME'))
+        text = lines.join("\n")
+        if not createFile(heafile, text)
+            uimessage("Error: Could not create DAYSIM hea file '#{heafile}'", -2)
+            return ''
+        end
+        return heafile
+    end
+    
+    def _createDaysimPTS
+        ## add field descriptions
+        numdir = getFilename('numeric')
+        if not File.exists?(numdir)
+            return ''
+        end
+        Dir.foreach(numdir) { |f|
+            if f =~ /.fld$/
+                fullpath = File.join(numdir, f)
+                ptsfile = getFilename("Daysim/%s.pts" % getConfig('SCENENAME'))
+                if not createFile(ptsfile, File.open(fullpath).read())
+                    uimessage("Error: Could not create DAYSIM pts file '#{ptsfile}'", -2)
+                else
+                    uimessage("created DAYSIM pts file '#{ptsfile}'", 1)
+                    return ptsfile
+                end
+            end
+        }
+        ## default: empty string (no file copied)
+        return ''
+    end
+    
+    def _createDaysimRAD
+        ## remove sky from radiance scene and convert to single file
+        radfile = getFilename(getConfig('SCENENAME') + ".rad")
+        lines = File.new(radfile).readlines()
+        dspath = getFilename("Daysim/%s.rad" % getConfig('SCENENAME'))
+        begin
+            fDaysim = File.new(dspath, 'w')
+            lines.each { |l|
+                if l.strip() =~ /.sky$/
+                    uimessage("stripping sky: '#{l.strip}'", 1)
+                elsif l =~ /^!xform/
+                    if l.strip =~ /materials.rad$/
+                        uimessage("identified materials file: '#{l.strip}'", 2)
+                        uimessage("-> TODO: convert to greyscale", 2)
+                    end
+                    uimessage("adding scene file '%s'" % l.split()[-1], 2)
+                    scenefile = getFilename(l.split()[-1])
+                    if File.exists?(scenefile)
+                        fDaysim.write(File.open(scenefile).read())
+                        fDaysim.write("\n\n")
+                    else
+                        uimessage("Error: Could not locate  scene file '#{scenefile}'", -2)
+                    end
+                else
+                    fDaysim.write(l)
+                end
+            }
+            fDaysim.write("\n")
+            fDaysim.close()
+        rescue => e
+            uimessage("Error: Could not create daysim scene file '#{dspath}'", -2)
+            uimessage("error message: '%s'\n%s\n" % [$!.message, e.backtrace.join("\n")], -2)
+            return ''
+        end
+        return dspath
+    end
+
+end
+
+
 class StatusPage 
    
     include InterfaceBase
@@ -136,6 +292,8 @@ end
 
 
 class RadianceScene < ExportBase
+    
+    include Daysim
     
     attr_reader :exportOptions, :renderOptions, :viewsList, :skyOptions, :materialLists
     
@@ -285,34 +443,9 @@ class RadianceScene < ExportBase
         end
             
         writeLogFile()
-        
-        if getConfig('MODE') == 'daysim'
-        end
         return true
     end
   
-    def startDaysim(heafile)
-        if $SU2RAD_PLATFORM != 'WIN'
-            uimessage("platform != 'WIN' ('%s') -> can't start daysim" % $SU2RAD_PLATFORM, 4)
-            return
-        end
-        uimessage("trying to start daysim ...", 1)
-        daysim = "C:\\daysim\\bin_windows\\daysimExe.jar"
-        heafile.gsub!(/\//, "\\")
-        olddir = Dir.pwd()
-        Dir.chdir("C:/daysim/bin_windows")
-        begin
-            Thread.new do
-                #system(`java -jar #{daysim} <"#{heafile}"`)
-                system(`start #{daysim} "#{heafile}"`)
-            end
-        rescue
-            uimessage("Error starting 'daysimExe.jar' thread", -2)
-            uimessage("%s\n%s\n" % [$!.message, e.backtrace.join("\n")], -2)
-        end
-        Dir.chdir(olddir)
-    end
-    
     def _saveFilesByColor(byColor)
         references = []
         uimessage("\nSCENEFILES:", 0)
@@ -397,104 +530,11 @@ class RadianceScene < ExportBase
         end
         return text
     end
-  
-    def createDaysimFiles
-        ## create subdirectory 'daysim' with geometry and control files
-        dsdir = getFilename("Daysim")
-        uimessage("creating DAYSIM structure in '#{dsdir}'", 1)
-        createDirectory(dsdir)
-        ['res', 'rad', 'pts', 'tmp', 'wea'].each { |d|
-            createDirectory(File.join(dsdir, d))
-        }
-        radfile = _createDaysimRAD()
-        ptsfile = _createDaysimPTS()
-        if radfile != ''
-            return _createDaysimHEA(radfile,ptsfile)
-        end
-        return ''
-    end
     
-    def _createDaysimRAD
-        ## remove sky from radiance scene and convert to single file
-        radfile = getFilename(getConfig('SCENENAME') + ".rad")
-        lines = File.new(radfile).readlines()
-        dspath = getFilename("Daysim/%s.rad" % getConfig('SCENENAME'))
-        begin
-            fDaysim = File.new(dspath, 'w')
-            lines.each { |l|
-                if l.strip() =~ /.sky$/
-                    uimessage("stripping sky: '#{l.strip}'", 1)
-                elsif l =~ /^!xform/
-                    if l.strip =~ /materials.rad$/
-                        uimessage("identified materials file: '#{l.strip}'", 2)
-                        uimessage("-> TODO: convert to greyscale", 2)
-                    end
-                    uimessage("adding scene file '%s'" % l.split()[-1], 2)
-                    scenefile = getFilename(l.split()[-1])
-                    if File.exists?(scenefile)
-                        fDaysim.write(File.open(scenefile).read())
-                        fDaysim.write("\n\n")
-                    else
-                        uimessage("Error: Could not locate  scene file '#{scenefile}'", -2)
-                    end
-                else
-                    fDaysim.write(l)
-                end
-            }
-            fDaysim.write("\n")
-            fDaysim.close()
-        rescue => e
-            uimessage("Error: Could not create daysim scene file '#{dspath}'", -2)
-            uimessage("error message: '%s'\n%s\n" % [$!.message, e.backtrace.join("\n")], -2)
-            return ''
-        end
-        return dspath
+    def getSky
+        return @sky
     end
-     
-    def _createDaysimHEA(radfile, ptsfile='')
-        ## create Daysim/*.hea file
-        lines = ["project_name %s" % getConfig('SCENENAME'),
-                 @sky.getDaysimSiteInfo(),
-                 "\n########################\n# building information #\n########################",
-                 "material_file %s_material.rad" % getConfig('SCENENAME'),
-                 "geometry_file %s_geometry.rad" % getConfig('SCENENAME'),
-                 "radiance_source_files 1,%s"    % File.basename(radfile)]
-        if ptsfile != ''
-            lines.push("sensor_file %s" % File.basename(ptsfile))
-        end
-        lines.push("shading 0\nViewPoint 0\n")
-        
-        heafile = getFilename("Daysim/%s.hea" % getConfig('SCENENAME'))
-        text = lines.join("\n")
-        if not createFile(heafile, text)
-            uimessage("Error: Could not create DAYSIM hea file '#{heafile}'", -2)
-            return ''
-        end
-        return heafile
-    end
-    
-    def _createDaysimPTS
-        ## add field descriptions
-        numdir = getFilename('numeric')
-        if not File.exists?(numdir)
-            return ''
-        end
-        Dir.foreach(numdir) { |f|
-            if f =~ /.fld$/
-                fullpath = File.join(numdir, f)
-                ptsfile = getFilename("Daysim/%s.pts" % getConfig('SCENENAME'))
-                if not createFile(ptsfile, File.open(fullpath).read())
-                    uimessage("Error: Could not create DAYSIM pts file '#{ptsfile}'", -2)
-                else
-                    uimessage("created DAYSIM pts file '#{ptsfile}'", 1)
-                    return ptsfile
-                end
-            end
-        }
-        ## default: empty string (no file copied)
-        return ''
-    end
-    
+
     def createRifFile
         ## last step in Radiance export: write radiance input file
         sceneName = getConfig('SCENENAME')

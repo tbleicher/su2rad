@@ -85,27 +85,27 @@ fileSelector.setFileTreeJSON = function (tree, setPosition) {
 fileSelector.formatTree = function (tree) {
     var d = "<ul class=\"jqueryFileTree\" style=\"display: none;\">"
     try {
-    for (var i=0; i<tree.length; i++) {
-        var e = tree[i];
-        if (e.access == false) {
-            d = d + "<li class=\"" + e.type + " no_access\">" + e.name + "</li>"
-            //log.debug("no access for: " + e.path)
-        } else {
-            d = d + "<li "
-            if (e.id) {
-                d = d + "id=\"" + e.id + "\" "
+        for (var i=0; i<tree.length; i++) {
+            var e = tree[i];
+            if (e.access == false) {
+                d = d + "<li class=\"" + e.type + " no_access\">" + e.name + "</li>"
+                //log.debug("no access for: " + e.path)
+            } else {
+                d = d + "<li "
+                if (e.id) {
+                    d = d + "id=\"" + e.id + "\" "
+                }
+                if (e.children) {
+                    d = d + "class=\"directory expanded\"><a href=\"#\" rel=\"" + e.path + "/\">" + e.name + "</a>"
+                    d = d + this.formatTree(e.children)
+                } else if (e.type == "directory") {
+                    d = d + "class=\"directory collapsed\"><a href=\"#\" rel=\"" + e.path + "/\">" + e.name + "</a>"
+                } else if (e.type == "file") {
+                    d = d + "class=\"file " + e.ext + "\"><a href=\"#\" rel=\"" + e.path + "\">" + e.name + "</a>"
+                }
+                d = d + "</li>"
             }
-            if (e.children) {
-                d = d + "class=\"directory expanded\"><a href=\"#\" rel=\"" + e.path + "/\">" + e.name + "</a>"
-                d = d + this.formatTree(e.children)
-            } else if (e.type == "directory") {
-                d = d + "class=\"directory collapsed\"><a href=\"#\" rel=\"" + e.path + "/\">" + e.name + "</a>"
-            } else if (e.type == "file") {
-                d = d + "class=\"file " + e.ext + "\"><a href=\"#\" rel=\"" + e.path + "\">" + e.name + "</a>"
-            }
-            d = d + "</li>"
         }
-    }
     } catch (e) {
         logError(e)
     }

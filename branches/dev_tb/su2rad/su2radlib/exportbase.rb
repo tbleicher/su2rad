@@ -4,6 +4,19 @@ require 'context.rb'
 require 'radiance.rb'
 
 
+class ProgressDialogDummy
+    def initialize(msg, status, cancel=false)
+        print "ProgressDialogDummy.new()"
+    end
+    def destroy
+    end
+    def hide
+    end
+    def update_progress(percent, status="stat", status2="stat2")
+        return true
+    end
+end
+
 
 class ProgressCounter
     
@@ -38,7 +51,8 @@ class ProgressCounter
                 #XXX enable cancel option after it's implemented in the export loop
                 #@progressDialog = ProgressDialog.new("export progress", "preparing export", true)
                 @progressDialog = ProgressDialog.new("export progress", "preparing export", false)
-            rescue
+            rescue LoadError
+                @progressDialog = ProgressDialogDummy.new("export progress", "preparing export", false)
                 printf "could not load progress dialog"
             end
         else
