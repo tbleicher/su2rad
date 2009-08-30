@@ -16,6 +16,40 @@ su2rad.NSIDOM = false;
 su2rad.BROWSER = "";
 su2rad.NSIDOM = false;
 
+
+
+su2rad.dialog = su2rad.dialog ? su2rad.dialog : new Object()
+su2rad.dialog.expFunc = su2rad.dialog.expFunc ? su2rad.dialog.expFunc : new Object()
+
+su2rad.dialog.setSketchup = function() {
+    // switch to actions for Sketchup (skp:...)
+    log.info('using Sketchup backend ...'); 
+    log.debug('browser: ' + navigator.userAgent);
+    su2rad.SKETCHUP = true;
+    su2rad.dialog.evaluateSketchup();
+}
+
+su2rad.dialog.setTest = function() {
+    // set dummy actions
+    try {
+        log.info('using dummy backend ...'); 
+        log.debug('browser: ' + navigator.userAgent);
+    } catch (e) {
+        // log might not be defined yet
+    }
+    su2rad.SKETCHUP = false;
+    su2rad.dialog.evaluateSketchup();
+}
+
+su2rad.dialog.evaluateSketchup = function() {
+}
+
+su2rad.dialog.loadFileCallback = function (text) {
+    //dummy function to be reasigned to real callback
+}
+
+
+
 // set BROWSER var 
 var userAgent = navigator.userAgent;
 log.debug("userAgent: " + userAgent);
@@ -33,51 +67,35 @@ if ( engine == "AppleWebKit" ) {
 log.debug("browser: " + su2rad.BROWSER);
 
 
-su2rad.dialog = su2rad.dialog ? su2rad.dialog : new Object()
+su2rad.utils = su2rad.utils ? su2rad.utils : new Object()
 
-function setSketchup() {
-    // switch to actions for Sketchup (skp:...)
-    log.info('using Sketchup backend ...'); 
-    log.debug('browser: ' + navigator.userAgent);
-    su2rad.SKETCHUP = true;
-    evaluateSketchup();
-}
-
-function setTest() {
-    // set dummy actions
+su2rad.utils.arrayFromJSON = function(json) {
     try {
-        log.info('using dummy backend ...'); 
-        log.debug('browser: ' + navigator.userAgent);
+        eval("var array = " + json);
     } catch (e) {
-        // log might not be defined yet
+        logError(e);
+        var array = new Array();
     }
-    su2rad.SKETCHUP = false;
-    evaluateSketchup();
+    return array
 }
 
-function evaluateSketchup() {
-}
-
-function decodeJSON(text) {
+su2rad.utils.decodeJSON = function(text) {
     var json = unescape(text)
     return json;
 }
 
-function decodeText(encText) {
+su2rad.utils.decodeText = function (encText) {
     // text file is encoded via urlEncode - replace '+'
     var text = unescape(encText)
     text = text.replace(/\+/g,' ');
     return text;
 }
 
-function encodeJSON(json) {
+su2rad.utils.encodeJSON = function (json) {
     var text = escape(json);
     return text;
 }
 
-function loadFileCallback(text) {
-    //dummy function to be reasigned to real callback
-}
 
 function loadTextFile(fname) {
     log.debug("loadTextFile() fname='" + fname + "'");

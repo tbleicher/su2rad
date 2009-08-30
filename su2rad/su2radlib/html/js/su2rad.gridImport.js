@@ -11,8 +11,8 @@ su2rad.dialog.gridImport = function () {
     this.gCanvas = null;
 }
 
-su2rad.dialog.gridImport.evaluateSketchup = function () {
-    log.debug("evaluateSketchup() su2rad.SKETCHUP='" + su2rad.SKETCHUP + "'")
+su2rad.dialog.gridImport.su2rad.dialog.evaluateSketchup = function () {
+    log.debug("su2rad.dialog.evaluateSketchup() su2rad.SKETCHUP='" + su2rad.SKETCHUP + "'")
     
     // show warning/simulate and hide file load buttons by default
     document.getElementById("loadFileWarning").style.display='';
@@ -52,7 +52,7 @@ su2rad.dialog.gridImport.initPage = function () {
     document.getElementById("messagearea").value = '';
     this.gCanvas = new su2rad.canvas.GridCanvas;
     this.gCanvas.setCanvasId('cv');
-    this.evaluateSketchup(); 
+    this.su2rad.dialog.evaluateSketchup(); 
     this.updateUI();
     //log.debug("gCanvas=" + this.gCanvas)
 }
@@ -106,7 +106,7 @@ su2rad.dialog.gridImport._loadFileSU = function (encText) {
     log.debug("DEBUG _loadFileSU: received " + encText.length + " bytes")
     // text received from
     try {
-        var text = decodeText(encText);
+        var text = su2rad.utils.decodeText(encText);
         var filename = fileSelector.getFilepath();
         // can't use 'this' because function is call in fileselector context
         su2rad.dialog.gridImport.parseFileText(text, filename);

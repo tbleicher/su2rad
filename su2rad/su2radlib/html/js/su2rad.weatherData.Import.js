@@ -14,7 +14,7 @@ su2rad.dialog.weatherdata.initPage = function () {
     document.getElementById("messagearea").value = '';
     this.gCanvas = new su2rad.canvas.GridCanvas();
     this.gCanvas.setCanvasId('cv');
-    this.evaluateSketchup(); 
+    this.su2rad.dialog.evaluateSketchup(); 
     this.updateUI();
 }
 
@@ -30,8 +30,8 @@ su2rad.dialog.weatherdata.onResizeCanvas = function () {
     }
 }
 
-su2rad.dialog.weatherdata.evaluateSketchup = function () {
-    log.debug("evaluateSketchup() su2rad.SKETCHUP='" + su2rad.SKETCHUP + "'")
+su2rad.dialog.weatherdata.su2rad.dialog.evaluateSketchup = function () {
+    log.debug("su2rad.dialog.evaluateSketchup() su2rad.SKETCHUP='" + su2rad.SKETCHUP + "'")
     document.getElementById("loadFileWarning").style.display='';
     document.getElementById("loadFileSUDiv").style.display='none';
     document.getElementById("graphOptions").style.display='none';
@@ -101,7 +101,7 @@ su2rad.dialog.weatherdata._loadFileSU = function (encText) {
     // function called from SU with encoded text
     log.debug("_loadFileSU: received " + encText.length + " bytes")
     // text received from 
-    var text = decodeText(encText);
+    var text = su2rad.utils.decodeText(encText);
     var lines = text.split("\n")
     log.debug("_loadFileSU: lines=" + lines.length)
     var filename = fileSelector.getFilepath();
@@ -159,8 +159,8 @@ su2rad.dialog.weatherdata.setFilename = function (filename) {
 su2rad.dialog.weatherdata.setFileFromSketchup = function (encText,filename) {
     // function called from SU with encoded text and encoded filename
     // TODO: set fileselector root
-    var text = decodeText(encText);
-    filename = decodeText(filename);
+    var text = su2rad.utils.decodeText(encText);
+    filename = su2rad.utils.decodeText(filename);
     log.debug("setFileFromSketchup: " + text.length + " bytes")
     try {
         this.parseFileText(text, filename);

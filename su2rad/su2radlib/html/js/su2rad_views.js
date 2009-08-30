@@ -549,7 +549,7 @@ ViewsListObject.prototype.toString = function (selection_only) {
 
 function onActivateView(viewname) {
     if (su2rad.SKETCHUP == true) {
-        window.location = 'skp:activateView@' + encodeJSON(viewname);
+        window.location = 'skp:activateView@' + su2rad.utils.encodeJSON(viewname);
     } else {
         log.debug("dummy backend: no action for activateView(" + viewname + ")"); 
     }

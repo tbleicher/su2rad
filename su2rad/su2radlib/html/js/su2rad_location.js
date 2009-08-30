@@ -259,7 +259,7 @@ function setLocationWarning(msg) {
 
 function _getShadowInfoArrayFromJSON(text) {
     // convert JSON response string into javascript array
-    var json = decodeJSON(text);
+    var json = su2rad.utils.decodeJSON(text);
     try {
         eval("var array = " + json);
     } catch (e) {

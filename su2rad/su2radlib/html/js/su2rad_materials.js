@@ -214,9 +214,9 @@ function _materialFilter(mat, showAlias, showType) {
 }
 
 function buildMaterialListByType (type) {
-    if (type == 'layer' && exportSettings.exportMode.match(/layer/i) ) {
+    if (type == 'layer' && su2rad.exportSettings.exportMode.match(/layer/i) ) {
         buildMaterialListSU();
-    } else if (type == 'skm' && !exportSettings.exportMode.match(/layer/i) ) {
+    } else if (type == 'skm' && !su2rad.exportSettings.exportMode.match(/layer/i) ) {
         buildMaterialListSU();
     }
 }

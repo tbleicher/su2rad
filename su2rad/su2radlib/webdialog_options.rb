@@ -22,6 +22,7 @@ class ExportOptions
         @textures      = getConfig('TEXTURES')
         @exportMode    = getConfig('MODE')
         @global_coords = getConfig('MAKEGLOBAL')
+        @radSunpath    = false
         updateFromAttributes()
     end
    
@@ -43,7 +44,13 @@ class ExportOptions
     end
     
     def saveToAttributes
+        printf "TEST saveToAttributes\n"
+        attrDict = Sketchup.active_model.attribute_dictionary('SU2RAD_EXPORTOPTIONS', true)
+        attrDict.each_key { |k|
+            attrDict.delete_key(k)
+        }
         dict = _getSettings()
+        dict['latestExportPath'] = File.join(dict['scenePath'], dict['sceneName'])
         dict.delete('scenePath')
         dict.delete('sceneName')
         dict.each_pair { |k,v|
@@ -127,6 +134,7 @@ class ExportOptions
         setConfig('MAKEGLOBAL', @global_coords)
         setConfig('SCENEPATH', @scenePath)
         setConfig('SCENENAME', @sceneName)
+        setConfig('RADSUNPATH', @radSunpath)
         saveToAttributes()
     end
 

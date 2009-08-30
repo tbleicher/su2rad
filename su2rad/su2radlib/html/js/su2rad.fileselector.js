@@ -54,7 +54,7 @@ fileSelector.show = function(ftRoot) {
 
 fileSelector.setFileTreeJSON = function (tree, setPosition) {
     // eval JSON views string from SketchUp
-    var json = decodeJSON(tree);
+    var json = su2rad.utils.decodeJSON(tree);
     var entries = new Array();
     try {
         eval("entries = " + json);
@@ -122,7 +122,7 @@ fileSelector.listDirectory = function (dir, root) {
     } else {
         log.debug("using dummy backend.getViewsList()");
         var listing = this.dummy(dir);
-        this.setFileTreeJSON( encodeJSON(listing), root );
+        this.setFileTreeJSON( su2rad.utils.encodeJSON(listing), root );
     }    
 }
 

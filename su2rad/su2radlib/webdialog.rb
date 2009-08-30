@@ -52,7 +52,7 @@ class ExportDialogWeb < ExportBase
             text = f.read()
             text = urlEncode(text)
         end
-        dlg.execute_script("loadFileCallback('%s')" % text)
+        dlg.execute_script("su2rad.dialog.loadFileCallback('%s')" % text)
     end
     
     def show(title="su2rad export")
@@ -139,11 +139,19 @@ class ExportDialogWeb < ExportBase
         html = File.join(File.dirname(__FILE__), "html","su2rad_export.html")
         dlg.set_file(html, nil)
         
+        ## add option for RadSunpath
+        begin
+            radsunpath = RadSunpath.getProgramPath()
+            #XXX add radsunpath option to dialog options
+        rescue NameError
+            uimessage("Module 'RadSunpath' not loaded.", 1)
+        end
+        
         ## show dialog
         $SU2RAD_DIALOG_WINDOW = dlg
         dlg.show {
-            uimessage("setSketchup()", 2)
-            dlg.execute_script("setSketchup()")
+            uimessage("su2rad.dialog.setSketchup()", 2)
+            dlg.execute_script("su2rad.dialog.setSketchup()")
             @exportOptions.setExportOptions(dlg, '')
             @renderOptions.setRenderOptions(dlg, '')
             @viewsList.setViewsList(dlg, '')
@@ -161,8 +169,30 @@ class ExportDialogWeb < ExportBase
         if status 
             showFinalStatus(status)
         end
+        printf "RADSUNPATH='#{getConfig('RADSUNPATH')}'\n"
+        if getConfig('RADSUNPATH') == true
+            startRadSunpath()
+        end
     end
-
+    
+    def startRadSunpath
+        printf "RADSUNPATH start()\n"
+        rsp = ""
+        #begin
+        rsp = RadSunpath.getProgramPath()
+        printf "RADSUNPATH rsp='#{rsp}'\n"
+        if rsp
+            scenefile = File.join(getConfig('SCENEPATH'), getConfig('SCENENAME')) + '.rif'
+            printf "RADSUNPATH scenefile='#{scenefile}'\n"
+            RadSunpath.start_rsp(scenefile)
+        else
+            uimessage("No executable for RadSunpath found!", -2)
+        end
+        #rescue NameError
+        #    uimessage("Module 'RadSunpath' not loaded.", -2)
+        #end
+    end
+    
     def showFinalStatus(status)
         return
         tmplpath = File.join(File.dirname(__FILE__), "html", "final.html")
