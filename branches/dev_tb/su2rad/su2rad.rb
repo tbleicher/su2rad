@@ -2,7 +2,7 @@
 #
 # su2rad.rb 
 
-$SU2RAD_VERSION = "daysim r02" #XXX
+$SU2RAD_VERSION = "$Rev$" #XXX
 
 # Written by Thomas Bleicher
 #
@@ -27,6 +27,9 @@ $SU2RAD_VERSION = "daysim r02" #XXX
 
 # revisions:
 # ===========
+#
+# current: $Rev::$      $:  $Date$
+#                           by $Author$
 #
 # branch 1.0:
 # -----------
@@ -70,6 +73,7 @@ $:.push(File.join(basedir, 'su2radlib'))
 #$:.push(File.join(basedir, 'su2radlib', 'rubylib'))
 
 require "sketchup.rb"
+require "su2radlib/su2rad.module.rb"
 require "su2radlib/exportbase.rb"
 require "su2radlib/context.rb"
 require "su2radlib/numeric.rb"

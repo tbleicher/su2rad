@@ -1,4 +1,51 @@
 
+// requires su2rad.dialog.common.js to be loaded
+
+// create new namespace for main export functions
+
+
+su2rad.dialog.expFunc.setOption = function (optname, optvalue) {
+    log.debug("DEBUG: export.setOption(optname='" + optname + "' optvalue='" + optvalue + "')")
+}
+
+su2rad.dialog.expFunc.onExport = function() {
+    log.debug("onExportButton()...")
+    if (su2rad.SKETCHUP != false) {
+        try {
+            log.info("starting export ...")
+            window.location = 'skp:onExport@';
+        } catch (e) {
+            logError(e)
+            alert(e.toString())
+        }
+    } else {
+        showBusy()
+        log.warn('Sketchup not available; no export action');
+        msg  = '{"status"  :"success"';
+        msg += ',"messages":"0"';
+        msg += ',"files"   :"31"';
+        msg += ',"groups"  :"345"';
+        msg += ',"faces"   :"45678"}';
+        showResults(su2rad.utils.encodeJSON(msg));
+    }
+}
+
+su2rad.dialog.expFunc.onCancel = function() {
+    try {
+        if (su2rad.SKETCHUP != false) {
+                //log.info("export canceled by user")
+                window.location = 'skp:onCancel@';
+        } else {
+            hideProgressWindow();
+            document.body.innerHTML = "";
+            //window.opener='x';
+            window.close();
+        }
+    } catch (e) {
+        logError(e)
+    }
+}
+
 // set environment
 var _currentStatusDiv = "status_tab-export"
 
@@ -6,7 +53,7 @@ var map, marker, lastPoint;
 
 // object instances
 try {
-    var exportSettings = new ExportSettingsObject();
+    su2rad.exportSettings = new ExportSettingsObject();
     var skyOptions     = new SkyOptionsObject();      // required by ModelLocationObject
     var skyDateTime    = new SkyDateTimeObject();
     var modelLocation  = new ModelLocationObject();
@@ -17,7 +64,7 @@ try {
 }
 
 function loadTestData() {
-    setTest();
+    su2rad.dialog.setTest();
     if (su2rad.SKETCHUP == false) {
         // fill dialog with test data
         getExportOptions();
@@ -47,47 +94,10 @@ function disableGlobalOption() {
             select.options[i] = null;
         }
     }
-    exportSettings.setMode('by color');
+    su2rad.exportSettings.setMode('by color');
     document.getElementById("global_coords_display").style.display='none';
 }
 
-function onExportButton() {
-    log.debug("onExportButton()...")
-    if (su2rad.SKETCHUP != false) {
-        try {
-            log.info("starting export ...")
-            window.location = 'skp:onExport@';
-        } catch (e) {
-            logError(e)
-            alert(e.toString())
-        }
-    } else {
-        showBusy()
-        log.warn('Sketchup not available; no export action');
-        msg  = '{"status"  :"success"';
-        msg += ',"messages":"0"';
-        msg += ',"files"   :"31"';
-        msg += ',"groups"  :"345"';
-        msg += ',"faces"   :"45678"}';
-        showResults(encodeJSON(msg));
-    }
-}
-
-function onCancelButton() {
-    try {
-        if (su2rad.SKETCHUP != false) {
-                //log.info("export canceled by user")
-                window.location = 'skp:onCancel@';
-        } else {
-            hideProgressWindow();
-            document.body.innerHTML = "";
-            //window.opener='x';
-            window.close();
-        }
-    } catch (e) {
-        logError(e)
-    }
-}
 
 function showExportOption(opt) {
     log.debug("showExportOption('" + opt + "')")
@@ -213,7 +223,7 @@ function JSON2HTML (obj, title, level) {
 function showResults(msg) {
     log.error("TODO: showResult()")
     log.error("TEST: msg=" + msg)
-    json = decodeJSON(msg)
+    json = su2rad.utils.decodeJSON(msg)
     var obj = new Array();
     try { 
         eval("obj = " + json)

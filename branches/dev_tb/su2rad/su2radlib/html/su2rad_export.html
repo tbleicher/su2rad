@@ -148,7 +148,7 @@
                         </div>
                         <div class="gridCell">
                             <input id="triangulate" type="checkbox"
-                            onClick="onExportBoolOption('triangulate')"> triangulate
+                            onClick="su2rad.exportSettings.setOption('triangulate', this.checked)"> triangulate
                         </div>
                     </div>
                     <div class="gridRow">
@@ -156,13 +156,13 @@
                         <div class="gridCell">
                             <span id="global_coords_display" style="display:none;">
                                 <input id="global_coords" type="checkbox" 
-                                onClick="onExportBoolOption('global_coords')"> global coords
+                                onClick="su2rad.exportSettings.setOption('global_coords', this.checked)"> global coords
                             </span>
                         </div>
                         <div class="gridCell">
                             <span id="textures_display">
                                 <input id="textures" type="checkbox"
-                                onClick="onExportBoolOption('textures')">
+                                onClick="su2rad.exportSettings.setOption('textures', this.checked)">
                                 <span id="textures_label"> textures</span>
                             </span>
                         </div>
@@ -293,14 +293,19 @@
                 </div>
 
                 
-                <h2>
-                    <input class="exportbutton" type="button" name="export" value="export" onclick="onExportButton()">
-                    <input class="exportbutton" type="button" name="cancel" value="cancel" onclick="onCancelButton()">
-                </h2>
+                <div id="mainButtonRow">
+                    <input type="button" value="export" onclick="su2rad.dialog.expFunc.onExport()">
+                    <input type="button" value="cancel" onclick="su2rad.dialog.expFunc.onCancel()">
+                    <div id="showRadSunpath">
+                        <input type="checkbox" id="radSunpath" onClick="su2rad.exportSettings.setOption('radSunpath', this.checked)">start RadSunpath
+                    </div>
+                </div>
             
                 <div class="statusMessage" id="status_tab-export" style="display:none;">
                     msg
                 </div>
+
+                <!-- pop up progress window -->
                 <div class="jqmWindow" id="progressWindow">
                     <img src="./css/ajax-loader-1500ms.gif" />
                     <div id="progressStatus">
@@ -317,10 +322,6 @@
             <!-- TAB render -->
             
             <div id="tab-render">
-                <h3>
-                    <!-- <input class="floatright" type="button" value="done" onclick="switch_to_tab('tab-export')"> -->
-                    Render Settings
-                </h3>
                 
                 <div id="radOptions" style="border-color:red;height:220px;">
                     <div class="gridColumn">
@@ -456,10 +457,6 @@
                     SketchUp model settings
                 </h3>
                 
-                <h3>
-                    <!-- <input class="floatright" type="button" value="done" onclick="switch_to_tab('tab-export')"> -->
-                    Sky Settings
-                </h3>
                 <div class="optionsColumn" style="height:120px">
                     <div class="optionsHeader">
                         <span class="gridLabel">generator:</span>
@@ -674,10 +671,6 @@
             <!-- TAB views -->
             
             <div id="tab-views" style="display:none;">
-                <h3>
-                    <!-- <input class="floatright" type="button" value="done" onclick="switch_to_tab('tab-export')"> -->
-                    View Details
-                </h3>
                 <div id="viewDetails">
                     <input type="button" id="testDataButton" name="testDataButton" value="load test data" onclick="loadTestData()">
                 </div>
@@ -691,7 +684,6 @@
             <!-- TAB materials -->
             
             <div id="tab-materials" style="display:none;">
-                <h3>Materials</h3>
                 <div id="MaterialsDetails">
                     <div class="listPanel" style="margin-left:5px;">
                         <div class="listOptions">

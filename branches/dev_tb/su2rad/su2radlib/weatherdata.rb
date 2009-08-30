@@ -47,7 +47,7 @@ class WeatherDataImportDialog < ExportBase
         $SU2RAD_DIALOG_WINDOW = dlg
         epwpath, epwdata = getEPWPathFromAttribute()
         dlg.show {
-            dlg.execute_script("setSketchup()")
+            dlg.execute_script("su2rad.dialog.setSketchup()")
             epwpath, epwdata = getEPWPathFromAttribute()
             if epwpath != ""
                 path = urlEncode(epwpath)
@@ -107,7 +107,7 @@ class WeatherDataImportDialog < ExportBase
             text = urlEncode(text)
             #uimessage("TEST: text=%d bytes" % text.length , 3)
         end
-        dlg.execute_script("loadFileCallback('%s')" % text)
+        dlg.execute_script("su2rad.dialog.loadFileCallback('%s')" % text)
     end
 
 end 

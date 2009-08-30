@@ -6,6 +6,7 @@ function ExportSettingsObject() {
     this.global_coords = true;
     this.textures = false;
     this.triangulate = false;
+    this.radSunpath = false;
 }
 
 ExportSettingsObject.prototype._setBool = function(name,value) {
@@ -56,7 +57,7 @@ ExportSettingsObject.prototype.setMode = function(val) {
 }
 
 ExportSettingsObject.prototype.setValue = function(name,value) {
-    //log.debug("setValue: '" + name + "' = '" + value + "'");
+    log.debug("setValue: '" + name + "' = '" + value + "'");
     switch (name) {
     case 'exportMode': 
         this.setMode(value);
@@ -68,6 +69,9 @@ ExportSettingsObject.prototype.setValue = function(name,value) {
         this._setBool(name,value);
         break;
     case 'textures':
+        this._setBool(name,value);
+        break;
+    case 'radSunpath':
         this._setBool(name,value);
         break;
     default:
@@ -83,22 +87,33 @@ ExportSettingsObject.prototype.toString = function() {
     text += '&textures='      + this.textures;
     text += '&exportMode='    + this.exportMode;
     text += '&global_coords=' + this.global_coords;
+    text += '&radSunpath='    + this.radSunpath;
     return text
 }
 
-
-
-function onExportBoolOption(opt) {
-    var val = document.getElementById(opt).checked;
-    exportSettings.setValue(opt, val);
+ExportSettingsObject.prototype.setOption = function (opt, val) {
+    this.setValue(opt, val);
     applyExportOptions();
+}
+
+ExportSettingsObject.prototype.setOptionsFromArray = function (array) {
+    var text = '<b>new export settings:</b><br/>';
+    for(var j=0; j<array.length; j++) {
+        var attrib = array[j];
+        if(attrib != null) {
+            this.setValue(attrib.name, attrib.value);
+            var line = '&nbsp;&nbsp;<b>' + attrib.name + ':</b> ' + attrib.value + '<br/>';
+            text += line;
+        }
+    }
+    log.debug(text);
 }
 
 function onExportModeChange() {
     // apply new value for exportMode
     var val=document.getElementById("exportMode").value;
     //log.debug("new export mode: '" + val + "'"  );
-    exportSettings.setMode(val);
+    su2rad.exportSettings.setMode(val);
     _setGlobalCoordsDisplay();
     updateExportFormValues();
     setCurrentMaterialList(val);
@@ -107,7 +122,7 @@ function onExportModeChange() {
 
 function _setGlobalCoordsDisplay(val) {
     // show or hide global_coords checkbox
-    var val = exportSettings.exportMode;
+    var val = su2rad.exportSettings.exportMode;
     if (val == 'by group') {
         document.getElementById("global_coords_display").style.display='';
     } else {
@@ -130,7 +145,7 @@ function setExportPath(path) {
         path = _getExportPath()
     } 
     log.debug("new path: '" + path + "'");
-    exportSettings.setExportPath(path);
+    su2rad.exportSettings.setExportPath(path);
     updateExportFormValues();
     applyExportOptions();
 }
@@ -155,10 +170,10 @@ function onSelectExportPath() {
         alert('Firefox 3 can not be used to set export path. Sorry');
         // TODO: hide file selection
         path = _getExportPath();
-        exportSettings.setExportPath(path);
+        su2rad.exportSettings.setExportPath(path);
     } else {
         var val=document.getElementById("fileselection").value;
-        exportSettings.setExportPath(val);
+        su2rad.exportSettings.setExportPath(val);
     }
     updateExportFormValues();
     applyExportOptions();
@@ -183,7 +198,7 @@ function onLoadSceneFile() {
 
 function loadSceneFile(text) {
     // loadTextFile callback to read scene (*.rif) files
-    text = decodeText(text);
+    text = su2rad.utils.decodeText(text);
     setStatusMsg("<b>file contents:</b><br/><code>" + text.replace(/\n/g,'<br/>') + "</code>");
     _loadSceneFile(text);
 }
@@ -204,38 +219,24 @@ function enableLoadSceneFile(path) {
 }
 
 function setExportModeSelection() {
-    setSelectionValue('exportMode', exportSettings.exportMode);
+    setSelectionValue('exportMode', su2rad.exportSettings.exportMode);
     // set visibility of global_coords checkbox
     _setGlobalCoordsDisplay();
 }
 
 function setExportOptionsJSON(msg) {
-    var json = decodeJSON(msg);
-    try {
-        eval("var exportOpts = " + json);
-    } catch (e) {
-        logError(e);
-        var exportOpts = new Array();
-    }
-    var text = '<b>export settings:</b><br/>';
-    for(var j=0; j<exportOpts.length; j++) {
-        var attrib = exportOpts[j];
-        if(attrib != null) {
-            exportSettings.setValue(attrib.name, attrib.value);
-            var line = '&nbsp;&nbsp;<b>' + attrib.name + ':</b> ' + attrib.value + '<br/>';
-            //log.debug(line);
-            text = text + line;
-        }
-    }
+    var json = su2rad.utils.decodeJSON(msg);
+    var opts = su2rad.utils.arrayFromJSON(json)
+    su2rad.exportSettings.setOptionsFromArray(opts);
     updateExportFormValues();
-    setStatusMsg(text);
 }
 
 function updateExportFormValues() {
-    document.getElementById("scenePath").value = exportSettings.scenePath;
-    document.getElementById("sceneName").value = exportSettings.sceneName + ".rif";
-    document.getElementById("triangulate").checked = exportSettings.triangulate;
-    document.getElementById("textures").checked = exportSettings.textures;
+    document.getElementById("scenePath").value = su2rad.exportSettings.scenePath;
+    document.getElementById("sceneName").value = su2rad.exportSettings.sceneName + ".rif";
+    document.getElementById("triangulate").checked = su2rad.exportSettings.triangulate;
+    document.getElementById("textures").checked = su2rad.exportSettings.textures;
+    document.getElementById("radSunpath").checked = su2rad.exportSettings.radSunpath;
     setExportModeSelection();
 }
 

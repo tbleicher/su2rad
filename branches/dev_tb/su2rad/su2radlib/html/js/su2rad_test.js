@@ -38,9 +38,9 @@ function test_getViewsListTest() {
 
 function test_getMaterialsLists () {
     var rad = test_getRadMaterialData();
-    setMaterialsListJSON(encodeJSON(rad),'rad');
+    setMaterialsListJSON(su2rad.utils.encodeJSON(rad),'rad');
     var skm = test_getSkmMaterialData();
-    setMaterialsListJSON(encodeJSON(skm),'skm');
+    setMaterialsListJSON(su2rad.utils.encodeJSON(skm),'skm');
     // TODO: Layers
 }
 

@@ -504,7 +504,7 @@ function getRpictOptionSpansBool() {
 
 function setRenderOptionsJSON(text) {
     //log.debug("setRenderOptionsJSON()")
-    var json = decodeJSON(text);
+    var json = su2rad.utils.decodeJSON(text);
     try {
         eval("var renderOpts = " + json);
     } catch (e) {

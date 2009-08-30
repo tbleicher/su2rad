@@ -34,7 +34,7 @@ function getExportOptions() {
         // setExportOptionsJSON() called by Sketchup
     } else {
         var json = test_getExportOptions();
-        setExportOptionsJSON( encodeJSON(json) );
+        setExportOptionsJSON( su2rad.utils.encodeJSON(json) );
     }
 }
 
@@ -47,12 +47,12 @@ function getSkySettings() {
     } else {
         log.debug("using dummy backend.getSkySettings()");
         var json = test_getSkySettings();
-        setShadowInfoJSON( encodeJSON(json) );
+        setShadowInfoJSON( su2rad.utils.encodeJSON(json) );
     }
 }
 
 function applyExportOptions() {
-    var param = exportSettings.toString();
+    var param = su2rad.exportSettings.toString();
     if (su2rad.SKETCHUP == true) {
         // log.debug("applyExportOptions:<br/>" + param.replace(/&/g,"<br/>") );
         window.location = 'skp:applyExportOptions@' + param;
@@ -77,8 +77,8 @@ function applyRenderOptions() {
 
 function setViewJSON(name,text) {
     //log.error("DEBUG: setViewJSON: '" + name + "'<br/>" + text);
-    var viewname = decodeJSON(name);
-    var json = decodeJSON(text);
+    var viewname = su2rad.utils.decodeJSON(name);
+    var json = su2rad.utils.decodeJSON(text);
     var obj = {};
     try {
         eval("obj = " + json);
@@ -93,7 +93,7 @@ function setViewJSON(name,text) {
 
 function setViewsListJSON(text) {
     // eval JSON views string from SketchUp
-    var json = decodeJSON(text);
+    var json = su2rad.utils.decodeJSON(text);
     //log.debug("setViewsListJSON=<br/>" + json.replace(/,/g,',<br/>'));
     var newViews = new Array();
     try {
@@ -115,7 +115,7 @@ function getViewsList() {
     } else {
         log.debug("using dummy backend.getViewsList()");
         var msg = test_getViewsListTest();
-        setViewsListJSON( encodeJSON(msg) );
+        setViewsListJSON( su2rad.utils.encodeJSON(msg) );
     }    
 }
 
@@ -181,7 +181,7 @@ function skpSetMaterialAlias(skmname, radname, mtype) {
 
 function setMaterialsListJSON(text, type) {
     try {
-        var json = decodeJSON(text);
+        var json = su2rad.utils.decodeJSON(text);
         //log.error("TEST: setMaterialsListJSON=<br/>json.length=" + json.length);
         var newMats = new Array();
         try {

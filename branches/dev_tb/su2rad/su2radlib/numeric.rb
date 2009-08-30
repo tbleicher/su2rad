@@ -46,7 +46,7 @@ class NumericImportDialog < ExportBase
         dlg.set_file(html, nil)
         $SU2RAD_DIALOG_WINDOW = dlg
         dlg.show {
-            dlg.execute_script("setSketchup()")
+            dlg.execute_script("su2rad.dialog.setSketchup()")
         }
     end
 
@@ -97,7 +97,7 @@ class NumericImportDialog < ExportBase
             text = f.read()
             text = urlEncode(text)
         end
-        dlg.execute_script("loadFileCallback('%s')" % text)
+        dlg.execute_script("su2rad.dialog.loadFileCallback('%s')" % text)
     end
 
 end 
