@@ -28,8 +28,9 @@ $SU2RAD_VERSION = "$Rev$" #XXX
 # revisions:
 # ===========
 #
-# current: $Rev::$      $:  $Date$
-#                           by $Author$
+# current                :  $Rev$
+#                           $Date::                     $
+#                           $Author$
 #
 # branch 1.0:
 # -----------

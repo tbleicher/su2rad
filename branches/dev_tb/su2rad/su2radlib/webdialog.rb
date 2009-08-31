@@ -139,24 +139,25 @@ class ExportDialogWeb < ExportBase
         html = File.join(File.dirname(__FILE__), "html","su2rad_export.html")
         dlg.set_file(html, nil)
         
-        ## add option for RadSunpath
-        begin
-            radsunpath = RadSunpath.getProgramPath()
-            #XXX add radsunpath option to dialog options
-        rescue NameError
-            uimessage("Module 'RadSunpath' not loaded.", 1)
-        end
-        
         ## show dialog
         $SU2RAD_DIALOG_WINDOW = dlg
         dlg.show {
             uimessage("su2rad.dialog.setSketchup()", 2)
             dlg.execute_script("su2rad.dialog.setSketchup()")
+            begin
+                radsunpath = RadSunpath.getProgramPath()
+                if radsunpath
+                    dlg.execute_script("document.getElementById('showRadSunpath').style.display='';")
+                end
+            rescue NameError
+                uimessage("Module 'RadSunpath' not loaded.", 1)
+            end
             @exportOptions.setExportOptions(dlg, '')
             @renderOptions.setRenderOptions(dlg, '')
             @viewsList.setViewsList(dlg, '')
             @skyOptions.setSkyOptions(dlg, '')
             @materialLists.setLists(dlg)
+            ## add option for RadSunpath
             dlg.execute_script("updateExportPage()")
         }
     end ## end def show
@@ -176,21 +177,18 @@ class ExportDialogWeb < ExportBase
     end
     
     def startRadSunpath
-        printf "RADSUNPATH start()\n"
         rsp = ""
-        #begin
-        rsp = RadSunpath.getProgramPath()
-        printf "RADSUNPATH rsp='#{rsp}'\n"
-        if rsp
-            scenefile = File.join(getConfig('SCENEPATH'), getConfig('SCENENAME')) + '.rif'
-            printf "RADSUNPATH scenefile='#{scenefile}'\n"
-            RadSunpath.start_rsp(scenefile)
-        else
-            uimessage("No executable for RadSunpath found!", -2)
+        begin
+            rsp = RadSunpath.getProgramPath()
+            printf "RADSUNPATH rsp='#{rsp}'\n"
+            if rsp
+                RadSunpath.start_rsp(getConfig('SCENEPATH'))
+            else
+                uimessage("No executable for RadSunpath found!", -2)
+            end
+        rescue NameError
+            uimessage("Module 'RadSunpath' not loaded.", -2)
         end
-        #rescue NameError
-        #    uimessage("Module 'RadSunpath' not loaded.", -2)
-        #end
     end
     
     def showFinalStatus(status)
