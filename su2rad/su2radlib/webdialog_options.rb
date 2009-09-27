@@ -89,7 +89,7 @@ class ExportOptions
         
         if @exportMode == 'daysim'
             @textures = false
-            dlg.execute_script("hideExportOption(\"textures\")")
+            dlg.execute_script("su2rad.dialog.hideExportOption('textures')")
         end      
     end
     

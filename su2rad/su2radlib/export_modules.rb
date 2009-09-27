@@ -369,7 +369,7 @@ module RadiancePath
             elsif ENV.has_key?('USERPROFILE')
                 path = ENV['USERPROFILE']
             elsif ENV.has_key?('HOMEPATH')
-                ## home path missing drive letter!?
+                ## HOMEPATH missing drive letter!?
                 path = ENV['HOMEPATH']
             elsif ENV.has_key?('TEMP')
                 path = ENV['TEMP']

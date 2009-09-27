@@ -523,7 +523,7 @@ function setRenderOptionsJSON(text) {
     updateRenderFormValues();
     updateRpictValues();
     updateRenderLine();
-    setStatusMsg(text);
+    su2rad.dialog.setStatusMsg(text);
 }
 
 function syncRadOption(id) {

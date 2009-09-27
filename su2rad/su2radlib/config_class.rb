@@ -12,8 +12,13 @@ class RunTimeConfig
         'EXPORTALLVIEWS' => false,
 
         'LOGLEVEL'       => 2,
-        'UNIT'           => 0.0254,
+        'USEWX'          => false,
+
         'UTC_OFFSET'     => nil,
+        
+        'UNIT'           => 0.0254,
+        'GRIDSPACINGX'   => 0.25,    ## assumes meters!
+        'GRIDSPACINGY'   => 0.25,    ## assumes meters!
 
         ## path template
         'PATHTMPL'  => '$FILE/radiance/$PAGE.rif',

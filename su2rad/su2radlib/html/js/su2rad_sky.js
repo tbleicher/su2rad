@@ -233,7 +233,7 @@ SkyDateTimeObject.prototype.setFromShadowTime_time_t = function (time_t) {
     text += "GMTstring=" + sdate.toGMTString() + "<br/>";
     text += "UTCstring=" + sdate.toUTCString() + "<br/>";
     text += "gensky=" + this.toGenskyString() + "<br/>";
-    setStatusMsg(text);
+    su2rad.dialog.setStatusMsg(text);
     */
 }
 
@@ -281,9 +281,8 @@ SkyDateTimeObject.prototype.toGenskyString = function () {
 
 
 
-
 function onGenskyInputChanged(opt) {
-    //log.debug("onGenskyInputChanged(opt='" + opt + "')");
+    // log.debug("onGenskyInputChanged(opt='" + opt + "')");
     var id = "genskyOptionInput" + opt;
     var val = document.getElementById(id).value;
     var v = parseFloat(val);
@@ -293,13 +292,13 @@ function onGenskyInputChanged(opt) {
     } else {
         skyOptions.setValue(opt, v);
     }
-    //document.getElementById('skyCommandLine').innerHTML = skyOptions.toString();
+    // document.getElementById('skyCommandLine').innerHTML = skyOptions.toString();
     updateSkyPage();
     applySkySettings();
 }
 
 function onGenskyOptionCB(opt) {
-    //log.debug("onGenskyOptionCB(opt='" + opt + "'");
+    // log.debug("onGenskyOptionCB(opt='" + opt + "'");
     try {
         var cbid = "genskyOptionCB_" + opt;
         var cb = document.getElementById(cbid);
@@ -403,7 +402,7 @@ function setSkyCmdLine() {
     var sky = modelLocation.toGenskyString();
     document.getElementById("skySummaryOptions").innerHTML = sky;
     document.getElementById("skyCommandLine").innerHTML = '<b>cmd:</b> ' + sky;
-    setStatusMsg(sky);
+    su2rad.dialog.setStatusMsg(sky);
 }
 
 function updateSkyDateTimeDisplay() {
@@ -508,15 +507,14 @@ function _updateGenskyOptionsDiv(opt) {
     }
 }
 
-function disableGenskyOverride(opt) {
-    log.debug("disableGenskyOverride('" + opt + "')");
-    enableGenskyOption(opt, false);
-}
-
-function enableGenskyOverride(opt) {
-    log.debug("enableGenskyOverride('" + opt + "')");
-    enableGenskyOption(opt, true);
-}
+// function disableGenskyOverride(opt) {
+//     log.debug("disableGenskyOverride('" + opt + "')");
+//     enableGenskyOption(opt, false);
+// }
+// function enableGenskyOverride(opt) {
+//     log.debug("enableGenskyOverride('" + opt + "')");
+//     enableGenskyOption(opt, true);
+// }
 
 function enableGenskyOption(opt, enable) {
     log.debug("enableGenskyOption(opt='" + opt + "'");

@@ -48,11 +48,11 @@ ExportSettingsObject.prototype.setMode = function(val) {
         this.global_coords = document.getElementById('global_coords').checked;
     } else if (value == 'by color') {
         this.global_coords = true;
-        showExportOption('textures'); 
+        su2rad.dialog.showExportOption('textures'); 
     } else {
         this.global_coords = true;
         this.textures = false;
-        hideExportOption('textures');
+        su2rad.dialog.hideExportOption('textures');
     }
 }
 
@@ -199,7 +199,7 @@ function onLoadSceneFile() {
 function loadSceneFile(text) {
     // loadTextFile callback to read scene (*.rif) files
     text = su2rad.utils.decodeText(text);
-    setStatusMsg("<b>file contents:</b><br/><code>" + text.replace(/\n/g,'<br/>') + "</code>");
+    su2rad.dialog.setStatusMsg("<b>file contents:</b><br/><code>" + text.replace(/\n/g,'<br/>') + "</code>");
     _loadSceneFile(text);
 }
 

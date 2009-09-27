@@ -14,7 +14,7 @@ function geonamesLookup(lat,long,zoom) {
     request = "http://ws.geonames.org/findNearbyJSON?lat=" + lat + "&lng=" + long + "&radius=" + radius + feature + "&style=full&callback=geonamesCallback";
     var text = "<b>geonames request in progress ...</b><br/><span style=\"font-size: small;\">";
     text += request + "</span>";
-    setStatusMsg(text);
+    su2rad.dialog.setStatusMsg(text);
     //document.body.style.cursor='wait';
     // Create a new script object
     aObj = new JSONscriptRequest(request);
@@ -62,7 +62,7 @@ function geonamesCallback(jData) {
         city = jData.geonames[minDistIdx];
         _setLocationFromGeonames(city);
         updateSkyPage()
-        setStatusMsg(text); 
+        su2rad.dialog.setStatusMsg(text); 
     } else {
         log.info("geonames: no locations found");
     }

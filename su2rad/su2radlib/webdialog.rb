@@ -206,6 +206,13 @@ class ExportDialogWeb < ExportBase
         dlg.show_modal { dlg.bring_to_front() }
     end
 
+    def testExport
+        #XXX @scene.setOptionsFromDialog(@exportOptions,@renderOptions,@skyOptions,@viewsList)
+        @scene.prepareExport()
+        status = @scene.startExportWeb()
+        printf "\nexport status: #{status}\n"
+    end
+    
 end ## end class exportDialogWeb
 
  

@@ -1,6 +1,7 @@
 require 'export_modules.rb'
-require "exportbase.rb"
-require "delauney_mod.rb"
+require 'radiance_entities.rb'
+require 'exportbase.rb'
+require 'delauney_mod.rb'
 require 'filesystemproxy.rb'
 
 
@@ -41,16 +42,29 @@ class NumericImportDialog < ExportBase
             $SU2RAD_DIALOG_WINDOW = nil
         }
         
+        exportdir = "."
+        latest = Su2Rad.getLatestExportPath()
+        latest = Sketchup.active_model.get_attribute('SU2RAD_EXPORTOPTIONS', 'latestExportPath')
+        if latest != nil
+            exportdir = File.join(File.dirname(latest), "numeric")
+            uimessage("exportdir='#{exportdir}'\n")
+            while not File.directory?(exportdir)
+                exportdir = File.dirname(exportdir)
+                uimessage("exportdir='#{exportdir}'\n")
+            end
+        end
         ## load html file and show dialog
         html = File.join(File.dirname(__FILE__), "html","importGrid.html")
         dlg.set_file(html, nil)
         $SU2RAD_DIALOG_WINDOW = dlg
         dlg.show {
             dlg.execute_script("su2rad.dialog.setSketchup()")
+            dlg.execute_script("su2rad.dialog.gridImport.directory='#{exportdir}'")
         }
     end
 
     def getDirectoryListing(dlg, dirpath)
+        printf "getDirectoryListing (#{dirpath})...\n"
         dirpath,root = dirpath.split('&')
         if root == 'true'
             dirs = FileSystemProxy.listDirectoryTree(dirpath)
@@ -62,6 +76,7 @@ class NumericImportDialog < ExportBase
     end
     
     def importFromWebDialog(dlg, opts)
+        printf "importFromWebDialog(#{opts})\n"
         ## get options from URL string
         optsDict = {'filename' => 'unknown'}
         items = opts.split('&')
@@ -70,18 +85,22 @@ class NumericImportDialog < ExportBase
             optsDict[k] = v
             uimessage("TEST option '#{k}' = '#{v}'", 2)
         }
-
-        ## try to get values, set options and create graph
         begin
-            values = dlg.get_element_value(optsDict['elementId'])
-            lines = values.split("\n")
-            ni = NumericImport.new()
-            if ni.setLines(lines) == true
-                ni.applyOptions(optsDict)
-                ni.createGraph()
+            if optsDict['allfiles'] == 'true'
+                dlg.close()
+                importDirectory(optsDict)
+            else
+                ## try to get values, set options and create graph
+                values = dlg.get_element_value(optsDict['elementId'])
+                lines = values.split("\n")
+                ni = NumericImport.new()
+                if ni.setLines(lines) == true
+                    ni.applyOptions(optsDict)
+                    ni.createGraph()
+                end
+                ## if successfull close the web dialog
+                dlg.close()
             end
-            ## if successfull close the web dialog
-            dlg.close()
         rescue => e
             msg = "Error importing graph:\n%s\n\n%s\n" % [$!.message,e.backtrace.join("\n")]
             uimessage(msg, -2)
@@ -90,7 +109,34 @@ class NumericImportDialog < ExportBase
         end
     end
     
+    def importDirectory(optsDict)
+        fields = []
+        dirpath,filename = File.split(optsDict['filename'])
+        if filename.rindex('.') != nil
+            ext = filename.slice(filename.rindex('.'), 10)
+            pattern = "#{dirpath}/*#{ext}"
+            uimessage("TEST glob='#{pattern}'", 2)
+            fields = Dir.glob(pattern)
+        end
+        fields = fields.slice(0,3)
+        fields.each { |f|
+            uimessage(" test1 f='#{f}'", 2)
+        }
+        fields.each_index { |idx|
+            f = fields[idx]
+            uimessage(" test2 f='#{f}'", 2)
+            ni = NumericImport.new(f)
+            ni.applyOptions(optsDict)
+            if idx != 0
+                ni.setLegendPosition('none')
+            end
+            ni.createGraph()
+            sleep 3
+        }
+    end
+    
     def loadTextFile(dlg, filepath)
+        printf "loadTextFile (filepath='#{filepath}')\n"
         text = ''
         if File.exists?(filepath)
             f = File.open(filepath, 'r')
@@ -107,6 +153,7 @@ end
 class NumericImport < ExportBase
     
     include Delauney
+    include NumericEntity
     
     if not $SU2RAD_LOG
         $SU2RAD_LOG = [] #XXX make singleton class instance
@@ -119,7 +166,7 @@ class NumericImport < ExportBase
         @index_value = 6    ## index of column of df/lux values
         @_labelSide = '+x'  ## display labels to the left (-x) or right (+x)
         @labelLeaderLength = 4
-        @colorStyle = 'roygbiv'
+        @colorStyle = 'roygbivXXX'
         @scalevalue = 1     ## scale of surface 'height' (e.g. 500lx/m)
         @zOffset = 0.0      ## config for offset of value scale
         @_clstep = 100.0
@@ -128,14 +175,14 @@ class NumericImport < ExportBase
         @doLabels = 'no'
         @labelText = ''
         @legendPos = 'right'
-        @lightness = 0.4    ## intensity of contour colors
+        @lightness = 0.0    ## intensity of contour colors
         
         @lines = []         ## raw lines in values file
         @maxvalue = 0.0     ## max in values
         @minvalue = 0.0     ## min in values
         
-        @surface = nil      ## group for graph entities
-        @legend = nil       ## group for legend entities
+        @surface = nil      ## SU group for graph entities
+        @legend = nil       ## SU group for legend entities
         @materials = []
         if filename != ''
             loadFile(filename)
@@ -160,13 +207,15 @@ class NumericImport < ExportBase
         @maxvalue = Float(opts['maxValue'])
         @_clstep  = (@maxvalue-@minvalue) / Integer(opts['steps'])
         uimessage("min=#{@minvalue} max=#{@maxvalue} @_clstep=#{@_clstep}")
-        
+        if opts['filename']
+            setFilename(opts['filename'])
+        end
+
         #XXX @doFalsecolor = dlg[1]
         #XXX @lightness = dlg[2].to_f
         #XXX @legendPos = dlg[3]
         #XXX @doLables = dlg[4]
         #XXX @labelText = dlg[5]
-        #XXX @filename
     end
     
     def addContourLines
@@ -218,7 +267,11 @@ class NumericImport < ExportBase
             z -= 0.01                   ## reduce z for idx rounding
             idx = Integer( (z/unit)/step )
             g = @surface.entities.add_group()
-            g.name = "%s_faces_%05d" % [@labelText, v] ## format with leading '0's for sorting
+            if step.to_i == step
+                g.name = "%s_faces_%05d" % [@labelText, v] ## format with leading '0's for sorting
+            else
+                g.name = "%s_faces_%09.3f" % [@labelText, v] ## format with leading '0's for sorting
+            end
             groupsHash["%02d" % idx] = g
         }
         
@@ -283,10 +336,23 @@ class NumericImport < ExportBase
         }
     end
 
-    def _getColorByValue(value)
-        if value == 0.0
-            return [0,0,0]
-        end
+    def _colorBRY(v)
+        r = Math.sin((v-0.4)*Math::PI     ) * 0.5 + 0.5
+        g = Math.sin(  (v-1)*Math::PI*0.7 ) * 1.0 + 1.0
+        b = Math.cos(      v*Math::PI     ) * 0.6
+        r = (r > 1.0) ? 255 : r*255
+        r = (r < 0.0) ?   0 : r
+        g = (g > 1.0) ? 255 : g*255
+        g = (g < 0.0) ?   0 : g
+        b = (b > 1.0) ? 255 : b*255
+        b = (b < 0.0) ?   0 : b
+        r = _lightenColor(r)
+        g = _lightenColor(g)
+        b = _lightenColor(b)
+        return [r,g,b]
+    end
+    
+    def _colorROYGBIV(value)
         ## add 0.5 at the top to get red, and limit bottom at x=1.7 to get purple
         if @colorStyle == 'roygbiv'
             shft = 0.5*value + 1.7*(1-value)
@@ -304,6 +370,18 @@ class NumericImport < ExportBase
         g = _lightenColor( ((Math.cos(x+Math::PI/2) + 1) * scale).floor )
         b = _lightenColor( ((Math.cos(x+Math::PI)   + 1) * scale).floor )
         return [r,g,b]
+    end
+    
+    def _getColorByValue(value)
+        if value == 0.0
+            return [0,0,0]
+        end
+        ## add 0.5 at the top to get red, and limit bottom at x=1.7 to get purple
+        if @colorStyle == 'roygbiv'
+            return _colorROYGBIV(value)
+        else
+            return _colorBRY(value)
+        end
     end
     
     def _lightenColor(num)
@@ -385,6 +463,7 @@ class NumericImport < ExportBase
     
     def setFilename(filename)
         @filename = filename
+        uimessage("filename='#{filename}'")
         if @filename.rindex('.')
             @labelText = @filename.slice(@filename.rindex('.')+1,@filename.length)
             @labelText.upcase!()
@@ -478,7 +557,7 @@ class NumericImport < ExportBase
             uimessage(msg, -2)
         end
     end
-    
+   
     def cleanLines
         newlines = []
         @lines.each { |l|
@@ -578,7 +657,16 @@ class NumericImport < ExportBase
             dz = v / @scalevalue
             points.push([x,y,z+dz])
         }
+        
+        ## create triangles (as indices to array 'points')
         tris = triangulate(points)
+        
+        name = getGroupName()
+        parentGroup = findGroupByName(name)
+        if parentGroup
+            tris = eliminateFillTriangles(parentGroup,tris,points)
+        end
+        
         suPoints = points.collect { |p| Geom::Point3d.new(p[0], p[1], p[2]) }
         mesh = Geom::PolygonMesh.new(points.length, tris.length)
         tris.each { |v|
@@ -587,13 +675,78 @@ class NumericImport < ExportBase
         scaletrans = Geom::Transformation.new(1/getConfig('UNIT'))
         mesh.transform!(scaletrans)
         uimessage("created mesh", 2) 
-        @surface = Sketchup.active_model.entities.add_group
+        
+        ## add to parent or create new group
+        if parentGroup
+            entities = parentGroup.entities
+            name = "#{name}_graph"
+            uimessage("applying transformation of '#{name}'", 2) 
+            ptrans = getGlobalTransformation(parentGroup) * parentGroup.transformation
+            ptrans = ptrans.invert!()
+            mesh = mesh.transform!(ptrans)
+        else
+            entities = Sketchup.active_model.entities
+        end
+        @surface = entities.add_group
         @surface.entities.add_faces_from_mesh(mesh)
-        name = remove_spaces(File.basename(@filename))
         @surface.name = name
         uimessage("added surface group '#{name}' to scene", 2) 
     end
+
+    def getGroupName
+        fname = File.basename(@filename)
+        if fname.rindex('.')
+            fname = fname.slice(0,fname.rindex('.'))
+        end
+        return remove_spaces(fname)
+    end 
+    
+    def findGroupByName(name)
+        uimessage("searching for existing group '#{name}'", 2)
+        Sketchup.active_model.definitions.each { |d|
+            d.instances.each { |i|
+                if i.name == name
+                    uimessage(" => found group '#{name}'", 2)
+                    return i
+                end
+            }
+        }
+    end
+    
+    def eliminateFillTriangles(parent,triangles,points)
+        ## convert meshes to arrays of polygon vertices
+        meshes = getNumericMeshes(parent)
+        polys = []
+        meshes.each { |mesh|
+            mesh.polygons.each { |p|
+                vertices = [0,1,2].collect { |i| mesh.point_at( p[i].abs() ) }
+                polys.push(vertices)
+            }    
+        }
         
+        ## filter triangles (arrays of indices) by centre point
+        unit = getConfig('UNIT')
+        newTris = []
+        triangles.each { |t|
+            p1 = points[t[0]]
+            p2 = points[t[1]]
+            p3 = points[t[2]]
+            x = (p1[0] + p2[0] + p3[0]) / (3.0*unit)
+            y = (p1[1] + p2[1] + p3[1]) / (3.0*unit)
+            z = (p1[2] + p2[2] + p3[2]) / (3.0*unit)
+            polys.each { |verts|
+                pt = Geom::Point3d.new(x,y,z)
+                if Geom::point_in_polygon_2D(pt, verts, true)
+                    newTris.push(t)
+                    break
+                end
+            }
+        }
+        n = triangles.length - newTris.length
+        uimessage("removed #{n} fill triangles", 2)
+        return newTris
+    end
+    
     def createLegend()
         if @surface == nil or @materials == []
             return
@@ -688,6 +841,10 @@ class NumericImport < ExportBase
             h = dy
         end
         return x,y,w,h,dx,dy
+    end
+    
+    def setLegendPosition(pos)
+        @legendPos = pos
     end
     
     def showWebDialog()

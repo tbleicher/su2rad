@@ -59,7 +59,7 @@ function applyExportOptions() {
     } else {
         log.debug("using dummy backend.applyExportOptions()");
         param = param.replace(/&/g,"<br/>");
-        setStatusMsg("applyExportOptions:<br/>" + param);
+        su2rad.dialog.setStatusMsg("applyExportOptions:<br/>" + param);
     }
 }
 
@@ -71,7 +71,7 @@ function applyRenderOptions() {
     } else {
         log.debug("using dummy backend.applyRenderOptions()");
         param = param.replace(/&/g,"<br/>");
-        setStatusMsg("applyRenderOptions:<br/>" + param);
+        su2rad.dialog.setStatusMsg("applyRenderOptions:<br/>" + param);
     }
 }
 

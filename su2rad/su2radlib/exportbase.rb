@@ -5,6 +5,7 @@ require 'radiance.rb'
 
 
 class ProgressDialogDummy
+    
     def initialize(msg, status, cancel=false)
         print "ProgressDialogDummy.new()"
     end
@@ -19,6 +20,8 @@ end
 
 
 class ProgressCounter
+    
+    include InterfaceBase
     
     def initialize
         @progressDialog = nil
@@ -46,14 +49,18 @@ class ProgressCounter
     
     def countEntities(entities)
         if @progressDialog == nil
-            begin
-                load 'ProgressDialog.rb'
-                #XXX enable cancel option after it's implemented in the export loop
-                #@progressDialog = ProgressDialog.new("export progress", "preparing export", true)
-                @progressDialog = ProgressDialog.new("export progress", "preparing export", false)
-            rescue LoadError
+            if getConfig('USEWX') == true
+                begin
+                    load 'ProgressDialog.rb'
+                    #XXX enable cancel option after it's implemented in the export loop
+                    #@progressDialog = ProgressDialog.new("export progress", "preparing export", true)
+                    @progressDialog = ProgressDialog.new("export progress", "preparing export", false)
+                rescue LoadError
+                    @progressDialog = ProgressDialogDummy.new("export progress", "preparing export", false)
+                    printf "could not load progress dialog"
+                end
+            else
                 @progressDialog = ProgressDialogDummy.new("export progress", "preparing export", false)
-                printf "could not load progress dialog"
             end
         else
             @progressDialog.update_progress(1, "export progress", "preparing export")
@@ -295,8 +302,8 @@ class ExportBase
         faces.each_index { |i|
             f = faces[i]
             rp = RadiancePolygon.new(f)
-            if rp.isNumeric?
-                numpoints += rp.getNumericPoints()
+            if rp.isNumeric?(f)
+                numpoints += rp.getNumericPoints(f)
             elsif makeGlobal?()
                 faces_text += rp.getText(parenttrans)
             else
@@ -358,6 +365,14 @@ class ExportBase
         ["octrees", "images", "logfiles", "ambfiles"].each { |subdir|
             createDirectory(File.join(scene_dir,subdir))
         }
+        scriptsdir = File.join(File.dirname(__FILE__), "scripts")
+        if File.directory?(scriptsdir)
+            cmd = "cp -r '#{scriptsdir}' '#{scene_dir}'"
+            printf "scriptsdir cmd='#{cmd}'\n"
+            if not system(cmd)
+                printf "Error: '#{$?}'\n"
+            end
+        end
     end 
     
     def isMirror(trans)
@@ -409,6 +424,31 @@ class ExportBase
         return parenttrans
     end
     
+    def createNumericEdgeFile(edges)
+        name = @@nameContext[-1]
+        filename = getFilename("numeric/#{name}.edges")
+        uimessage("TODO: create numeric edge file #{filename}")
+        if FileTest.exists?(filename)
+            uimessage("updating edge file '%s'" % filename)
+            f = File.new(filename)
+            txt = f.read()
+            f.close()
+            oldedges = txt.split("\n")
+            edges += oldedges
+        end
+        ## delete edges between faces
+        edgecnt = Hash.new(0)
+        edges.each { |e| edgecnt[e] += 1 }
+        unique_edges = edgecnt.keys().collect { |e| egdecnt[e] == 1 }
+        ## save to file
+        text = unique_edges.join("\n")
+        if not createFile(filename, text)
+            uimessage("Error: Could not create numeric edge file '#{filename}'")
+        else
+            uimessage("Created numeric edge file '%s' (%d edges)" % [filename, unique_edges.length])
+        end
+    end
+    
     def createNumericFile(points)
         ## write points to file in a save way; if file exists merge points
         name = @@nameContext[-1]
@@ -428,6 +468,7 @@ class ExportBase
             uimessage("Error: Could not create numeric file '#{filename}'")
         else
             uimessage("Created field '%s' (%d points)" % [filename, points.length])
+            #createNumericEdgeFile(edges)
         end
     end
 
