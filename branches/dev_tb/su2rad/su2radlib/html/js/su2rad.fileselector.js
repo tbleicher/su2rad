@@ -9,6 +9,7 @@ fileSelector.callback = function (path) {
 }
 
 fileSelector.applyPath = function () {
+    log.debug("applyPath()")
     this.callback(this._filePath);
 }
 
@@ -23,7 +24,9 @@ fileSelector.close = function () {
 
 fileSelector.select = function () {
     log.debug("fileSelectorWindow.select() ...");
+    log.debug("fileSelector._filePath='" + fileSelector._filePath +  "'");
     $('#fileSelectorWindow').jqmHide();
+    log.debug("after jqmHide()")
     if (fileSelector._filePath != "") {
         fileSelector.applyPath();
     }
@@ -31,7 +34,10 @@ fileSelector.select = function () {
 
 fileSelector.show = function(ftRoot) {
     try {
-        log.debug("fileSelectorWindow.show() ...");
+        //if ( ! ftRoot ) {
+        //    ftRoot = su2rad.dialog.getDefaultDirectory();
+        //}
+        log.debug("fileSelectorWindow.show(ftRoot='" + ftRoot + "')");
         fileSelector._filePath = "";    // reset to empty string
         
         //log.debug("fileSelector root='" + ftRoot + "'");

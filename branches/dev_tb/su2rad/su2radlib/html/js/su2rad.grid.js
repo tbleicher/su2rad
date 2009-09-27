@@ -220,6 +220,26 @@ su2rad.grid.GridArray.prototype.analyzeGrid = function () {
     this.sortArray();
 }
 
+su2rad.grid.GridArray.prototype.makeConvex = function() {
+    if (this.triangles.length == 0) {
+        return
+    }
+    //log.debug("makeConvex: triangles start=" + this.triangles.length)
+    newtris = []
+    ltris = []
+    r2 = 0.25*0.25
+    for (var i=0; i<this.triangles.length; i+=1) {
+        var tri = this.triangles[i];
+        if (tri.radius_squared > r2) {
+            ltris.push(tri)
+        } else {
+            newtris.push(tri)
+        }
+    }
+    log.debug("makeConvex: removed " + ltris.length + " of " + this.triangles.length + " triangles")
+    this.triangles = newtris;
+}
+
 su2rad.grid.GridArray.prototype.setDataTypeIndex = function (idx) {
     this.values = [];
     for (var i=0; i<this.rows.length; i+=1) {

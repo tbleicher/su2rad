@@ -150,7 +150,7 @@ function onClickCity(city, country, lat, lng) {
     modelLocation.setValue('Latitude', lat);
     modelLocation.setValue('Longitude', lng);
     googleMapSetCenter(parseFloat(lat),parseFloat(lng),11);
-    setStatusMsg('');
+    su2rad.dialog.setStatusMsg('');
     updateSkyPage();
     applySkySettings();
 }
@@ -264,7 +264,7 @@ function _getShadowInfoArrayFromJSON(text) {
         eval("var array = " + json);
     } catch (e) {
         logError(e);
-        setStatusMsg("error in shadow_info array: " + e.name + "<br/>" + json);
+        su2rad.dialog.setStatusMsg("error in shadow_info array: " + e.name + "<br/>" + json);
         return
         var array = new Array();
     }
@@ -289,7 +289,7 @@ function setShadowInfoJSON(msg) {
     modelLocation.changed = false;
     modelLocation.logging = true;
     clearTZWarning();
-    setStatusMsg(text);
+    su2rad.dialog.setStatusMsg(text);
     skyOptions.parseSkyCommand(modelLocation.SkyCommand);
     skyDateTime.setFromShadowTime_time_t(modelLocation.ShadowTime_time_t);
     googleMapInitialize(modelLocation.Latitude, modelLocation.Longitude);

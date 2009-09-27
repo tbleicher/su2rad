@@ -71,6 +71,7 @@ code {
     padding-top: 11px;
     height: 36px;
     max-width: 620px;
+    border: 1px solid red;
     background: url(gradient.png) repeat-x;
 }
 #mainButtonRow input[type=button] {

@@ -9,9 +9,11 @@ su2rad.dialog = su2rad.dialog ? su2rad.dialog : new Object()
 
 su2rad.dialog.gridImport = function () {
     this.gCanvas = null;
+    this.directory = "."
+    this.filename = ""
 }
 
-su2rad.dialog.gridImport.su2rad.dialog.evaluateSketchup = function () {
+su2rad.dialog.evaluateSketchup = function () {
     log.debug("su2rad.dialog.evaluateSketchup() su2rad.SKETCHUP='" + su2rad.SKETCHUP + "'")
     
     // show warning/simulate and hide file load buttons by default
@@ -52,12 +54,18 @@ su2rad.dialog.gridImport.initPage = function () {
     document.getElementById("messagearea").value = '';
     this.gCanvas = new su2rad.canvas.GridCanvas;
     this.gCanvas.setCanvasId('cv');
-    this.su2rad.dialog.evaluateSketchup(); 
+    su2rad.dialog.evaluateSketchup(); 
     this.updateUI();
     //log.debug("gCanvas=" + this.gCanvas)
 }
 
-su2rad.dialog.gridImport.importGraphToSketchup = function () {
+su2rad.dialog.gridImport.makeConvex = function () {
+    this.gCanvas.array.makeConvex();
+    this.gCanvas.draw();
+    this.updateUI();
+}
+
+su2rad.dialog.gridImport.importGraphToSketchup = function (allfiles) {
     //log.debug("DEBUG: importGraphToSketchup")
     if (this.gCanvas.array == null || this.gCanvas.array.empty() == true) {
         log.info("nothing to import")
@@ -68,7 +76,9 @@ su2rad.dialog.gridImport.importGraphToSketchup = function () {
     txt  = 'maxValue='  + opts.maxValue.toFixed(2) + '&'
     txt += 'minValue='  + opts.minValue.toFixed(2) + '&'
     txt += 'steps='     + opts.steps.toFixed() + '&'
-    txt += 'elementId=' + opts.elementId 
+    txt += 'elementId=' + opts.elementId + '&' 
+    txt += 'filename='  + escape(this.filename) + '&'
+    txt += 'allfiles='  + allfiles
     if (su2rad.SKETCHUP == true) {
         window.location = 'skp:importFromWebDialog@' + txt;
     }
@@ -92,11 +102,13 @@ su2rad.dialog.gridImport.loadFileIDOM = function () {
 
 su2rad.dialog.gridImport.loadFileSU = function () {
     // function to be called with encoded text from SU
-    loadFileCallback = this._loadFileSU
+    su2rad.dialog.loadFileCallback = this._loadFileSU
     // function to be called with fielpath in JS
-    fileSelector.callback = loadTextFile; 
+    log.debug("DEBUG: laodFileSU")
+    log.debug("this.directory='" + this.directory + "'")
+    fileSelector.callback = su2rad.dialog.loadTextFile; 
     try {
-        fileSelector.show()
+        fileSelector.show(this.directory)
     } catch (e) {
         logError(e)
     }
@@ -123,7 +135,46 @@ su2rad.dialog.gridImport.onResizeCanvas = function () {
     this.gCanvas.draw()
 }
                 
+su2rad.dialog.gridImport._setTitleFromFilename = function (filename) {
+    // set new title
+    var title = document.getElementById("pageTitle")
+    while (title.hasChildNodes() == true) {
+        title.removeChild(title.firstChild)
+    }
+    var txt = document.createTextNode("file: " + filename);
+    title.appendChild(txt);
+    // extract extension for label
+    var ridx = filename.lastIndexOf('.');
+    if (ridx != -1) {
+        var ext = filename.slice(ridx+1, filename.length);
+        if ( ext != '') {
+            ext = ext.toUpperCase();
+            if ( ext == 'DA') {
+                var comments = gArray.getCommentLines();
+                if (comments != []) {
+                    try {
+                        var line1 = comments[0]
+                        ext = line1.split(' ')[4];
+                        ext = ext.replace(/_/g, " ");
+                        ext = ext.replace(/,/g, "");
+                    } catch(e) {
+                        logError(e)
+                    }
+                }
+                ext = "% " + ext; 
+            } else if (ext == 'ADF' || ext == 'DF' ) {
+                ext = "% " + ext;
+            }
+            document.getElementById("legendLabelInput").value = ext;
+            this.gCanvas.setLegendLabel(ext);
+        }
+    } else {
+        this.gCanvas.setLegendLabel('');
+    }
+}
+
 su2rad.dialog.gridImport.parseFileText = function (text, filename) {
+    log.debug("parseFileText(filename='" + filename + "')")
     var gArray = new su2rad.grid.GridArray();
     gArray.parseText(text);
     if (gArray.empty() == false) {
@@ -131,41 +182,8 @@ su2rad.dialog.gridImport.parseFileText = function (text, filename) {
         document.getElementById('textfilecontent').value = text;
         this.setGridArray(gArray);
         if (filename != null) {
-            // set new title
-            var title = document.getElementById("pageTitle")
-            while (title.hasChildNodes() == true) {
-                title.removeChild(title.firstChild)
-            }
-            var txt = document.createTextNode("file: " + filename);
-            title.appendChild(txt);
-            // extract extension for label
-            var ridx = filename.lastIndexOf('.');
-            if (ridx != -1) {
-                var ext = filename.slice(ridx+1, filename.length);
-                if ( ext != '') {
-                    ext = ext.toUpperCase();
-                    if ( ext == 'DA') {
-                        var comments = gArray.getCommentLines();
-                        if (comments != []) {
-                            try {
-                                var line1 = comments[0]
-                                ext = line1.split(' ')[4];
-                                ext = ext.replace(/_/g, " ");
-                                ext = ext.replace(/,/g, "");
-                            } catch(e) {
-                                logError(e)
-                            }
-                        }
-                        ext = "% " + ext; 
-                    } else if (ext == 'ADF' || ext == 'DF' ) {
-                        ext = "% " + ext;
-                    }
-                    document.getElementById("legendLabelInput").value = ext;
-                    this.gCanvas.setLegendLabel(ext);
-                }
-            } else {
-                this.gCanvas.setLegendLabel('');
-            }
+            this._setTitleFromFilename(filename)
+            this.filename = filename
         }
     } else {
         // TODO: disable import button

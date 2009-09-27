@@ -275,7 +275,7 @@ function _clearAliasSkm(listId) {
     var element = _currentSUMaterialList.getMaterial(listId);
     var msg = "removing alias for material '" + element.nameHTML + "' ('" + element.alias + ")";
     log.info(msg);
-    setStatusMsg(msg);
+    su2rad.dialog.setStatusMsg(msg);
     element.alias = '';
     document.getElementById(listId).innerHTML = element.nameHTML
     if (radMaterialsList.getMaterial(element.nameRad, true)) {
@@ -379,7 +379,7 @@ function setAlias(skmId, radId) {
         var rad = radMaterialsList.getMaterial(radId);
         var msg = "material '" + skm.nameHTML + "' aliased to '" + rad.nameHTML + "'";
         log.info(msg);
-        setStatusMsg(msg);
+        su2rad.dialog.setStatusMsg(msg);
     } catch (e) {
         log.error("Error setAlias(): '" + e + "'");
     }

@@ -37,8 +37,8 @@ var su2rad = su2rad ? su2rad : new Object();
 su2rad.canvas = su2rad.canvas ? su2rad.canvas : new Object();
 
 su2rad.canvas.ColorGradient = function () {
-    this.colorStyle = 'roygbiv';
-    this.lightness = 0.4;
+    this.colorStyle = 'roygbivXXX'; //XXX
+    this.lightness = 0.0;
     this.maxValue = 1.0;
     this.minValue = 0.0;
 }
@@ -52,6 +52,33 @@ su2rad.canvas.ColorGradient.prototype.getColorByValue = function (value, lightne
     // value between 1 and 0
     var position = (value - this.minValue) / (this.maxValue - this.minValue); 
     // this adds 0.5 at the top to get red, and limits the bottom at x= 1.7 to get purple
+    if (this.colorStyle == 'roygbiv') {
+        var rgb = this._roygbiv(position)
+    } else {
+        var rgb = this._bry(position)
+    }
+    // apply lightness to rgb components 
+    var r = this.process( rgb[0], lightness );
+    var g = this.process( rgb[1], lightness );
+    var b = this.process( rgb[2], lightness );
+    return '#' + r + g + b;
+}    
+
+su2rad.canvas.ColorGradient.prototype._bry = function (v) {
+    var r = Math.sin((v-0.4)*Math.PI     ) * 0.5 + 0.5;
+    //var g = Math.sin(  (v-1)*Math.PI*0.7) * 1.05 + 1;
+    var g = Math.sin(  (v-1)*Math.PI*0.7 ) * 1.0 + 1.0;
+    var b = Math.cos(      v*Math.PI     ) * 0.6;
+    r = (r > 1.0) ? 255 : r*255;
+    r = (r < 0.0) ?   0 : r;
+    g = (g > 1.0) ? 255 : g*255;
+    g = (g < 0.0) ?   0 : g;
+    b = (b > 1.0) ? 255 : b*255;
+    b = (b < 0.0) ?   0 : b;
+    return [r,g,b]
+}
+
+su2rad.canvas.ColorGradient.prototype._roygbiv = function (position) {
     var shft = this.colorStyle == 'roygbiv'
             ? 0.5*position + 1.7*(1-position)
             : position + 0.2 + 5.5*(1-position);
@@ -62,23 +89,24 @@ su2rad.canvas.ColorGradient.prototype.getColorByValue = function (value, lightne
     var period = 2*Math.PI;
     // x is place along x axis of cosine wave
     var x = shft + position * period;
-    var r = this.process( Math.floor((Math.cos(x)           + 1) * scale), lightness );
-    var g = this.process( Math.floor((Math.cos(x+Math.PI/2) + 1) * scale), lightness );
-    var b = this.process( Math.floor((Math.cos(x+Math.PI)   + 1) * scale), lightness );
-    return '#' + r + g + b;
+    var r = Math.floor((Math.cos(x)           + 1) * scale);
+    var g = Math.floor((Math.cos(x+Math.PI/2) + 1) * scale);
+    var b = Math.floor((Math.cos(x+Math.PI)   + 1) * scale);
+    return [r,g,b]
 }
 
 su2rad.canvas.ColorGradient.prototype.process = function (num, lightness) {
-        if (lightness ==  null) {
-            lightness = this.lightness;
-        }
-        // adjust lightness
-        var n = Math.floor( num + lightness * (256 - num));
-        // turn to hex
-        var s = n.toString(16);
-        // if no first char, prepend 0
-        s = s.length == 1 ? '0' + s : s;
-        return s;		
+    // convert value from 0 to 255 to hex
+    if (lightness ==  null) {
+        lightness = this.lightness;
+    }
+    // adjust lightness
+    var n = Math.floor( num + lightness * (256 - num));
+    // turn to hex
+    var s = n.toString(16);
+    // if no first char, prepend 0
+    s = s.length == 1 ? '0' + s : s;
+    return s;		
 }
 
 su2rad.canvas.ColorGradient.prototype.setLightness = function (v) {
@@ -523,8 +551,35 @@ su2rad.canvas.GridCanvas.prototype._drawRulerY = function (ctx) {
     ctx.restore()    
 }
 
+su2rad.canvas.GridCanvas.prototype.getCoords = function (x,y) {
+    //this.setOrigin(ctx)
+    log.debug("getCoords  1: " + x + "'" + y)
+    var frame = this.getFrameCoords("center");
+    //var ox = frame[0];
+    //var oy = frame[1]+frame[3];
+    x -= frame[0]
+    y -= (frame[1]+frame[3])
+    log.debug("getCoords  2: " + x + "'" + y)
+    
+    //ctx.scale(this.canvasscale, -1*this.canvasscale);               // scale to size and mirror y (up=positive)
+    x *= this.canvasscale
+    y *= this.canvasscale*-1
+    log.debug("getCoords  3: " + x + "'" + y)
+    
+    //ctx.translate(this.gridstep/2,this.gridstep/2)                  // translate by half a tile
+    x += this.gridstep/2
+    y += this.gridstep/2
+    log.debug("getCoords  4: " + x + "'" + y)
+    
+    //ctx.translate(-1*this.array.bbox[0],-1*this.array.bbox[2]);     // set origin to match first tile at lower left
+    x -= this.array.bbox[0]
+    y += this.array.bbox[2]
+    log.debug("getCoords  5: " + x + "'" + y)
+    
+    
+}
+
 su2rad.canvas.GridCanvas.prototype.getLegendOptions = function () {
-    try {
     var opts = {}
     opts.maxValue = this.gradient.maxValue;
     opts.minValue = this.gradient.minValue;
@@ -532,9 +587,6 @@ su2rad.canvas.GridCanvas.prototype.getLegendOptions = function () {
     opts.label = this.legendLabel;
     opts.lightness = this.gradient.lightness;
     return opts
-    } catch (e) {
-        logError(e)
-    }
 }
 
 su2rad.canvas.GridCanvas.prototype.setArray = function (array) {
@@ -546,19 +598,21 @@ su2rad.canvas.GridCanvas.prototype.setArray = function (array) {
 
 su2rad.canvas.GridCanvas.prototype.setCanvas = function (canvas) {
     this.canvas = canvas;
-                                                                            
 }
 
 su2rad.canvas.GridCanvas.prototype.setCanvasId = function (canvasid) {
-    this.setCanvas(document.getElementById(canvasid));
+    var canvas = document.getElementById(canvasid);
+    this.setCanvas(canvas)
     try {
         $("#" + canvasid).click( function(e) {
+            
             /* e will give us absolute x, y so we need to
             calculate relative to canvas position */
             var pos = $('#canvasContainer').position();
             var ox = e.pageX - pos.left;
             var oy = e.pageY - (pos.top+1);
-            //log.debug("click coordinates: ox=" + ox + " oy=" + oy)
+            //this.getCoords(ox,oy)
+            log.debug("click coordinates: ox=" + ox + " oy=" + oy)
             return false;
         });
     } catch (err) {

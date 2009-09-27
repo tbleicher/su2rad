@@ -75,7 +75,7 @@ class MaterialContext < ExportBase
         if not createFile(filename, text)
             uimessage("ERROR creating material file '#{filename}'")
         end
-        printf "\n\n#{text}\n" #XXX
+        #printf "\n\n#{text}\n" #XXX
         @texturewriter = nil
         @textureHash = {}
     end

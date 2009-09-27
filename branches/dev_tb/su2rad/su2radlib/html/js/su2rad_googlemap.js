@@ -120,7 +120,7 @@ function googleMapInitialize(lat,long) {
         return;
     }
     log.debug("googleMapInitialize");
-    /* initialize map stuff */
+    // initialize map stuff 
     try {
         var isCompatible = GBrowserIsCompatible()
     } catch (e) {
@@ -139,7 +139,7 @@ function googleMapInitialize(lat,long) {
         map.addControl(new GMapTypeControl());
         map.setCenter(latlong, 7);
         
-        /* dragable marker icon */
+        // dragable marker icon 
         var icon = new GIcon();
         icon.image = "./css/mm_20_yellow.png";
         icon.shadow = "./css/mm_20_shadow.png";
@@ -164,7 +164,7 @@ function googleMapInitialize(lat,long) {
         // GEvent.addListener(marker, "dragend", googleMapCenterMarker);
         googleMapCenterMarker();
 
-        /* set marker on mouse click events */
+        // set marker on mouse click events 
         GEvent.addListener(map, "mousemove", function(currentPoint) {
             // store coords in global var lastPoint
             lastPoint = currentPoint;
@@ -176,7 +176,7 @@ function googleMapInitialize(lat,long) {
             map.setCenter(lastPoint, zoomlevel+2);
             //googleMapCenterMarker();
         });
-        /* set centre to current location coords */
+        // set centre to current location coords 
         // window.resizeBy(10,0);
     }
 }  
@@ -211,7 +211,7 @@ function googleMapLookup() {
 
 
 function _googleMapLookupLocation(location) {
-    log.info("googleMapLookup(): '" + location + "'");
+    // log.info("googleMapLookup(): '" + location + "'");
     var geocoder = new GClientGeocoder();
     geocoder.getLatLng(location, function(point) {
         if (!point) {
@@ -219,7 +219,7 @@ function _googleMapLookupLocation(location) {
             log.warn(msg);
             alert(msg);
         } else {
-            setStatusMsg('');  // clear near by cities list
+            su2rad.dialog.setStatusMsg('');  // clear near by cities list
             setLatLong(point.lat(),point.lng());
             googleMapEnable();
             googleMapInitialize(point.lat(),point.lng());

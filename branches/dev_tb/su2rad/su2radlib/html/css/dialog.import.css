@@ -32,7 +32,7 @@
     color: darkred;
 }
 
-#importToSketchup, #loadFileSU, #useEPWInSU, #weatherDataType {
+#importToSketchup, #importAllToSketchup, #loadFileSU, #useEPWInSU, #weatherDataType {
     width: 130px;
     margin: 0;
     margin-top: 5px;

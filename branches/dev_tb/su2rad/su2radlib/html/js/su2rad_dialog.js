@@ -19,14 +19,14 @@ su2rad.dialog.expFunc.onExport = function() {
             alert(e.toString())
         }
     } else {
-        showBusy()
+        su2rad.dialog.showBusy()
         log.warn('Sketchup not available; no export action');
         msg  = '{"status"  :"success"';
         msg += ',"messages":"0"';
         msg += ',"files"   :"31"';
         msg += ',"groups"  :"345"';
         msg += ',"faces"   :"45678"}';
-        showResults(su2rad.utils.encodeJSON(msg));
+        su2rad.dialog.showResults(su2rad.utils.encodeJSON(msg));
     }
 }
 
@@ -36,7 +36,7 @@ su2rad.dialog.expFunc.onCancel = function() {
                 //log.info("export canceled by user")
                 window.location = 'skp:onCancel@';
         } else {
-            hideProgressWindow();
+            su2rad.dialog.hideProgressWindow();
             document.body.innerHTML = "";
             //window.opener='x';
             window.close();
@@ -78,10 +78,37 @@ function loadTestData() {
     }
 }
 
-function hideProgressWindow() {
+su2rad.dialog.hideExportOption = function (opt) {
+    log.debug("disableExportOption('" + opt + "')")
+    try {
+        document.getElementById(opt).checked = false;
+        document.getElementById(opt).style.display='none';
+        var opt_label = opt.toString() + "_label";
+        document.getElementById("textures_label").className = 'optionLabelDisabled';
+        document.getElementById(opt_label).innerHTML = '<i>' + opt.toString() + ' disabled</i>';
+    } catch (e) {
+        log.error("Error in disableExportOption('" + opt + "')")
+        logError(e)
+    }
+}
+
+su2rad.dialog.hideProgressWindow = function () {
     try {
         $('#progressWindow').jqmHide();
     } catch (e) {
+        logError(e)
+    }
+}
+
+su2rad.dialog.showExportOption = function (opt) {
+    log.debug("su2rad.dialog.showExportOption('" + opt + "')")
+    try {
+        document.getElementById(opt).style.display='';
+        var opt_label = opt.toString() + "_label";
+        document.getElementById(opt_label).className = '';
+        document.getElementById(opt_label).innerHTML = ' ' + opt.toString();
+    } catch (e) {
+        log.error("Error in su2rad.dialog.showExportOption('" + opt + "')")
         logError(e)
     }
 }
@@ -99,36 +126,9 @@ function disableGlobalOption() {
 }
 
 
-function showExportOption(opt) {
-    log.debug("showExportOption('" + opt + "')")
-    try {
-        document.getElementById(opt).style.display='';
-        var opt_label = opt.toString() + "_label";
-        document.getElementById(opt_label).className = '';
-        document.getElementById(opt_label).innerHTML = ' ' + opt.toString();
-    } catch (e) {
-        log.error("Error in showExportOption('" + opt + "')")
-        logError(e)
-    }
-}
-
 function disableTextureOption() {
     document.getElementById("textures").checked = false;
     document.getElementById("global_coords_display").style.display='none';
-}
-
-function hideExportOption(opt) {
-    log.debug("disableExportOption('" + opt + "')")
-    try {
-        document.getElementById(opt).checked = false;
-        document.getElementById(opt).style.display='none';
-        var opt_label = opt.toString() + "_label";
-        document.getElementById("textures_label").className = 'optionLabelDisabled';
-        document.getElementById(opt_label).innerHTML = '<i>' + opt.toString() + ' disabled</i>';
-    } catch (e) {
-        log.error("Error in disableExportOption('" + opt + "')")
-        logError(e)
-    }
 }
 
 function toggleClimateTab() {
@@ -149,7 +149,7 @@ function setProgressMsg (msg) {
     document.getElementById("progressStatus").innerHTML = msg;
 }
 
-function setStatusMsg (msg) {
+su2rad.dialog.setStatusMsg = function (msg) {
     document.getElementById(_currentStatusDiv).innerHTML = msg;
 }
 
@@ -191,12 +191,12 @@ function setSelectionValue(id, value) {
 }
 
     
-function showBusy() {
+su2rad.dialog.showBusy = function () {
     log.error("TODO: showBusy()")
     showProgressWindow()
 }
 
-function JSON2HTML (obj, title, level) {
+su2rad.utils.JSON2HTML = function (obj, title, level) {
     // show JSON object with HTML markup
     if (level == null) {
         level = 3;
@@ -204,7 +204,7 @@ function JSON2HTML (obj, title, level) {
     var text = "<H"+level+">" + title + "</H"+level+">";
     if (obj.constructor.toString().match(/Array/i)) { 
         for (var i=0; i<obj.length; i++) {
-            text += JSON2HTML(obj[i], "element "+i, level+1);
+            text += su2rad.utils.JSON2HTML(obj[i], "element "+i, level+1);
         }
     } else {
         log.debug("obj=" + obj);
@@ -220,9 +220,8 @@ function JSON2HTML (obj, title, level) {
     return text;
 }
 
-function showResults(msg) {
-    log.error("TODO: showResult()")
-    log.error("TEST: msg=" + msg)
+su2rad.dialog.showResults = function (msg) {
+    log.debug("TEST: showResults()")
     json = su2rad.utils.decodeJSON(msg)
     var obj = new Array();
     try { 
@@ -232,7 +231,7 @@ function showResults(msg) {
     } catch (e) {
         logError(e)
     }
-    html = JSON2HTML(obj, 'export results')
+    html = su2rad.utils.JSON2HTML(obj, 'export results')
     html += '<div><input class="exportbutton" type="button" value="close" onclick="onCancelButton()"></div>';
     document.getElementById("progressStatus").innerHTML = html;
 }

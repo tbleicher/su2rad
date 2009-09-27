@@ -1,6 +1,7 @@
 // switches to call right functions for context
 
-var su2rad = new Object();
+//var su2rad = new Object();
+var su2rad = su2rad ? su2rad : new Object()
 
 if (navigator.userAgent.indexOf("Windows") != -1) {
     su2rad.PATHSEP = "/";    // helps with file handling in Ruby
@@ -48,7 +49,21 @@ su2rad.dialog.loadFileCallback = function (text) {
     //dummy function to be reasigned to real callback
 }
 
+su2rad.dialog.loadTextFile = function (fname) {
+    log.debug("loadTextFile() fname='" + fname + "'");
+    if (su2rad.SKETCHUP == true) {
+        window.location = 'skp:loadTextFile@' + fname;
+    } else {
+        log.warn("Warning: can't load file without backend! (fname='" + fname + "')");
+        loadFileCallback('');
+    }
+}
 
+
+su2rad.dialog.getDefaultDirectory = function () {
+    log.debug("XXX getDefaultDirectory()")
+    return "/Users/ble/Desktop/testex"
+}
 
 // set BROWSER var 
 var userAgent = navigator.userAgent;
@@ -97,16 +112,6 @@ su2rad.utils.encodeJSON = function (json) {
 }
 
 
-function loadTextFile(fname) {
-    log.debug("loadTextFile() fname='" + fname + "'");
-    if (su2rad.SKETCHUP == true) {
-        window.location = 'skp:loadTextFile@' + fname;
-    } else {
-        log.warn("Warning: can't load file without backend! (fname='" + fname + "')");
-        loadFileCallback('');
-    }
-}
-
 function logError(e) {
     log.error(e.toString())
     log.error("e.name " + e.name)
@@ -126,22 +131,22 @@ function reverseData(val) {
 
 function splitPath(val) {
     var text="fileselection: '" + val + "'<br/>";
-    setStatusMsg(text);
+    su2rad.dialog.setStatusMsg(text);
     val = val.replace(/\\/g, "/");   
     val=encodeURI(val);
     var reversedsrc=reverseData(val);
-    setStatusMsg(text);
+    su2rad.dialog.setStatusMsg(text);
     var nameEnd=reversedsrc.indexOf(su2rad.PATHSEP);
     var name=reversedsrc.substring(0,nameEnd);
     name=reverseData(name);
     name=decodeURI(name);
     text += "name: '" + name + "'<br/>";
-    setStatusMsg(text);
+    su2rad.dialog.setStatusMsg(text);
     var path=reversedsrc.substring(nameEnd, reversedsrc.length);
     path=reverseData(path);
     path=decodeURI(path);
     text += "path: '" + path + "'<br/>";
-    setStatusMsg(text);
+    su2rad.dialog.setStatusMsg(text);
     return [path,name];
     //text += "reversedsrc: " + reversedsrc + "<br/>";
     //text += "name rev: '" + name + "'<br/>";

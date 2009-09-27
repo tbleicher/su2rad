@@ -1,7 +1,7 @@
 module FileSystemProxy
    
     def FileSystemProxy.listDirectoryTree(path)
-        #puts "listDirectoryTree(path=#{path})"
+        puts "listDirectoryTree(path=#{path})"
         abspath = File.expand_path(path)
         idPath = abspath
         #puts "(abspath=#{abspath})"
