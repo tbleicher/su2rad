@@ -95,6 +95,7 @@ $SU2RAD_LOG = []
 
 def startExport(selected_only=0)
     begin
+        $SU2RAD_CONTEXT = ExportContext.new()
         $SU2RAD_CONFIG = RunTimeConfig.new()
         $SU2RAD_COUNTER = ProgressCounter.new()
         rs = RadianceScene.new()
@@ -111,6 +112,7 @@ def startWebExport(selected_only=0)
         if $SU2RAD_DIALOG_WINDOW
             $SU2RAD_DIALOG_WINDOW.bring_to_front()
         else 
+            $SU2RAD_CONTEXT = ExportContext.new()
             $SU2RAD_CONFIG = RunTimeConfig.new()
             $SU2RAD_COUNTER = ProgressCounter.new()
             edw = ExportDialogWeb.new()
@@ -122,7 +124,22 @@ def startWebExport(selected_only=0)
     end 
 end
 
-
+def su2radTestExport
+    begin
+        if $SU2RAD_DIALOG_WINDOW
+            $SU2RAD_DIALOG_WINDOW.bring_to_front()
+        else 
+            $SU2RAD_CONTEXT = ExportContext.new()
+            $SU2RAD_CONFIG = RunTimeConfig.new()
+            $SU2RAD_COUNTER = ProgressCounter.new()
+            edw = ExportDialogWeb.new()
+            edw.testExport()
+        end
+    rescue => e 
+        msg = "%s\n\n%s" % [$!.message,e.backtrace.join("\n")]
+        UI.messagebox msg            
+    end 
+end 
 
 $matConflicts = nil
 

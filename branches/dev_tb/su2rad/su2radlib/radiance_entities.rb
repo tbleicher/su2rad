@@ -15,6 +15,8 @@ class RadianceGroup < ExportBase
         resetglobal = checkTransformation()
         parenttrans = setTransformation(parenttrans, resetglobal)
         
+        #$SU2RAD_CONTEXT.pushName(name)
+        #$SU2RAD_CONTEXT.pushMaterial(getMaterial(@entity))
         @@nameContext.push(name)
         @@materialContext.push(getMaterial(@entity))
         
@@ -25,6 +27,8 @@ class RadianceGroup < ExportBase
         
         @@materialContext.pop()
         @@nameContext.pop()
+        #$SU2RAD_CONTEXT.popName()
+        #$SU2RAD_CONTEXT.popMaterial()
         
         if resetglobal == true
             setConfig('MAKEGLOBAL', false)
@@ -180,9 +184,11 @@ class RadianceComponent < ExportBase
                 uimessage("creating new ref for instance '#{iname}'")
             end
             @@nameContext.push(defname)  ## use definition name for file
+            #$SU2RAD_CONTEXT.pushName(defname)
         else
             filename = getFilename("objects/#{iname}.rad")
             @@nameContext.push(iname)    ## use instance name for file
+            #$SU2RAD_CONTEXT.pushName(iname)    ## use instance name for file
         end
         
         parenttrans = setTransformation(parenttrans, resetglobal)
@@ -202,9 +208,9 @@ class RadianceComponent < ExportBase
             $inComponent.pop()
             $globaltrans = oldglobal
         end
-        
         @@materialContext.pop()
         @@nameContext.pop()
+        #$SU2RAD_CONTEXT.popName()
         pop()
         if resetglobal == true
             setConfig('MAKEGLOBAL', false)
@@ -238,18 +244,120 @@ class RadianceComponent < ExportBase
 end
 
 
+module Geometry
+
+    def getCenter(vertices)
+        x_sum = 0
+        y_sum = 0
+        z_sum = 0
+        vertices.each { |v|
+            x_sum += v.position.x
+            y_sum += v.position.y
+            z_sum += v.position.z
+        }
+        n = vertices.length
+        if n > 0
+            return Geom::Point3d.new(x_sum/n, y_sum/n, z_sum/n)
+        else 
+            return nil
+        end
+    end
+
+    def getGlobalTransformation(e)
+        ## find global transformation for entity <e>
+        transStack = []
+        while e.parent
+            if e.parent == Sketchup.active_model
+                break
+            else
+                e = e.parent
+                transStack.push(e.transformation)
+            end
+        end
+        transStack.reverse!
+        gt = Geom::Transformation.new()
+        transStack.each { |t|
+            gt *= t
+        }
+        return gt
+    end
+    
+    def getNearestPoint(p, verts)
+        return verts[getNearestPointIndex(p,verts)]
+    end
+    
+    def getNearestPointDistance(p, verts)
+        v = getNearestPoint(p, verts)
+        return p.distance(v.position)
+    end
+    
+    def getNearestPointIndex(p, verts)
+        dists = verts.collect { |v| p.distance(v.position) }
+        min = dists.sort[0]
+        idx = 0
+        verts.each_index { |i|
+            v = verts[i]
+            if p.distance(v) == min
+                idx = i
+                break
+            end
+        }
+        return idx
+    end
+   
+    def getPolyMesh(face, trans=nil)
+        polymesh = face.mesh 7 
+        if trans != nil
+            polymesh.transform! trans
+        end
+        return polymesh
+    end
+        
+    
+end
+
+
+
 module NumericEntity
 
-    def isNumeric?(entity)
-        if entity.layer.name.downcase == 'numeric'
-            return true
-        elsif entity.attribute_dictionary('SU2RAD_NUMERIC')
-            return true
+    def findIntersection(line, x, y)
+        ## Sketchup's intersect_line_line returns garbage.
+        ## Our requirements are simple so let's do our own function.
+        dx = line[0][0] - line[1][0]
+        dy = line[0][1] - line[1][1]
+        if y == 0
+            ## find intersection on x
+            n = (x-line[0][0])/dx
+            y = n*dy+line[0][1]
+        else
+            n = (y-line[0][1])/dy
+            x = n*dx+line[0][0]
         end
-        return false
+        return x,y
+    end
+    
+    def getBBoxOnGrid(p1,p2,p3)
+        ## return bbox for 0.25m grid
+        xs = [p1.x,p2.x,p3.x]
+        ys = [p1.y,p2.y,p3.y]
+        xs.sort!
+        ys.sort!
+        unit = getConfig('UNIT')
+        gsX = getConfig('GRIDSPACINGX')
+        gsY = getConfig('GRIDSPACINGY')
+        xmin = xs[0]*unit - gsX
+        xmin = ((xmin/gsX).to_i-1) * gsX
+        xmax = xs[2]*unit + gsX
+        xmax = ((xmax/gsX).to_i+1) * gsX
+        ymin = ys[0]*unit - gsY
+        ymin = ((ymin/gsY).to_i-1) * gsY
+        ymax = ys[2]*unit + gsY
+        ymax = ((ymax/gsY).to_i+1) * gsY
+        return [xmin/unit, ymin/unit, xmax/unit, ymax/unit]
     end
     
     def getNumericEdgePoints(face)
+        ## return intersection points of edge with 0.25m grid lines
         unit = getConfig('UNIT')
         gsX = getConfig('GRIDSPACINGY')
         gsY = getConfig('GRIDSPACINGX')
@@ -261,6 +369,8 @@ module NumericEntity
         edgePoints = []
         edgeLines = []
         zValues = []
+
+        ## add corner points first
         face.edges.each { |oedge|
             edge = entities.add_line(oedge.start.position, oedge.end.position)
             entities.transform_entities($globaltrans, edge)
@@ -273,6 +383,7 @@ module NumericEntity
             edgeLines.push([[s.x,s.y,0],[e.x,e.y,0]])
             entities.erase_entities(edge)
         }
+        
         ## find average z-value of corners
         if zValues.length > 0
             sum = 0
@@ -294,7 +405,7 @@ module NumericEntity
             deltaY = ymax - ymin
             
             if deltaX > deltaY
-                ## edge is more horizontal; intersect with x
+                ## edge is more horizontal; intersect with x-grid
                 y1 = gridBBox[1]
                 y2 = gridBBox[3]
                 x = gridBBox[0]
@@ -309,7 +420,7 @@ module NumericEntity
                 end
                 
             else
-                ## edge is more vertical; intersect with y
+                ## edge is more vertical; intersect with y-grid
                 x1 = gridBBox[0]
                 x2 = gridBBox[2]
                 y = gridBBox[1]
@@ -329,39 +440,6 @@ module NumericEntity
         return edgePoints
     end
     
-    def findIntersection(line, x, y)
-        dx = line[0][0] - line[1][0]
-        dy = line[0][1] - line[1][1]
-        if y == 0
-            ## find intersection on x
-            n = (x-line[0][0])/dx
-            y = n*dy+line[0][1]
-        else
-            n = (y-line[0][1])/dy
-            x = n*dx+line[0][0]
-        end
-        return x,y
-    end
-    
-    def getGlobalTransformation(e)
-        ## find global transformation for entity <e>
-        transStack = []
-        while e.parent
-            if e.parent == Sketchup.active_model
-                break
-            else
-                e = e.parent
-                transStack.push(e.transformation)
-            end
-        end
-        transStack.reverse!
-        gt = Geom::Transformation.new()
-        transStack.each { |t|
-            gt *= t
-        }
-        return gt
-    end
-    
     def getNumericMeshes(e,trans=nil)
         ## return polymesh for each numeric face in <e>
         if not trans
@@ -370,7 +448,7 @@ module NumericEntity
         meshes = []
         if e.class == Sketchup::Face
             if isNumeric?(e)
-                meshes.push(getNumericMesh(e,trans))
+                meshes.push(getPolyMesh(e,trans))
             end
         elsif e.class == Sketchup::Group
             e.entities.each { |ee|
@@ -385,14 +463,8 @@ module NumericEntity
         return meshes
     end
     
-    def getNumericMesh(face,trans)
-        polymesh = face.mesh 7
-        polymesh.transform!(trans)
-        return polymesh
-    end
-    
     def getNumericPoints(face)
-        
+        ## return array of points on grid lines within face    
         unit = getConfig('UNIT')
         gsX = getConfig('GRIDSPACINGX')
         gsY = getConfig('GRIDSPACINGY')
@@ -400,7 +472,7 @@ module NumericEntity
         dy = gsY/unit
         
         points = getNumericEdgePoints(face)
-        polymesh = getNumericMesh(face, $globaltrans)
+        polymesh = getNumericMeshes(face, $globaltrans)
         polymesh.polygons.each { |p|
             verts = []
             [0,1,2].each { |i|
@@ -425,11 +497,22 @@ module NumericEntity
         return points
     end
     
+    def isNumeric?(entity)
+        ## return true for entities with numeric attributes
+        if entity.layer.name.downcase == 'numeric'
+            return true
+        elsif entity.attribute_dictionary('SU2RAD_NUMERIC')
+            return true
+        end
+        return false
+    end
+    
 end
 
 class RadiancePolygon < ExportBase
     
     include NumericEntity
+    include Geometry
     
     attr_reader :material, :layer
     
@@ -471,7 +554,7 @@ class RadiancePolygon < ExportBase
     def addLoop(l)
         ## create hole in polygon
         ## find centre of new loop
-        c = getCentre(l)
+        c = getCenter(l.vertices)
         ## find closest point and split outer loop
         idx_out  = getNearestPointIndex(c, @verts)
         near_out = @verts[idx_out].position
@@ -515,54 +598,10 @@ class RadiancePolygon < ExportBase
         return verts
     end
 
-    def getCenter(l)
-        return getCentre(l)
-    end 
-    
-    def getCentre(l)
-        verts = l.vertices
-        x_sum = 0
-        y_sum = 0
-        z_sum = 0
-        verts.each { |v|
-            x_sum += v.position.x
-            y_sum += v.position.y
-            z_sum += v.position.z
-        }
-        n = verts.length
-        if n > 0
-            return Geom::Point3d.new(x_sum/n, y_sum/n, z_sum/n)
-        else 
-            return nil
-        end
-    end
-
     def getFace
         return @face
     end
     
-    def getNearestPointIndex(p, verts)
-        dists = verts.collect { |v| p.distance(v.position) }
-        min = dists.sort[0]
-        idx = 0
-        verts.each_index { |i|
-            v = verts[i]
-            if p.distance(v) == min
-                idx = i
-                break
-            end
-        }
-        return idx
-    end
-   
-    def getPolyMesh(trans=nil)
-        polymesh = @face.mesh 7 
-        if trans != nil
-            polymesh.transform! trans
-        end
-        return polymesh
-    end
-        
     def getText(trans=nil)
         if @face.area == 0
             uimessage("face.area == 0! skipping face", 1)
@@ -591,6 +630,7 @@ class RadiancePolygon < ExportBase
         if layer.name == 'Layer0'
             ## use layer of parent group (on stack)
             layer_s = @@layerstack.get()
+            layer_s = $SU2RAD_CONTEXT.getLayer()
             if layer_s != nil
                 layer = layer_s
             else
@@ -674,7 +714,7 @@ class RadiancePolygon < ExportBase
         end
         imgx = skm.texture.width
         imgy = skm.texture.height
-        m = getPolyMesh(trans)
+        m = getPolyMesh(@face, trans)
         si = @@meshStartIndex[matname]
         unit = getConfig('UNIT')
         text = ''
@@ -719,25 +759,6 @@ class RadiancePolygon < ExportBase
         return text
     end
     
-    def getBBoxOnGrid(p1,p2,p3)
-        ## return bbox for 0.25m grid
-        xs = [p1.x,p2.x,p3.x]
-        ys = [p1.y,p2.y,p3.y]
-        xs.sort!
-        ys.sort!
-        unit = getConfig('UNIT')
-        gsX = getConfig('GRIDSPACINGX')
-        gsY = getConfig('GRIDSPACINGY')
-        xmin = xs[0]*unit - gsX
-        xmin = ((xmin/gsX).to_i-1) * gsX
-        xmax = xs[2]*unit + gsX
-        xmax = ((xmax/gsX).to_i+1) * gsX
-        ymin = ys[0]*unit - gsY
-        ymin = ((ymin/gsY).to_i-1) * gsY
-        ymax = ys[2]*unit + gsY
-        ymax = ((ymax/gsY).to_i+1) * gsY
-        return [xmin/unit, ymin/unit, xmax/unit, ymax/unit]
-    end
 end 
 
 

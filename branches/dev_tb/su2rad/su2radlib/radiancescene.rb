@@ -416,10 +416,12 @@ class RadianceScene < ExportBase
         @sky.export()
         
         ## export geometry
-        $globaltrans = Geom::Transformation.new
-        @@nameContext.push(getConfig('SCENENAME')) 
+        $globaltrans = Geom::Transformation.new()
+        @@nameContext.push(getConfig('SCENENAME'))
+        #$SU2RAD_CONTEXT.pushName(getConfig('SCENENAME'))
         uimessage("\nOBJECTS:", 0)
         sceneref = exportByGroup(entities, Geom::Transformation.new)
+        uimessage("\nSCENE:", 0)
         emode = getConfig('MODE')
         if emode == 'by color' || emode == 'daysim'
             refs = _saveFilesByColor(@@byColor)
@@ -430,6 +432,7 @@ class RadianceScene < ExportBase
         end
         
         @@nameContext.pop()
+        #$SU2RAD_CONTEXT.popName()
         uimessage("\nMATERIALS:", 0)
         @@materialContext.export(@materialLists.matLib)
         createRifFile()
