@@ -4,6 +4,158 @@ require 'context.rb'
 require 'radiance.rb'
 
 
+class ExportContext
+    
+    include InterfaceBase
+   
+    attr_reader :toplevel
+    attr_writer :toplevel
+
+    def initialize
+        #TODO: build UniqueNames dict
+        init()
+    end 
+   
+    def init
+        @byColor = Hash.new()
+        @byLayer = Hash.new()
+        
+        @components = []
+        @componentNames = Hash.new()
+        
+        @globalTransformation = Geom::Transformation.new()
+        @groupstack = Stack.new()
+        @layerstack = LayerStack.new()
+        @materialContext = Stack.new()
+        @materialstack = MaterialStack.new()
+        @matrixstack = Stack.new( Geom::Transformation.new() )
+        @meshStartIndex = Hash.new()
+        @namestack = Stack.new()
+        @uniqueFileNames = Hash.new()
+        @visibleLayers = Hash.new()
+        
+        @definitionNames = initNamesDict()
+        @tmpNameCounter = 1
+        @toplevel = true
+    end
+    
+    def initNamesDict
+        names = {}
+        Sketchup.active_model.definitions.each { |d|
+            d.instances.each { |i|
+                printf "names: #{i.name} => #{i.object_id}\n"
+                names[i.name] = i.object_id
+            }
+        }        
+        return names
+    end
+    
+    def getLayer
+        return @layerstack.get()
+    end
+    
+    def getName
+        return @namestack.get()    
+    end
+    
+    def getUniqueName(entity)
+        print "getUniqueName('#{entity.name}')\n"
+        if entity.name != ""
+            if @definitionNames[entity.name] == entity.object_id
+                return entity.name
+            else
+                printf "names: #{entity.name} => #{entity.object_id} found: #{@definitionNames[entity.name]}\n"
+                name = createUniqueName(entity.name)
+            end
+        else
+            name = createUniqueName()
+        end
+        entity.name = name
+        @definitionNames[name] = entity.object_id
+        print " ... result:'#{name}'\n"
+        return name
+    end 
+    
+    def createUniqueName(basename)
+        ## create new name with basename and numbers
+        m = basename.match(/(\w[^\d])(\d+$)/)
+        if m != nil and m.length == 3
+            ## basename has numbers at end
+            basename = m[1]
+            counter = Int(m[2])
+        else
+            counter = 1
+        end
+        tmpname = "%s%04d" % [basename, counter]
+        while @definitionNames[tmpname] != nil
+            printf "found tmpname '#{tmpname}'\n"
+            counter += 1
+            tmpname = "%s%04d" % [basename, counter]
+        end
+        printf "final tmpname '#{tmpname}'\n"
+        return tmpname
+    end
+    
+    def globalTransformation
+        return @matrixstack.get()
+    end
+    
+    def pop
+        @materialContext.pop()
+        @materialstack.pop()
+        @matrixstack.pop()
+        @layerstack.pop()
+        @groupstack.pop()
+    end 
+    
+    def popMaterial
+        @materialContext.pop()
+        @materialstack.pop()
+    end
+    
+    def popName
+        @namestack.pop()
+    end
+    
+    def push(entity)
+        uimessage("begin export #{entity.class} name='#{entity.name}' id='#{entity.object_id}'")
+        @namestack.push(getUniqueName(entity))
+        pushMaterial(entity.material)
+        @materialstack.push(entity.material)
+        @matrixstack.push( globalTransformation()*entity.transformation )
+        @layerstack.push(entity.layer)
+        @groupstack.push(entity)
+        #XXX $SU2RAD_COUNTER.add("%s" % entity.class)
+    end
+    
+    def pushMaterial(material)
+        @materialContext.push(material)
+        @materialstack.push(material)
+    end
+    
+    def pushName(name)
+        @namestack.push(name)
+    end
+    
+    def resetContext
+        init()
+    end
+    
+    def show(prefix="")
+        return
+        printf "%smaterialContext: %d\n" % [prefix,@materialContext.length] 
+        printf "%smaterialstack:   %d\n" % [prefix,@materialstack.length]
+        printf "%smatrixstack:     %d\n" % [prefix,@matrixstack.length]
+        printf "%slayerstack:      %d\n" % [prefix,@layerstack.length]
+        printf "%sgroupstack:      %d\n" % [prefix,@groupstack.length]
+    end
+
+    def level
+        return @groupstack.length 
+    end
+    
+end 
+
 class ProgressDialogDummy
     
     def initialize(msg, status, cancel=false)
@@ -254,7 +406,7 @@ class ExportBase
                 if rp.material == nil or rp.material.texture == nil
                     face = rp.getText(globaltrans)
                 else
-                    face = rp.getPolyMesh(globaltrans)
+                    face = rp.getPolyMesh(e, globaltrans)
                 end
                 lines.push([rp.material, rp.layer.name, face])
             end
@@ -262,9 +414,9 @@ class ExportBase
         @@materialContext.pop()
         return lines
     end
-        
-    def exportByGroup(entity_list, parenttrans, instance=false)
-        ## split scene in individual files
+    
+    def exportEntityList (entity_list, parenttrans, instance)
+        ref = ''
         references = []
         faces = []
         entity_list.each { |e|
@@ -297,6 +449,12 @@ class ExportBase
                 next
             end
         }
+        return ref, references, faces
+    end
+    
+    def exportByGroup(entity_list, parenttrans, instance=false)
+        ## split scene in individual files
+        ref, references, faces = exportEntityList(entity_list, parenttrans, instance)
         faces_text = ''
         numpoints = []
         faces.each_index { |i|
@@ -313,21 +471,29 @@ class ExportBase
         
         ## if we have numeric points save to *.fld file
         if numpoints != []
-            createNumericFile(numpoints)
+            #name = $SU2RAD_CONTEXT.getName()
+            name = @@nameContext[-1]
+            filename = getFilename("numeric/#{name}.fld")
+            createNumericFile(numpoints, filename)
         end
-        
-        ## stats message  
         uimessage("exported entities [refs=%d, faces=%d]" % [references.length, faces.length], 1)
 
         ## create 'by group' files or stop here
         if getConfig('MODE') != 'by group'
             return "## mode = '%s' -> no export" % getConfig('MODE')
         elsif @@nameContext.length <= 1
+        #elsif $SU2RAD_CONTEXT.level == 0
+        #    printf("SU2RAD_CONTEXT.toplevel==true\n")
+            printf "DEBUG: createMainScene\n"
+            @@nameContext.each { |n|
+                printf " -> #{n}"
+            }
+            printf "\n"
             return createMainScene(references, faces_text, parenttrans)
         else
             ref_text = references.join("\n")
             text = ref_text + "\n\n" + faces_text
-            filename = getFilename( File.join('objects', getNameContext()+".rad") )
+            filename = getFilename( File.join('objects', getNameContext() + ".rad") )
             if not createFile(filename, text)
                 msg = "\n## ERROR: error creating file '%s'\n" % filename
                 uimessage(msg)
@@ -345,6 +511,7 @@ class ExportBase
     end
 
     def push
+        #$SU2RAD_CONTEXT.push(@entity)
         uimessage("begin export #{@entity.class} name='#{@entity.name}' id='#{@entity.object_id}'")
         @@materialstack.push(@entity.material)
         @@matrixstack.push(@entity.transformation)
@@ -354,6 +521,7 @@ class ExportBase
     end
     
     def pop
+        #$SU2RAD_CONTEXT.pop()
         @@materialstack.pop()
         @@matrixstack.pop()
         @@layerstack.pop()
@@ -424,35 +592,8 @@ class ExportBase
         return parenttrans
     end
     
-    def createNumericEdgeFile(edges)
-        name = @@nameContext[-1]
-        filename = getFilename("numeric/#{name}.edges")
-        uimessage("TODO: create numeric edge file #{filename}")
-        if FileTest.exists?(filename)
-            uimessage("updating edge file '%s'" % filename)
-            f = File.new(filename)
-            txt = f.read()
-            f.close()
-            oldedges = txt.split("\n")
-            edges += oldedges
-        end
-        ## delete edges between faces
-        edgecnt = Hash.new(0)
-        edges.each { |e| edgecnt[e] += 1 }
-        unique_edges = edgecnt.keys().collect { |e| egdecnt[e] == 1 }
-        ## save to file
-        text = unique_edges.join("\n")
-        if not createFile(filename, text)
-            uimessage("Error: Could not create numeric edge file '#{filename}'")
-        else
-            uimessage("Created numeric edge file '%s' (%d edges)" % [filename, unique_edges.length])
-        end
-    end
-    
-    def createNumericFile(points)
+    def createNumericFile(points, filename)
         ## write points to file in a save way; if file exists merge points
-        name = @@nameContext[-1]
-        filename = getFilename("numeric/#{name}.fld")
         if FileTest.exists?(filename)
             uimessage("updating field '%s'" % filename)
             f = File.new(filename)
@@ -468,7 +609,6 @@ class ExportBase
             uimessage("Error: Could not create numeric file '#{filename}'")
         else
             uimessage("Created field '%s' (%d points)" % [filename, points.length])
-            #createNumericEdgeFile(edges)
         end
     end
 
@@ -489,6 +629,7 @@ class ExportBase
     end
  
     def getNameContext
+        #return remove_spaces($SU2RAD_CONTEXT.getName())
         return remove_spaces(@@nameContext[-1])
     end
     
@@ -570,6 +711,7 @@ class ExportBase
     end
         
     def getXform(filename, trans)
+        #if $SU2RAD_CONTEXT.toplevel == true
         if @@nameContext.length <= 2     #XXX ugly hack
             ## for main scene file
             path = File.join(getConfig('SCENEPATH'),getConfig('SCENENAME'),"")
@@ -578,6 +720,7 @@ class ExportBase
         end 
         filename.sub!(path, '')
         objname = @@nameContext[-1]
+        #objname = $SU2RAD_CONTEXT.getName()
         if makeGlobal?()
             xform = "!xform -n #{objname} #{filename}"
         else
