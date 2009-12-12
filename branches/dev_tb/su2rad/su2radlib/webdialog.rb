@@ -122,6 +122,9 @@ class ExportDialogWeb < ExportBase
         }
         
         ## materials
+        dlg.add_action_callback("createMaterialPreview") { |d,p|
+            @materialLists.createMaterialPreview(d,p)
+        }
         dlg.add_action_callback("setMaterialAlias") { |d,p|
             @materialLists.setMaterialAlias(d,p)
         }

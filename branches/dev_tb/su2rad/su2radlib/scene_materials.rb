@@ -51,6 +51,11 @@ end
 
 class RadMaterial < ListMaterial
     
+    def initialize(material, group='undef')
+        super(material, group)
+        @defined = true
+    end
+
     def getDict
         d = super()
         d['group']      = @material.getGroup()
@@ -58,7 +63,12 @@ class RadMaterial < ListMaterial
         d['definition'] = @material.getText().gsub(/\n/, '<br/>')
         d['required']   = @material.required
         d['mType']      = @material.getType()
+        d['defined']    = "%s" % @defined
         return d
+    end
+
+    def setUndefined
+        @defined = false
     end
     
 end
@@ -79,6 +89,13 @@ class MaterialLists < ExportBase
         @matLib = Radiance::MaterialLibrary.new(path)
     end
         
+    def createMaterialPreview(dlg, matname)
+        path = @matLib.createMaterialPreview(matname)
+        if path and path != ""
+            dlg.execute_script("su2rad.materials.setPreviewImage('%s','%s')" % [matname,path])
+        end
+    end
+
     def setMaterialAlias(dlg, param)
         skmname, radname, mtype = param.split("&")
         uimessage("setting alias for %s '%s' to material '%s'" % [mtype,skmname,radname], 0)
@@ -112,7 +129,13 @@ class MaterialLists < ExportBase
     def setMaterialList(dlg, mtype)
         if mtype == 'rad'
             materials = @matLib.getMaterials()
-            matList = materials.collect { |mat| RadMaterial.new(mat) }
+            matList = materials.collect { |mat|
+                rmat = RadMaterial.new(mat)
+                if not @matLib.isDefined?(mat)
+                    rmat.setUndefined()
+                end
+                rmat
+            }
             _setMaterialListInChunks(matList, dlg, mtype)
         elsif mtype == 'layer'
             layers = Sketchup.active_model.layers

@@ -68,7 +68,7 @@ class RunTimeConfig
 	    if $SU2RAD_PLATFORM == 'WIN'
 		app += '.exe'
 	    end
-            uimessage("  searching '#{app}' ...", 1)
+            uimessage("  searching '#{app}' ...", 2)
             binpath = File.join(bindir, app)
             if File.exists?(binpath)
                 set(k, binpath)
@@ -81,29 +81,38 @@ class RunTimeConfig
                     path = lines[0].strip()
                     if File.exists?(path)
                         set(k, path)
-                        uimessage("  => found '#{app}' in '#{path}'")
+                        uimessage("  => found '#{app}' in '#{path}'", 1)
                     end
+                else
+                    ## add /usr/local/bin to PATH before searching
+                    paths = ENV['PATH']
+                    paths = paths + ':/usr/local/bin'
+                    searchEnvPaths(paths, k, app)
                 end
             elsif ENV.has_key?('Path')
-                ENV['Path'].split(File::PATH_SEPARATOR).each { |p|
-                    if p =~ /system/i
-                        uimessage("  ... skipping system folder '#{p}'", 2)
-                        next ## skip system folder on Windows
-                    end
-                    path = File.join(p, app)
-                    if File.exists?(path)
-                        set(k, path)
-                        uimessage("  => found '#{app}' in '#{path}'")
-			break
-                    end
-                }
+                searchEnvPaths(ENV['Path'], k, app)
 	    end
 	    if get(k) == ''
                 uimessage("  => application '#{app}' not found", -1)
             end
         }
     end
-    
+   
+    def searchEnvPaths(searchpaths, k, app)
+        searchpaths.split(File::PATH_SEPARATOR).each { |p|
+            if p =~ /system/i
+                uimessage("  ... skipping system folder '#{p}'", 2)
+                next ## skip system folder on Windows
+            end
+            path = File.join(p, app)
+            if File.exists?(path)
+                set(k, path)
+                uimessage("  => found '#{app}' in '#{path}'")
+                break
+            end
+        }
+    end
+     
     def [](key)
         get(key)
     end
@@ -160,11 +169,9 @@ class RunTimeConfig
     end
     
     def _evalLines(lines)
-        #printf "\nevalLines()\n"
         config = Hash.new()
         lines.each { |line|
             line.strip!() 
-            #printf "line='%s'\n" % line
             if line[-1] == ','
                 line = line.slice[0..-2]
             end

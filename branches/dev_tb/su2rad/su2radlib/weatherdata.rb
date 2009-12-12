@@ -32,6 +32,7 @@ class WeatherDataImportDialog < ExportBase
             setEPWFilePathFromDialog(d,p);
         }
         dlg.add_action_callback("loadTextFile") {|d,p|
+            uimessage("loadTextFile() ...")
             loadTextFile(d,p);
         }
         
@@ -47,13 +48,18 @@ class WeatherDataImportDialog < ExportBase
         $SU2RAD_DIALOG_WINDOW = dlg
         epwpath, epwdata = getEPWPathFromAttribute()
         dlg.show {
+            printf "DEBUG: su2rad.dialog.setSketchup()\n"
             dlg.execute_script("su2rad.dialog.setSketchup()")
             epwpath, epwdata = getEPWPathFromAttribute()
             if epwpath != ""
                 path = urlEncode(epwpath)
                 data = urlEncode(epwdata)
                 uimessage("setting file path '#{epwpath}'", 2)
-                dlg.execute_script("setFileFromSketchup('#{data}', '#{path}')")
+                dlg.execute_script("su2rad.dialog.weatherdata.setFileFromSketchup('#{data}', '#{path}')")
+            else
+                path = '/Users/ble/tmp/su2rad' 
+                uimessage("starting file selector ... (path='#{path}')", 2)
+                dlg.execute_script("su2rad.dialog.weatherdata.loadFileSU('#{path}')")
             end 
         }
     end
@@ -99,13 +105,14 @@ class WeatherDataImportDialog < ExportBase
     end
     
     def loadTextFile(dlg, filepath)
+        uimessage("loadTextFile(filepath='#{filepath}')")
         text = ''
         if File.exists?(filepath)
             f = File.open(filepath, 'r')
             text = f.read()
             #uimessage("TEST: text=%d bytes" % text.length , 3)
             text = urlEncode(text)
-            #uimessage("TEST: text=%d bytes" % text.length , 3)
+            uimessage("TEST: text=%d bytes" % text.length , 3)
         end
         dlg.execute_script("su2rad.dialog.loadFileCallback('%s')" % text)
     end
