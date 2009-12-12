@@ -208,6 +208,14 @@ su2rad.geom.Delaunay = function() {
                 s += " [" + this.v1.x.toFixed(2) + "," + this.v1.y.toFixed(2) + "]"
                 s += " [" + this.v2.x.toFixed(2) + "," + this.v2.y.toFixed(2) + "]"
                 return s
+            },
+            'getPointOnEdge' : function(v1,v2,level) {
+                // get point between v1 and v2 where z==level
+                var dz = v2.z - v1.z;
+                var delta = (level-v1.z) / dz
+                var x = v1.x + (v2.x-v1.x)*delta;
+                var y = v1.y + (v2.y-v1.y)*delta;
+                return [x,y,level]
             }
         }
         return CalcCircumcircle(triangle);

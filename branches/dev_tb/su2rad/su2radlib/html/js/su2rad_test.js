@@ -47,63 +47,83 @@ function test_getMaterialsLists () {
 function test_getRadMaterialData () {
     var json = "[" 
     json += "{\"name\":\"redMat\",\"nameRad\":\"redMat\",\"nameHTML\":\"redMat\",";
-    json += "\"alias\":\"\",\"preview\":\"\",\"group\":\"plastic\",\"defType\":\"material\",";
+    json += "\"alias\":\"\",\"group\":\"plastic\",\"defType\":\"material\",";
     json += "\"definition\":\"void plastic redMat<br/>0<br/>0<br/>5 0.6 0.1 0.1 0 0\",";
+    json += "\"defined\":\"true\","
+    json += "\"preview\":\"testdata/preview/red.jpg\","
     json += "\"required\":\"\"},";
     
     json += "{\"name\":\"blueMat\",\"nameRad\":\"blueMat\",\"nameHTML\":\"blueMat\","
-    json += "\"alias\":\"\",\"preview\":\"\",\"group\":\"plastic\",\"defType\":\"material\",";
+    json += "\"alias\":\"\",\"group\":\"plastic\",\"defType\":\"material\",";
     json += "\"definition\":\"void plastic blueMat<br/>0<br/>0<br/>5 0.1 0.1 0.6 0 0\","
+    json += "\"defined\":\"true\","
+    json += "\"preview\":\"testdata/preview/blue.jpg\","
     json += "\"required\":\"\"},";                
 
     json += "{\"name\":\"green\",\"nameRad\":\"green\",\"nameHTML\":\"green\",";
-    json += "\"alias\":\"\",\"preview\":\"\",\"group\":\"plastic\",\"defType\":\"material\",";
+    json += "\"alias\":\"\",\"group\":\"plastic\",\"defType\":\"material\",";
     json += "\"definition\":\"void plastic green<br/>0<br/>0<br/>5 0.13 0.48 0.02 0 0\","
+    json += "\"defined\":\"true\","
+    json += "\"preview\":\"\","
     json += "\"required\":\"\"},";                
     
     json += "{\"name\":\"grass_green\",\"nameRad\":\"grass_green\",\"nameHTML\":\"grass_green\", ";
-    json += "\"alias\":\"\",\"preview\":\"\",\"group\":\"plastic\",\"defType\":\"alias\", ";
+    json += "\"alias\":\"\",\"group\":\"plastic\",\"defType\":\"alias\", ";
     json += "\"definition\":\"void alias grass_green green\", ";
+    json += "\"defined\":\"true\","
+    json += "\"preview\":\"\","
     json += "\"required\":\"green\"}, ";                
     
     json += "{\"name\":\"brick_pat\",\"nameRad\":\"brick_pat\",\"nameHTML\":\"brick_pat\",";
-    json += "\"alias\":\"\",\"preview\":\"\",\"group\":\"texfunc\",\"defType\":\"pattern\",";
+    json += "\"alias\":\"\",\"group\":\"texfunc\",\"defType\":\"pattern\",";
     json += "\"definition\":\"void texfunc brick_pat<br/>4 gran_dx gran_dy gran_dz brick.cal<br/>0<br/>0\","
+    json += "\"preview\":\"\","
     json += "\"required\":\"brick.cal\"},";                
     
     json += "{\"name\":\"brick\",\"nameRad\":\"brick\",\"nameHTML\":\"brick\",";
-    json += "\"alias\":\"\",\"preview\":\"\",\"group\":\"plastic\",\"defType\":\"material\",";
+    json += "\"alias\":\"\",\"group\":\"plastic\",\"defType\":\"material\",";
     json += "\"definition\":\"brick_pat plastic brick<br/>0<br/>0<br/>5 0.4 0.25 0.1 0 0\","
+    json += "\"defined\":\"true\","
+    json += "\"preview\":\"\","
     json += "\"required\":\"brick_pat\"},";                
     
     json += "{\"name\":\"grey15\",\"nameRad\":\"grey15\",\"nameHTML\":\"grey15\",";
-    json += "\"alias\":\"\",\"preview\":\"\",\"group\":\"plastic\",\"defType\":\"material\",";
+    json += "\"alias\":\"\",\"group\":\"plastic\",\"defType\":\"material\",";
     json += "\"definition\":\"void plastic grey15<br/>0<br/>0<br/>5 0.15 0.15 0.15 0 0\","
+    json += "\"defined\":\"true\","
+    json += "\"preview\":\"\","
     json += "\"required\":\"\"},";                
     
     json += "{\"name\":\"grey40\",\"nameRad\":\"grey40\",\"nameHTML\":\"grey40\",";
-    json += "\"alias\":\"\",\"preview\":\"\",\"group\":\"plastic\",\"defType\":\"material\",";
+    json += "\"alias\":\"\",\"group\":\"plastic\",\"defType\":\"material\",";
     json += "\"definition\":\"void plastic grey40<br/>0<br/>0<br/>5 0.4 0.4 0.4 0 0\","
+    json += "\"defined\":\"true\","
+    json += "\"preview\":\"\","
     json += "\"required\":\"\"},";                
     
     json += "{\"name\":\"concrete\",\"nameRad\":\"concrete\",\"nameHTML\":\"concrete\",";
-    json += "\"alias\":\"\",\"preview\":\"\",\"group\":\"plastic\",\"defType\":\"alias\",";
+    json += "\"alias\":\"\",\"group\":\"plastic\",\"defType\":\"alias\",";
     json += "\"definition\":\"void alias concrete grey40\","
+    json += "\"preview\":\"\","
     json += "\"required\":\"grey40\"},";                
     
     json += "{\"name\":\"asphalt_dark\",\"nameRad\":\"asphalt_dark\",\"nameHTML\":\"asphalt_dark\",";
-    json += "\"alias\":\"\",\"preview\":\"\",\"group\":\"plastic\",\"defType\":\"alias\",";
+    json += "\"alias\":\"\",\"group\":\"plastic\",\"defType\":\"alias\",";
     json += "\"definition\":\"void alias asphalt_dark grey15\","
+    json += "\"preview\":\"\","
     json += "\"required\":\"grey15\"},";                
     
     json += "{\"name\":\"gran_tex\",\"nameRad\":\"gran_tex\",\"nameHTML\":\"gran_tex\",";
-    json += "\"alias\":\"\",\"preview\":\"\",\"group\":\"pattern\",\"defType\":\"texfunc\",";
+    json += "\"alias\":\"\",\"group\":\"pattern\",\"defType\":\"texfunc\",";
     json += "\"definition\":\"void texfunc gran_tex<br/>4 gran_dx gran_dy gran_dz plink.cal<br/>0<br/>0\","
+    json += "\"defined\":\"true\","
+    json += "\"preview\":\"\","
     json += "\"required\":\"plink.cal\"},";                
     
     json += "{\"name\":\"granular_glass\",\"nameRad\":\"granular_glass\",\"nameHTML\":\"granular_glass\",";
-    json += "\"alias\":\"\",\"preview\":\"\",\"group\":\"glass\",\"defType\":\"material\",";
+    json += "\"alias\":\"\",\"group\":\"glass\",\"defType\":\"material\",";
     json += "\"definition\":\"gran_tex glass granular_glass<br/>0<br/>0<br/>3 0.982293 1.0 0.097719\","
+    json += "\"preview\":\"\","
     json += "\"required\":\"gran_tex\"}]";                
     return json
 }

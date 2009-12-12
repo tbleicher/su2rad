@@ -1,14 +1,18 @@
 
-function UniqueArray () {
+su2rad = su2rad ? su2rad : new Object()
+
+su2rad.utils = su2rad.utils ? su2rad.utils : new Object()
+
+su2rad.utils.UniqueArray = function () {
     this.values = []
     this.length = 0;
 }
 
-UniqueArray.prototype.getValues = function() {
+su2rad.utils.UniqueArray.prototype.getValues = function() {
     return this.values;
 }
 
-UniqueArray.prototype.push = function(v) {
+su2rad.utils.UniqueArray.prototype.push = function(v) {
     if (this[v] == null) {
         this[v] = v;
         this.values.push(v);
@@ -16,20 +20,27 @@ UniqueArray.prototype.push = function(v) {
     }
 }
 
-UniqueArray.prototype.sort = function() {
+su2rad.utils.UniqueArray.prototype.sort = function() {
+    this.values.sort();
+}
+
+su2rad.utils.UniqueArray.prototype.sortByValue = function() {
     this.values.sort();
 }
 
 
 
-function materialsListObject() {
+
+su2rad.materials = su2rad.materials ? su2rad.materials : new Object()
+
+su2rad.materials.ListObject = function () {
     this.name = "matList";
     this._lookupTable = {};
     this._idArray = new Array();
-    this._groups = new UniqueArray();
+    this._groups = new su2rad.utils.UniqueArray();
 }
 
-materialsListObject.prototype.update = function (list) {
+su2rad.materials.ListObject.prototype.update = function (list) {
     var redefined = 0;
     for (var i=0; i<list.length; i++) {
         var mat = list[i];
@@ -48,11 +59,11 @@ materialsListObject.prototype.update = function (list) {
     log.debug(this.name + ".update(): materials total=" + this._idArray.length + " new=" + list.length + " redef=" + redefined)
 }
 
-materialsListObject.prototype.genId = function (mat) {
+su2rad.materials.ListObject.prototype.genId = function (mat) {
     return mat.id
 }
 
-materialsListObject.prototype.getList = function () {
+su2rad.materials.ListObject.prototype.getList = function () {
     this._idArray.sort()
     list = new Array();
     try {
@@ -70,7 +81,7 @@ materialsListObject.prototype.getList = function () {
     return list;   
 }
 
-materialsListObject.prototype.getMaterial = function (id, silent) {
+su2rad.materials.ListObject.prototype.getMaterial = function (id, silent) {
     var mat = this._lookupTable[id]
     if (mat) {
         return mat;
@@ -82,124 +93,124 @@ materialsListObject.prototype.getMaterial = function (id, silent) {
     }
 }
     
-materialsListObject.prototype.getMaterialGroups = function () {
+su2rad.materials.ListObject.prototype.getMaterialGroups = function () {
    this._groups.sort()
    return this._groups.getValues();
 }
 
+su2rad.materials.ListObject.prototype.setMaterialPreview = function (id, path) {
+    var mat = this._lookupTable[id]
+    if (mat) {
+        mat.preview = path;
+        this._lookupTable[id] = mat;
+    } else {
+        log.error(this.name + ".setMaterialPreview(): id not found '" + id + "'");
+    }
+}
+
 // mixin for SketchUp materials and layers
-function genSkmId(skm) {
+su2rad.materials.genSkmId = function(skm) {
     return skm.nameRad + '_id'
 }
 
 // mixin for Radiance materials
-function genMatId(mat) {
+su2rad.materials.genMatId = function(mat) {
     return mat.nameRad
 }
 
-var skmMaterialsList = new materialsListObject();
-skmMaterialsList.name = "skmList"
-skmMaterialsList.genId = genSkmId 
 
-var layerMaterialsList = new materialsListObject();
-layerMaterialsList.name = "layerList"
-layerMaterialsList.genId = genSkmId 
 
-var radMaterialsList = new materialsListObject();
-radMaterialsList.name = "radList"
-radMaterialsList.genId = genMatId
+// create instances for skm, layer and Radiance material lists
+su2rad.materials.skmList = new su2rad.materials.ListObject();
+su2rad.materials.skmList.name = "skmList"
+su2rad.materials.skmList.genId = su2rad.materials.genSkmId 
+
+su2rad.materials.layersList = new su2rad.materials.ListObject();
+su2rad.materials.layersList.name = "layerList"
+su2rad.materials.layersList.genId = su2rad.materials.genSkmId 
+
+su2rad.materials.radList = new su2rad.materials.ListObject();
+su2rad.materials.radList.name = "radList"
+su2rad.materials.radList.genId = su2rad.materials.genMatId
+
 
 // define alias for rebuilding of lists
-var _currentSUMaterialList = skmMaterialsList;
+su2rad.materials._currentList = su2rad.materials.skmList;
 
-// timeout flag for applyMaterialAlias
-var _timeoutMaterialAlias = false;
+// timeout flag for su2rad.materials.applyAlias
+su2rad.materials._timeoutMaterialAlias = false;
 
 
-function activateDrag () {
+
+
+su2rad.materials.activateDrag = function () {
     $(".mdev").draggable({
         helper:'clone',
         start: function (ev,ui) {
-            showMaterialDetails( $(ui.helper).attr('id') );
+            su2rad.materials.showDetails( $(ui.helper).attr('id') );
         }
     });
 }
 
-function activateDrop () {
+su2rad.materials.activateDrop = function () {
     $(".skm").droppable({
         accept: ".mdev",
         activeClass: 'droppable-active',
         hoverClass: 'droppable-hover',
-        drop: _dropAction
+        drop: su2rad.materials._dropAction
     });
     $(".skm_with_alias").droppable({
         accept: ".mdev",
         activeClass: 'droppable-active',
         hoverClass: 'droppable-hover',
-        drop: _dropAction
+        drop: su2rad.materials._dropAction
     });
     $(".skm_defined").droppable({
         accept: ".mdev",
         activeClass: 'droppable-active',
         hoverClass: 'droppable-hover-defined',
-        drop: _dropAction
+        drop: su2rad.materials._dropAction
     });
 }
 
-function _dropAction (ev, ui) {
-    //log.error("DEBUG: _dropAction(ev='" + ev + "' ui='" + ui+ ")");
-    // BUG: _dropAction is triggered multiple times
+su2rad.materials._dropAction = function (ev, ui) {
+    // BUG: su2rad.materials._dropAction is triggered multiple times
     //      apparently old 'droppables' persist after rebuild of
     //      materials list.
     // workaround: set timer (first event) and stop execution
     //             if timer is present;
-    if (_timeoutMaterialAlias) {
+    if (su2rad.materials._timeoutMaterialAlias) {
         return
     }
     var skmId = $(this).attr('id');
     var radId = $(ui.draggable).attr('id');
     var dragClone = $(ui.draggable).clone();
-    setAlias(skmId, radId);
+    su2rad.materials.setAlias(skmId, radId);
     
     // repeated dragging messes up div content on Windows
     if (su2rad.PLATFORM != "Windows") {
         dragClone.draggable({
             helper:'clone',
             start: function (ev,ui) {
-                showMaterialDetails( $(ui.helper).attr('id') );
+                su2rad.materials.showDetails( $(ui.helper).attr('id') );
             }
         });
     }
     $(this).append(dragClone);
     
     // set timeout for callback to SU
-    _timeoutMaterialAlias = setTimeout("applyMaterialAlias('" + skmId + "','" + radId + "')", 100);
+    su2rad.materials._timeoutMaterialAlias = setTimeout("su2rad.materials.applyAlias('" + skmId + "','" + radId + "')", 100);
 }
 
-function applyMaterialAlias(skmId, radId) {
-    //log.debug("applyMaterialAlias() " + skmId + ", " + radId)
-    var skm = _currentSUMaterialList.getMaterial(skmId);
-    var rad = radMaterialsList.getMaterial(radId);
-    _timeoutMaterialAlias = false;
+su2rad.materials.applyAlias = function (skmId, radId) {
+    //log.debug("su2rad.materials.applyAlias() " + skmId + ", " + radId)
+    var skm = su2rad.materials._currentList.getMaterial(skmId);
+    var rad = su2rad.materials.radList.getMaterial(radId);
+    su2rad.materials._timeoutMaterialAlias = false;
     skpSetMaterialAlias(skm.name, rad.name, skm.group);
 }
 
-function buildMaterialListRad () {
-    var text = "";
-    matList = radMaterialsList.getList();
-    for (var i=0; i<matList.length; i++) {
-        var showAlias = document.getElementById('showDefTypeAlias').checked;
-        var showType = document.getElementById('showMaterialGroup').value;
-        var mat = matList[i]
-        if (_materialFilter(mat, showAlias, showType) == true) {
-            text += getMatDragHTML(mat.nameRad)
-        }
-    }
-    document.getElementById("radListPanel").innerHTML = text;
-    activateDrag();
-}
-
-function _materialFilter(mat, showAlias, showType) {
+su2rad.materials._filterMaterials = function (mat, showAlias, showType) {
     if (mat.defType == 'alias' && showType == 'alias') {
         return true
     } else if (!showAlias && mat.defType == 'alias') {
@@ -213,30 +224,45 @@ function _materialFilter(mat, showAlias, showType) {
     }
 }
 
-function buildMaterialListByType (type) {
+su2rad.materials.buildMaterialListByType = function (type) {
     if (type == 'layer' && su2rad.exportSettings.exportMode.match(/layer/i) ) {
-        buildMaterialListSU();
+        su2rad.materials.buildMaterialListSU();
     } else if (type == 'skm' && !su2rad.exportSettings.exportMode.match(/layer/i) ) {
-        buildMaterialListSU();
+        su2rad.materials.buildMaterialListSU();
     }
 }
 
-function buildMaterialListSU () {
+su2rad.materials.buildMaterialListRad = function () {
+    var text = "";
+    var matList = su2rad.materials.radList.getList();
+    for (var i=0; i<matList.length; i++) {
+        var showAlias = document.getElementById('showDefTypeAlias').checked;
+        var showType = document.getElementById('showMaterialGroup').value;
+        var mat = matList[i]
+        if (su2rad.materials._filterMaterials(mat, showAlias, showType) == true) {
+            text += su2rad.materials.getDragHTML(mat.nameRad)
+        }
+    }
+    document.getElementById("radListPanel").innerHTML = text;
+    su2rad.materials.activateDrag();
+}
+
+su2rad.materials.buildMaterialListSU = function () {
     try {
         $(".skm").droppable("disable");
         $(".skm_with_alias").remove();
         $(".skm_defined").remove();
-        buildMaterialListContent();
-        activateDrag();
-        activateDrop();
+        su2rad.materials.buildMaterialListContent();
+        su2rad.materials.activateDrag();
+        su2rad.materials.activateDrop();
     } catch (e) {
         log.error("error building list content:<br/>" + e.name + "<br/>" + e.message)
     }
 }
 
-function buildMaterialListContent() {
+su2rad.materials.buildMaterialListContent = function () {
     //log.debug("building SU material list content");
-    var skmList = _currentSUMaterialList.getList();
+    var skmList = su2rad.materials._currentList.getList();
     var listPanel = document.getElementById("skmListPanel");
     listPanel.innerHTML = "";
     for (var i=0; i<skmList.length; i++) {
@@ -244,16 +270,16 @@ function buildMaterialListContent() {
             var skm = skmList[i]
             var div = document.createElement("div");
             div.setAttribute("id", skm.id);
-            if (skm.alias != '' && radMaterialsList.getMaterial(skm.alias)) {
+            if (skm.alias != '' && su2rad.materials.radList.getMaterial(skm.alias)) {
                 // material has alias set
                 div.className = "skm_with_alias";
-                div.innerHTML = getSkmInnerHTML(skm) + getMatDragHTML(skm.alias);
-            } else if (radMaterialsList.getMaterial(skm.nameRad, true)) {
+                div.innerHTML = su2rad.materials.getSkmInnerHTML(skm) + su2rad.materials.getDragHTML(skm.alias);
+            } else if (su2rad.materials.radList.getMaterial(skm.nameRad, true)) {
                 div.className = "skm_defined";
-                div.innerHTML = _getSkmLabel(skm)
+                div.innerHTML = su2rad.materials._getSkmLabel(skm)
             } else {
                 div.className = "skm";
-                div.innerHTML = _getSkmLabel(skm)
+                div.innerHTML = su2rad.materials._getSkmLabel(skm)
             }
             listPanel.appendChild(div);
         } catch (e) {
@@ -262,23 +288,23 @@ function buildMaterialListContent() {
     }
 }
 
-function clearAlias(skmId) {
+su2rad.materials.clearAlias = function (skmId) {
     log.info("clearing alias for '" + skmId + "'");
     try {
-        _clearAliasSkm(skmId)
+        su2rad.materials._clearAliasSkm(skmId)
     } catch (e) {
-        log.error("Error clearAlias(): '" + e + "'");
+        log.error("Error su2rad.materials.clearAlias(): '" + e + "'");
     }
 }
 
-function _clearAliasSkm(listId) {
-    var element = _currentSUMaterialList.getMaterial(listId);
+su2rad.materials._clearAliasSkm = function (listId) {
+    var element = su2rad.materials._currentList.getMaterial(listId);
     var msg = "removing alias for material '" + element.nameHTML + "' ('" + element.alias + ")";
     log.info(msg);
     su2rad.dialog.setStatusMsg(msg);
     element.alias = '';
     document.getElementById(listId).innerHTML = element.nameHTML
-    if (radMaterialsList.getMaterial(element.nameRad, true)) {
+    if (su2rad.materials.radList.getMaterial(element.nameRad, true)) {
         document.getElementById(listId).className = 'skm_defined';
     } else {
         document.getElementById(listId).className = 'skm';
@@ -286,15 +312,15 @@ function _clearAliasSkm(listId) {
     skpRemoveMaterialAlias(element.name, element.group);
 }
         
-function getMatDragHTML(matname) {
+su2rad.materials.getDragHTML = function (matname) {
     var text = "<div class=\"mdev\" id=\"" + matname + "\">"
-    text += "<a title=\"" + matname + "\" onClick=\"showMaterialDetails('" + matname + "')\">" 
+    text += "<a title=\"" + matname + "\" onClick=\"su2rad.materials.showDetails('" + matname + "')\">" 
     text += matname + "</a></div>"
     return text
 }
 
-function setGroupSelection () {
-    var classes = radMaterialsList.getMaterialGroups()
+su2rad.materials.setGroupSelection = function () {
+    var classes = su2rad.materials.radList.getMaterialGroups()
     var select = document.getElementById('showMaterialGroup');
     select.options.length = 0;
     select.options[0] = new Option("all", "all", true, true);
@@ -303,15 +329,29 @@ function setGroupSelection () {
     }
 }
 
-function showMaterialDetails(matname) {
-    var mat = radMaterialsList.getMaterial(matname)
+su2rad.materials.createPreview = function (matname) {
+    log.debug("TEST: createPreview('" + matname + "')")
+    var mat = su2rad.materials.radList.getMaterial(matname)
+    log.debug("TEST: material = '" + mat + "'")
+    window.location = 'skp:createMaterialPreview@' + matname
+}    
+    
+su2rad.materials.setPreviewImage = function (matname, path) {
+    log.debug("TEST: setPreviewImage('" + matname + "', '" + path + "')")
+    this.radList.setMaterialPreview(matname, path)
+    this.showDetails(matname) 
+}
+
+su2rad.materials.showDetails = function (matname) {
+    // display material definition and preview image of <matname>
+    var mat = su2rad.materials.radList.getMaterial(matname)
     var text = "";
     if (mat) {
         document.getElementById('panelDetailsTitle').innerHTML = matname;
         var detailsCB = document.getElementById('showDetailsRequired')
-        detailsCB.setAttribute("onclick", "showMaterialDetails('" + matname + "')");
+        detailsCB.setAttribute("onclick", "su2rad.materials.showDetails('" + matname + "')");
         if (mat.required != 'void' && detailsCB.checked) {
-            var req = radMaterialsList.getMaterial(mat.required)
+            var req = su2rad.materials.radList.getMaterial(mat.required)
             if (!req) {
                 text += "<span style=\"color:#cc0000;\">## required modifier '" + mat.required + "' unknown</span><br/>"
             } else {
@@ -320,8 +360,25 @@ function showMaterialDetails(matname) {
         }
         text += mat.definition;
         document.getElementById('panelDetailsText').innerHTML = text;
-        if (mat.preview != '') {
-            document.getElementById('panelPreview').innerHTML = mat.preview;
+        
+        log.debug("mat.defined='" + mat.defined + "'") 
+        log.debug("mat.preview='" + mat.preview + "'") 
+        // set preview image or 'create preview' button
+        var pPreview = document.getElementById('panelPreview');
+        while (pPreview.childNodes[0]) {
+            pPreview.removeChild(pPreview.childNodes[0])
+        }
+        if (mat.preview && mat.preview != '' && mat.preview != 'undefined') {
+            pPreview.innerHTML = "<img class=\"materialPreviewImage\" src=\"file://" + mat.preview + "\" />";
+        } else if (mat.defined == 'true') {
+            // if ra_ppm and convert are available show 'create preview' button
+            // document.getElementById('panelPreview').innerHTML = "no preview for " + matname;
+            var button = document.createElement('BUTTON');
+            button.onclick = function () { su2rad.materials.createPreview(matname) }
+            button.className = "materialPreviewButton"
+            var b_text = document.createTextNode('create preview');
+            button.appendChild(b_text);
+            pPreview.appendChild(button);
         } else {
             document.getElementById('panelPreview').innerHTML = "no preview for " + matname;
         }
@@ -331,20 +388,20 @@ function showMaterialDetails(matname) {
     }
 }
 
-function getSkmInnerHTML(skm) {
+su2rad.materials.getSkmInnerHTML = function (skm) {
     var html = "";
     if (su2rad.PLATFORM == "Windows") {
-        html += "<div style=\"float:right;font-size:12px;cursor:pointer;\"><a onclick=\"clearAlias('" + skm.id + "')\""
+        html += "<div style=\"float:right;font-size:12px;cursor:pointer;\"><a onclick=\"su2rad.materials.clearAlias('" + skm.id + "')\""
         html += "title=\"remove alias\">[X]</a></div>";
     } else {
-        html += "<a class=\"alias_clear\" onclick=\"clearAlias('" + skm.id + "')\""
+        html += "<a class=\"alias_clear\" onclick=\"su2rad.materials.clearAlias('" + skm.id + "')\""
         html += "title=\"remove alias\">&nbsp;</a>";
     }
-    html += _getSkmLabel(skm)
+    html += su2rad.materials._getSkmLabel(skm)
     return html
 }
 
-function _getSkmLabel(skm) {
+su2rad.materials._getSkmLabel = function (skm) {
     if (document.getElementById("showRadianceName").checked == true) {
         return "<div id=\"" + skm.id + "_label\">" + skm.nameRad + "</div>";
     } else { 
@@ -352,8 +409,8 @@ function _getSkmLabel(skm) {
     }
 }
 
-function onChangeSkmLabel () {
-    var skmList = _currentSUMaterialList.getList();
+su2rad.materials.onChangeSkmLabel = function () {
+    var skmList = su2rad.materials._currentList.getList();
     for (var i=0; i<skmList.length; i++) {
         try {
             var skm = skmList[i]
@@ -364,32 +421,32 @@ function onChangeSkmLabel () {
                 document.getElementById(id).innerHTML = skm.nameHTML;
             }
         } catch (e) {
-            log.error("error in onChangeSkmLabel(): " + e.name + "<br/>" + e.message)
+            log.error("error in su2rad.materials.onChangeSkmLabel(): " + e.name + "<br/>" + e.message)
         }
     }
 }
 
-function setAlias(skmId, radId) {
+su2rad.materials.setAlias = function (skmId, radId) {
     try {
-        var skm = _currentSUMaterialList.getMaterial(skmId);
+        var skm = su2rad.materials._currentList.getMaterial(skmId);
         skm.alias = radId;
         document.getElementById(skmId).className = 'skm_with_alias';
-        document.getElementById(skmId).innerHTML = getSkmInnerHTML(skm);
+        document.getElementById(skmId).innerHTML = su2rad.materials.getSkmInnerHTML(skm);
         // show log and status
-        var rad = radMaterialsList.getMaterial(radId);
+        var rad = su2rad.materials.radList.getMaterial(radId);
         var msg = "material '" + skm.nameHTML + "' aliased to '" + rad.nameHTML + "'";
         log.info(msg);
         su2rad.dialog.setStatusMsg(msg);
     } catch (e) {
-        log.error("Error setAlias(): '" + e + "'");
+        log.error("Error su2rad.materials.setAlias(): '" + e + "'");
     }
 }
 
-function setCurrentMaterialList(mode) {
+su2rad.materials.setCurrentMaterialList = function (mode) {
     if (mode.match(/layer/i)) {
-        _currentSUMaterialList = layerMaterialsList
+        su2rad.materials._currentList = su2rad.materials.layersList
     } else {
-        _currentSUMaterialList = skmMaterialsList
+        su2rad.materials._currentList = su2rad.materials.skmList
     }
-    buildMaterialListSU();
+    su2rad.materials.buildMaterialListSU();
 }

@@ -116,7 +116,7 @@ function onExportModeChange() {
     su2rad.exportSettings.setMode(val);
     _setGlobalCoordsDisplay();
     updateExportFormValues();
-    setCurrentMaterialList(val);
+    su2rad.materials.setCurrentMaterialList(val);
     applyExportOptions();
 }
 

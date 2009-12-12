@@ -14,7 +14,8 @@ su2rad.dialog.weatherdata.initPage = function () {
     document.getElementById("messagearea").value = '';
     this.gCanvas = new su2rad.canvas.GridCanvas();
     this.gCanvas.setCanvasId('cv');
-    this.su2rad.dialog.evaluateSketchup(); 
+    this.evaluateSketchup(); 
+    su2rad.dialog.evaluateSketchup = this.evaluateSketchup
     this.updateUI();
 }
 
@@ -30,26 +31,23 @@ su2rad.dialog.weatherdata.onResizeCanvas = function () {
     }
 }
 
-su2rad.dialog.weatherdata.su2rad.dialog.evaluateSketchup = function () {
-    log.debug("su2rad.dialog.evaluateSketchup() su2rad.SKETCHUP='" + su2rad.SKETCHUP + "'")
+su2rad.dialog.weatherdata.evaluateSketchup = function () {
+    log.debug("weatherdata.evaluateSketchup() su2rad.SKETCHUP='" + su2rad.SKETCHUP + "'")
     document.getElementById("loadFileWarning").style.display='';
     document.getElementById("loadFileSUDiv").style.display='none';
     document.getElementById("graphOptions").style.display='none';
     document.getElementById("statsDiv").style.display='none';
     document.getElementById("useEPWInSUDiv").style.display='none';
     // show 'load file' button depending on browser and Sketchup
-    var idomFileList = document.getElementById("loadFileSelection").files;
-    if (idomFileList == null && su2rad.SKETCHUP == false) {
-        // this is not Firefox/Mozilla
-        log.warn("nsIDOMFileList and Sketchup not available - no functionality");
-        log.debug("broser: " + navigator.userAgent);
-    } else if (su2rad.SKETCHUP == true) {
+    // var idomFileList = document.getElementById("loadFileSelection").files;
+    // log.debug("DEBUG: idomFileList='" + idomFileList + "' typeof=" + typeof(idomFileList));
+    if (su2rad.SKETCHUP == true) {
         log.info("Sketchup available");
         document.getElementById("loadFileWarning").style.display='none';
         document.getElementById("loadFileSUDiv").style.display='';
         document.getElementById("graphOptions").style.display='';
         document.getElementById("statsDiv").style.display='';
-    } else {
+    } else if (su2rad.BROWSER == "Gecko" && su2rad.SKETCHUP == false) {
         // this is Firefox -> enable direct load of file text
         log.info("nsIDOMFileList available");
         log.debug("broser: " + navigator.userAgent);
@@ -58,6 +56,10 @@ su2rad.dialog.weatherdata.su2rad.dialog.evaluateSketchup = function () {
         document.getElementById("loadFileSelectionDiv").style.display=''; 
         document.getElementById("graphOptions").style.display='';
         document.getElementById("statsDiv").style.display='';
+    } else {
+        // this is not Firefox/Mozilla
+        log.warn("nsIDOMFileList and Sketchup not available - no functionality");
+        log.debug("broser: " + navigator.userAgent);
     }
 }
 
@@ -85,13 +87,15 @@ su2rad.dialog.weatherdata.loadFileIDOM = function () {
     }
 }
 
-su2rad.dialog.weatherdata.loadFileSU = function () {
+su2rad.dialog.weatherdata.loadFileSU = function (path) {
+    log.debug("loadFileSU()")
     // function to be called with encoded text from SU
-    loadFileCallback = this._loadFileSU
-    // function to be called with fielpath in JS
-    fileSelector.callback = loadTextFile; 
     try {
-        fileSelector.show()
+        su2rad.dialog.loadFileCallback = su2rad.dialog.weatherdata._loadFileSU
+        // function to be called with fielpath in JS
+        fileSelector.callback = su2rad.dialog.loadTextFile; 
+        log.debug("starting file selector ... ")
+        fileSelector.show(path)
     } catch (e) {
         logError(e)
     }
@@ -106,6 +110,7 @@ su2rad.dialog.weatherdata._loadFileSU = function (encText) {
     log.debug("_loadFileSU: lines=" + lines.length)
     var filename = fileSelector.getFilepath();
     try {
+        // will be called as method of su2rad.dialog => this.parseFileText does not work!
         su2rad.dialog.weatherdata.parseFileText(text, filename);
     } catch (e) {
         logError(e)

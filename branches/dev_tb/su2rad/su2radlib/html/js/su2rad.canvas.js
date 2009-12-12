@@ -36,6 +36,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 var su2rad = su2rad ? su2rad : new Object();
 su2rad.canvas = su2rad.canvas ? su2rad.canvas : new Object();
 
+
 su2rad.canvas.ColorGradient = function () {
     this.colorStyle = 'roygbivXXX'; //XXX
     this.lightness = 0.0;
@@ -43,20 +44,43 @@ su2rad.canvas.ColorGradient = function () {
     this.minValue = 0.0;
 }
 
-su2rad.canvas.ColorGradient.prototype.getColorByValue = function (value, lightness) {
+
+su2rad.canvas.ColorGradient.prototype.getColorByValue = function (value, fg, lightness) {
+    // return hex-color from gradient for <value>
     if (value < this.minValue) {
         value = this.minValue;
     } else if (value > this.maxValue) {
         value = this.maxValue;
     }
-    // value between 1 and 0
+
+    // convert value to position between 1 and 0
     var position = (value - this.minValue) / (this.maxValue - this.minValue); 
+    
+    if (lightness == null) {
+        lightness = this.lightness;
+    }
+    
     // this adds 0.5 at the top to get red, and limits the bottom at x= 1.7 to get purple
     if (this.colorStyle == 'roygbiv') {
         var rgb = this._roygbiv(position)
     } else {
         var rgb = this._bry(position)
     }
+    
+    // return color for text if fg == true
+    if (fg == true) {
+        if (lightness <= 0.2) {
+            // light grey for saturated colors
+            if (position <= 0.4) {
+                return "#cccccc"
+            } else {
+                return "#222222"
+            }
+        } else {
+            return "#222222"
+        }
+    }
+
     // apply lightness to rgb components 
     var r = this.process( rgb[0], lightness );
     var g = this.process( rgb[1], lightness );
@@ -64,7 +88,9 @@ su2rad.canvas.ColorGradient.prototype.getColorByValue = function (value, lightne
     return '#' + r + g + b;
 }    
 
+
 su2rad.canvas.ColorGradient.prototype._bry = function (v) {
+    // create blue-red-yellow gradient as in Ecotect
     var r = Math.sin((v-0.4)*Math.PI     ) * 0.5 + 0.5;
     //var g = Math.sin(  (v-1)*Math.PI*0.7) * 1.05 + 1;
     var g = Math.sin(  (v-1)*Math.PI*0.7 ) * 1.0 + 1.0;
@@ -78,7 +104,9 @@ su2rad.canvas.ColorGradient.prototype._bry = function (v) {
     return [r,g,b]
 }
 
+
 su2rad.canvas.ColorGradient.prototype._roygbiv = function (position) {
+    // create rainbow gradient
     var shft = this.colorStyle == 'roygbiv'
             ? 0.5*position + 1.7*(1-position)
             : position + 0.2 + 5.5*(1-position);
@@ -95,13 +123,11 @@ su2rad.canvas.ColorGradient.prototype._roygbiv = function (position) {
     return [r,g,b]
 }
 
+
 su2rad.canvas.ColorGradient.prototype.process = function (num, lightness) {
     // convert value from 0 to 255 to hex
-    if (lightness ==  null) {
-        lightness = this.lightness;
-    }
     // adjust lightness
-    var n = Math.floor( num + lightness * (256 - num));
+    var n = Math.floor( num + lightness * (256 - num) );
     // turn to hex
     var s = n.toString(16);
     // if no first char, prepend 0
@@ -109,13 +135,16 @@ su2rad.canvas.ColorGradient.prototype.process = function (num, lightness) {
     return s;		
 }
 
+
 su2rad.canvas.ColorGradient.prototype.setLightness = function (v) {
     this.lightness = v;
 }
 
+
 su2rad.canvas.ColorGradient.prototype.setMaxValue = function (v) {
     this.maxValue = v;
 }
+
 
 su2rad.canvas.ColorGradient.prototype.setMinValue = function (v) {
     this.minValue = v;
@@ -162,6 +191,7 @@ su2rad.canvas.GridCanvas = function () {
     this.padding = 15;
 }
 
+
 su2rad.canvas.GridCanvas.prototype.draw = function () {
     // nothing to draw?
     if (this.canvas == null || this.array == null || this.array.empty() == true) {
@@ -185,6 +215,7 @@ su2rad.canvas.GridCanvas.prototype.draw = function () {
         }
     }
 }
+
 
 su2rad.canvas.GridCanvas.prototype.getFrameCoords = function (position) {
     if (position == "left") {
@@ -232,6 +263,7 @@ su2rad.canvas.GridCanvas.prototype.getFrameCoords = function (position) {
     return [x,y,w,h]
 }
 
+
 su2rad.canvas.GridCanvas.prototype.drawOutlines = function (ctx) {
     ctx.save()
     ctx.strokeStyle = "#FF00FF"
@@ -252,21 +284,31 @@ su2rad.canvas.GridCanvas.prototype.drawOutlines = function (ctx) {
     ctx.restore()
 }
 
+
 su2rad.canvas.GridCanvas.prototype.drawContourLines = function (ctx) {
+    log.debug("TEST: drawContourLines")
     var dValue = (this.gradient.maxValue - this.gradient.minValue) / this.legendSteps
     ctx.save()
     ctx.lineWidth = 2/this.canvasscale;
     ctx.strokeStyle = this.fgcolor
+    ctx.strokeStyle = 'rgba(0,0,0,0.3)'
     for (var n=1; n<=Math.floor(this.gradient.maxValue/dValue); n++) {
+        // try {
+        //     var lines = this.array.getContourLinesAt(n*dValue);
+        // } catch(e) {
+        //     logError(e)
+        //     continue
+        // }
         try {
-            var lines = this.array.getContourLinesAt(n*dValue);
+            var lines = this.array.getContourLinesAtNew(n*dValue);
         } catch(e) {
             logError(e)
             continue
         }
+
         if (lines.length > 0) {
-            var color = this.gradient.getColorByValue(n*dValue, 0.0);
-            ctx.strokeStyle = color;
+            // var color = this.gradient.getColorByValue(n*dValue, 0.0);
+            // ctx.strokeStyle = color;
             ctx.beginPath()
             for (var i=0; i<lines.length; i++) {
                 ctx.moveTo(lines[i][0][0], lines[i][0][1]);
@@ -277,6 +319,7 @@ su2rad.canvas.GridCanvas.prototype.drawContourLines = function (ctx) {
     }
     ctx.restore()
 }
+
 
 su2rad.canvas.GridCanvas.prototype.drawGrid = function (ctx) {
     if ( this.array.bbox == null ) {
@@ -309,6 +352,7 @@ su2rad.canvas.GridCanvas.prototype.drawGrid = function (ctx) {
     this.drawContourLines(ctx)
     ctx.restore()
 }
+
 
 su2rad.canvas.GridCanvas.prototype.drawGrid_OLD = function (ctx) {
     if ( this.array.bbox == null ) {
@@ -343,6 +387,7 @@ su2rad.canvas.GridCanvas.prototype.drawGrid_OLD = function (ctx) {
     ctx.restore()
 }
 
+
 su2rad.canvas.GridCanvas.prototype.drawLegend = function (ctx) {
     var frame = this.getFrameCoords("right");
     var dValue = (this.gradient.maxValue - this.gradient.minValue) / this.legendSteps
@@ -369,21 +414,38 @@ su2rad.canvas.GridCanvas.prototype.drawLegend = function (ctx) {
     ctx.lineWidth = 2;
     for (var i=0; i<this.legendSteps; i++) {
         y -= dH;    // y values decrease to go up
+        // fill color value is center of rectangle
         var value = (i+0.5) * dValue + this.gradient.minValue
-        var color = this.gradient.getColorByValue(value);
-        ctx.fillStyle = color;
+        var bgcolor = this.gradient.getColorByValue(value);
+        ctx.fillStyle = bgcolor;
         ctx.fillRect(x,y,w,dH);
-        var ltext = this.getLegendText(dValue*(i+1) + this.gradient.minValue);
-        ctx.fillStyle = this.fgcolor;
+        // line and text color value is top of rectangle
+        var fgvalue = dValue*(i+1) + this.gradient.minValue;
+        var fgcolor = this.gradient.getColorByValue(value, true);
+
+        var ltext = this.getLegendText(fgvalue)
+        ctx.fillStyle = fgcolor;
+        //ctx.fillStyle = this.getColorBrightness(color) < 0.3 ? '#cccccc' : this.fgcolor;
+        // first label width is returned incorrectly;
+        // hack: call getLabelWidth() before first label 
+        if (i==0) {
+            var width = this.getLabelWidth(ctx,ltext);
+            log.debug("bug: label width('" + ltext + "')= " + width)
+        }
         this.labelText(ctx,ltext,"right",x+5,y+14,w-10,12);
         // draw dark line at <value> level
-        if (this.gradient.lightness >= 0.2) {
-            var lineValue = (i+1) * dValue + this.gradient.minValue
-            var color = this.gradient.getColorByValue(lineValue, 0.0);
+        var lineValue = (i+1) * dValue + this.gradient.minValue
+        /* if (this.gradient.lightness <= 0.2) {
+            //var color = this.gradient.getColorByValue(lineValue, 0.0);
+            color = "#000000";
         } else {
-            var color = this.fgcolor;
+            var color = this.gradient.getColorByValue(lineValue, 0.0);
+            log.debug("color 0.5 = " + color)
+            //var color = this.fgcolor;
         }
         ctx.strokeStyle = color;
+        */
+        ctx.strokeStyle = this.gradient.getColorByValue(lineValue, false, 0.0);
         ctx.beginPath()
         ctx.moveTo(x, y+1);    // offset 0.5*linewidth (down) to avoid
         ctx.lineTo(x+w, y+1);  // overlap by following rectangle
@@ -392,9 +454,25 @@ su2rad.canvas.GridCanvas.prototype.drawLegend = function (ctx) {
     ctx.restore()
 }
 
+
+su2rad.canvas.GridCanvas.prototype.getColorBrightness = function (color) {
+    // this is a solution from the web
+    // alternative YIQ color system:
+    // (Red value X 299) + (Green value X 587) + (Blue value X 114)
+    if(color.length==7){color=color.substring(1);}
+    var R = parseInt(color.substring(0,2),16);
+    var G = parseInt(color.substring(2,4),16);
+    var B = parseInt(color.substring(4,6),16);
+    var b = Math.sqrt( R*R*0.241 + G*G*0.691 + B *B*0.068 );
+    log.debug("color='" + color + "' brightness=" + b)
+    return b/255.0
+}
+
+
 su2rad.canvas.GridCanvas.prototype.labelText = function (ctx,text,pos,x,y,w,h) {
-    //log.debug("labelText(): text=" + text + " x=" + x + " y=" + y + " w=" + w + " h=" + h)
+    // log.debug("labelText(): text='" + text + "' x=" + x + " y=" + y + " w=" + w + " h=" + h)
     var width = this.getLabelWidth(ctx,text);
+    // log.debug("width('" + text + "')= " + width)
     if (pos == "right") {
         x = x + w - width
     } else if (pos == "center") {
@@ -415,6 +493,7 @@ su2rad.canvas.GridCanvas.prototype.labelText = function (ctx,text,pos,x,y,w,h) {
     }
 }
 
+
 su2rad.canvas.GridCanvas.prototype._splitSuperscript = function (text) {
     var superscript = "";
     var exp = text.slice(-2,text.length)
@@ -424,6 +503,7 @@ su2rad.canvas.GridCanvas.prototype._splitSuperscript = function (text) {
     }
     return [text,superscript];
 }
+
 
 su2rad.canvas.GridCanvas.prototype.getLabelWidth = function (ctx, text) {
     var nText = this._splitSuperscript(text);
@@ -435,6 +515,7 @@ su2rad.canvas.GridCanvas.prototype.getLabelWidth = function (ctx, text) {
     }
     return width;
 }
+
 
 su2rad.canvas.GridCanvas.prototype.getLegendText = function (value) {
     if ( this.gradient.maxValue > 100 ) {
@@ -448,6 +529,7 @@ su2rad.canvas.GridCanvas.prototype.getLegendText = function (value) {
     return text;
 }
 
+
 su2rad.canvas.GridCanvas.prototype.drawRulers = function (ctx) {
     // draw ruler, tick marks and labels in canvas space (pixels!)
     ctx.save()
@@ -456,7 +538,8 @@ su2rad.canvas.GridCanvas.prototype.drawRulers = function (ctx) {
     this._drawRulerY(ctx)
     ctx.restore()    
 }
-    
+
+
 su2rad.canvas.GridCanvas.prototype._drawRulerX = function (ctx) {
     ctx.save()
     var frame = this.getFrameCoords("bottom") 
@@ -508,7 +591,8 @@ su2rad.canvas.GridCanvas.prototype._drawRulerX = function (ctx) {
     this.labelText(ctx,"[m]","right",xUnit,frame[3]-2,20,12);
     ctx.restore()    
 }
-   
+
+
 su2rad.canvas.GridCanvas.prototype._drawRulerY = function (ctx) {
     ctx.save()
     var frame = this.getFrameCoords("left") 
@@ -551,6 +635,7 @@ su2rad.canvas.GridCanvas.prototype._drawRulerY = function (ctx) {
     ctx.restore()    
 }
 
+
 su2rad.canvas.GridCanvas.prototype.getCoords = function (x,y) {
     //this.setOrigin(ctx)
     log.debug("getCoords  1: " + x + "'" + y)
@@ -579,6 +664,7 @@ su2rad.canvas.GridCanvas.prototype.getCoords = function (x,y) {
     
 }
 
+
 su2rad.canvas.GridCanvas.prototype.getLegendOptions = function () {
     var opts = {}
     opts.maxValue = this.gradient.maxValue;
@@ -589,6 +675,7 @@ su2rad.canvas.GridCanvas.prototype.getLegendOptions = function () {
     return opts
 }
 
+
 su2rad.canvas.GridCanvas.prototype.setArray = function (array) {
     this.array = array;
     if ( this.array.empty() == false ) {
@@ -596,9 +683,11 @@ su2rad.canvas.GridCanvas.prototype.setArray = function (array) {
     }
 }
 
+
 su2rad.canvas.GridCanvas.prototype.setCanvas = function (canvas) {
     this.canvas = canvas;
 }
+
 
 su2rad.canvas.GridCanvas.prototype.setCanvasId = function (canvasid) {
     var canvas = document.getElementById(canvasid);
@@ -620,6 +709,7 @@ su2rad.canvas.GridCanvas.prototype.setCanvasId = function (canvasid) {
     }
 }
 
+
 su2rad.canvas.GridCanvas.prototype.setDataTypeIndex = function (idx) {
     this.array.setDataTypeIndex(idx)
     this.setLegendLabel(this.array.units)
@@ -627,6 +717,7 @@ su2rad.canvas.GridCanvas.prototype.setDataTypeIndex = function (idx) {
         this.setDataRange()
     }
 }
+
 
 su2rad.canvas.GridCanvas.prototype.setDataRange = function () {
     var minValue = this.array.bbox[4]
@@ -648,6 +739,7 @@ su2rad.canvas.GridCanvas.prototype.setDataRange = function () {
     this.legendSteps = nSteps;
 }
 
+
 su2rad.canvas.GridCanvas.prototype._setDataStep = function (delta) {
     var sizes = [1,2,2.5,5]
     for (var m=1; m<1000000; m*=10) {
@@ -662,6 +754,7 @@ su2rad.canvas.GridCanvas.prototype._setDataStep = function (delta) {
     }
     return [stepsize*m, steps]
 }
+
 
 su2rad.canvas.GridCanvas.prototype.setLegend = function (position) {
     this.legend = true;
@@ -678,11 +771,13 @@ su2rad.canvas.GridCanvas.prototype.setLegend = function (position) {
     }
 }
 
+
 su2rad.canvas.GridCanvas.prototype.setLegendLabel = function (label) {
     this.legendLabel = label;
     log.info("legend: label set to '" + this.legendLabel + "'");
     this.draw();
 }
+
 
 su2rad.canvas.GridCanvas.prototype.setLegendLightness = function (value) {
     var v = parseFloat(value);
@@ -699,6 +794,7 @@ su2rad.canvas.GridCanvas.prototype.setLegendLightness = function (value) {
     }
 }
 
+
 su2rad.canvas.GridCanvas.prototype.setLegendMax = function (value) {
     var v = parseFloat(value);
     if ( ! isNaN(v) ) {
@@ -707,6 +803,7 @@ su2rad.canvas.GridCanvas.prototype.setLegendMax = function (value) {
         this.draw();
     }
 }
+
 
 su2rad.canvas.GridCanvas.prototype.setLegendMin = function (value) {
     var v = parseFloat(value);
@@ -717,6 +814,7 @@ su2rad.canvas.GridCanvas.prototype.setLegendMin = function (value) {
     }
 }
 
+
 su2rad.canvas.GridCanvas.prototype.setLegendSteps = function (value) {
     var v = parseFloat(value);
     if ( ! isNaN(v) ) {
@@ -725,6 +823,7 @@ su2rad.canvas.GridCanvas.prototype.setLegendSteps = function (value) {
         this.draw();
     }
 }
+
 
 su2rad.canvas.GridCanvas.prototype.getGraphHeight = function () {
     if ( this.array.bbox == null ) {
@@ -748,11 +847,13 @@ su2rad.canvas.GridCanvas.prototype.getGraphHeight = function () {
     
 }
 
+
 su2rad.canvas.GridCanvas.prototype.setOrigin = function (ctx) {
     // translate to lower left corner off graph area 
     var frame = this.getFrameCoords("center");
     ctx.translate(frame[0], frame[1]+frame[3]);
 }
+
 
 su2rad.canvas.GridCanvas.prototype.setRulerFont = function (ctx) {
     ctx.strokeStyle = this.fgcolor;
@@ -760,7 +861,9 @@ su2rad.canvas.GridCanvas.prototype.setRulerFont = function (ctx) {
     ctx.font = this.fontNormal 
 }
 
+
 su2rad.canvas.GridCanvas.prototype.setRulerWidth = function (ctx) {
+    // calculate ruler width based on legend text width
     ctx.save()
     this.setRulerFont(ctx)
     
@@ -792,6 +895,7 @@ su2rad.canvas.GridCanvas.prototype.setRulerWidth = function (ctx) {
     
     ctx.restore()
 }
+
 
 su2rad.canvas.GridCanvas.prototype.setScale = function () {    
     var dimX = this.array.bbox[1] - this.array.bbox[0] + this.gridstep;
