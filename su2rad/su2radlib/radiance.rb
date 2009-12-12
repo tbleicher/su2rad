@@ -1,3 +1,4 @@
+require 'su2radlib/export_modules.rb'
 
 module Radiance
     
@@ -25,14 +26,16 @@ module Radiance
 
     class Radiance::Material
         
-        attr_reader :name, :comment, :defType, :matType, :text, :rest, :valid, :required
-        
+        attr_reader :name, :comment, :defType, :matType, :text, :rest, :valid, :required, :filepath
+        attr_writer :filepath
+
         def initialize(text)
             @name = ''
             @comment = ''
             @defType = 'material'
             @matType = nil
             @required = 'void'
+            @filepath = ''
             @text = ''
             @rest = ''
             @_group = ''
@@ -70,6 +73,10 @@ module Radiance
             end
         end
         
+        def getPreviewPath
+            return File.join(@filepath + ".preview", @name + ".jpg")
+        end
+
         def identifier
             return @name
         end
@@ -156,10 +163,14 @@ module Radiance
     
     class Radiance::MaterialLibrary
 
+        include RadiancePath
+
         def initialize(path, log=$stdout)
+
             @log = log
             @materials = {}
             @files = []
+            @defaultPath = path
             addPath(path)
             uimessage("=> %s" % getStats())
         end
@@ -191,6 +202,64 @@ module Radiance
             end
         end
        
+        def createMaterialPreview(mname)
+            uimessage("TEST: createMaterialPreview('%s')" % mname, 2) 
+            definition = getMaterialWithDependencies(mname)
+            uimessage("material definition:\n%s" % definition, 2)
+            material = get(mname)
+            path = _createMaterialPreviewImage(mname, definition, material.getPreviewPath)
+            return path
+            #return "testdata/preview/yellow_black.jpg" 
+        end
+        
+        def _createMaterialPreviewImage(mname, definition, path)
+            uimessage("TEST: createMaterialPreviewImage('%s')" % path, 2) 
+            lines = ["#!gensky 3 21 12:00 +i",
+                     "void light solar 0 0 3 1.04e+06 1.04e+06 1.04e+06",
+                     "solar source sun 0 0 4 0.068 -0.62 0.78 0.5",
+                     "void brightfunc skyfunc 2 skybr skybright.cal 0 7 4 2.27e+01 7.6e+00 9.73e-01 0.0678 -0.612 0.784",
+                     "skyfunc glow skyglow 0 0 4 1 1 1 0",
+                     "skyglow source sky 0 0 4 0 0 1 180",
+                     "skyfunc glow groundglow 0 0 4 0.2 0.2 0.2 0",
+                     "groundglow source ground 0 0 4 0 0 1 180",
+                     "void plastic abcdefg 0 0 5 0.8 0.8 0.8 0 0",
+                     "abcdefg polygon square 0 0 12 -5 -5 -1 -5 5 -1 5 5 -1 5 -5 -1",
+                     definition,
+                     "%s sphere testball 0 0 4 0 0 0 1.0" % mname]
+            dirname = File.dirname(path)
+            if createDirectory(dirname)
+                if createFile(path + ".rad", lines.join("\n"))
+                    script = ["cd '#{dirname}'",
+                              "/usr/local/bin/oconv '#{path}.rad' > '#{path}.oct'",
+                              "/usr/local/bin/rpict -x 200 -y 200 -ab 1 -vtv -vp 0 -3 1.5 -vd 0 1 -0.5 -vu 0 0 1 -vv 45 -vh 45 '#{path}.oct' > '#{path}.unf'",
+                              "/usr/local/bin/pfilt '#{path}.unf' > '#{path}.hdr'",
+                              "/usr/local/bin/ra_ppm '#{path}.hdr' '#{path}.ppm'",
+                              "/usr/local/bin/convert -quality 90 '#{path}.ppm' '#{path}'"]
+                    ['oct', 'unf', 'hdr', 'ppm'].each { |ext|
+                        script.push("rm '#{path}.#{ext}'")
+                    }
+                    script.each { |cmd|
+                        runSystemCmd(cmd)
+                    }
+                    return path
+                    if createFile(path + ".sh", script.join("\n"))
+                        if runSystemCmd("bash '#{path}.sh' > '#{path}.log'") != false
+                            #File.delete(path + ".sh")
+                            #File.delete(path + ".rad")
+                            return path
+                        else
+                            uimessage("Error running bash file '#{path}.sh'", -2)
+                        end
+                    end
+                else
+                    uimessage("Error: Could not create file '#{path}.rad'", -2)
+                end
+            else
+                uimessage("Error: Could not create directory '#{dirname}'", -2)
+            end
+            return false
+        end
+
         def getStats
             counts = Hash.new(0)
             @materials.each_value { |m|
@@ -322,7 +391,7 @@ module Radiance
             begin
                 lines = File.new(filename, 'r').readlines()
                 text = purgeLines(lines)
-                parseText(text)
+                parseText(text, filename)
             rescue => e
                 msg = "%s\n  %s" % [$!.message,e.backtrace.join("\n  ")]
                 printf "\n#{msg}\n"
@@ -342,7 +411,7 @@ module Radiance
             return keywords
         end 
         
-        def parseText(text)
+        def parseText(text, filename)
             if text.class == Array
                 text = text.join(" ")
             end
@@ -373,6 +442,7 @@ module Radiance
                 if line.length > 2 and matTypes.has_key?(line[1])
                     m = Radiance::Material.new(line.join(" "))
                     if m.valid?
+                        m.filepath = filename
                         @materials.push(m)
                     end
                 end
@@ -505,6 +575,7 @@ module RadianceUtils
         else
             cmd = "echo '#{marker}' | replmarks -s 1.0 -x #{filename} replaceme"
         end
+        uimessage("xform cmd='#{cmd}'", 4)
         f = IO.popen(cmd)
         lines = f.readlines
         f.close()

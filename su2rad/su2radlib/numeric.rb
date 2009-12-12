@@ -10,11 +10,11 @@ class NumericImportDialog < ExportBase
     include JSONUtils
     include InterfaceBase
 
-    def initialize()
+    def initialize
 
     end
 
-    def show() 
+    def show 
         if $SU2RAD_DIALOG_WINDOW
             $SU2RAD_DIALOG_WINDOW.bring_to_front()
             return
@@ -64,7 +64,7 @@ class NumericImportDialog < ExportBase
     end
 
     def getDirectoryListing(dlg, dirpath)
-        printf "getDirectoryListing (#{dirpath})...\n"
+        ## send directory listing to dialog
         dirpath,root = dirpath.split('&')
         if root == 'true'
             dirs = FileSystemProxy.listDirectoryTree(dirpath)
@@ -76,7 +76,6 @@ class NumericImportDialog < ExportBase
     end
     
     def importFromWebDialog(dlg, opts)
-        printf "importFromWebDialog(#{opts})\n"
         ## get options from URL string
         optsDict = {'filename' => 'unknown'}
         items = opts.split('&')
@@ -110,6 +109,7 @@ class NumericImportDialog < ExportBase
     end
     
     def importDirectory(optsDict)
+        ## loop over files in directory (XXX doesn't work)
         fields = []
         dirpath,filename = File.split(optsDict['filename'])
         if filename.rindex('.') != nil
@@ -136,7 +136,8 @@ class NumericImportDialog < ExportBase
     end
     
     def loadTextFile(dlg, filepath)
-        printf "loadTextFile (filepath='#{filepath}')\n"
+        ## send encoded file content to dialog
+        uimessage("loadTextFile (filepath='#{filepath}')\n", 2)
         text = ''
         if File.exists?(filepath)
             f = File.open(filepath, 'r')
@@ -154,6 +155,7 @@ class NumericImport < ExportBase
     
     include Delauney
     include NumericEntity
+    include Geometry
     
     if not $SU2RAD_LOG
         $SU2RAD_LOG = [] #XXX make singleton class instance
@@ -484,6 +486,7 @@ class NumericImport < ExportBase
     end
     
     def confirmDialog
+        ## show import options with simple UI.dialog
         if @lines.length == 0
             return
         end
@@ -529,7 +532,7 @@ class NumericImport < ExportBase
         createGraph()
     end
     
-    def createGraph()
+    def createGraph
         ## create graph with new options
         
         if @lines.length == 0
@@ -644,6 +647,7 @@ class NumericImport < ExportBase
     end
     
     def createMesh
+        ## create 3D graph as polygon mesh 
         if @lines.length == 0
             return
         end
@@ -660,10 +664,9 @@ class NumericImport < ExportBase
         
         ## create triangles (as indices to array 'points')
         tris = triangulate(points)
-        
         name = getGroupName()
         parentGroup = findGroupByName(name)
-        if parentGroup
+        if parentGroup != nil
             tris = eliminateFillTriangles(parentGroup,tris,points)
         end
         
@@ -677,7 +680,7 @@ class NumericImport < ExportBase
         uimessage("created mesh", 2) 
         
         ## add to parent or create new group
-        if parentGroup
+        if parentGroup != nil
             entities = parentGroup.entities
             name = "#{name}_graph"
             uimessage("applying transformation of '#{name}'", 2) 
@@ -711,6 +714,7 @@ class NumericImport < ExportBase
                 end
             }
         }
+        return nil
     end
     
     def eliminateFillTriangles(parent,triangles,points)
@@ -747,7 +751,7 @@ class NumericImport < ExportBase
         return newTris
     end
     
-    def createLegend()
+    def createLegend
         if @surface == nil or @materials == []
             return
         end
@@ -764,6 +768,7 @@ class NumericImport < ExportBase
     end
     
     def _createLegendFaces(x,y,w,h,dx,dy)
+        ## create coloured squares 
         matnames = @materials.collect { |m| m.name }
         matnames.sort!()
         f_grp = @legend.entities.add_group()
@@ -784,6 +789,7 @@ class NumericImport < ExportBase
     end 
     
     def _createLegendText(x,y,w,h,dx,dy)
+        ## add text to legend 
         tt_grp = @legend.entities.add_group()
         m = Sketchup.active_model.materials['Black'] || Sketchup.active_model.materials.add('Black')
         m.color = Sketchup::Color.new('Black')
@@ -799,13 +805,13 @@ class NumericImport < ExportBase
             t_grp = tt_grp.entities.add_group()
             ## 3d text options:  string, alignment (constant),    font, bold, italic, h,     tol, z, fill, extrusion
             t_grp.entities.add_3d_text(fmt % v, TextAlignLeft, "Arial", true, false,  h/3.0, 0.0, 1, true, 0.0)
-            t_grp.transform!( Geom::Transformation.new([x+0.05*w, y+0.05*h, 0]) )
+            t_grp.transform!( Geom::Transformation.new([x+0.05*w, y+0.7*h, 0]) )
             x += dx
             y += dy
         }
     end
     
-    def getLegendExtents()
+    def getLegendExtents
         bl = @surface.bounds.corner(0)
         tr = @surface.bounds.corner(3)
         if @legendPos == 'right'

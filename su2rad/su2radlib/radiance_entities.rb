@@ -270,7 +270,8 @@ module Geometry
             if e.parent == Sketchup.active_model
                 break
             else
-                e = e.parent
+                ## e.parent is SketchUp::ComponentDefinition
+                e = e.parent.instances[0]
                 transStack.push(e.transformation)
             end
         end
@@ -472,27 +473,29 @@ module NumericEntity
         dy = gsY/unit
         
         points = getNumericEdgePoints(face)
-        polymesh = getNumericMeshes(face, $globaltrans)
-        polymesh.polygons.each { |p|
-            verts = []
-            [0,1,2].each { |i|
-                idx = p[i]
-                verts.push(polymesh.point_at(idx.abs()))
-            }
-            bbox = getBBoxOnGrid(*verts)
-            z = (verts[0].z + verts[1].z + verts[2].z) / 3.0
-            x = bbox[0]
-            while x <= bbox[2]
-                y = bbox[1] 
-                while y <= bbox[3]
-                    pt = Geom::Point3d.new(x,y,z)
-                    if Geom::point_in_polygon_2D pt, verts, true
-                        points.push("%.2f %.2f %.2f 0 0 1" % [pt.x*unit, pt.y*unit, pt.z*unit])
+        polymeshes = getNumericMeshes(face, $globaltrans)
+        polymeshes.each { |pm|
+            pm.polygons.each { |p|
+                verts = []
+                [0,1,2].each { |i|
+                    idx = p[i]
+                    verts.push(pm.point_at(idx.abs()))
+                }
+                bbox = getBBoxOnGrid(*verts)
+                z = (verts[0].z + verts[1].z + verts[2].z) / 3.0
+                x = bbox[0]
+                while x <= bbox[2]
+                    y = bbox[1] 
+                    while y <= bbox[3]
+                        pt = Geom::Point3d.new(x,y,z)
+                        if Geom::point_in_polygon_2D pt, verts, true
+                            points.push("%.2f %.2f %.2f 0 0 1" % [pt.x*unit, pt.y*unit, pt.z*unit])
+                        end
+                        y += dy
                     end
-                    y += dy
+                    x += dx
                 end
-                x += dx
-            end
+            }
         }
         return points
     end
@@ -663,9 +666,6 @@ class RadiancePolygon < ExportBase
     def getPolygonText(points, count, trans)
         ## return chunk of text to describe face in global/local space
         skm = getEffectiveMaterial(@face)
-        #if skm == nil
-        #    printf "## no material\n"
-        #end
         matname = getMaterialName(skm)
         
         ## create text of polygon in world coords for byColor/byLayer

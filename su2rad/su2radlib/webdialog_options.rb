@@ -291,9 +291,10 @@ class RenderOptions
         dict.each_pair { |k,v|
             old = eval("@%s" % k)
             if old != v
-                uimessage("new Value for %s: %s", 1)
+                uimessage("new Value for '%s': '%s'" % [k,v], 1)
             end
             if old.class == String
+                ## add quotes to force eval to string
                 v = "'%s'" % v
             end
             begin

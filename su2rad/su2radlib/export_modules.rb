@@ -265,6 +265,7 @@ module RadiancePath
                 return false
             end
         }
+        return true
     end
    
     def createFile(filename, text)
