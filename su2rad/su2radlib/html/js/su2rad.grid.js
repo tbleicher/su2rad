@@ -215,6 +215,7 @@ su2rad.grid.GridArray.prototype.analyzeGrid = function () {
     } catch (e) {
         logError(e)
     }
+    this.values.sort(this.sortByFloatValue);
     this.calcStats();
     this.fillRows();
     this.sortArray();
@@ -224,7 +225,6 @@ su2rad.grid.GridArray.prototype.makeConvex = function() {
     if (this.triangles.length == 0) {
         return
     }
-    //log.debug("makeConvex: triangles start=" + this.triangles.length)
     newtris = []
     ltris = []
     r2 = 0.25*0.25
@@ -282,6 +282,15 @@ su2rad.grid.GridArray.prototype.calcStats = function () {
     }
 }
 
+su2rad.grid.GridArray.prototype.calcMedian = function () {
+    log.debug("DEBUG: calcMedian")
+    var idx = parseInt(this.values.length/2)
+    log.debug("DEBUG: median idx=" + idx)
+    log.debug("DEBUG: calcMedian")
+    return this.values[idx]
+}
+        
+        
 su2rad.grid.GridArray.prototype.getStatsAsText = function () {
     var lines = new Array();
     var stats = this.getStats();
@@ -309,6 +318,7 @@ su2rad.grid.GridArray.prototype.empty = function () {
 
 su2rad.grid.GridArray.prototype.fillRows = function () {
     // fill gaps in rows with points of value -1
+    // left over from ortho grid 
     this.cols.sort(this.sortByFloatValue);
     this.rows.sort(this.sortByFloatValue);
     for (var i=0; i<this.rows.length; i++) {
@@ -380,10 +390,10 @@ su2rad.grid.GridArray.prototype.getCommentLines = function () {
     return this.commentLines;
 }
 
-su2rad.grid.GridArray.prototype.getContourLinesAt = function (level) {
+su2rad.grid.GridArray.prototype.getContourLinesAtOld = function (level) {
     // return array of contour line segments 
     
-    // log.debug("getContourLinesAt(level=" + level.toFixed(2) + ")") 
+    log.debug("getContourLinesAt(level=" + level.toFixed(2) + ")") 
     // check cache first
     if (this._contourCache[level] != null) {
         return this._contourCache[level]
@@ -452,6 +462,67 @@ su2rad.grid.GridArray.prototype.getContourLinesAt = function (level) {
     
     // add lines to cache and return array
     this._contourCache[level] = lines;
+    return lines;
+}
+
+
+su2rad.grid.GridArray.prototype.getContourLinesAt = function (level) {
+    // return array of contour line segments 
+    
+    log.info("getContourLinesAt(level=" + level.toFixed(2) + ")") 
+    // check cache first
+    // if (this._contourCache[level] != null) {
+    //    return this._contourCache[level]
+    // }
+    
+    var lines = []
+    var errorTris = 0
+    for (var i=0;i<this.triangles.length;i+=1) {
+        var points = []
+        var t = this.triangles[i]
+        try {
+            if (t.v0.z == level) {
+                points.push( [v0.x,v0.y,v0.z] )
+            }
+            if (t.v1.z == level) {
+                points.push( [v1.x,v1.y,v1.z] )
+            }
+            if (t.v2.z == level) {
+                points.push( [v2.x,v2.y,v2.z] )
+            }
+            if (t.v0.z < level && t.v1.z > level) {
+                points.push(t.getPointOnEdge(t.v0,t.v1,level))
+            }
+            if (t.v0.z < level && t.v2.z > level) {
+                points.push(t.getPointOnEdge(t.v0,t.v2,level))
+            }
+            if (t.v1.z < level && t.v0.z > level) {
+                points.push(t.getPointOnEdge(t.v1,t.v0,level))
+            }
+            if (t.v1.z < level && t.v2.z > level) {
+                points.push(t.getPointOnEdge(t.v1,t.v2,level))
+            }
+            if (t.v2.z < level && t.v0.z > level) {
+                points.push(t.getPointOnEdge(t.v2,t.v0,level))
+            }
+            if (t.v2.z < level && t.v1.z > level) {
+                points.push(t.getPointOnEdge(t.v2,t.v1,level))
+            }
+        } catch (e) {
+            errorTris += 1;
+            log.error(e)
+        }
+
+        // 
+        if (points.length == 1) {
+            log.error("DEBUG: points.length = " + points.length)
+        } else if (points.length == 2) {
+            lines.push( [points[0], points[1]] )
+        }
+    }
+
+    // this._contourCache[level] = lines;
+    log.info("=> getContourLinesAtNew() lines=" + lines.length) 
     return lines;
 }
 
@@ -568,6 +639,7 @@ su2rad.grid.GridArray.prototype.readArray = function (gridarray) {
     for (var i=0; i<gridarray.length; i++) {
         this.addPoint(gridarray[i]);
     }
+    this.values.sort(this.sortByFloatValue);
     this.analyzeGrid()
 }
 

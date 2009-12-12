@@ -52,6 +52,7 @@ su2rad.dialog.loadFileCallback = function (text) {
 su2rad.dialog.loadTextFile = function (fname) {
     log.debug("loadTextFile() fname='" + fname + "'");
     if (su2rad.SKETCHUP == true) {
+        log.debug("skp:loadTextFile@" + fname);
         window.location = 'skp:loadTextFile@' + fname;
     } else {
         log.warn("Warning: can't load file without backend! (fname='" + fname + "')");

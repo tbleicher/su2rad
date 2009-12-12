@@ -740,7 +740,7 @@ div.mdev:hover {
 .listPanel {
     float: left;
     width: 44%;
-    height: 301px;
+    height: 305px;
     overflow: auto;
 }
 .listOptions {
@@ -786,7 +786,8 @@ div.mdev:hover {
     position: relative;
     top: -3px;
     cursor: pointer;
-    background: url(16-circle-red-remove.png) no-repeat right; 
+    /* background: url(16-circle-red-remove.png) no-repeat right; */ 
+    background: url(red_cross_16.png) no-repeat right; 
 }
 .detailsPanel {
     height: 200px;
@@ -815,11 +816,26 @@ div.mdev:hover {
 }
 #panelPreview {
     width: 200px;
-    margin: 0;
+    margin: 0px;
+    padding: 0px;
     float: right;
     position: relative;
     right: -10px;
     background: url(material_preview_bg.png) no-repeat; 
+}
+.materialPreviewImage {
+    margin: 0px;
+    padding: 0px;
+    width: 200px;
+    height: 198px;
+}
+.materialPreviewButton {
+    margin: 0px;
+    margin-left: 25px;
+    margin-top: 90px;
+    font-size: 12px;
+    height: 20px;
+    width: 150px;
 }
 #panelDetails {
     margin: 0;

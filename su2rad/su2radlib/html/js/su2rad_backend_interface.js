@@ -192,15 +192,15 @@ function setMaterialsListJSON(text, type) {
             log.error("json= " + json.replace(/,/g,',<br/>'));
         }
         if (type == 'skm') {
-            skmMaterialsList.update(newMats);
-            buildMaterialListByType('skm')
+            su2rad.materials.skmList.update(newMats);
+            su2rad.materials.buildMaterialListByType('skm')
         } else if (type == 'layer') {
-            layerMaterialsList.update(newMats);
-            buildMaterialListByType('layer')
+            su2rad.materials.layersList.update(newMats);
+            su2rad.materials.buildMaterialListByType('layer')
         } else if (type == 'rad') {
-            radMaterialsList.update(newMats);
-            setGroupSelection()
-            buildMaterialListRad()
+            su2rad.materials.radList.update(newMats);
+            su2rad.materials.setGroupSelection()
+            su2rad.materials.buildMaterialListRad()
         } else {
             log.warn("unknown material list type '" + type + "'");
         }

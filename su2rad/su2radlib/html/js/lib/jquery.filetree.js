@@ -59,6 +59,7 @@ if(jQuery) (function($){
                 }
                                 
                 function showTree(c, t, root) {
+                    log.debug("showTree(root='" + root + "')")
                     $("#ft_debug").text("current: " + t.toString());
                     $(c).addClass('wait');
                     $(".jqueryFileTree.start").remove();

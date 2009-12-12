@@ -86,17 +86,21 @@ su2rad.dialog.gridImport.importGraphToSketchup = function (allfiles) {
 
 su2rad.dialog.gridImport.loadFileIDOM = function () {
     log.debug("loadFileIDOM()")
+    var text = ""
+    var filename = ""
     try {
         // access file contents via nsIDOMFileList (FireFox, Mozilla)
         var files = document.getElementById("loadFileSelection").files;
-        var text = files.item(0).getAsText('UTF-8');
-        var filename = files.item(0).fileName
-        this.parseFileText(text, filename);
+        text = files.item(0).getAsText('UTF-8');
+        filename = files.item(0).fileName
     } catch (e) {
         logError(e)
         alert("Sorry, your browser does not support this feature.\n\n" + e)
         document.getElementById("loadFileSelectionDiv").style.display='none'; 
         document.getElementById("loadFileWarning").style.display='';
+    }
+    if (text != "") {
+        this.parseFileText(text, filename);
     }
 }
 

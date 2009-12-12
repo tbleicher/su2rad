@@ -10,7 +10,11 @@ fileSelector.callback = function (path) {
 
 fileSelector.applyPath = function () {
     log.debug("applyPath()")
-    this.callback(this._filePath);
+    try {
+        this.callback(this._filePath);
+    } catch (e) {
+        logError(e)
+    }
 }
 
 fileSelector.getFilepath = function () {
@@ -33,6 +37,7 @@ fileSelector.select = function () {
 }            
 
 fileSelector.show = function(ftRoot) {
+    log.debug("fileSelector.show(ftRoot='" + ftRoot + "')");
     try {
         //if ( ! ftRoot ) {
         //    ftRoot = su2rad.dialog.getDefaultDirectory();

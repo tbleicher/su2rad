@@ -689,7 +689,7 @@
                         <div class="listOptions">
                             <div>Radiance names
                                 <input type=checkbox class="cbListOption"
-                                id="showRadianceName" onclick="onChangeSkmLabel()">
+                                id="showRadianceName" onclick="su2rad.materials.onChangeSkmLabel()">
                             </div>
                         </div>
                         <div class="mlistPanel" id="skmListPanel">
@@ -699,13 +699,13 @@
                     <div class="listPanel" style="float:none;">
                         <div class="listOptions">
                             <div style="float:left;margin:0;margin-left:3px;margin-top:1px;">
-                                <select style="width:100px;" id="showMaterialGroup" onchange="buildMaterialListRad()">
+                                <select style="width:100px;" id="showMaterialGroup" onchange="su2rad.materials.buildMaterialListRad()">
                                     <option value="all" selected>all</option>
                                 </select>
                             </div>
-                            <!-- <div>light<input type=checkbox class="cbListOption" id="showDefType_light" onclick="buildMaterialListRad()"></div> -->
-                            <!-- <div>pattern<input type=checkbox class="cbListOption" id="showDefType_pattern" onclick="buildMaterialListRad()"></div> -->
-                            <div>alias<input type=checkbox class="cbListOption" id="showDefTypeAlias" onclick="buildMaterialListRad()"></div>
+                            <!-- <div>light<input type=checkbox class="cbListOption" id="showDefType_light" onclick="su2rad.materials.buildMaterialListRad()"></div> -->
+                            <!-- <div>pattern<input type=checkbox class="cbListOption" id="showDefType_pattern" onclick="su2rad.materials.buildMaterialListRad()"></div> -->
+                            <div>alias<input type=checkbox class="cbListOption" id="showDefTypeAlias" onclick="su2rad.materials.buildMaterialListRad()"></div>
                         </div>
                         <div class="mlistPanel" id="radListPanel"></div>
                     </div>
