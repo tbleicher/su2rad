@@ -26,7 +26,7 @@ module Radiance
 
     class Radiance::Material
         
-        attr_reader :name, :comment, :defType, :matType, :text, :rest, :valid, :required, :filepath
+        attr_reader :name, :comment, :defType, :matType, :text, :preview, :rest, :valid, :required, :filepath
         attr_writer :filepath
 
         def initialize(text)
@@ -39,12 +39,13 @@ module Radiance
             @text = ''
             @rest = ''
             @_group = ''
+            @preview = ''
             begin
                 @valid = parseText(text)
             rescue => e
                 printf "Error in text: '#{text}'\n"
-                msg = "%s\n  %s" % [$!.message,e.backtrace.join("\n  ")]
-                printf "\n#{msg}\n"
+                #msg = "%s\n  %s" % [$!.message,e.backtrace.join("\n  ")]
+                #printf "\n#{msg}\n"
                 @valid = false
             end
         end
@@ -74,7 +75,15 @@ module Radiance
         end
         
         def getPreviewPath
-            return File.join(@filepath + ".preview", @name + ".jpg")
+            if @preview != ''
+                return @preview
+            end
+            if @filepath[-4,1] == "."
+                filepath = @filepath[0..-5]
+            else
+                filepath = @filepath
+            end
+            return File.join(filepath + ".preview", @name + ".jpg")
         end
 
         def identifier
@@ -86,8 +95,8 @@ module Radiance
                 @valid = _parseText(text)
             rescue => e
                 printf "\nError in text: '#{text}'\n"
-                msg = "%s\n%s" % [$!.message,e.backtrace.join("\n")]
-                printf "\n#{msg}\n"
+                #msg = "%s\n%s" % [$!.message,e.backtrace.join("\n")]
+                #printf "\n#{msg}\n"
                 @valid = false
                 @name = ''
                 @text = ''
@@ -123,8 +132,8 @@ module Radiance
                 idx3 = 5 + step1 + step2
                 nargs = Integer(parts[idx3])
                 n = idx3 + nargs
-                line1 = parts[idx1..idx1].join(' ')
-                line2 = parts[idx2..idx2].join(' ')
+                line1 = parts[idx1...idx2].join(' ')
+                line2 = parts[idx2...idx3].join(' ')
                 line3 = parts[idx3..n].join(' ')
                 @text = ["#{@required} #{@matType} #{@name}", line1, line2, line3].join("\n")
                 if parts.length > n+1
@@ -147,6 +156,13 @@ module Radiance
                 return "## %s\n%s\n%s" % [@name, @comment, @text]
             else
                 return "## %s\n%s" % [@name,@text]
+            end
+        end
+
+        def setFilepath(filepath)
+            @filepath = filepath
+            if File.exists?(getPreviewPath())
+                @preview = getPreviewPath()
             end
         end
 
@@ -207,13 +223,18 @@ module Radiance
             definition = getMaterialWithDependencies(mname)
             uimessage("material definition:\n%s" % definition, 2)
             material = get(mname)
-            path = _createMaterialPreviewImage(mname, definition, material.getPreviewPath)
-            return path
-            #return "testdata/preview/yellow_black.jpg" 
+            puts "material:", material
+            if material
+                path = _createMaterialPreviewImage(mname, definition, material.getPreviewPath)
+                return path
+            else
+                return ""
+            end
         end
         
         def _createMaterialPreviewImage(mname, definition, path)
-            uimessage("TEST: createMaterialPreviewImage('%s')" % path, 2) 
+            uimessage("TEST: createMaterialPreviewImage('%s')" % path, 2)
+            uimessage("material definition:\n#{definition}", 2)
             lines = ["#!gensky 3 21 12:00 +i",
                      "void light solar 0 0 3 1.04e+06 1.04e+06 1.04e+06",
                      "solar source sun 0 0 4 0.068 -0.62 0.78 0.5",
@@ -235,9 +256,10 @@ module Radiance
                               "/usr/local/bin/pfilt '#{path}.unf' > '#{path}.hdr'",
                               "/usr/local/bin/ra_ppm '#{path}.hdr' '#{path}.ppm'",
                               "/usr/local/bin/convert -quality 90 '#{path}.ppm' '#{path}'"]
-                    ['oct', 'unf', 'hdr', 'ppm'].each { |ext|
+                    ['rad', 'oct', 'unf', 'hdr', 'ppm'].each { |ext|
                         script.push("rm '#{path}.#{ext}'")
                     }
+                    ENV['RAYPATH'] = '/usr/local/lib/ray'
                     script.each { |cmd|
                         runSystemCmd(cmd)
                     }
@@ -391,7 +413,7 @@ module Radiance
             begin
                 lines = File.new(filename, 'r').readlines()
                 text = purgeLines(lines)
-                parseText(text, filename)
+                parseSceneText(text, filename)
             rescue => e
                 msg = "%s\n  %s" % [$!.message,e.backtrace.join("\n  ")]
                 printf "\n#{msg}\n"
@@ -411,7 +433,7 @@ module Radiance
             return keywords
         end 
         
-        def parseText(text, filename)
+        def parseSceneText(text, filename)
             if text.class == Array
                 text = text.join(" ")
             end
@@ -442,7 +464,7 @@ module Radiance
                 if line.length > 2 and matTypes.has_key?(line[1])
                     m = Radiance::Material.new(line.join(" "))
                     if m.valid?
-                        m.filepath = filename
+                        m.setFilepath(filename)
                         @materials.push(m)
                     end
                 end
@@ -513,10 +535,18 @@ end
 
 module RadianceUtils
 
+    # remove characters not allowed in Radiance from <name>
     def getRadianceIdentifier(name)
-        return name.gsub(/\s+/, '_').gsub(/\W/, '')
+        newname = ""
+        name.each_byte { |b|
+            if b.chr() =~ /[\w.-]/
+                newname += b.chr()
+            end
+        }
+        return newname
     end
     
+    # check in <word> is key word used in Radiance
     def isRadianceKeyword?(word)
         isKey = false;
         isKey = Radiance::Keywords_Geometry[word] || isKey
@@ -527,8 +557,8 @@ module RadianceUtils
         return isKey
     end
 
+    # test if transformation can be created with xform (uniform scale etc)
     def isRadianceTransformation?(trans)
-        ## test if trans can be created with xform (uniform scale only)
         a = trans.to_a
         vx = Geom::Vector3d.new(a[0..2])
         vy = Geom::Vector3d.new(a[4..6])
@@ -543,8 +573,8 @@ module RadianceUtils
         return true
     end
     
+    # return xform command for transformation matrix <trans>
     def xformFromReplmarks(trans, filename, objname, scale)
-        ## return xform command for transformation <trans>
         #TODO: get mirror axes from trans
         mirror = ""
         

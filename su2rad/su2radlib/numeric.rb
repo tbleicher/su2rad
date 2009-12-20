@@ -88,6 +88,13 @@ class NumericImportDialog < ExportBase
             if optsDict['allfiles'] == 'true'
                 dlg.close()
                 importDirectory(optsDict)
+            elsif optsDict['triangles'] != nil
+                text = dlg.get_element_value(optsDict['triangles'])
+                triangles = eval(text)
+                ni = NumericImport.new()
+                ni.setTriangles(triangles)
+                ni.applyOptions(optsDict)
+                ni.createGraphFromTriangles()
             else
                 ## try to get values, set options and create graph
                 values = dlg.get_element_value(optsDict['elementId'])
@@ -182,7 +189,8 @@ class NumericImport < ExportBase
         @lines = []         ## raw lines in values file
         @maxvalue = 0.0     ## max in values
         @minvalue = 0.0     ## min in values
-        
+        @triangles = []
+
         @surface = nil      ## SU group for graph entities
         @legend = nil       ## SU group for legend entities
         @materials = []
@@ -473,6 +481,7 @@ class NumericImport < ExportBase
     end
 
     def setLines(lines)
+        ## set file text as array of lines
         @lines = lines
         begin
             cleanLines()
@@ -484,7 +493,16 @@ class NumericImport < ExportBase
         end
         return true
     end
-    
+   
+    def setTriangles(triangles)
+        ## triangles as array of [v1,v2,v3] vertices
+        @triangles = triangles
+
+        uimessage("TEST: triangles.length=%d" % triangles.length, 2)
+        #getMaxValue()
+        #setCLStep()
+    end
+
     def confirmDialog
         ## show import options with simple UI.dialog
         if @lines.length == 0
@@ -561,6 +579,28 @@ class NumericImport < ExportBase
         end
     end
    
+    def createGraphFromTriangles
+        ## create individual faces from triangles
+        name = getGroupName()
+        parentGroup = findGroupByName(name)
+        if parentGroup != nil
+            tris = eliminateFillTriangles(parentGroup,tris,points)
+        end
+        if parentGroup != nil
+            entities = parentGroup.entities
+            name = "#{name}_graph"
+            uimessage("applying transformation of '#{name}'", 2) 
+            ptrans = getGlobalTransformation(parentGroup) * parentGroup.transformation
+            ptrans = ptrans.invert!()
+        else
+            entities = Sketchup.active_model.entities
+        end
+        @surface = entities.add_group
+        @surface.name = name
+        uimessage("added surface group '#{name}' to scene", 2) 
+        
+    end
+
     def cleanLines
         newlines = []
         @lines.each { |l|
@@ -646,24 +686,35 @@ class NumericImport < ExportBase
         @scalevalue = divider.to_f / step
     end
     
+    def getIndexedTris
+        ## get array of points and triangles with indexes from @triangles
+        #XXX
+    end
+
     def createMesh
         ## create 3D graph as polygon mesh 
-        if @lines.length == 0
-            return
+        if @triangles == []
+            if @lines.length == 0
+                return
+            end
+            uimessage("processing %d values" % @lines.length, 2) 
+            points = []
+            @lines.each { |l|
+                x = l[0]
+                y = l[1]
+                z = @zOffset
+                v = l[@index_value]
+                dz = v / @scalevalue
+                points.push([x,y,z+dz])
+            }
+            
+            ## create triangles (as indices to array 'points')
+            tris = triangulate(points)
+        else
+            tris, points = getIndexedTris()
         end
-        uimessage("processing %d values" % @lines.length, 2) 
-        points = []
-        @lines.each { |l|
-            x = l[0]
-            y = l[1]
-            z = @zOffset
-            v = l[@index_value]
-            dz = v / @scalevalue
-            points.push([x,y,z+dz])
-        }
-        
-        ## create triangles (as indices to array 'points')
-        tris = triangulate(points)
+
+        ## find containing group 
         name = getGroupName()
         parentGroup = findGroupByName(name)
         if parentGroup != nil
