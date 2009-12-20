@@ -61,6 +61,7 @@ class RadMaterial < ListMaterial
         d['group']      = @material.getGroup()
         d['defType']    = @material.defType
         d['definition'] = @material.getText().gsub(/\n/, '<br/>')
+        d['preview']    = @material.preview
         d['required']   = @material.required
         d['mType']      = @material.getType()
         d['defined']    = "%s" % @defined

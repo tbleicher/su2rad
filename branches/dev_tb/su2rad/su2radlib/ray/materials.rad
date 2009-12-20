@@ -499,7 +499,7 @@ void brightfunc arm_pat
 2 arm_wire plink.cal
 0
 0
-arm_pat glass rough_wire-reinforced_glass_7
+arm_pat glass rough_wire_reinforced_glass_7
 0
 0
 3 0.90304 0.97144 0.918244
@@ -507,7 +507,7 @@ arm_pat glass rough_wire-reinforced_glass_7
 #
 # smooth_wire-reinforced_glass_6.5 / Verre_glace_armee_6.5
 #
-void glass smooth_wire-reinforced_glass_6.5
+void glass smooth_wire_reinforced_glass_6.5
 0
 0
 3 0.804159 0.99857 0.866106
