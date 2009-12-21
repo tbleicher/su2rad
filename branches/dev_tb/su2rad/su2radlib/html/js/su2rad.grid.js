@@ -465,6 +465,25 @@ su2rad.grid.GridArray.prototype.getContourLinesAtOld = function (level) {
     return lines;
 }
 
+su2rad.grid.GridArray.prototype.trianglesToText = function () {
+    if (this.triangles.length == 0) {
+        return "[]"
+    }
+    // if we have triangles create nested array
+    var tris = []
+    for (var i=0;i<this.triangles.length;i+=1) {
+        var t = this.triangles[i]
+        try {
+            var line = "[[" + t.v0.x + "," + t.v0.y + "," + t.v0.z + "]"
+            line +=    ",[" + t.v1.x + "," + t.v1.y + "," + t.v1.z + "]"
+            line +=    ",[" + t.v2.x + "," + t.v2.y + "," + t.v2.z + "]]"
+            tris.push(line)
+        } catch (e) {
+            logError(e)
+        }
+    }
+    return "[" + tris.join(",\n") + "]"
+}
 
 su2rad.grid.GridArray.prototype.getContourLinesAt = function (level) {
     // return array of contour line segments 

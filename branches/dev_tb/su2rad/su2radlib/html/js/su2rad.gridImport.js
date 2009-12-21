@@ -66,21 +66,32 @@ su2rad.dialog.gridImport.makeConvex = function () {
 }
 
 su2rad.dialog.gridImport.importGraphToSketchup = function (allfiles) {
-    //log.debug("DEBUG: importGraphToSketchup")
-    if (this.gCanvas.array == null || this.gCanvas.array.empty() == true) {
-        log.info("nothing to import")
-        return;
-    }
-    opts = this.gCanvas.getLegendOptions();
-    opts.elementId = 'textfilecontent';
-    txt  = 'maxValue='  + opts.maxValue.toFixed(2) + '&'
-    txt += 'minValue='  + opts.minValue.toFixed(2) + '&'
-    txt += 'steps='     + opts.steps.toFixed() + '&'
-    txt += 'elementId=' + opts.elementId + '&' 
-    txt += 'filename='  + escape(this.filename) + '&'
-    txt += 'allfiles='  + allfiles
-    if (su2rad.SKETCHUP == true) {
-        window.location = 'skp:importFromWebDialog@' + txt;
+    log.debug("DEBUG: importGraphToSketchup")
+    try {
+        if (this.gCanvas.array == null || this.gCanvas.array.empty() == true) {
+            log.info("nothing to import")
+            return;
+        }
+        var opts = this.gCanvas.getLegendOptions();
+        // disabled trianglesToText because it doesn't work better
+        //var tritext = this.gCanvas.array.trianglesToText()
+        document.getElementById('trianglesjson').value = tritext
+        opts.triangles = 'trianglesjson';
+        log.debug("DEBUG: set triangles text: " + tritext.length + " bytes")
+        opts.elementId = 'textfilecontent';
+        txt  = 'maxValue='  + opts.maxValue.toFixed(2) + '&'
+        txt += 'minValue='  + opts.minValue.toFixed(2) + '&'
+        txt += 'steps='     + opts.steps.toFixed() + '&'
+        txt += 'elementId=' + opts.elementId + '&' 
+        // disabled trianglesToText because it doesn't work better
+        //txt += 'triangles=' + opts.triangles + '&' 
+        txt += 'filename='  + escape(this.filename) + '&'
+        txt += 'allfiles='  + allfiles
+        if (su2rad.SKETCHUP == true) {
+            window.location = 'skp:importFromWebDialog@' + txt;
+        }
+    } catch (e) {
+        log.error(e)
     }
 }
 
