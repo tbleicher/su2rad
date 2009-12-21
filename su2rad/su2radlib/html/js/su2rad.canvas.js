@@ -300,7 +300,7 @@ su2rad.canvas.GridCanvas.prototype.drawContourLines = function (ctx) {
         //     continue
         // }
         try {
-            var lines = this.array.getContourLinesAtNew(n*dValue);
+            var lines = this.array.getContourLinesAt(n*dValue);
         } catch(e) {
             logError(e)
             continue
