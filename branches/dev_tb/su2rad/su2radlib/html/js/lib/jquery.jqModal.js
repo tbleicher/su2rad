@@ -7,7 +7,7 @@
  *   http://www.opensource.org/licenses/mit-license.php
  *   http://www.gnu.org/licenses/gpl.html
  * 
- * $Version: 07/06/2008 +r13
+ * $Version: 03/01/2009 +r14
  */
 (function($) {
 $.fn.jqm=function(o){
@@ -32,16 +32,12 @@ if(p.trigger)$(this).jqmAddTrigger(p.trigger);
 
 $.fn.jqmAddClose=function(e){return hs(this,e,'jqmHide');};
 $.fn.jqmAddTrigger=function(e){return hs(this,e,'jqmShow');};
-$.fn.jqmShow=function(t){return this.each(function(){$.jqm.open(this._jqm,t);});};
-$.fn.jqmHide=function(t){return this.each(function(){$.jqm.close(this._jqm,t)});};
+$.fn.jqmShow=function(t){return this.each(function(){t=t||window.event;$.jqm.open(this._jqm,t);});};
+$.fn.jqmHide=function(t){return this.each(function(){t=t||window.event;$.jqm.close(this._jqm,t)});};
 
 $.jqm = {
 hash:{},
-open:function(s,t) {
- var h=H[s];
- var c=h.c;
- var cc='.'+c.closeClass;
- var z=(parseInt(h.w.css('z-index'))),z=(z>0)?z:3000,o=$('<div></div>').css({height:'100%',width:'100%',position:'fixed',left:0,top:0,'z-index':z-1,opacity:c.overlay/100});if(h.a)return F;h.t=t;h.a=true;h.w.css('z-index',z);
+open:function(s,t){var h=H[s],c=h.c,cc='.'+c.closeClass,z=(parseInt(h.w.css('z-index'))),z=(z>0)?z:3000,o=$('<div></div>').css({height:'100%',width:'100%',position:'fixed',left:0,top:0,'z-index':z-1,opacity:c.overlay/100});if(h.a)return F;h.t=t;h.a=true;h.w.css('z-index',z);
  if(c.modal) {if(!A[0])L('bind');A.push(s);}
  else if(c.overlay > 0)h.w.jqmAddClose(o);
  else o=F;
