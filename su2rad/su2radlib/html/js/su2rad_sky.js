@@ -282,7 +282,7 @@ SkyDateTimeObject.prototype.toGenskyString = function () {
 
 
 function onGenskyInputChanged(opt) {
-    // log.debug("onGenskyInputChanged(opt='" + opt + "')");
+    log.debug("onGenskyInputChanged(opt='" + opt + "')");
     var id = "genskyOptionInput" + opt;
     var val = document.getElementById(id).value;
     var v = parseFloat(val);
@@ -298,7 +298,7 @@ function onGenskyInputChanged(opt) {
 }
 
 function onGenskyOptionCB(opt) {
-    // log.debug("onGenskyOptionCB(opt='" + opt + "'");
+    log.debug("onGenskyOptionCB(opt='" + opt + "'");
     try {
         var cbid = "genskyOptionCB_" + opt;
         var cb = document.getElementById(cbid);
@@ -313,6 +313,7 @@ function onGenskyOptionCB(opt) {
 }
 
 function onSkyDateTimeChange(id) {
+    log.debug("onSkyDateTimeChange(id='" + id + "'");
     var val = document.getElementById(id).value;
     if (val.indexOf('0') == 0 && val.length == 2) {
         val = val.substring(1,2);
@@ -470,6 +471,7 @@ function _updateGenskyOptions() {
 }
 
 function _updateGenskyOptionsDiv(opt) {
+    log.debug("_updateGenskyOptionsDiv(opt='" + opt + "'");
     var text = "";
     var state = "";
     if (skyOptions.isActive(opt) == true) {
@@ -507,14 +509,14 @@ function _updateGenskyOptionsDiv(opt) {
     }
 }
 
-// function disableGenskyOverride(opt) {
-//     log.debug("disableGenskyOverride('" + opt + "')");
-//     enableGenskyOption(opt, false);
-// }
-// function enableGenskyOverride(opt) {
-//     log.debug("enableGenskyOverride('" + opt + "')");
-//     enableGenskyOption(opt, true);
-// }
+function disableGenskyOverride(opt) {
+    log.debug("disableGenskyOverride('" + opt + "')");
+    enableGenskyOption(opt, false);
+}
+function enableGenskyOverride(opt) {
+    log.debug("enableGenskyOverride('" + opt + "')");
+    enableGenskyOption(opt, true);
+}
 
 function enableGenskyOption(opt, enable) {
     log.debug("enableGenskyOption(opt='" + opt + "'");

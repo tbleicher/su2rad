@@ -75,9 +75,9 @@ su2rad.dialog.gridImport.importGraphToSketchup = function (allfiles) {
         var opts = this.gCanvas.getLegendOptions();
         // disabled trianglesToText because it doesn't work better
         //var tritext = this.gCanvas.array.trianglesToText()
-        document.getElementById('trianglesjson').value = tritext
-        opts.triangles = 'trianglesjson';
-        log.debug("DEBUG: set triangles text: " + tritext.length + " bytes")
+        //document.getElementById('trianglesjson').value = tritext
+        //opts.triangles = 'trianglesjson';
+        //log.debug("DEBUG: set triangles text: " + tritext.length + " bytes")
         opts.elementId = 'textfilecontent';
         txt  = 'maxValue='  + opts.maxValue.toFixed(2) + '&'
         txt += 'minValue='  + opts.minValue.toFixed(2) + '&'

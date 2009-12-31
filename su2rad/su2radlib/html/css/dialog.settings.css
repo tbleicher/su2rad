@@ -1,0 +1,73 @@
+/*****************/
+/*   MATERIALS   */
+/*****************/
+
+a {
+    color: #27537a;
+    text-decoration: none;
+}
+
+.settings > div {
+    margin-top:     3px;
+    padding:        10px;
+    padding-bottom: 7px;
+    border: 1px solid #27537a; /* blue-grey */
+    background-color: #cbe6f4;
+}
+
+.setting_name {
+    font-size:      12px;
+    font-weight:    bold;
+    color:          #27537a;
+}
+
+.settings div input {
+    /* background:     white; */
+    postition:      relative;
+    top:            -3px;
+    padding:        0px;
+    height:         16px;
+    width:          350px;
+    float:          right;
+}
+
+.settings div input[type=button] {
+    width:          50px;
+    margin-left:    10px;
+    height:         20px;
+    postition:      relative;
+    top:            -4px;
+}
+
+.settings div input.numberInput {
+    width:          96px;
+    margin-right:   254px;
+}
+
+.settings div input.pathInput {
+    width:          290px;
+}
+
+.settings div select {
+    padding: 0px;
+    width: 100px;
+    float: right;
+    margin: 0px;
+    margin-right: 254px;
+}
+
+.setting_help {
+    display: none;
+    margin-top: 10px;
+    margin-left: 30px;
+    margin-right: 30px;
+    font-size: 12px;
+    text-align: justify;
+    color: grey;
+}
+
+#settings_container {
+    margin-top: 15px;
+    max-width: 620px;
+}
+

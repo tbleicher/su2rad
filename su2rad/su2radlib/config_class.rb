@@ -3,10 +3,10 @@ class RunTimeConfig
    
     attr_reader :filename
         
-    @@_dict = {'MODE'     => 'by color',
+    @@_dict = {'MODE'    => 'by color',
         'MAKEGLOBAL'     => false,
         'TRIANGULATE'    => false,
-        'TEXTURES'       => true,
+        'TEXTURES'       => false,
 
         'SHOWRADOPTS'    => false,
         'EXPORTALLVIEWS' => false,
@@ -21,23 +21,27 @@ class RunTimeConfig
         'GRIDSPACINGY'   => 0.25,    ## assumes meters!
 
         ## path template
-        'PATHTMPL'  => '$FILE/radiance/$PAGE.rif',
+        'PATHTMPL'      => '$FILE/radiance/$PAGE.rif',
         
         ## paths to utility programs
-        'REPLMARKS' => '',
-        'CONVERT'   => '',
-        'RA_PPM'    => '',
-        'OBJ2MESH'  => '',
+        'REPLMARKS'     => '',
+        'RA_PPM'        => '',
+        'OBJ2MESH'      => '',
+        
+        'CONVERT'       => '',
+        'DAYSIM'        => '',
+        'RADSUNPATH'    => '',
 
         ## misc and unused options
         'ZOFFSET'         => nil,
+        'COLOR_SCHEME'    => 'blue-red-yellow',
         'CONFIRM_REPLACE' => true,
         'RAD'             => '',
         'PREVIEW'         => false}
 
     @@_paths = ['REPLMARKS', 'CONVERT', 'RA_PPM', 'OBJ2MESH', 'EPW2WEA',
                 'MATERIALLIB', 'SUPPORTDIR']
-        
+    
     def initialize
         printf "RunTimeConfig.initialize()\n"
         @filename = File.expand_path('_config.rb', File.dirname(__FILE__))
@@ -126,7 +130,19 @@ class RunTimeConfig
     end
 
     def set(key,value)
-        @@_dict[key] = value
+        if @@_paths.index(key) != nil 
+            if value != '' and File.exists?(value)
+                @@_dict[key] = value
+                if key == 'REPLMARKS'
+                    set('RA_PPM', value.sub("replmarks", "ra_ppm"))
+                    set('OBJ2MESH', value.sub("replmarks", "obj2mesh"))
+                end
+            else
+                return false
+            end
+        else
+            @@_dict[key] = value
+        end
     end
 
     def readConfig(filename='')
@@ -184,11 +200,11 @@ class RunTimeConfig
                 end
             end
         }
-        config = _consolidate(config)
+        config = consolidate(config)
         return config       
     end
     
-    def _consolidate(config)
+    def consolidate(config)
         ## convert strings to objects
         config.each_pair { |k,v|
             if k == 'LOGLEVEL'
@@ -196,7 +212,7 @@ class RunTimeConfig
             elsif k == 'UNIT'
                 config[k] = Float(v)
             elsif v == 'true'
-                config[k] = nil
+                config[k] = true
             elsif v == 'false'
                 config[k] = false
             elsif v == "''"
@@ -212,7 +228,66 @@ class RunTimeConfig
         }    
         return config       
     end 
-    
+   
+    def toJSON()
+        options = {
+            'MODE'         => 'by color|by layer|by group',
+            'MAKEGLOBAL'   => 'true|false',
+            'TRIANGULATE'  => 'true|false',
+            'TEXTURES'     => 'true|false',
+            'LOGLEVEL'     => '-2|-1|0|1|2|3|4',
+            'USEWX'        => 'true|false',
+            'COLOR_SCHEME' => 'roygbiv|blue-red-yellow'
+        }
+        options.default = ""
+        help = {
+            "MODE"        => "default export mode - set this to the mode you are going to use most often.",
+            "MAKEGLOBAL"  => "default setting for make global check box.",
+            "TRIANGULATE" => "default setting for triangulate check box.",
+            "TEXTURES"    => "default setting for textures check box.",
+            "UNIT"        => "conversion unit for SketchUp inches to Radiance scene units. Use 0.0254 if you want Radiance to use meters, or 0.0833 if your prefered scene unit is imperial foot.",
+            "LOGLEVEL"    => "amount of information to report in the log file. -2 is only errors -1 are errors and warnings 0 includes important messages 1 to 4 increases the verbosity.",
+            "PATHTMPL"    => "This string is used to create the default path for the Radiance files. $FILE will be replaced by the path of the SketchUp file, $PAGE by the name of the SketchUp scene.",
+            "USEWX"       => "If you have wxSU installed on your system this setting will allow you to use the extension for improved progress dialogs. Note that this might create instability of SketchUp.",
+            "REPLMARKS"   => "path to REPLMARKS and other Radiance binaries. If you have Radiance installed select the replmarks application of your installation.",
+            "CONVERT"     => "path to ImageMagick convert. If you have ImageMagick or GraphicsMagick installed select the convert application of your installation.",
+            "DAYSIM"      => "If you have DAYSIM installed select the daysim java application.",
+            "RADSUNPATH"  => "If you have RADSUNPATH installed select the radsunpath executable.",
+            'COLOR_SCHEME' => "UNUSED - colour gradient used for numeric graph",
+        }
+        help.default = ""
+        help.default = "This is the default help. this is the default help. this is the default help. this is the default help. htis is the default help."
+        opts_in_sequence = [["basic settings", 'title'], 
+                            ["MODE",        'choice'],
+                            ["MAKEGLOBAL",  'choice'],
+                            ["TRIANGULATE", 'choice'],
+                            ["TEXTURES",    'choice'],
+                            ["UNIT",        'number'],
+                            
+                            ["paths", 'title'], 
+                            ["REPLMARKS",   'path'],
+                            ["CONVERT",     'path'],
+                            ["DAYSIM",      'path'],
+                            ["RADSUNPATH",  'path'],
+                            
+                            ["advanced settings", 'title'], 
+                            ["LOGLEVEL",    'choice'],
+                            ["PATHTMPL",    'string'],
+                            ["USEWX",       'choice'],
+
+                            ["numeric settings", 'title'],
+                            ["ZOFFSET",      'number'],
+                            ["COLOR_SCHEME", 'choice']]
+        array = []
+        opts_in_sequence.each { |opt|
+            oname = opt[0]
+            otype = opt[1]  
+            array.push("{name: \"#{oname}\", value: \"#{get(oname)}\", help: \"#{help[oname]}\", options: \"#{options[oname]}\", type: \"#{otype}\"}")
+        }
+        json = "[%s]" % array.join(',')
+        return json
+    end
+
     def to_s(sep="\n")
         pairs = []
         @@_dict.each_pair { |k,v|
@@ -265,10 +340,10 @@ def test_config
     rtc.write()
     rtc.readConfig()
     printf "\n%s\n" % rtc.to_s
-        ## paths to utility programs
+    ## paths to utility programs
     paths = {'REPLMARKS' => '/some/path/to/replmarks',
              'CONVERT'   => '/some/path/to/convert',
-             'RA_PPM'   => '/usr/local/bin/ra_ppm',
+             'RA_PPM'    => '/usr/local/bin/ra_ppm',
              'OBJ2MESH'  => '/usr/local/bin/obj2mesh'}
     rtc.applyDict(paths, 'testpaths.dict')
     printf "\n%s\n" % rtc.to_s

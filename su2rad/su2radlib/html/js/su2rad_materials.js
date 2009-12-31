@@ -289,7 +289,7 @@ su2rad.materials.buildMaterialListContent = function () {
 }
 
 su2rad.materials.clearAlias = function (skmId) {
-    log.info("clearing alias for '" + skmId + "'");
+    //log.info("clearing alias for '" + skmId + "'");
     try {
         su2rad.materials._clearAliasSkm(skmId)
     } catch (e) {
@@ -436,6 +436,7 @@ su2rad.materials.setAlias = function (skmId, radId) {
         var rad = su2rad.materials.radList.getMaterial(radId);
         var msg = "material '" + skm.nameHTML + "' aliased to '" + rad.nameHTML + "'";
         log.info(msg);
+        humanMsg.displayMsg(msg);
         su2rad.dialog.setStatusMsg(msg);
     } catch (e) {
         log.error("Error su2rad.materials.setAlias(): '" + e + "'");

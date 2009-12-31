@@ -2,6 +2,7 @@
 var fileSelector = {};
 
 fileSelector._filePath = "";    // full path of selected file or dir 
+fileSelector.writeaccess = true // require files and directories to be writeable
 
 fileSelector.callback = function (path) {
     // this should be overriden for each occasion
@@ -22,7 +23,7 @@ fileSelector.getFilepath = function () {
 }
 
 fileSelector.close = function () {
-    log.info("file selction canceled");
+    log.info("file selection canceled");
     $('#fileSelectorWindow').jqmHide();
 }            
 
@@ -62,9 +63,9 @@ fileSelector.show = function(ftRoot) {
     }
 }
 
-
 fileSelector.setFileTreeJSON = function (tree, setPosition) {
     // eval JSON views string from SketchUp
+    log.debug("TEST: setFileTreeJSON")
     var json = su2rad.utils.decodeJSON(tree);
     var entries = new Array();
     try {
@@ -76,6 +77,7 @@ fileSelector.setFileTreeJSON = function (tree, setPosition) {
         log.error("json= " + json.replace(/,/g,',<br/>'));
         logError(e);
     }
+    log.debug("TEST: setFileTreeJSON entries.length=" + entries.length)
     var listing = this.formatTree(entries); 
     this._callback( listing );
     if (setPosition == 'true') {
@@ -94,13 +96,17 @@ fileSelector.setFileTreeJSON = function (tree, setPosition) {
 }
 
 fileSelector.formatTree = function (tree) {
+    log.debug("fileSelectorWindow.formatTree()");
     var d = "<ul class=\"jqueryFileTree\" style=\"display: none;\">"
     try {
         for (var i=0; i<tree.length; i++) {
             var e = tree[i];
-            if (e.access == false) {
+
+            if ((e.type == "directory") && (e.access == false)) {
                 d = d + "<li class=\"" + e.type + " no_access\">" + e.name + "</li>"
                 //log.debug("no access for: " + e.path)
+            } else if ((e.type == "file") && (this.writeaccess == true) && (e.access == false))  {
+                d = d + "<li class=\"" + e.type + " no_access\">" + e.name + "</li>"
             } else {
                 d = d + "<li "
                 if (e.id) {
@@ -128,8 +134,9 @@ fileSelector.formatTree = function (tree) {
 fileSelector.listDirectory = function (dir, root) {
     if (su2rad.SKETCHUP == true) {
         log.info("listing directory '" + dir + "' (root=" + root + ") ...");
-        window.location = 'skp:getDirectoryListing@' + dir + "&" + root.toString(); 
-        // setViewsListJSON() called by Sketchup
+        var params = dir + "&" + root.toString(); 
+        log.info("params='" + params + "'");
+        window.location = 'skp:getDirectoryListing@' + params;
     } else {
         log.debug("using dummy backend.getViewsList()");
         var listing = this.dummy(dir);

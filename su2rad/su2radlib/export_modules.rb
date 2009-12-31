@@ -19,6 +19,7 @@ module InterfaceBase
     
     def uimessage(msg, loglevel=0)
         begin
+            msg.gsub!("%", "%%")
             prefix = "  " * getNestingLevel()
             levels = ["I", "V", "D", "3", "4", "5", "E", "W"]  ## [0,1,2,-2,-1]
             line = "%s[%s] %s" % [prefix, levels[loglevel], msg]
@@ -83,6 +84,7 @@ module JSONUtils
         string.gsub(/([^ a-zA-Z0-9_.-]+)/n) do
             '%' + $1.unpack('H2' * $1.size).join('%').upcase
         end
+        string.gsub!(/'/,"\\\\'") 
         return string
     end
     
@@ -91,6 +93,7 @@ module JSONUtils
         string.gsub(/([^ a-zA-Z0-9_.-]+)/n) do
             '%' + $1.unpack('H2' * $1.size).join('%').upcase
         end.tr(' ', '+')
+        return string
     end
     
     # ecapeHTML from Ruby::CGI

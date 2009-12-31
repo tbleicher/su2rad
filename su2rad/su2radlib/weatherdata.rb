@@ -67,7 +67,7 @@ class WeatherDataImportDialog < ExportBase
     def getDirectoryListing(dlg, dirpath)
         dirpath,root = dirpath.split('&')
         if root == 'true'
-            dirs = FileSystemProxy.listDirectoryTree(dirpath)
+            dirs = FileSystemProxy.listFileSystemTree(dirpath)
         else
             dirs = FileSystemProxy.listDirectory(dirpath)
         end

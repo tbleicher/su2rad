@@ -332,23 +332,14 @@ su2rad.canvas.GridCanvas.prototype.drawGrid = function (ctx) {
     ctx.translate(this.gridstep/2,this.gridstep/2)                  // translate by half a tile
     ctx.translate(-1*this.array.bbox[0],-1*this.array.bbox[2]);     // set origin to match first tile at lower left
                                                                     // of graph area
+    //this.drawContourLines(ctx)
     ctx.lineWidth = 1.0/this.canvasscale;
     ctx.strokeStyle = '#000000' // this.fgcolor
     var triangles = this.array.triangles;
     for (var i=0; i<triangles.length; i++) {
         var t = triangles[i];
-        var color = this.gradient.getColorByValue(t.z);
-        ctx.fillStyle = color;
-        ctx.strokeStyle = color;
-        ctx.beginPath()
-        ctx.moveTo(t.v0.x, t.v0.y);
-        ctx.lineTo(t.v1.x, t.v1.y);
-        ctx.lineTo(t.v2.x, t.v2.y);
-        ctx.fill()
-        ctx.stroke()
-        ctx.closePath();
+        t.draw(ctx, this.gradient, "")
     }
-    
     this.drawContourLines(ctx)
     ctx.restore()
 }

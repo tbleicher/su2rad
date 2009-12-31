@@ -71,13 +71,13 @@ code {
     padding-top: 11px;
     height: 36px;
     max-width: 620px;
-    border: 1px solid red;
+    /* border: 1px solid red; */
     background: url(gradient.png) repeat-x;
 }
 #mainButtonRow input[type=button] {
     float: right;
     width: 100px;
-    height: 24px;
+    height: 20px;
     margin: 10px;
 }
 #mainButtonRow div {
@@ -114,16 +114,18 @@ h2 {
     vertical-align: middle;
 }
 h3,th {
-    margin: 0.8em 0 0.8em;
-    padding: 0.3em;
-    padding-left: 0.5em;
+    /* margin: 0.8em 0 0.8em; */
+    /* padding: 0.3em; */
+    /* padding-left: 0.5em; */
+    padding: 10px;
+    padding-bottom: 5px;
     font-weight: bold;
     color: #27537a;
     background: url(gradient.png) repeat-x;
     height: 18px;     /* IE 6 treats height as min-height */
     min-height: 18px; /* IE 6 treats height as min-height */
-    max-width: 620px;
-    outline: 0.5px dashed blue;
+    max-width: 600px;
+    /* outline: 0.5px dashed blue; */
 }
 h3.highlightWarn {
     font-weight: bold;

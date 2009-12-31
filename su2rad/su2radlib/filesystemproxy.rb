@@ -1,29 +1,24 @@
 module FileSystemProxy
    
-    def FileSystemProxy.listDirectoryTree(path)
-        puts "listDirectoryTree(path=#{path})"
+    def FileSystemProxy.listFileSystemTree(path)
+        print "listFileSystemTree(path='" + path + "')"
         abspath = File.expand_path(path)
         idPath = abspath
-        #puts "(abspath=#{abspath})"
         while not File.exists?(abspath)
-            #puts "DEBUG: dir '#{abspath}' not a directory! - using parent"
 	    abspath = File.dirname(abspath)
             idPath = abspath
         end
         if File.file?(abspath)
             abspath = File.dirname(abspath)
         end
-        #puts "DEBUG: directoryTree '#{abspath}'"
         children = FileSystemProxy.listDirectory(abspath,idPath)
-        #puts children.collect{ |c| "'%s'" % c['name'] }.join('|')
         parent = File.basename(abspath)
         abspath = File.dirname(abspath)
         while abspath
             dirs = FileSystemProxy.listDirectory(abspath,idPath)
             dirs.each { |d|
-                #puts "d[name] = '#{d['name']}', parent='#{parent}'"
                 if d['name'] == parent
-                    puts "=> '#{parent}': adding children"
+                    printf("  => '#{parent}': adding %d children\n" % children.length)
                     d['children'] = children
                 end
             }
@@ -82,13 +77,14 @@ module FileSystemProxy
     
     def FileSystemProxy.listDirectory(path,idPath='')
         #puts "listDirectory() path=#{path}"
-        abspath = File.expand_path(path)
-        if File.directory?(abspath)
-            #puts "listing directory '#{abspath}'"
+        epath = File.expand_path(path)
+        if File.directory?(epath)
+            abspath = epath
+            #puts "listing directory '#{epath}'"
             #puts "DEBUG:            idPath='#{idPath}'"
-        elsif File.file?(abspath)
+        elsif File.file?(epath)
             #puts "DEBUG: listing parent dir of '#{abspath}'"
-            abspath = File.dirname(abspath)
+            abspath = File.dirname(epath)
 	end
          
         dirs = Array.new()
@@ -113,7 +109,9 @@ module FileSystemProxy
                      'path' => p,
                      'ext'  => 'ext_foo',
                      'access' => FileTest.readable?(p)}
-            if entry['type'] == 'file'
+            if p.index("'") != nil
+                entry['access'] = false
+            elsif entry['type'] == 'file'
                 entry['access'] = FileTest.writable?(p)
             end
             if entry['type'] == 'file' && p.length > 3

@@ -497,52 +497,59 @@ su2rad.grid.GridArray.prototype.getContourLinesAt = function (level) {
     var lines = []
     var errorTris = 0
     for (var i=0;i<this.triangles.length;i+=1) {
-        var points = []
         var t = this.triangles[i]
-        try {
-            if (t.v0.z == level) {
-                points.push( [v0.x,v0.y,v0.z] )
-            }
-            if (t.v1.z == level) {
-                points.push( [v1.x,v1.y,v1.z] )
-            }
-            if (t.v2.z == level) {
-                points.push( [v2.x,v2.y,v2.z] )
-            }
-            if (t.v0.z < level && t.v1.z > level) {
-                points.push(t.getPointOnEdge(t.v0,t.v1,level))
-            }
-            if (t.v0.z < level && t.v2.z > level) {
-                points.push(t.getPointOnEdge(t.v0,t.v2,level))
-            }
-            if (t.v1.z < level && t.v0.z > level) {
-                points.push(t.getPointOnEdge(t.v1,t.v0,level))
-            }
-            if (t.v1.z < level && t.v2.z > level) {
-                points.push(t.getPointOnEdge(t.v1,t.v2,level))
-            }
-            if (t.v2.z < level && t.v0.z > level) {
-                points.push(t.getPointOnEdge(t.v2,t.v0,level))
-            }
-            if (t.v2.z < level && t.v1.z > level) {
-                points.push(t.getPointOnEdge(t.v2,t.v1,level))
-            }
-        } catch (e) {
-            errorTris += 1;
-            log.error(e)
-        }
-
-        // 
-        if (points.length == 1) {
+        var points = t.intersectAt(level)
+        if (points == false) {
+            errorTris += 1
+        } else if (points.length == 1) {
             log.error("DEBUG: points.length = " + points.length)
         } else if (points.length == 2) {
             lines.push( [points[0], points[1]] )
+            //t.splitAt(level)
         }
     }
-
     // this._contourCache[level] = lines;
     log.info("=> getContourLinesAtNew() lines=" + lines.length) 
     return lines;
+}
+
+su2rad.grid.GridArray.prototype.getContourLineOnTriangle = function (t, level) {
+    // return list of intersection points with line at level
+    var points = []
+    /*
+    try {
+        if (t.v0.z == level) {
+            points.push( [t.v0.x,t.v0.y,t.v0.z] )
+        }
+        if (t.v1.z == level) {
+            points.push( [t.v1.x,t.v1.y,t.v1.z] )
+        }
+        if (t.v2.z == level) {
+            points.push( [t.v2.x,t.v2.y,t.v2.z] )
+        }
+        if (t.v0.z < level && t.v1.z > level) {
+            points.push(t.getPointOnEdge(t.v0,t.v1,level))
+        }
+        if (t.v0.z < level && t.v2.z > level) {
+            points.push(t.getPointOnEdge(t.v0,t.v2,level))
+        }
+        if (t.v1.z < level && t.v0.z > level) {
+            points.push(t.getPointOnEdge(t.v1,t.v0,level))
+        }
+        if (t.v1.z < level && t.v2.z > level) {
+            points.push(t.getPointOnEdge(t.v1,t.v2,level))
+        }
+        if (t.v2.z < level && t.v0.z > level) {
+            points.push(t.getPointOnEdge(t.v2,t.v0,level))
+        }
+        if (t.v2.z < level && t.v1.z > level) {
+            points.push(t.getPointOnEdge(t.v2,t.v1,level))
+        }
+    } catch (e) {
+        log.error(e)
+        return false
+    } */
+    return points
 }
 
 su2rad.grid.GridArray.prototype.getRows = function () {
