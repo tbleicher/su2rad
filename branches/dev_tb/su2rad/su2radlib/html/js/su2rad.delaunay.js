@@ -79,7 +79,7 @@ su2rad.geom.Delaunay = function() {
             var maxx = max3( triangle.v0.x, triangle.v1.x, triangle.v2.x );
             var miny = min3( triangle.v0.y, triangle.v1.y, triangle.v2.y );
             var maxy = max3( triangle.v0.y, triangle.v1.y, triangle.v2.y );
-            var minx = min3( triangle.v0.z, triangle.v1.z, triangle.v2.z );
+            var minz = min3( triangle.v0.z, triangle.v1.z, triangle.v2.z );
             var maxz = max3( triangle.v0.z, triangle.v1.z, triangle.v2.z );
 
             triangle.center = _Vertex( ( minx + maxx ) / 2, ( miny + maxy ) / 2, (minz+maxz)/2 );
@@ -203,6 +203,32 @@ su2rad.geom.Delaunay = function() {
             'v1' : v1,
             'v2' : v2,
             'z'  : (v0.z + v1.z + v2.z) / 3.0,
+            'displayTriangles' : [],
+            'draw' : function(ctx, colorgradient, indent) {
+                if (this.displayTriangles.length == 0) {
+                    //log.debug("TEST: triangle.draw()")
+                    color = colorgradient.getColorByValue(this.z)
+                    ctx.fillStyle = color;
+                    ctx.strokeStyle = color;
+                    ctx.beginPath()
+                    ctx.moveTo(this.v0.x, this.v0.y);
+                    ctx.lineTo(this.v1.x, this.v1.y);
+                    ctx.lineTo(this.v2.x, this.v2.y);
+                    ctx.fill()
+                    ctx.stroke()
+                    ctx.closePath();
+                } else {
+                    //log.debug("TEST: displayTriangles.draw()")
+                    indent = indent + "+"
+                    for (var i=0; i<this.displayTriangles.length; i++) {
+                        var dtri = this.displayTriangles[i];
+                        //log.debug("test: dtri.v0 x=" + dtri.v0.x + " y=" + dtri.v0.y)
+                        //log.debug("test: dtri.v1 x=" + dtri.v1.x + " y=" + dtri.v1.y)
+                        //log.debug("test: dtri.v2 x=" + dtri.v2.x + " y=" + dtri.v2.y)
+                        dtri.draw(ctx, colorgradient, indent)
+                    }
+                }
+            },
             'toString' : function() {
                 var s = "tri [" + this.v0.x.toFixed(2) + "," + this.v0.y.toFixed(2) + "]"
                 s += " [" + this.v1.x.toFixed(2) + "," + this.v1.y.toFixed(2) + "]"
@@ -216,6 +242,76 @@ su2rad.geom.Delaunay = function() {
                 var x = v1.x + (v2.x-v1.x)*delta;
                 var y = v1.y + (v2.y-v1.y)*delta;
                 return [x,y,level]
+            },
+            'intersectAt' : function(level) {
+                // get point of intersection at <level>
+                var points = []
+                try {
+                    if (this.v0.z == level) {
+                        points.push( [this.v0.x,this.v0.y,this.v0.z] )
+                    }
+                    if (this.v1.z == level) {
+                        points.push( [this.v1.x,this.v1.y,this.v1.z] )
+                    }
+                    if (this.v2.z == level) {
+                        points.push( [this.v2.x,this.v2.y,this.v2.z] )
+                    }
+                    if (this.v0.z < level && this.v1.z > level) {
+                        points.push(this.getPointOnEdge(this.v0,this.v1,level))
+                    }
+                    if (this.v0.z < level && this.v2.z > level) {
+                        points.push(this.getPointOnEdge(this.v0,this.v2,level))
+                    }
+                    if (this.v1.z < level && this.v0.z > level) {
+                        points.push(this.getPointOnEdge(this.v1,this.v0,level))
+                    }
+                    if (this.v1.z < level && this.v2.z > level) {
+                        points.push(this.getPointOnEdge(this.v1,this.v2,level))
+                    }
+                    if (this.v2.z < level && this.v0.z > level) {
+                        points.push(this.getPointOnEdge(this.v2,this.v0,level))
+                    }
+                    if (this.v2.z < level && this.v1.z > level) {
+                        points.push(this.getPointOnEdge(this.v2,this.v1,level))
+                    }
+                } catch (e) {
+                    log.error(e)
+                    return false
+                }
+                return points
+            },
+            'splitAt' : function(level) {
+                try {
+                    if (this.v0.z < level && this.v1.z < level) {
+                        var p1 = this.getPointOnEdge(this.v0, this.v2, level)
+                        p1 = _Vertex(p1[0],p1[1],p1[2])
+                        var p2 = this.getPointOnEdge(this.v1, this.v2, level)
+                        p2 = _Vertex(p2[0],p2[1],p2[2])
+                        var tri1 = Triangle(this.v0, p1, this.v1)
+                        var tri2 = Triangle(p1, p2, this.v1)
+                        var tri3 = Triangle(this.v2, p2, p1)
+                    } else if (this.v0.z < level && this.v2.z < level) {
+                        var p1 = this.getPointOnEdge(this.v0, this.v1, level)
+                        p1 = _Vertex(p1[0],p1[1],p1[2])
+                        var p2 = this.getPointOnEdge(this.v2, this.v1, level)
+                        p2 = _Vertex(p2[0],p2[1],p2[2])
+                        var tri1 = Triangle(this.v0, p1, this.v2)
+                        var tri2 = Triangle(p1, p2, this.v2)
+                        var tri3 = Triangle(this.v1, p2, p1)
+                    } else { 
+                        // (this.v1.z < level && this.v2.z < level)
+                        var p1 = this.getPointOnEdge(this.v1, this.v0, level)
+                        p1 = _Vertex(p1[0],p1[1],p1[2])
+                        var p2 = this.getPointOnEdge(this.v2, this.v0, level)
+                        p2 = _Vertex(p2[0],p2[1],p2[2])
+                        var tri1 = Triangle(this.v1, p1, this.v2)
+                        var tri2 = Triangle(p1, p2, this.v2)
+                        var tri3 = Triangle(this.v0, p2, p1)
+                    }
+                    this.displayTriangles = [tri1,tri2,tri3]
+                } catch (e) {
+                    logError(e)
+                }
             }
         }
         return CalcCircumcircle(triangle);

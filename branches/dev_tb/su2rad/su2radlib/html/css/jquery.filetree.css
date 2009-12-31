@@ -40,9 +40,11 @@
     color: #27537a;
 }
 
-/* .jqmWindow2 .exportbutton {
-    margin-top: 10px;
-} */
+.jqmWindow2 > .exportbutton {
+    float: right;
+    margin: 5px;
+    margin-right: 10px;
+} 
 
 
 UL.jqueryFileTree {

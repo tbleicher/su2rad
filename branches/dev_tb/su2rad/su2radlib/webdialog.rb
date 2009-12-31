@@ -37,12 +37,12 @@ class ExportDialogWeb < ExportBase
     def getDirectoryListing(dlg, dirpath)
         dirpath,root = dirpath.split('&')
         if root == 'true'
-            dirs = FileSystemProxy.listDirectoryTree(dirpath)
+            dirs = FileSystemProxy.listFileSystemTree(dirpath)
         else
             dirs = FileSystemProxy.listDirectory(dirpath)
         end
         json = toStringJSON(dirs)
-        dlg.execute_script( "fileSelector.setFileTreeJSON('%s', '%s')" % [encodeJSON(json),root])
+        dlg.execute_script("fileSelector.setFileTreeJSON('%s', '%s')" % [encodeJSON(json),root])
     end
     
     def loadTextFile(dlg, filepath)
@@ -91,7 +91,7 @@ class ExportDialogWeb < ExportBase
         }
         
         ## shadow_info (location and sky)
-        dlg.add_action_callback("getSkySettinge") { |d,p|
+        dlg.add_action_callback("getSkySettings") { |d,p|
             ## get shadow_info dict and apply to dialog
             d.execute_script("setShadowInfoJSON('%s')" % encodeJSON(@skyOptions.toJSON()) )
         }

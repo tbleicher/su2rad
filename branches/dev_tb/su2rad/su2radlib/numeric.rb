@@ -67,7 +67,7 @@ class NumericImportDialog < ExportBase
         ## send directory listing to dialog
         dirpath,root = dirpath.split('&')
         if root == 'true'
-            dirs = FileSystemProxy.listDirectoryTree(dirpath)
+            dirs = FileSystemProxy.listFileSystemTree(dirpath)
         else
             dirs = FileSystemProxy.listDirectory(dirpath)
         end
@@ -85,16 +85,21 @@ class NumericImportDialog < ExportBase
             uimessage("TEST option '#{k}' = '#{v}'", 2)
         }
         begin
-            if optsDict['allfiles'] == 'true'
-                dlg.close()
-                importDirectory(optsDict)
-            elsif optsDict['triangles'] != nil
+            ## TODO: find proplems with this method
+            #if optsDict['allfiles'] == 'true'
+            #    dlg.close()
+            #    importDirectory(optsDict)
+            if optsDict['triangles'] != nil
+                uimessage("TEST: 'triangles' option = '%s'" % optsDict['triangles'], 2)
                 text = dlg.get_element_value(optsDict['triangles'])
+                uimessage("TEST: triangles text found (%d bytes)" % text.length, 2)
                 triangles = eval(text)
+                uimessage("TEST: triangles text evaluated: found %d triangles" % triangles.length, 2)
                 ni = NumericImport.new()
                 ni.setTriangles(triangles)
                 ni.applyOptions(optsDict)
-                ni.createGraphFromTriangles()
+                ni.createGraph()
+                dlg.close()
             else
                 ## try to get values, set options and create graph
                 values = dlg.get_element_value(optsDict['elementId'])
@@ -103,9 +108,12 @@ class NumericImportDialog < ExportBase
                 if ni.setLines(lines) == true
                     ni.applyOptions(optsDict)
                     ni.createGraph()
+                    ## if successfull close the web dialog
+                    dlg.close()
+                else
+                    ## TODO: set error message in dialog
+                    dlg.close()
                 end
-                ## if successfull close the web dialog
-                dlg.close()
             end
         rescue => e
             msg = "Error importing graph:\n%s\n\n%s\n" % [$!.message,e.backtrace.join("\n")]
@@ -228,17 +236,24 @@ class NumericImport < ExportBase
         #XXX @labelText = dlg[5]
     end
     
-    def addContourLines
-        if @surface == nil
-            return
-        end
-        @clevels = []
+    def getContourLevels
+        clevels = []
         v = @minvalue
         while v < @maxvalue
             v += @_clstep
             z = v/@scalevalue + @zOffset
-            @clevels.push([z,v])
+            clevels.push([z,v])
+            printf("TEST: getContourLevels: z=%.2f  v=%.2f\n" % [z,v])
         end
+        return clevels
+    end
+
+    # add contour lines via intersection with polygon mesh
+    def addContourLines
+        if @surface == nil
+            return
+        end
+        @clevels = getContourLevels()
         s_ents = @surface.entities
         ents = Sketchup.active_model.entities
         cl = ents.add_group
@@ -496,11 +511,22 @@ class NumericImport < ExportBase
    
     def setTriangles(triangles)
         ## triangles as array of [v1,v2,v3] vertices
+        uimessage("TEST: setTriangles() (%d triangles)" % triangles.length, 2)
         @triangles = triangles
-
-        uimessage("TEST: triangles.length=%d" % triangles.length, 2)
-        #getMaxValue()
-        #setCLStep()
+        points_hash = {}
+        triangles.each { |tri|
+            tri.each { |vertex|
+                x = vertex[0]
+                y = vertex[1]
+                v = vertex[2] 
+                points_hash["%.4f_%.4f" % [x,y]] = [x,y,0.85,v] #XXX fixed value for vertex-z
+            }
+        }
+        @lines = points_hash.values()
+        @index_value = 3
+        uimessage("TEST: setTriangles() @lines.length=%d" % @lines.length, 2)
+        getMaxValue()
+        setCLStep()
     end
 
     def confirmDialog
@@ -558,12 +584,11 @@ class NumericImport < ExportBase
         end
         
         begin
-            createMesh()
+            createSurface()
             if @surface == nil
                 uimessage("error: no surface created", -2)
                 return
             end
-            addContourLines()
             if @doLables == 'yes'
                 addLabels()
             end
@@ -579,13 +604,10 @@ class NumericImport < ExportBase
         end
     end
    
-    def createGraphFromTriangles
+    def createGraphFromTriangles(tris, points, parentGroup=nil, name=nil)
         ## create individual faces from triangles
-        name = getGroupName()
-        parentGroup = findGroupByName(name)
-        if parentGroup != nil
-            tris = eliminateFillTriangles(parentGroup,tris,points)
-        end
+        uimessage("TEST: tris = %d" % tris.length, 2)
+        uimessage("TEST: points = %d" % points.length, 2)
         if parentGroup != nil
             entities = parentGroup.entities
             name = "#{name}_graph"
@@ -594,11 +616,78 @@ class NumericImport < ExportBase
             ptrans = ptrans.invert!()
         else
             entities = Sketchup.active_model.entities
+            name = "unknown_graph"
         end
+        suPoints = points.collect { |p| Geom::Point3d.new(p[0], p[1], p[2]) }
         @surface = entities.add_group
         @surface.name = name
-        uimessage("added surface group '#{name}' to scene", 2) 
+        @clevels = getContourLevels()
         
+        tris[0...5].each { |tri|
+            z = suPoints[tri[0]].z
+            uimessage("TEST: vertex z = %.2f\n" % z, 2)
+        }
+
+        ## create group for each contour level
+        old_clevel = 0
+        @clevels.each { |cl|
+            uimessage("creating faces for contour level %.2f" % cl[1], 2)
+            cl_name = "%s_%.3f" % [name, cl[1]]
+            max_clevel = cl[0] # / getConfig('UNIT')
+            uimessage("TEST: max_clevel =  %.2f" % max_clevel, 2)
+            tris.each { |tri|
+                z = suPoints[tri[0]].z
+                if old_clevel <= z and z < max_clevel
+                    f = @surface.entities.add_face(suPoints[tri[0]], suPoints[tri[1]], suPoints[tri[2]])
+                    f.edges.each { |edge| edge.soft=true }
+                end
+            }
+            old_clevel = max_clevel
+            uimessage("TODO: added surface group '#{cl_name}' to scene", 2) 
+        }
+        
+        
+        scaletrans = Geom::Transformation.new(1/getConfig('UNIT'))
+        @surface.transform!(scaletrans)
+        uimessage("created surface from triangles", 2) 
+        uimessage("added surface group '#{name}' to scene", 2) 
+    end
+
+    def createSurface
+        if @triangles != []
+            ## convert triangles from javascript to indexed lists
+            tris, points = getIndexedTris()
+            uimessage("tris=%d, points=%d" % [tris.length, points.length], 2)
+        else
+            if @lines.length == 0
+                return
+            end
+            uimessage("processing %d values" % @lines.length, 2) 
+            points = []
+            @lines.each { |l|
+                x = l[0]
+                y = l[1]
+                z = @zOffset
+                v = l[@index_value]
+                dz = v / @scalevalue
+                points.push([x,y,z+dz])
+            }
+            ## create triangles (as indices to array 'points')
+            tris = triangulate(points)
+        end
+
+        ## find containing group 
+        name = getGroupName()
+        parentGroup = findGroupByName(name)
+        if parentGroup != nil
+            tris = eliminateFillTriangles(parentGroup,tris,points)
+        end
+        #if @triangles != []
+        if false
+            createGraphFromTriangles(tris, points, parentGroup, name)
+        else
+            createMesh(tris, points, parentGroup, name)
+        end
     end
 
     def cleanLines
@@ -688,39 +777,54 @@ class NumericImport < ExportBase
     
     def getIndexedTris
         ## get array of points and triangles with indexes from @triangles
-        #XXX
+        printf("TEST: getIndexedTris()\n") 
+        points_hash = {}
+        @triangles.each { |tri|
+            tri.each { |vertex|
+                x = vertex[0]
+                y = vertex[1]
+                #v = vertex[2] 
+                z = @zOffset + vertex[2] / @scalevalue
+                points_hash["%.4f_%.4f" % [x,y]] = [x,y,z]
+            }
+        }
+        points = points_hash.values()
+        index_hash = {}
+        index = 0
+        points.each { |p|
+            x = p[0]
+            y = p[1]
+            key = "%.4f_%.4f" % [x,y]
+            index_hash[key] = index
+            index += 1
+        }
+        triangles = []
+        uimessage("@triangles.length=%d" % @triangles.length, 2)
+        @triangles.each { |tri|
+            newtri = []
+            tri.each { |vertex|
+                x = vertex[0]
+                y = vertex[1]
+                key = "%.4f_%.4f" % [x,y]
+                index = index_hash[key]
+                if index != nil
+                    newtri.push(index)
+                else
+                    uimessage("could not get index of triangle point (x=%.4f y=%.4f)" % [x,y], -2) 
+                end
+            }
+            if newtri.length == 3
+                triangles.push(newtri)
+            else
+                printf("newtri.length = %d\n" % newtri.length)
+            end
+        }
+        uimessage("triangles.length=%d" % triangles.length, 2)
+        return triangles, points
     end
 
-    def createMesh
+    def createMesh(tris, points, parentGroup=nil, name="")
         ## create 3D graph as polygon mesh 
-        if @triangles == []
-            if @lines.length == 0
-                return
-            end
-            uimessage("processing %d values" % @lines.length, 2) 
-            points = []
-            @lines.each { |l|
-                x = l[0]
-                y = l[1]
-                z = @zOffset
-                v = l[@index_value]
-                dz = v / @scalevalue
-                points.push([x,y,z+dz])
-            }
-            
-            ## create triangles (as indices to array 'points')
-            tris = triangulate(points)
-        else
-            tris, points = getIndexedTris()
-        end
-
-        ## find containing group 
-        name = getGroupName()
-        parentGroup = findGroupByName(name)
-        if parentGroup != nil
-            tris = eliminateFillTriangles(parentGroup,tris,points)
-        end
-        
         suPoints = points.collect { |p| Geom::Point3d.new(p[0], p[1], p[2]) }
         mesh = Geom::PolygonMesh.new(points.length, tris.length)
         tris.each { |v|
@@ -745,6 +849,8 @@ class NumericImport < ExportBase
         @surface.entities.add_faces_from_mesh(mesh)
         @surface.name = name
         uimessage("added surface group '#{name}' to scene", 2) 
+        ## add contour lines via intersection with polygon mesh
+        addContourLines()
     end
 
     def getGroupName
