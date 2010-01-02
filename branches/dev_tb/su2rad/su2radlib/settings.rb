@@ -27,9 +27,9 @@ class SettingsDialog < ExportBase
                 dirs = FileSystemProxy.listDirectory(dirpath)
             end
             json = toStringJSON(dirs)
-            json = encodeJSON(json)
+            json = escape_javascript(json)
             uimessage('setFileTreeJSON()', 2)
-            dlg.execute_script("fileSelector.setFileTreeJSON('%s', '%s')" % [json,root])
+            dlg.execute_script("su2rad.dialog.fileSelector.setFileTreeJSON('%s', '%s')" % [json,root])
         else
             uimessage("no 'dirpath' for getDirectoryListing()", -2)
         end
@@ -124,7 +124,7 @@ class SettingsDialog < ExportBase
     
     def setCurrentOptions(dlg)
         uimessage("su2rad.dialog.settings.setCurrentOptions()", 2)
-        json = encodeJSON($SU2RAD_CONFIG.toJSON())
+        json = escape_javascript($SU2RAD_CONFIG.toJSON())
         dlg.execute_script("su2rad.dialog.settings.setCurrentOptions('%s')" % json) 
         dlg.execute_script("su2rad.dialog.settings.setButtonState('apply', 'disabled')") 
         @tmp_dict = {}

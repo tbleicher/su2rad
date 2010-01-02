@@ -42,7 +42,7 @@ class ExportDialogWeb < ExportBase
             dirs = FileSystemProxy.listDirectory(dirpath)
         end
         json = toStringJSON(dirs)
-        dlg.execute_script("fileSelector.setFileTreeJSON('%s', '%s')" % [encodeJSON(json),root])
+        dlg.execute_script("su2rad.dialog.fileSelector.setFileTreeJSON('%s', '%s')" % [escape_javascript(json),root])
     end
     
     def loadTextFile(dlg, filepath)
@@ -93,7 +93,7 @@ class ExportDialogWeb < ExportBase
         ## shadow_info (location and sky)
         dlg.add_action_callback("getSkySettings") { |d,p|
             ## get shadow_info dict and apply to dialog
-            d.execute_script("setShadowInfoJSON('%s')" % encodeJSON(@skyOptions.toJSON()) )
+            d.execute_script("setShadowInfoJSON('%s')" % escape_javascript(@skyOptions.toJSON()) )
         }
         dlg.add_action_callback("applySkySettings") { |d,p|
             ## set shadow_info values from dialog

@@ -98,7 +98,7 @@ class ExportOptions
         uimessage("setExportOptions() ...", 2)
         _setDialogOptions(dlg)
         json = toJSON()
-        dlg.execute_script( "setExportOptionsJSON('%s')" % encodeJSON(json) )
+        dlg.execute_script( "setExportOptionsJSON('%s')" % escape_javascript(json) )
     end 
     
     def toJSON
@@ -236,7 +236,7 @@ class RenderOptions
         ## set general export options
         uimessage("setRenderOptions() ...", 2)
         json = toJSON()
-        dlg.execute_script( "setRenderOptionsJSON('%s')" % encodeJSON(json) )
+        dlg.execute_script( "setRenderOptionsJSON('%s')" % escape_javascript(json) )
     end 
    
     def _getSettingsDict
@@ -416,7 +416,7 @@ class SkyOptions
         uimessage("setSkyOptions() ...\n", 2)
         #_syncSettings()
         json = toJSON()
-        dlg.execute_script( "setShadowInfoJSON('%s')" % encodeJSON(json) )
+        dlg.execute_script( "setShadowInfoJSON('%s')" % escape_javascript(json) )
     end
     
     def _syncSettings() 
@@ -460,7 +460,7 @@ class SkyOptions
         }
         #@_settings['ShadowTime'] = sinfo['ShadowTime']
         #@_settings['ShadowTime_time_t'] = sinfo['ShadowTime_time_t']
-        #d.execute_script("setShadowInfoJSON('%s')" % encodeJSON(toJSON()) )
+        #d.execute_script("setShadowInfoJSON('%s')" % escape_javascript(toJSON()) )
     end
         
 end

@@ -2,8 +2,8 @@
 
 <html lang="en">
     <head>
-        <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-        <meta http-equiv="Content-Style-Type" content="text/css">
+        <meta http-equiv="Content-Type"        content="text/html; charset=utf-8">
+        <meta http-equiv="Content-Style-Type"  content="text/css">
         <meta http-equiv="Content-Script-Type" content="text/javascript">
 
         <title>su2rad settings</title>
@@ -17,15 +17,15 @@
         <script type="text/javascript" src="./js/lib/jquery.jqModal.js"></script>
 	
         <script type="text/javascript" src="./js/su2rad.dialog.common.js"></script>
-        <script type="text/javascript" src="./js/su2rad.fileselector.js"></script>
+        <script type="text/javascript" src="./js/su2rad.dialog.fileselector.js"></script>
         <script type="text/javascript" src="./js/su2rad.dialog.settings.js"></script>
 
-        <link rel="stylesheet" href="./blackbirdjs/blackbird.css" type="text/css" media="screen">
-        <link rel="stylesheet" href="./css/dialog.css"            type="text/css" media="print, projection, screen">
-        <link rel="stylesheet" href="./css/dialog.settings.css"   type="text/css" media="print, projection, screen">
-        <link rel="stylesheet" href="./css/jqModal.css"           type="text/css" media="print, projection, screen">
+        <link rel="stylesheet" href="./blackbirdjs/blackbird.css" type="text/css" media="screen" />
+        <link rel="stylesheet" href="./css/dialog.css"            type="text/css" media="screen" />
+        <link rel="stylesheet" href="./css/dialog.settings.css"   type="text/css" media="screen" />
+        <link rel="stylesheet" href="./css/jqModal.css"           type="text/css" media="screen" />
         <link rel="stylesheet" href="./css/jquery.filetree.css"   type="text/css" media="screen" />
-        <!-- <link rel="stylesheet" href="./css/jquery.humanmsg.css"   type="text/css" media="screen" /> --/>
+        <!-- <link rel="stylesheet" href="./css/jquery.humanmsg.css"   type="text/css" media="screen" /> -->
 
         <script type="text/javascript">
         </script>
@@ -34,20 +34,9 @@
 
     <body>
         
-        <!-- file selector popup -->
-        <div class="jqmWindow2" id="fileSelectorWindow">
-            <h3>Select file ...</h3>
-            <div id="fileSelectorTree" class="fileSelector"></div>
-            <div id="fileSelectorNote">selected: </div>
-            <input class="exportbutton" type="button" id="fileSelectorButtonSelect" value="select file" onclick="fileSelector.select()" disabled>
-            <input class="exportbutton" type="button" id="fileSelectorButtonCancel" value="cancel" onclick="fileSelector.close()">
-        </div>
-        
         <input type="button" id="showLogButton" name="showLogButton" value="log" onclick="log.toggle()">
         
-        <h3>
-            su2rad settings
-        </h3>
+        <h3>su2rad settings</h3>
 
         <div class="settings" id="settings_container">
             <div>
@@ -55,23 +44,6 @@
                 <input type="text" value="SU2RAD_OPT_VALUE" />
                 <div class="setting_help" >This setting will do nothing at all.
                 It is set by magic and should be left unchanged until lunchtime.</div>
-            </div>
-            <div>
-                <span class="setting_name">SU2RAD_OPT_NAME</span>
-                <input type="text" value="SU2RAD_OPT_VALUE" />
-                <div class="setting_help" >This setting will do nothing at all.
-                It is set by magic and should be left unchanged until lunchtime.</div>
-            </div>
-            <div>
-                <span class="setting_name"><a onClick=su2rad.dialog.settings.unhideHelp('xyz')>SU2RAD_OPT_NAME</a></span>
-                <input type="text" value="SU2RAD_OPT_VALUE" />
-                <div class="setting_help" id="xyz_help">This setting will do nothing
-                    at all. It is set by magic and should be left unchanged until
-                    lunchtime. It is set by magic and should be left unchanged until
-                    lunchtime. It is set by magic and should be left unchanged until
-                    lunchtime.
-                    <a onClick=su2rad.dialog.settings.hideHelp('xyz')>hide</a>
-                </div>
             </div>
         </div>
 

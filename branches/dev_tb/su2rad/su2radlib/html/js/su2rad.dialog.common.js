@@ -22,6 +22,54 @@ su2rad.NSIDOM = false;
 su2rad.dialog = su2rad.dialog ? su2rad.dialog : new Object()
 su2rad.dialog.expFunc = su2rad.dialog.expFunc ? su2rad.dialog.expFunc : new Object()
 
+su2rad.dialog.expFunc.onCancel = function() {
+    try {
+        if (su2rad.SKETCHUP != false) {
+                //log.info("export canceled by user")
+                window.location = 'skp:onCancel@';
+        } else {
+            su2rad.dialog.hideProgressWindow();
+            document.body.innerHTML = "";
+            //window.opener='x';
+            window.close();
+        }
+    } catch (e) {
+        logError(e)
+    }
+}
+
+su2rad.dialog.expFunc.onExport = function() {
+    log.debug("onExportButton()...")
+    if (su2rad.SKETCHUP != false) {
+        try {
+            log.info("starting export ...")
+            window.location = 'skp:onExport@';
+        } catch (e) {
+            logError(e)
+            alert(e.toString())
+        }
+    } else {
+        su2rad.dialog.showBusy()
+        log.warn('Sketchup not available; no export action');
+        msg  = '{"status"  :"success"';
+        msg += ',"messages":"0"';
+        msg += ',"files"   :"31"';
+        msg += ',"groups"  :"345"';
+        msg += ',"faces"   :"45678"}';
+        su2rad.dialog.showResults(su2rad.utils.encodeJSON(msg));
+    }
+}
+
+su2rad.dialog.expFunc.setOption = function (optname, optvalue) {
+    log.debug("DEBUG: export.setOption(optname='" + optname + "' optvalue='" + optvalue + "')")
+}
+
+su2rad.dialog.expFunc.showFileSelector = function() {
+    su2rad.dialog.fileSelector.callback = setExportPath
+    var scenepath = document.getElementById('scenePath').value
+    su2rad.dialog.fileSelector.show(scenepath)
+}
+
 su2rad.dialog.setSketchup = function() {
     // switch to actions for Sketchup (skp:...)
     log.info('using Sketchup backend ...'); 
@@ -43,10 +91,11 @@ su2rad.dialog.setTest = function() {
 }
 
 su2rad.dialog.evaluateSketchup = function() {
+
 }
 
 su2rad.dialog.loadFileCallback = function (text) {
-    //dummy function to be reasigned to real callback
+    // dummy function to be reasigned to real callback
 }
 
 su2rad.dialog.loadTextFile = function (fname) {

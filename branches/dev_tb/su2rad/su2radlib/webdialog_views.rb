@@ -485,7 +485,7 @@ class SketchupViewsList
                 view.activate(true)
                 if view.removeOverride(name) == true
                     json = "%s" % view.toJSON()
-                    dlg.execute_script("setViewJSON('%s','%s')" % [encodeJSON(viewname),encodeJSON(json)])
+                    dlg.execute_script("setViewJSON('%s','%s')" % [escape_javascript(viewname),escape_javascript(json)])
                     uimessage("removed override '#{name}' from view '#{view.name}'", 2)
                     return true
                 else
@@ -526,7 +526,7 @@ class SketchupViewsList
             json += "%s," % v.toJSON()
         }
         json += "]"
-        dlg.execute_script("setViewsListJSON('%s')" % encodeJSON(json) )
+        dlg.execute_script("setViewsListJSON('%s')" % escape_javascript(json) )
     end
 
     def showViews(indent="",loglevel=1)

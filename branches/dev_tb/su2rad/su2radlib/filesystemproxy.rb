@@ -1,7 +1,7 @@
 module FileSystemProxy
    
     def FileSystemProxy.listFileSystemTree(path)
-        print "listFileSystemTree(path='" + path + "')"
+        print "listFileSystemTree(path='" + path + "')\n"
         abspath = File.expand_path(path)
         idPath = abspath
         while not File.exists?(abspath)

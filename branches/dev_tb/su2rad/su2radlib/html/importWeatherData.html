@@ -39,7 +39,7 @@
         <script type="text/javascript" src="./js/su2rad_test.js"></script>
         <script type="text/javascript" src="./js/su2rad.dialog.common.js"></script>
         <script type="text/javascript" src="./js/su2rad_backend_interface.js"></script>
-        <script type="text/javascript" src="./js/su2rad.fileselector.js"></script>
+        <script type="text/javascript" src="./js/su2rad.dialog.fileselector.js"></script>
         <script type="text/javascript" src="./js/su2rad_export.js"></script>
         <script type="text/javascript" src="./js/su2rad_views.js"></script>
         <script type="text/javascript" src="./js/su2rad_googlemap.js"></script>
@@ -109,15 +109,6 @@
     </head>
     
     <body style="background-color: white" onLoad="wd.initPage()">
-        
-        <!-- file selector popup -->
-        <div class="jqmWindow2" id="fileSelectorWindow">
-            <h3>Select file ...</h3>
-            <div id="fileSelectorTree" class="fileSelector"></div>
-            <div id="fileSelectorNote">selected: </div>
-            <input class="exportbutton" type="button" id="fileSelectorButtonSelect" value="select file" onclick="fileSelector.select()" disabled>
-            <input class="exportbutton" type="button" id="fileSelectorButtonCancel" value="cancel" onclick="fileSelector.close()">
-        </div>
         
         <input type="button" id="showLogButton" name="showLogButton" value="log" onclick="log.toggle()">
     
