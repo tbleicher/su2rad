@@ -106,7 +106,6 @@ def startExport(selected_only=0)
     end 
 end
 
-
 def startWebExport(selected_only=0)
     begin
         if $SU2RAD_DIALOG_WINDOW
@@ -205,8 +204,9 @@ end
 
 def runTest
     $SU2RAD_CONFIG = RunTimeConfig.new()
-    sky = RadianceSky.new()
-    sky.test()
+    load 'su2radlib/settings.rb'
+    sd = SettingsDialog.new()
+    sd.show()
 end
 
 def su2rad_reload

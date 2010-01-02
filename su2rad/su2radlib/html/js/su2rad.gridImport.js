@@ -121,9 +121,9 @@ su2rad.dialog.gridImport.loadFileSU = function () {
     // function to be called with fielpath in JS
     log.debug("DEBUG: laodFileSU")
     log.debug("this.directory='" + this.directory + "'")
-    fileSelector.callback = su2rad.dialog.loadTextFile; 
+    su2rad.dialog.fileSelector.callback = su2rad.dialog.loadTextFile; 
     try {
-        fileSelector.show(this.directory)
+        su2rad.dialog.fileSelector.show(this.directory)
     } catch (e) {
         logError(e)
     }
@@ -131,10 +131,11 @@ su2rad.dialog.gridImport.loadFileSU = function () {
 
 su2rad.dialog.gridImport._loadFileSU = function (encText) {
     log.debug("DEBUG _loadFileSU: received " + encText.length + " bytes")
+    //log.debug("DEBUG _loadFileSU: encText='" + encText + "'")
     // text received from
     try {
         var text = su2rad.utils.decodeText(encText);
-        var filename = fileSelector.getFilepath();
+        var filename = su2rad.dialog.fileSelector.getFilepath();
         // can't use 'this' because function is call in fileselector context
         su2rad.dialog.gridImport.parseFileText(text, filename);
     } catch(e) {

@@ -163,7 +163,7 @@ class MaterialLists < ExportBase
         while startIdx < mList.length
             chunk = mList[startIdx...startIdx+nChunk]
             jsonList = chunk.collect { |m| m.toJSON() }
-            json = encodeJSON( "[%s]" % jsonList.join(',') )
+            json = escape_javascript( "[%s]" % jsonList.join(',') )
             uimessage("mList %s: setting materials %d to %d" % [mtype, startIdx, startIdx+chunk.length])
             dlg.execute_script("setMaterialsListJSON('%s','%s')" % [json,mtype])
             startIdx += nChunk

@@ -88,6 +88,17 @@ module JSONUtils
         return string
     end
     
+    def escape_javascript(javascript)
+        if javascript
+            js_escape_map = {'\\' => '\\\\', '</' => '<\/', "\r\n" => '\n',
+                             "\n" => '\n',   "\r" => '\n',     '"' => '\\"',
+                             "'"  => "\\'"}
+            javascript.gsub(/(\\|<\/|\r\n|[\n\r"'])/) { js_escape_map[$1] }
+        else
+            ''
+        end
+    end
+
     def urlEncode(string)
         ## URL-encode from Ruby::CGI
         string.gsub(/([^ a-zA-Z0-9_.-]+)/n) do

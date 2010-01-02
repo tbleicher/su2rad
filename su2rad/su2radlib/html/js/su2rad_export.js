@@ -1,4 +1,8 @@
 
+var su2rad = su2rad ? su2rad : new Object()
+
+    
+    
 function ExportSettingsObject() {
     this.scenePath = '.';
     this.sceneName = 'unnamed.rif';

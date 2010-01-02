@@ -4,48 +4,6 @@
 // create new namespace for main export functions
 
 
-su2rad.dialog.expFunc.setOption = function (optname, optvalue) {
-    log.debug("DEBUG: export.setOption(optname='" + optname + "' optvalue='" + optvalue + "')")
-}
-
-su2rad.dialog.expFunc.onExport = function() {
-    log.debug("onExportButton()...")
-    if (su2rad.SKETCHUP != false) {
-        try {
-            log.info("starting export ...")
-            window.location = 'skp:onExport@';
-        } catch (e) {
-            logError(e)
-            alert(e.toString())
-        }
-    } else {
-        su2rad.dialog.showBusy()
-        log.warn('Sketchup not available; no export action');
-        msg  = '{"status"  :"success"';
-        msg += ',"messages":"0"';
-        msg += ',"files"   :"31"';
-        msg += ',"groups"  :"345"';
-        msg += ',"faces"   :"45678"}';
-        su2rad.dialog.showResults(su2rad.utils.encodeJSON(msg));
-    }
-}
-
-su2rad.dialog.expFunc.onCancel = function() {
-    try {
-        if (su2rad.SKETCHUP != false) {
-                //log.info("export canceled by user")
-                window.location = 'skp:onCancel@';
-        } else {
-            su2rad.dialog.hideProgressWindow();
-            document.body.innerHTML = "";
-            //window.opener='x';
-            window.close();
-        }
-    } catch (e) {
-        logError(e)
-    }
-}
-
 // set environment
 var _currentStatusDiv = "status_tab-export"
 

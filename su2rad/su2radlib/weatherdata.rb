@@ -72,7 +72,7 @@ class WeatherDataImportDialog < ExportBase
             dirs = FileSystemProxy.listDirectory(dirpath)
         end
         json = toStringJSON(dirs)
-        dlg.execute_script( "fileSelector.setFileTreeJSON('%s', '%s')" % [encodeJSON(json),root])
+        dlg.execute_script("su2rad.dialog.fileSelector.setFileTreeJSON('%s', '%s')" % [escape_javascript(json),root])
     end
     
     def getEPWPathFromAttribute

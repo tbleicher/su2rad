@@ -72,7 +72,7 @@ class NumericImportDialog < ExportBase
             dirs = FileSystemProxy.listDirectory(dirpath)
         end
         json = toStringJSON(dirs)
-        dlg.execute_script( "fileSelector.setFileTreeJSON('%s', '%s')" % [encodeJSON(json),root])
+        dlg.execute_script("su2rad.dialog.fileSelector.setFileTreeJSON('%s', '%s')" % [escape_javascript(json),root])
     end
     
     def importFromWebDialog(dlg, opts)
@@ -152,14 +152,14 @@ class NumericImportDialog < ExportBase
     
     def loadTextFile(dlg, filepath)
         ## send encoded file content to dialog
-        uimessage("loadTextFile (filepath='#{filepath}')\n", 2)
+        uimessage("NumericImportdialog.loadTextFile(filepath='#{filepath}')", 2)
         text = ''
         if File.exists?(filepath)
             f = File.open(filepath, 'r')
             text = f.read()
-            text = urlEncode(text)
+            text = escape_javascript(text)
         end
-        dlg.execute_script("su2rad.dialog.loadFileCallback('%s')" % text)
+        dlg.execute_script("su2rad.dialog.gridImport._loadFileSU('%s')" % text)
     end
 
 end 

@@ -93,9 +93,9 @@ su2rad.dialog.weatherdata.loadFileSU = function (path) {
     try {
         su2rad.dialog.loadFileCallback = su2rad.dialog.weatherdata._loadFileSU
         // function to be called with fielpath in JS
-        fileSelector.callback = su2rad.dialog.loadTextFile; 
+        su2rad.dialog.fileSelector.callback = su2rad.dialog.loadTextFile; 
         log.debug("starting file selector ... ")
-        fileSelector.show(path)
+        su2rad.dialog.fileSelector.show(path)
     } catch (e) {
         logError(e)
     }
@@ -108,7 +108,7 @@ su2rad.dialog.weatherdata._loadFileSU = function (encText) {
     var text = su2rad.utils.decodeText(encText);
     var lines = text.split("\n")
     log.debug("_loadFileSU: lines=" + lines.length)
-    var filename = fileSelector.getFilepath();
+    var filename = su2rad.dialog.fileSelector.getFilepath();
     try {
         // will be called as method of su2rad.dialog => this.parseFileText does not work!
         su2rad.dialog.weatherdata.parseFileText(text, filename);

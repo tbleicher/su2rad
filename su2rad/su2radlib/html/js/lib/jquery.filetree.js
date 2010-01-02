@@ -52,8 +52,8 @@ if(jQuery) (function($){
             $(this).each( function() {
                 
                 function setTree(t, root, f) {
-                    fileSelector._callback = f;
-                    fileSelector.listDirectory(t, root);
+                    su2rad.dialog.fileSelector._callback = f;
+                    su2rad.dialog.fileSelector.listDirectory(t, root);
                     // var data = fileTreeDummy(t);
                     // f(data);
                 }

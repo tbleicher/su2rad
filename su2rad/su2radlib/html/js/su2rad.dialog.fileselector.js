@@ -1,15 +1,17 @@
 
-var fileSelector = {};
+su2rad = su2rad ? su2rad : new Object()
+su2rad.dialog = su2rad.dialog ? su2rad.dialog : new Object()
+su2rad.dialog.fileSelector = su2rad.dialog.fileSelector ? su2rad.dialog.fileSelector : new Object()
 
-fileSelector._filePath = "";    // full path of selected file or dir 
-fileSelector.writeaccess = true // require files and directories to be writeable
+su2rad.dialog.fileSelector._filePath = "";    // full path of selected file or dir 
+su2rad.dialog.fileSelector.writeaccess = true // require files and directories to be writeable
 
-fileSelector.callback = function (path) {
+su2rad.dialog.fileSelector.callback = function (path) {
     // this should be overriden for each occasion
-    log.error("fileSelector.callback() path='" + path + "'");
+    log.warn("su2rad.dialog.fileSelector.callback() path='" + path + "'");
 }
 
-fileSelector.applyPath = function () {
+su2rad.dialog.fileSelector.applyPath = function () {
     log.debug("applyPath()")
     try {
         this.callback(this._filePath);
@@ -18,18 +20,18 @@ fileSelector.applyPath = function () {
     }
 }
 
-fileSelector.getFilepath = function () {
+su2rad.dialog.fileSelector.getFilepath = function () {
     return this._filePath
 }
 
-fileSelector.close = function () {
+su2rad.dialog.fileSelector.close = function () {
     log.info("file selection canceled");
     $('#fileSelectorWindow').jqmHide();
 }            
 
-fileSelector.createWindow = function () {
+su2rad.dialog.fileSelector.createWindow = function () {
     // create html elements for file selector window
-    log.debug("fileSelector.createWindow()");
+    log.debug("su2rad.dialog.fileSelector.createWindow()");
     var fsw = document.createElement("div");
     fsw.className = "jqmWindow2"
     fsw.id = "fileSelectorWindow"
@@ -49,7 +51,7 @@ fileSelector.createWindow = function () {
     select.setAttribute("type", "button")
     select.setAttribute("value", "select file")
     select.className = "exportbutton"
-    select.onclick = (function(){return function(){fileSelector.select();}})();
+    select.onclick = (function(){return function(){su2rad.dialog.fileSelector.select();}})();
     select.disabled = true;
     fsw.appendChild(select);
     var cancel = document.createElement("input")
@@ -57,25 +59,23 @@ fileSelector.createWindow = function () {
     cancel.setAttribute("type", "button")
     cancel.setAttribute("value", "cancel")
     cancel.className = "exportbutton"
-    cancel.onclick = (function(){return function(){fileSelector.close();}})();
+    cancel.onclick = (function(){return function(){su2rad.dialog.fileSelector.close();}})();
     fsw.appendChild(cancel);
     document.body.appendChild(fsw);
     // add jqModal properties to file selector div
     $('#fileSelectorWindow').jqm();
 }
 
-fileSelector.select = function () {
+su2rad.dialog.fileSelector.select = function () {
     log.debug("fileSelectorWindow.select() ...");
-    log.debug("fileSelector._filePath='" + fileSelector._filePath +  "'");
     $('#fileSelectorWindow').jqmHide();
-    log.debug("after jqmHide()")
-    if (fileSelector._filePath != "") {
-        fileSelector.applyPath();
+    if (this._filePath != "") {
+       this.applyPath();
     }
 }            
 
-fileSelector.show = function(ftRoot) {
-    log.debug("fileSelector.show(ftRoot='" + ftRoot + "')");
+su2rad.dialog.fileSelector.show = function(ftRoot) {
+    log.debug("su2rad.dialog.fileSelector.show(ftRoot='" + ftRoot + "')");
     var fsw = document.getElementById("fileSelectorWindow");
     if (fsw == null) {
         this.createWindow();
@@ -85,7 +85,7 @@ fileSelector.show = function(ftRoot) {
         //    ftRoot = su2rad.dialog.getDefaultDirectory();
         //}
         log.debug("fileSelectorWindow.show(ftRoot='" + ftRoot + "')");
-        fileSelector._filePath = "";    // reset to empty string
+        this._filePath = "";    // reset to empty string
         
         //log.debug("fileSelector root='" + ftRoot + "'");
         $('#fileSelectorNote').text(ftRoot);
@@ -94,7 +94,7 @@ fileSelector.show = function(ftRoot) {
             
             $('#fileSelectorNote').text(file.toString());
             
-            fileSelector._filePath = file.toString();   // store current selection
+            su2rad.dialog.fileSelector._filePath = file.toString();   // store current selection
             log.debug('TEST: ' + file.toString())
             document.getElementById("fileSelectorButtonSelect").disabled=false;
             document.getElementById("fileSelectorButtonSelect").value="select file";
@@ -104,7 +104,7 @@ fileSelector.show = function(ftRoot) {
     }
 }
 
-fileSelector.setFileTreeJSON = function (tree, setPosition) {
+su2rad.dialog.fileSelector.setFileTreeJSON = function (tree, setPosition) {
     // eval JSON views string from SketchUp
     log.debug("TEST: setFileTreeJSON")
     var json = su2rad.utils.decodeJSON(tree);
@@ -128,7 +128,7 @@ fileSelector.setFileTreeJSON = function (tree, setPosition) {
             if (entry) {
                 document.getElementById('fileSelectorTree').scrollTop = entry.offsetTop-25;
             } else {
-                log.error("setPosition: element with id 'requestedPath' not found");
+                log.warn("setPosition: element with id 'requestedPath' not found");
             }
         } catch (e) {
             logError(e)
@@ -136,7 +136,7 @@ fileSelector.setFileTreeJSON = function (tree, setPosition) {
     }
 }
 
-fileSelector.formatTree = function (tree) {
+su2rad.dialog.fileSelector.formatTree = function (tree) {
     log.debug("fileSelectorWindow.formatTree()");
     var d = "<ul class=\"jqueryFileTree\" style=\"display: none;\">"
     try {
@@ -172,7 +172,7 @@ fileSelector.formatTree = function (tree) {
 }
 
 
-fileSelector.listDirectory = function (dir, root) {
+su2rad.dialog.fileSelector.listDirectory = function (dir, root) {
     if (su2rad.SKETCHUP == true) {
         log.info("listing directory '" + dir + "' (root=" + root + ") ...");
         var params = dir + "&" + root.toString(); 
@@ -186,7 +186,7 @@ fileSelector.listDirectory = function (dir, root) {
 }
 
 
-fileSelector.dummy = function (dir) {
+su2rad.dialog.fileSelector.dummy = function (dir) {
     //alert('fileTreeDummy(\''+dir+'\')');
     dir = dir.replace(/\\/g, '/');
     if (dir.charAt(dir.length-1) != su2rad.PATHSEP) {

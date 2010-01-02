@@ -191,9 +191,9 @@ su2rad.dialog.settings.showFileBrowser = function (name,path) {
         log.debug("starting file browser for key '" + name + "'")
         this._currentPathKey = name
         su2rad.dialog.settings._currentPathKey = name
-        fileSelector.callback = su2rad.dialog.settings.newPath
-        fileSelector.writeaccess = false
-        fileSelector.show(path)
+        su2rad.dialog.fileSelector.callback = su2rad.dialog.settings.newPath
+        su2rad.dialog.fileSelector.writeaccess = false
+        su2rad.dialog.fileSelector.show(path)
     } catch (e) {
         log.error(e)
     }
