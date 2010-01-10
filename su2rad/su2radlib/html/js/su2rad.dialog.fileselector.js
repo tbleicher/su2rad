@@ -97,7 +97,12 @@ su2rad.dialog.fileSelector.show = function(ftRoot) {
             su2rad.dialog.fileSelector._filePath = file.toString();   // store current selection
             log.debug('TEST: ' + file.toString())
             document.getElementById("fileSelectorButtonSelect").disabled=false;
-            document.getElementById("fileSelectorButtonSelect").value="select file";
+            var fname = file.toString()
+            if (fname.substring(fname.length-1) == "/") {
+                document.getElementById("fileSelectorButtonSelect").value="select dir";
+            } else {
+                document.getElementById("fileSelectorButtonSelect").value="select file";
+            }
         });
     } catch (e) {
         logError(e)

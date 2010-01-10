@@ -6,16 +6,14 @@ su2rad.dialog.settings = su2rad.dialog.settings ? su2rad.dialog.settings : new O
 
 su2rad.dialog.settings._currentPathKey = ""
 
-su2rad.dialog.settings.setButtonState = function (bvalue, state) {
-    var button = document.getElementById(bvalue + "_button")
-    if (button) {
-        if (state == "disabled") {
-            button.disabled = true
-        } else {
-            button.disabled = false
-        }
+su2rad.dialog.settings.setButtonState = function (state) {
+    var button = document.getElementById("apply_button")
+    if (state == "disabled") {
+        button.disabled = true
+        document.getElementById("cancel_button").value = "close"
     } else {
-        log.error("could not find button id '" + bvalue + "_button'")
+        button.disabled = false
+        document.getElementById("cancel_button").value = "cancel"
     }
 }
 

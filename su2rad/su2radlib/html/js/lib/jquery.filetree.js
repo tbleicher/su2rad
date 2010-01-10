@@ -92,6 +92,7 @@ if(jQuery) (function($){
                                 // Collapse
                                 $(this).parent().find('UL').slideUp({ duration: o.collapseSpeed, easing: o.collapseEasing });
                                 $(this).parent().removeClass('expanded').addClass('collapsed');
+                                h($(this).attr('rel')); // apply direcory names on collapse
                             }
                         } else {
                             h($(this).attr('rel'));

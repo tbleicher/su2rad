@@ -198,8 +198,10 @@ def acknowledgementDialog
 end
     
 def preferencesDialog
-    pd = PreferencesDialog.new()
-    pd.showDialog()
+    $SU2RAD_CONFIG = RunTimeConfig.new()
+    load 'su2radlib/settings.rb'
+    sd = SettingsDialog.new()
+    sd.show()
 end
 
 def runTest
@@ -253,7 +255,7 @@ def addRadianceMenu
     radmenu.add_item("weather data") { showWeatherDataDialog() }
     radmenu.add_separator()
     
-    #radmenu.add_item("Preferences") { preferencesDialog() }
+    radmenu.add_item("Preferences") { preferencesDialog() }
     radmenu.add_item("About") { aboutDialog() }
     radmenu.add_item("Acknowledgement") { acknowledgementDialog() }
     radmenu.add_separator()

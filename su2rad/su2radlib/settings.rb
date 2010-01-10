@@ -94,9 +94,8 @@ class SettingsDialog < ExportBase
             $SU2RAD_CONFIG.set(k,v)
         }
         printf("\n%s\n" % $SU2RAD_CONFIG.to_s())
-        #TODO:
-        #$SU2RAD_CONFIG.write() 
-        #$SU2RAD_CONFIG.readConfig() 
+        $SU2RAD_CONFIG.write() 
+        $SU2RAD_CONFIG.readConfig() 
         setCurrentOptions(dlg)
     end
 
@@ -108,7 +107,7 @@ class SettingsDialog < ExportBase
             @tmp_dict[k] = v
         }
         if @tmp_dict.length != 0
-            dlg.execute_script("su2rad.dialog.settings.setButtonState('apply')") 
+            dlg.execute_script("su2rad.dialog.settings.setButtonState('enabled')") 
         end
     end
     
@@ -118,7 +117,7 @@ class SettingsDialog < ExportBase
             @tmp_dict.delete(param)
         end
         if @tmp_dict.length == 0
-            dlg.execute_script("su2rad.dialog.settings.setButtonState('apply', 'disabled')") 
+            dlg.execute_script("su2rad.dialog.settings.setButtonState('disabled')") 
         end
     end
     
@@ -126,7 +125,7 @@ class SettingsDialog < ExportBase
         uimessage("su2rad.dialog.settings.setCurrentOptions()", 2)
         json = escape_javascript($SU2RAD_CONFIG.toJSON())
         dlg.execute_script("su2rad.dialog.settings.setCurrentOptions('%s')" % json) 
-        dlg.execute_script("su2rad.dialog.settings.setButtonState('apply', 'disabled')") 
+        dlg.execute_script("su2rad.dialog.settings.setButtonState('disabled')") 
         @tmp_dict = {}
     end
 
