@@ -110,11 +110,10 @@ class WeatherDataImportDialog < ExportBase
         if File.exists?(filepath)
             f = File.open(filepath, 'r')
             text = f.read()
-            #uimessage("TEST: text=%d bytes" % text.length , 3)
-            text = urlEncode(text)
+            text = escape_javascript(text)
             uimessage("TEST: text=%d bytes" % text.length , 3)
         end
-        dlg.execute_script("su2rad.dialog.loadFileCallback('%s')" % text)
+        dlg.execute_script("su2rad.dialog.weatherdata._loadFileSU('%s')" % text)
     end
 
 end 

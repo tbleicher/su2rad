@@ -94,6 +94,9 @@ module JSONUtils
                              "\n" => '\n',   "\r" => '\n',     '"' => '\\"',
                              "'"  => "\\'"}
             javascript.gsub(/(\\|<\/|\r\n|[\n\r"'])/) { js_escape_map[$1] }
+            #enc = encodeJSON(javascript)
+            #puts enc
+            #return enc
         else
             ''
         end

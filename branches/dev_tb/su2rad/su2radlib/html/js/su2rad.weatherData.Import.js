@@ -101,11 +101,10 @@ su2rad.dialog.weatherdata.loadFileSU = function (path) {
     }
 }
 
-su2rad.dialog.weatherdata._loadFileSU = function (encText) {
-    // function called from SU with encoded text
-    log.debug("_loadFileSU: received " + encText.length + " bytes")
-    // text received from 
-    var text = su2rad.utils.decodeText(encText);
+su2rad.dialog.weatherdata._loadFileSU = function (text) {
+    // function called from SU with escaped javascript string
+    log.debug("_loadFileSU: received " + text.length + " bytes")
+    // text received from WeatherDataImportDialog.loadTextFile 
     var lines = text.split("\n")
     log.debug("_loadFileSU: lines=" + lines.length)
     var filename = su2rad.dialog.fileSelector.getFilepath();
