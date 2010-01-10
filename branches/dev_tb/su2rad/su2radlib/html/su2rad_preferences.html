@@ -6,7 +6,7 @@
         <meta http-equiv="Content-Style-Type"  content="text/css">
         <meta http-equiv="Content-Script-Type" content="text/javascript">
 
-        <title>su2rad settings</title>
+        <title>su2rad preferences</title>
         
         <script type="text/javascript" src="./blackbirdjs/blackbird.js"></script>
         <script type="text/javascript" src="./js/lib/jsr_class.js"></script>
@@ -18,11 +18,11 @@
 	
         <script type="text/javascript" src="./js/su2rad.dialog.common.js"></script>
         <script type="text/javascript" src="./js/su2rad.dialog.fileselector.js"></script>
-        <script type="text/javascript" src="./js/su2rad.dialog.settings.js"></script>
+        <script type="text/javascript" src="./js/su2rad.dialog.preferences.js"></script>
 
         <link rel="stylesheet" href="./blackbirdjs/blackbird.css" type="text/css" media="screen" />
         <link rel="stylesheet" href="./css/dialog.css"            type="text/css" media="screen" />
-        <link rel="stylesheet" href="./css/dialog.settings.css"   type="text/css" media="screen" />
+        <link rel="stylesheet" href="./css/dialog.preferences.css"   type="text/css" media="screen" />
         <link rel="stylesheet" href="./css/jqModal.css"           type="text/css" media="screen" />
         <link rel="stylesheet" href="./css/jquery.filetree.css"   type="text/css" media="screen" />
         <!-- <link rel="stylesheet" href="./css/jquery.humanmsg.css"   type="text/css" media="screen" /> -->
@@ -36,9 +36,9 @@
         
         <input type="button" id="showLogButton" name="showLogButton" value="log" onclick="log.toggle()">
         
-        <h3>su2rad settings</h3>
+        <h3>su2rad preferences</h3>
 
-        <div class="settings" id="settings_container">
+        <div class="preferences" id="preferences_container">
             <div>
                 <span class="setting_name">SU2RAD_OPT_NAME</span>
                 <input type="text" value="SU2RAD_OPT_VALUE" />
@@ -48,9 +48,9 @@
         </div>
 
         <div id="mainButtonRow">
-            <input type="button" value="apply" id="apply_button"  onclick="su2rad.dialog.settings.onApply()">
-            <input type="button" value="close" id="cancel_button" onclick="su2rad.dialog.settings.onClose()">
-            <input type="button" value="test"  onclick="su2rad.dialog.settings.test()">
+            <input type="button" value="apply" id="apply_button"  onclick="su2rad.dialog.preferences.onApply()">
+            <input type="button" value="close" id="cancel_button" onclick="su2rad.dialog.preferences.onClose()">
+            <input type="button" value="test"  onclick="su2rad.dialog.preferences.test()">
         </div>
 
     </body>

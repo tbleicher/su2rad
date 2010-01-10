@@ -166,24 +166,6 @@ function _getExportPath() {
     return path;
 }
 
-function onSelectExportPath() {
-    //XXX unused
-    if (navigator.userAgent.indexOf('Firefox/3') != -1) {
-        // FireFox 3 does not provide full path
-        log.error('Firefox 3 can not be used to set export path. Sorry');
-        alert('Firefox 3 can not be used to set export path. Sorry');
-        // TODO: hide file selection
-        path = _getExportPath();
-        su2rad.exportSettings.setExportPath(path);
-    } else {
-        var val=document.getElementById("fileselection").value;
-        su2rad.exportSettings.setExportPath(val);
-    }
-    updateExportFormValues();
-    applyExportOptions();
-}
-
-
 
 function onLoadSceneFile() {
     // open scene file

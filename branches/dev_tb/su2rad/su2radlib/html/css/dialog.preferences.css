@@ -7,7 +7,7 @@ a {
     text-decoration: none;
 }
 
-.settings > div {
+.preferences > div {
     margin-top:     3px;
     padding:        10px;
     padding-bottom: 7px;
@@ -21,7 +21,7 @@ a {
     color:          #27537a;
 }
 
-.settings div input {
+.preferences div input {
     /* background:     white; */
     postition:      relative;
     top:            -3px;
@@ -31,7 +31,7 @@ a {
     float:          right;
 }
 
-.settings div input[type=button] {
+.preferences div input[type=button] {
     width:          50px;
     margin-left:    10px;
     height:         20px;
@@ -39,16 +39,16 @@ a {
     top:            -4px;
 }
 
-.settings div input.numberInput {
+.preferences div input.numberInput {
     width:          96px;
     margin-right:   254px;
 }
 
-.settings div input.pathInput {
+.preferences div input.pathInput {
     width:          290px;
 }
 
-.settings div select {
+.preferences div select {
     padding: 0px;
     width: 100px;
     float: right;
@@ -66,7 +66,7 @@ a {
     color: grey;
 }
 
-#settings_container {
+#preferences_container {
     margin-top: 15px;
     max-width: 620px;
 }

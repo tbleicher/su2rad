@@ -246,7 +246,7 @@ class RunTimeConfig
             "TRIANGULATE" => "default setting for triangulate check box.",
             "TEXTURES"    => "default setting for textures check box.",
             "UNIT"        => "conversion unit for SketchUp inches to Radiance scene units. Use 0.0254 if you want Radiance to use meters, or 0.0833 if your prefered scene unit is imperial foot.",
-            "LOGLEVEL"    => "amount of information to report in the log file. -2 is only errors -1 are errors and warnings 0 includes important messages 1 to 4 increases the verbosity.",
+            "LOGLEVEL"    => "amount of information to report in the log file:<br/>-2 is only errors<br/> -1 are errors and warnings<br/>0 includes important messages (default)<br/> 1 to 4 increases the verbosity.",
             "PATHTMPL"    => "This string is used to create the default path for the Radiance files. $FILE will be replaced by the path of the SketchUp file, $PAGE by the name of the SketchUp scene.",
             "USEWX"       => "If you have wxSU installed on your system this setting will allow you to use the extension for improved progress dialogs. Note that this might create instability of SketchUp.",
             "REPLMARKS"   => "path to REPLMARKS and other Radiance binaries. If you have Radiance installed select the replmarks application of your installation.",
