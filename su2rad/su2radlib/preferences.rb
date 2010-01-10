@@ -35,7 +35,7 @@ class SettingsDialog < ExportBase
         end
     end
     
-    def show(title="su2rad settings")
+    def show(title="su2rad preferences")
         ## create and show WebDialog
         if $SU2RAD_DIALOG_WINDOW
             $SU2RAD_DIALOG_WINDOW.bring_to_front()
@@ -45,19 +45,19 @@ class SettingsDialog < ExportBase
             
         ## apply, close and close actions
         dlg.add_action_callback("applySettings") {|d,p|
-            uimessage("applying settings ...", 2)
+            uimessage("applying preferences ...", 2)
             applySettings(d,p)
         }
         
         dlg.add_action_callback("closeDialog") { |d,p|
-            uimessage("closing settings dialog ...", 1)
+            uimessage("closing preferences dialog ...", 1)
             d.close();
             @tmp_dict = {}
             $SU2RAD_DIALOG_WINDOW = nil
         }
 
         dlg.set_on_close {
-            uimessage("closing settings dialog ...", 2)
+            uimessage("closing preferences dialog ...", 2)
             @tmp_dict = {}
             $SU2RAD_DIALOG_WINDOW = nil
         }
@@ -77,14 +77,14 @@ class SettingsDialog < ExportBase
         }
 
         ## set contents
-        html = File.join(File.dirname(__FILE__), "html","su2rad_settings.html")
+        html = File.join(File.dirname(__FILE__), "html","su2rad_preferences.html")
         dlg.set_file(html, nil)
         
         ## show dialog
         $SU2RAD_DIALOG_WINDOW = dlg
         dlg.show {
             dlg.execute_script("su2rad.dialog.setSketchup()") 
-            uimessage("su2rad.dialog.settings.show()", 2)
+            uimessage("su2rad.dialog.preferences.show()", 2)
             setCurrentOptions(dlg)
         }
     end
@@ -107,7 +107,7 @@ class SettingsDialog < ExportBase
             @tmp_dict[k] = v
         }
         if @tmp_dict.length != 0
-            dlg.execute_script("su2rad.dialog.settings.setButtonState('enabled')") 
+            dlg.execute_script("su2rad.dialog.preferences.setButtonState('enabled')") 
         end
     end
     
@@ -117,15 +117,15 @@ class SettingsDialog < ExportBase
             @tmp_dict.delete(param)
         end
         if @tmp_dict.length == 0
-            dlg.execute_script("su2rad.dialog.settings.setButtonState('disabled')") 
+            dlg.execute_script("su2rad.dialog.preferences.setButtonState('disabled')") 
         end
     end
     
     def setCurrentOptions(dlg)
-        uimessage("su2rad.dialog.settings.setCurrentOptions()", 2)
+        uimessage("su2rad.dialog.preferences.setCurrentOptions()", 2)
         json = escape_javascript($SU2RAD_CONFIG.toJSON())
-        dlg.execute_script("su2rad.dialog.settings.setCurrentOptions('%s')" % json) 
-        dlg.execute_script("su2rad.dialog.settings.setButtonState('disabled')") 
+        dlg.execute_script("su2rad.dialog.preferences.setCurrentOptions('%s')" % json) 
+        dlg.execute_script("su2rad.dialog.preferences.setButtonState('disabled')") 
         @tmp_dict = {}
     end
 

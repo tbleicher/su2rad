@@ -47,19 +47,17 @@ su2rad.dialog.weatherdata.evaluateSketchup = function () {
         document.getElementById("loadFileSUDiv").style.display='';
         document.getElementById("graphOptions").style.display='';
         document.getElementById("statsDiv").style.display='';
-    } else if (su2rad.BROWSER == "Gecko" && su2rad.SKETCHUP == false) {
+    } else if (su2rad.NSIDOM == true)
         // this is Firefox -> enable direct load of file text
         log.info("nsIDOMFileList available");
-        log.debug("broser: " + navigator.userAgent);
-        su2rad.NSIDOM = true;
         document.getElementById("loadFileWarning").style.display='none';
         document.getElementById("loadFileSelectionDiv").style.display=''; 
         document.getElementById("graphOptions").style.display='';
         document.getElementById("statsDiv").style.display='';
     } else {
         // this is not Firefox/Mozilla
-        log.warn("nsIDOMFileList and Sketchup not available - no functionality");
-        log.debug("broser: " + navigator.userAgent);
+        log.warn("Sketchup and nsIDOMFileList not available - no functionality");
+        log.debug("broser: " + su2rad.BROWSER);
     }
 }
 

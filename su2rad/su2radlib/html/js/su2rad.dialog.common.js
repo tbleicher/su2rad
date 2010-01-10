@@ -3,23 +3,45 @@
 //var su2rad = new Object();
 var su2rad = su2rad ? su2rad : new Object()
 
-if (navigator.userAgent.indexOf("Windows") != -1) {
-    su2rad.PATHSEP = "/";    // helps with file handling in Ruby
-    su2rad.PLATFORM = "Windows";
-} else {
-    su2rad.PATHSEP = "/";
-    su2rad.PLATFORM = "Mac";
-}
+su2rad.dialog = su2rad.dialog ? su2rad.dialog : new Object()
 
 // flag for backend 
 su2rad.SKETCHUP = false;
-su2rad.NSIDOM = false;
-su2rad.BROWSER = "";
-su2rad.NSIDOM = false;
+
+su2rad.dialog.setEnvironment = function () {
+    // BROWSER
+    su2rad.BROWSER = "";
+    su2rad.NSIDOM = false;
+    if ( jQuery.browser.mozilla) {
+        su2rad.BROWSER = "mozilla";
+        su2rad.NSIDOM = true;
+    } else if ( jQuery.browser.safari) {
+        su2rad.BROWSER = "safari";
+    } else if ( jQuery.browser.msie) {
+        su2rad.BROWSER = "msie";
+    } else if ( jQuery.browser.opera) {
+        su2rad.BROWSER = "opera";
+    }
+    if (su2rad.BROWSER == "") {
+        log.warning("Browser could not be identified!")
+    } else {
+        log.info("browser: " + su2rad.BROWSER);
+    }
+    log.debug("userAgent: " + navigator.userAgent);
+
+    // PLATFORM 
+    if (navigator.userAgent.indexOf("Windows") != -1) {
+        su2rad.PATHSEP = "/";    // helps with file handling in Ruby
+        su2rad.PLATFORM = "Windows";
+    } else {
+        su2rad.PATHSEP = "/";
+        su2rad.PLATFORM = "Mac";
+    }
+}
+su2rad.dialog.setEnvironment()
 
 
 
-su2rad.dialog = su2rad.dialog ? su2rad.dialog : new Object()
 su2rad.dialog.expFunc = su2rad.dialog.expFunc ? su2rad.dialog.expFunc : new Object()
 
 su2rad.dialog.expFunc.onCancel = function() {
@@ -109,27 +131,10 @@ su2rad.dialog.loadTextFile = function (fname) {
     }
 }
 
-
 su2rad.dialog.getDefaultDirectory = function () {
     log.debug("XXX getDefaultDirectory()")
     return "/Users/ble/Desktop/testex"
 }
-
-// set BROWSER var 
-var userAgent = navigator.userAgent;
-log.debug("userAgent: " + userAgent);
-var engine = "";
-var engine = userAgent.match(/AppleWebKit/i)
-if ( engine == "AppleWebKit" ) {
-    su2rad.BROWSER = "Safari";
-} else {
-    var engine = userAgent.match(/Gecko/i)
-    if ( engine == "Gecko" ) {
-        su2rad.BROWSER = "Gecko";
-        su2rad.NSIDOM = true;
-    }
-}
-log.debug("browser: " + su2rad.BROWSER);
 
 
 su2rad.utils = su2rad.utils ? su2rad.utils : new Object()
@@ -142,6 +147,16 @@ su2rad.utils.arrayFromJSON = function(json) {
         var array = new Array();
     }
     return array
+}
+
+su2rad.utils.objectFromJSON = function(json) {
+    try {
+        eval("var obj = " + json);
+    } catch (e) {
+        logError(e);
+        var obj = new Object();
+    }
+    return obj
 }
 
 su2rad.utils.decodeJSON = function(text) {

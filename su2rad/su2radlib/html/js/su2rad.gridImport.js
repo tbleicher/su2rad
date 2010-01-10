@@ -25,8 +25,7 @@ su2rad.dialog.evaluateSketchup = function () {
     document.getElementById("importGraphToSketchupDiv").style.display='none';
     
     // show 'load file' button depending on browser and Sketchup
-    if ( su2rad.SKETCHUP == false && su2rad.BROWSER != "Gecko" ) {
-        // this is not Firefox/Mozilla
+    if ( su2rad.SKETCHUP == false && su2rad.NSIDOM == false ) {
         log.warn("nsIDOMFileList and Sketchup not available - no functionality");
     
     } else if (su2rad.SKETCHUP == true) {
