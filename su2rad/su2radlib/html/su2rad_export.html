@@ -447,7 +447,7 @@
                 <div class="optionsColumn" style="height:120px">
                     <div class="optionsHeader">
                         <span class="gridLabel">generator:</span>
-                        <select id="skyGenerator" name="skyGenerator" onchange="onSkyGenChange()">
+                        <select id="skyGenerator" name="skyGenerator" onchange="su2rad.dialog.sky.setGenerator(this.value)">
                             <option value="gensky" selected>gensky</option>
                             <!--<option value="gendaylit">gendaylit</option>-->
                             <!--<option value="hdr-image">hdr-image</option>-->
@@ -484,19 +484,19 @@
                     <div class="optionsRow">
                         <span class="gridLabel">date:</span>
                         <input type="text" class="timeOptionInput" name="skyDateMonth" id="skyDateMonth" value="03"
-                        onchange="onSkyDateTimeChange('skyDateMonth')"/>
+                        onchange="su2rad.dialog.sky.setDateTime('skyDateMonth')"/>
                         <span class="skyOption" style="width:12px">/</span>
                         <input type="text" class="timeOptionInput" name="skyDateDay" id="skyDateDay" value="21"
-                        onchange="onSkyDateTimeChange('skyDateDay')"/>
+                        onchange="su2rad.dialog.sky.setDateTime('skyDateDay')"/>
                     </div>
                 
                     <div class="optionsRow">
                         <span class="gridLabel">time:</span>
                         <input type="text" class="timeOptionInput" name="skyTimeHour" id="skyTimeHour" value="12"
-                        onchange="onSkyDateTimeChange('skyTimeHour')"/>
+                        onchange="su2rad.dialog.sky.setDateTime('skyTimeHour')"/>
                         <span class="skyOption" style="width:12px">:</span>
                         <input type="text" class="timeOptionInput" name="skyTimeMinute" id="skyTimeMinute" value="00"
-                        onchange="onSkyDateTimeChange('skyTimeMinute')"/>
+                        onchange="su2rad.dialog.sky.setDateTime('skyTimeMinute')"/>
                     </div>
 
                 </div>

@@ -231,7 +231,7 @@ function onTabShow(link,div_show,div_hide) {
 
 function updateExportPage() {
     log.debug("updating 'Export' page ...");
-    setSkyCmdLine();
+    su2rad.dialog.sky.setSkyCmdLine();
 }
 
 function updateRenderPage() {
@@ -245,7 +245,7 @@ function updateRenderPage() {
 function updateSkyPage() {
     log.debug("updating 'Sky' page ...");
     updateLocationFormValues();
-    updateSkyFormValues();
+    su2rad.dialog.sky.updateDialog()
     updateGoogleMapLocation();
     // enable 'apply' if location or time has changed
     if (modelLocation.changed == true || skyDateTime.changed == true) {

@@ -199,14 +199,14 @@ end
     
 def preferencesDialog
     $SU2RAD_CONFIG = RunTimeConfig.new()
-    load 'su2radlib/settings.rb'
+    load 'su2radlib/preferences.rb'
     sd = SettingsDialog.new()
     sd.show()
 end
 
 def runTest
     $SU2RAD_CONFIG = RunTimeConfig.new()
-    load 'su2radlib/settings.rb'
+    load 'su2radlib/preferences.rb'
     sd = SettingsDialog.new()
     sd.show()
 end
