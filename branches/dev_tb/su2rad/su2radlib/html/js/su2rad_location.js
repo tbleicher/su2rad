@@ -346,6 +346,6 @@ function updateLocationFormValues() {
     //checkValueLatLong("Latitude", 90);
     //checkValueLatLong("Longitude", 190);
     //checkValueLatLong("NorthAngle", 360);
-    setSkyCmdLine();
+    su2rad.dialog.sky.setSkyCmdLine();
 }
 

@@ -17,7 +17,7 @@ module FileSystemProxy
         while abspath
             dirs = FileSystemProxy.listDirectory(abspath,idPath)
             dirs.each { |d|
-                if d['name'] == parent
+                if d['name'].downcase() == parent.downcase()
                     printf("  => '#{parent}': adding %d children\n" % children.length)
                     d['children'] = children
                 end
@@ -117,7 +117,7 @@ module FileSystemProxy
             if entry['type'] == 'file' && p.length > 3
                 entry['ext'] = "ext_%s" % p.slice(-3,3)
             end
-            if p == idPath
+            if p.downcase() == idPath.downcase()
                 entry['id'] = 'requestedPath'
             end
             dirList.push(entry)
