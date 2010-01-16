@@ -151,7 +151,7 @@ function onClickCity(city, country, lat, lng) {
     modelLocation.setValue('Longitude', lng);
     googleMapSetCenter(parseFloat(lat),parseFloat(lng),11);
     su2rad.dialog.setStatusMsg('');
-    updateSkyPage();
+    su2rad.dialog.sky.update();
     applySkySettings();
 }
 
@@ -186,7 +186,7 @@ function onCityCountryChanged() {
         modelLocation.setValue('Country', country);
         document.getElementById("googleMapLookup").disabled = false;
     }
-    updateSkyPage()
+    su2rad.dialog.sky.update()
     applySkySettings();
 }
 
@@ -196,7 +196,7 @@ function onNorthAngleChange() {
     }
     var north = parseFloat(document.getElementById("NorthAngle").value);
     modelLocation.setValue('NorthAngle', north);
-    updateSkyPage();
+    su2rad.dialog.sky.update();
     applySkySettings();
 } 
 
@@ -210,7 +210,7 @@ function onLatLongChange() {
     var lat = parseFloat(document.getElementById("Latitude").value);
     var lng = parseFloat(document.getElementById("Longitude").value);
     setLatLong(lat,lng);
-    updateSkyPage();
+    su2rad.dialog.sky.update();
     if (document.getElementById("useGoogleMap").checked == true) {
         googleMapSetCenter(lat,lng);
         geonamesTimeZone(lat,lng);
@@ -235,7 +235,7 @@ function onSelectTZ() {
     setTZHighlight(false);
     setLocationWarning("");
     setTZWarning(parseFloat(offset));
-    updateSkyPage();
+    su2rad.dialog.sky.update();
     applySkySettings();
 }
 
@@ -269,8 +269,8 @@ function _getShadowInfoArrayFromJSON(text) {
         var array = new Array();
     }
     return array;
-}
-    
+} 
+
 
 function setShadowInfoJSON(msg) {
     // parse and apply shadow_info settings in JSON string 'msg'
@@ -293,7 +293,7 @@ function setShadowInfoJSON(msg) {
     skyOptions.parseSkyCommand(modelLocation.SkyCommand);
     skyDateTime.setFromShadowTime_time_t(modelLocation.ShadowTime_time_t);
     googleMapInitialize(modelLocation.Latitude, modelLocation.Longitude);
-    updateSkyPage();
+    su2rad.dialog.sky.update();
 }
 
 

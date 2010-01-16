@@ -524,7 +524,7 @@ su2rad.dialog.sky.enableGenskyOption = function(opt,enable) {
     applySkySettings();
 }
 
-function su2rad.dialog.sky.update() {
+su2rad.dialog.sky.update = function () {
     log.debug("updating 'Sky' page ...");
     updateLocationFormValues();
     this.updateDialog()

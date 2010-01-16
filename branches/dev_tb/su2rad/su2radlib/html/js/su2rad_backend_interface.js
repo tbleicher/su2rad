@@ -22,7 +22,7 @@ function onApplySkySettingsToModel() {
         // msg = modelLocation.toJSON();
         // setShadowInfoFromJSON(msg);
         clearTZWarning();
-        updateSkyPage();
+        su2rad.dialog.sky.update();
     }
 }
     

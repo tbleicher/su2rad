@@ -39,7 +39,7 @@
         <script type="text/javascript" src="./js/su2rad_views.js"></script>
         <script type="text/javascript" src="./js/su2rad_googlemap.js"></script>
         <script type="text/javascript" src="./js/su2rad_geonames.js"></script>
-        <script type="text/javascript" src="./js/su2rad_sky.js"></script>
+        <script type="text/javascript" src="./js/su2rad.dialog.sky.js"></script>
         <script type="text/javascript" src="./js/su2rad_location.js"></script>
         <script type="text/javascript" src="./js/su2rad_radopts.js"></script>
         <script type="text/javascript" src="./js/su2rad_materials.js"></script>
@@ -457,7 +457,7 @@
                     <div class="optionsRow" id="genskyTypeOptions" style="width:210px">
                         <div class="optionsRow" style="width:160px">
                             <span class="gridLabel">type:</span>
-                            <select id="genskySkyType" name="genskySkyType" style="width:80px;" onchange="onSkyTypeChange()">
+                            <select id="genskySkyType" name="genskySkyType" style="width:80px;" onchange="su2rad.dialog.sky.onSkyTypeChange()">
                                 <option value="u">uniform</option>
                                 <option value="c" selected>overcast</option>
                                 <option value="i">interm.</option>
@@ -466,14 +466,14 @@
                         </div>
                         <div id="genskySunOption" style="display:none;width:45px">
 				<input type="checkbox" id="sunOptionCB" value="sunOption"
-				onClick="onSkyTypeChange()"><span style="font-size:12px">sun</span>
+				onClick="su2rad.dialog.sky.onSkyTypeChange()"><span style="font-size:12px">sun</span>
                         </div>
                     </div>
                     
                     <div class="optionsRow" id="gendaylitTypeOptions">
                         <div class="optionsRow">
                             <span class="gridLabel">params:</span>
-                            <select id="gendaylitSkyType" name="gendaylitSkyType" style="width:120px;" onchange="onSkyTypeChange()">
+                            <select id="gendaylitSkyType" name="gendaylitSkyType" style="width:120px;" onchange="su2rad.dialog.sky.onSkyTypeChange()">
                                 <option value="P">epsilon/delta</option>
                                 <option value="W" selected>irridiance</option>
                                 <option value="L">illuminance</option>
@@ -512,7 +512,7 @@
                     <div class="optionsColumn">
                         <div class="rpictOverrideHeader">general</div>
                         <div class="optionsRow">
-                            <input type="checkbox" id="sunOptionCB" style="float:left;" value="sunOption" onClick="onSkyTypeChange()">
+                            <input type="checkbox" id="sunOptionCB" style="float:left;" value="sunOption" onClick="su2rad.dialog.sky.onSkyTypeChange()">
                             <span class="gridLabel" style="width:60px;">no sun</span>
                         </div>
                     </div>
