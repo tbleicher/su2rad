@@ -61,7 +61,7 @@ function geonamesCallback(jData) {
         // set closest city
         city = jData.geonames[minDistIdx];
         _setLocationFromGeonames(city);
-        updateSkyPage()
+        su2rad.dialog.sky.update()
         su2rad.dialog.setStatusMsg(text); 
     } else {
         log.info("geonames: no locations found");

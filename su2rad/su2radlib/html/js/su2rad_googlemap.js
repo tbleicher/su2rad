@@ -98,7 +98,7 @@ function googleMapDragend() {
     var point = marker.getPoint();
     setLatLong(point.lat(), point.lng());
     var zoom = map.getZoom(); 
-    updateSkyPage();
+    su2rad.dialog.sky.update();
     geonamesLookup(point.lat(), point.lng(), zoom);
 }
 

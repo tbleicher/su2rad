@@ -206,7 +206,7 @@ function updatePageById(id) {
     } else if  (id == "tab-render") {
         return updateRenderPage();
     } else if (id == "tab-sky") {
-        return updateSkyPage();
+        return su2rad.dialog.sky.update();
     } else if (id == "tab-views") {
         return updateViewsPage();
     } else if (id == "tab-materials") {
@@ -240,22 +240,6 @@ function updateRenderPage() {
     updateRenderFormValues();
     updateRpictValues();
     updateRenderLine();
-}
-
-function updateSkyPage() {
-    log.debug("updating 'Sky' page ...");
-    updateLocationFormValues();
-    su2rad.dialog.sky.updateDialog()
-    updateGoogleMapLocation();
-    // enable 'apply' if location or time has changed
-    if (modelLocation.changed == true || skyDateTime.changed == true) {
-        document.getElementById("applyLocationValues").disabled=false;
-        document.getElementById("reloadShadowInfo").disabled=false;
-    } else {
-        document.getElementById("applyLocationValues").disabled=true;
-        document.getElementById("reloadShadowInfo").disabled=true;
-    }
-    skyDateTime.getShadowTime();
 }
 
 function updateViewsPage() {
