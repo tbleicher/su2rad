@@ -47,7 +47,7 @@ function getSkySettings() {
     } else {
         log.debug("using dummy backend.getSkySettings()");
         var json = test_getSkySettings();
-        setShadowInfoJSON( su2rad.utils.encodeJSON(json) );
+        su2rad.dialog.location.setShadowInfoJSON( su2rad.utils.encodeJSON(json) );
     }
 }
 

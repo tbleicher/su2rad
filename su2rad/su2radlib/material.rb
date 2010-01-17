@@ -351,7 +351,6 @@ class MaterialContext < ExportBase
         return @newMatLib.getMaterialWithDependencies(name)
     end
     
-    
     def getSaveMaterialName(mat)
         ## generate a name that's save to use in Radiance
         if @aliasHash.has_key?(mat)

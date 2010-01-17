@@ -528,7 +528,7 @@ function su2rad.dialog.sky.update() {
     log.debug("updating 'Sky' page ...");
     updateLocationFormValues();
     this.updateDialog()
-    updateGoogleMapLocation();
+    su2rad.dialog.googleMap.updateLocation();
     // enable 'apply' if location or time has changed
     if (modelLocation.changed == true || skyDateTime.changed == true) {
         document.getElementById("applyLocationValues").disabled=false;

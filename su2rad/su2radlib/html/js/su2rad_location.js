@@ -90,7 +90,12 @@ ModelLocationObject.prototype.toParamString = function () {
 
 
 
-function calculateTZOffset(long) {
+
+var su2rad = su2rad ? su2rad : new Object()
+su2rad.dialog = su2rad.dialog ? su2rad.dialog : new Object()
+su2rad.dialog.location = su2rad.dialog.location ? su2rad.dialog.location : new Object()
+
+su2rad.dialog.location.calculateTZOffset = function (long) {
     //log.debug("calculateTZOffset(" + long + ")");
     var west = false;
     var offset = +1.0;
@@ -112,12 +117,11 @@ function calculateTZOffset(long) {
         mer *= -1;
         offset *= -1;
     }
-    setTZHighlight(true); 
+    su2rad.dialog.location.setTZHighlight(true); 
     return offset;
 }
 
-
-function checkValueLatLong(id, minmax) {
+su2rad.dialog.location.checkValueLatLong = function (id, minmax) {
     var vNum = document.getElementById(id).value;
     var num = parseFloat(vNum);
     if (isNaN(num)) {
@@ -134,48 +138,13 @@ function checkValueLatLong(id, minmax) {
     return true;
 }
 
-
-function clearTZWarning() {
+su2rad.dialog.location.clearTZWarning = function () {
     // reset warning message 
-    setTZHighlight(false);
-    setLocationWarning("");
+    su2rad.dialog.location.setTZHighlight(false);
+    this.setLocationWarning("");
 }
 
-
-function onClickCity(city, country, lat, lng) {
-    // center map on lat/lng of city from geonames
-    log.info("new city selected: " + city);
-    modelLocation.setValue('City', city);
-    modelLocation.setValue('Country',country);
-    modelLocation.setValue('Latitude', lat);
-    modelLocation.setValue('Longitude', lng);
-    googleMapSetCenter(parseFloat(lat),parseFloat(lng),11);
-    su2rad.dialog.setStatusMsg('');
-    su2rad.dialog.sky.update();
-    applySkySettings();
-}
-
-
-function formatCity(city) {
-    var cityLong = city.name + " (" + city.adminName1 + ")";
-    var lat = parseFloat(city.lat).toFixed(4);
-    var lng = parseFloat(city.lng).toFixed(4);
-    var args = [city.name, city.countryName, lat, lng].join("','");
-    var text = "<a onClick=\"onClickCity('" + args + "')\"><b>" + cityLong + "</b></a>"
-    text += " [lat=" + lat + ", lng=" + lng;
-    try {
-        text += ", tzone=" + city.timezone.gmtOffset;
-    } catch (e) {
-        text += ", tzone=none";
-    }
-    text += ", dist=" + city.distance; 
-    text += ", pop=" + city.population; 
-    text += "]";
-    return text
-}
-
-
-function onCityCountryChanged() {
+su2rad.dialog.location.onCityCountryChanged = function () {
     var city = document.getElementById("City").value;
     if (city != modelLocation.City) {
         modelLocation.setValue('City', city);
@@ -190,8 +159,40 @@ function onCityCountryChanged() {
     applySkySettings();
 }
 
-function onNorthAngleChange() {
-    if (checkValueLatLong("NorthAngle", 360) == false) {
+su2rad.dialog.location.onClickCity = function (city, country, lat, lng) {
+    // center map on lat/lng of city from geonames
+    log.info("new city selected: " + city);
+    modelLocation.setValue('City', city);
+    modelLocation.setValue('Country',country);
+    modelLocation.setValue('Latitude', lat);
+    modelLocation.setValue('Longitude', lng);
+    su2rad.dialog.googleMap.setCenter(parseFloat(lat),parseFloat(lng),11);
+    su2rad.dialog.setStatusMsg('');
+    su2rad.dialog.sky.update();
+    applySkySettings();
+}
+
+su2rad.dialog.location.onLatLongChange = function () {
+    if (this.checkValueLatLong("Latitude", 90) == false) {
+        return;
+    }
+    if (this.checkValueLatLong("Longitude", 190) == false) {
+        return;
+    }
+    var lat = parseFloat(document.getElementById("Latitude").value);
+    var lng = parseFloat(document.getElementById("Longitude").value);
+    this.setLatLong(lat,lng);
+    su2rad.dialog.sky.update();
+    if (document.getElementById("useGoogleMap").checked == true) {
+        su2rad.dialog.googleMap.setCenter(lat,lng);
+        geonamesTimeZone(lat,lng);
+        geonamesLookup(parseFloat(lat), parseFloat(lng), map.getZoom());
+    }
+    applySkySettings();
+}
+
+su2rad.dialog.location.onNorthAngleChange = function () {
+    if (this.checkValueLatLong("NorthAngle", 360) == false) {
         return;
     }
     var north = parseFloat(document.getElementById("NorthAngle").value);
@@ -200,64 +201,32 @@ function onNorthAngleChange() {
     applySkySettings();
 } 
 
-function onLatLongChange() {
-    if (checkValueLatLong("Latitude", 90) == false) {
-        return;
-    }
-    if (checkValueLatLong("Longitude", 190) == false) {
-        return;
-    }
-    var lat = parseFloat(document.getElementById("Latitude").value);
-    var lng = parseFloat(document.getElementById("Longitude").value);
-    setLatLong(lat,lng);
-    su2rad.dialog.sky.update();
-    if (document.getElementById("useGoogleMap").checked == true) {
-        googleMapSetCenter(lat,lng);
-        geonamesTimeZone(lat,lng);
-        geonamesLookup(parseFloat(lat), parseFloat(lng), map.getZoom());
-    }
-    applySkySettings();
-}
-
-
-function resetCityCountry() {
-    // unused?
-    log.info("resetting city and country names ...");
-    modelLocation.setValue('City', "no city");
-    modelLocation.setValue('Country', "no country");
-    modelLocation.changed = true;
-}
-
-
-function onSelectTZ() {
+su2rad.dialog.location.onSelectTZ = function () {
     var offset = document.getElementById('TZOffset').value;
     modelLocation.setValue('TZOffset', offset);
-    setTZHighlight(false);
-    setLocationWarning("");
-    setTZWarning(parseFloat(offset));
+    this.setTZHighlight(false);
+    this.setLocationWarning("");
+    this.setTZWarning(parseFloat(offset));
     su2rad.dialog.sky.update();
     applySkySettings();
 }
 
-
-function setLatLong(lat,lng) {
+su2rad.dialog.location.setLatLong = function (lat,lng) {
     modelLocation.setValue('Latitude', lat);
     if (modelLocation.Longitude != parseFloat(lng)) {
         modelLocation.setValue('Longitude', lng);
-        var offset = calculateTZOffset(lng);
+        var offset = this.calculateTZOffset(lng);
         modelLocation.setValue('TZOffset', offset);
-        setTZOffsetSelection(offset);
-        setLocationWarning("<input type=\"button\" value=\"confirm TZ\" onclick=\"javascript:clearTZWarning()\" />");
+        this.setTZOffsetSelection(offset);
+        this.setLocationWarning("<input type=\"button\" value=\"confirm TZ\" onclick=\"su2rad.dialog.location.clearTZWarning()\" />");
     }
 }
 
-
-function setLocationWarning(msg) {
+su2rad.dialog.location.setLocationWarning = function (msg) {
     document.getElementById("meridianWarning").innerHTML = msg;
 }
 
-
-function _getShadowInfoArrayFromJSON(text) {
+su2rad.dialog.location.arrayFromJSON = function (text) {
     // convert JSON response string into javascript array
     var json = su2rad.utils.decodeJSON(text);
     try {
@@ -265,17 +234,15 @@ function _getShadowInfoArrayFromJSON(text) {
     } catch (e) {
         logError(e);
         su2rad.dialog.setStatusMsg("error in shadow_info array: " + e.name + "<br/>" + json);
-        return
         var array = new Array();
     }
     return array;
 } 
 
-
-function setShadowInfoJSON(msg) {
+su2rad.dialog.location.setShadowInfoJSON = function (msg) {
     // parse and apply shadow_info settings in JSON string 'msg'
     //log.debug("setShadowInfoJSON()")
-    shadowinfo = _getShadowInfoArrayFromJSON(msg);
+    shadowinfo = this.arrayFromJSON(msg);
     var text = '<b>shadow info settings:</b><br/>';
     modelLocation.logging = false;
     for(var j=0; j<shadowinfo.length; j++) {
@@ -288,16 +255,15 @@ function setShadowInfoJSON(msg) {
     modelLocation.parseSkyCmd();
     modelLocation.changed = false;
     modelLocation.logging = true;
-    clearTZWarning();
+    this.clearTZWarning();
     su2rad.dialog.setStatusMsg(text);
     skyOptions.parseSkyCommand(modelLocation.SkyCommand);
     skyDateTime.setFromShadowTime_time_t(modelLocation.ShadowTime_time_t);
-    googleMapInitialize(modelLocation.Latitude, modelLocation.Longitude);
+    //su2rad.dialog.googleMap.initialize(modelLocation.Latitude, modelLocation.Longitude);
     su2rad.dialog.sky.update();
 }
 
-
-function setTZHighlight(set) {
+su2rad.dialog.location.setTZHighlight = function(set) {
     if (set == true) {
         // set highlight
         document.getElementById("TZOffset").style.color="#cc0000";
@@ -309,8 +275,7 @@ function setTZHighlight(set) {
     }
 }
 
-
-function setTZOffsetSelection(offset) {    
+su2rad.dialog.location.setTZOffsetSelection = function (offset) {    
     //log.debug("setTZOffsetSelection(offset=" + offset + ")");
     offset = parseFloat(offset);
     var tz = document.getElementById('TZOffset');
@@ -319,10 +284,10 @@ function setTZOffsetSelection(offset) {
             tz[i].selected = true;
         }
     }
-    setTZWarning(offset);
+    this.setTZWarning(offset);
 }
 
-function setTZWarning(offset) {
+su2rad.dialog.location.setTZWarning = function (offset) {
     var mer = offset*15.0;
     var diff = parseFloat(document.getElementById('Longitude').value) - mer;
     if (diff > 25 || diff < -25) {
@@ -330,7 +295,7 @@ function setTZWarning(offset) {
     }
 }
 
-function updateLocationFormValues() {
+su2rad.dialog.location.update = function () {
     document.getElementById('City').value       = modelLocation.City;
     document.getElementById('Country').value    = modelLocation.Country;
     document.getElementById('Latitude').value   = modelLocation.Latitude.toFixed(4);
@@ -338,14 +303,14 @@ function updateLocationFormValues() {
     document.getElementById('NorthAngle').value = modelLocation.NorthAngle.toFixed(2);
     var radLng = modelLocation.Longitude*-1
     document.getElementById('radianceLongitude').innerHTML = "-o " + radLng.toFixed(4);
-    setTZOffsetSelection(modelLocation.TZOffset);
+    this.setTZOffsetSelection(modelLocation.TZOffset);
     // set meridian display
     var mer = parseFloat(document.getElementById('TZOffset').value)*-15.0;
     document.getElementById('meridianDisplay').innerHTML = "-m " + mer.toFixed(1);
     // check values
-    //checkValueLatLong("Latitude", 90);
-    //checkValueLatLong("Longitude", 190);
-    //checkValueLatLong("NorthAngle", 360);
+    //this.checkValueLatLong("Latitude", 90);
+    //this.checkValueLatLong("Longitude", 190);
+    //this.checkValueLatLong("NorthAngle", 360);
     su2rad.dialog.sky.setSkyCmdLine();
 }
 

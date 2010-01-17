@@ -526,9 +526,9 @@ su2rad.dialog.sky.enableGenskyOption = function(opt,enable) {
 
 su2rad.dialog.sky.update = function () {
     log.debug("updating 'Sky' page ...");
-    updateLocationFormValues();
+    su2rad.dialog.location.update();
     this.updateDialog()
-    updateGoogleMapLocation();
+    su2rad.dialog.googleMap.updateLocation();
     // enable 'apply' if location or time has changed
     if (modelLocation.changed == true || skyDateTime.changed == true) {
         document.getElementById("applyLocationValues").disabled=false;
