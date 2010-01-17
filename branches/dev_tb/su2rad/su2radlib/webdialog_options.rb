@@ -416,7 +416,7 @@ class SkyOptions
         uimessage("setSkyOptions() ...\n", 2)
         #_syncSettings()
         json = toJSON()
-        dlg.execute_script( "setShadowInfoJSON('%s')" % escape_javascript(json) )
+        dlg.execute_script( "su2rad.dialog.location.setShadowInfoJSON('%s')" % escape_javascript(json) )
     end
     
     def _syncSettings() 
@@ -460,7 +460,7 @@ class SkyOptions
         }
         #@_settings['ShadowTime'] = sinfo['ShadowTime']
         #@_settings['ShadowTime_time_t'] = sinfo['ShadowTime_time_t']
-        #d.execute_script("setShadowInfoJSON('%s')" % escape_javascript(toJSON()) )
+        #d.execute_script("su2rad.dialog.location.setShadowInfoJSON('%s')" % escape_javascript(toJSON()) )
     end
         
 end

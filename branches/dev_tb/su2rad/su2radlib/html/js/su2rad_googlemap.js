@@ -1,8 +1,24 @@
+var su2rad = su2rad ? su2rad : new Object()
+su2rad.dialog = su2rad.dialog ? su2rad.dialog : new Object()
+su2rad.dialog.googleMap = su2rad.dialog.googleMap ? su2rad.dialog.googleMap : new Object()
 
 // use online map and geonames
-var onlineLookup = true;
+su2rad.dialog.googleMap.onlineLookup = true;
+su2rad.dialog.googleMap.gMapLoaded = false;
 
-function loadGoogleMap(url, callback) {
+
+
+function resetCityCountry() {
+    // unused?
+    log.info("resetting city and country names ...");
+    modelLocation.setValue('City', "no city");
+    modelLocation.setValue('Country', "no country");
+    modelLocation.changed = true;
+}
+
+
+function loadGoogleMap_BROKEN(url, callback) {
+    log.warn("loadGoogleMap ...")
     // TODO: load Google Maps API on demand
     var script = document.createElement("script");
     script.type = "text/javascript";
@@ -24,12 +40,25 @@ function loadGoogleMap(url, callback) {
     document.getElementsByTagName("head")[0].appendChild(script);
 }
 
-function checkGoogleMap() {
+function googleMapLoadCallback() {
+    log.debug("googleMapLoadCallback()")
+    su2rad.dialog.googleMap.gMapLoaded = true;
+    su2rad.dialog.googleMap.toggleGoogleMap()
+}
+
+su2rad.dialog.googleMap.loadGoogleMap = function () {
+    log.info("loadGoogleMap()")
+    $.getScript("http://maps.google.com/maps?file=api&v=2&async=2&callback=googleMapLoadCallback&key=ABQIAAAAVkCvvMxWS6sy1KKSLvN3URTDis0fJxnS-wzgwKhlyWVJxXLRhxQq9kdL_d2nO8XPOQO2xIrAWCmccw")
+}
+
+su2rad.dialog.googleMap.checkGoogleMap = function () {
     // check if google map API could be loaded ('ReferenceError' if not)
-    if (onlineLookup == false) {
+    log.info("checkGoogleMap()");
+    if (su2rad.dialog.googleMap.onlineLookup == false) {
         return false;
     }
     try {
+        // load google map API on demand 
         var isCompatible = GBrowserIsCompatible();
         return true;
     } catch (e) {
@@ -38,15 +67,25 @@ function checkGoogleMap() {
         } else {
             log.warn("google map API: " + e);
         }
-        googleMapDisable();
-        onlineLookup = false;
+        su2rad.dialog.googleMap.disable();
+        su2rad.dialog.googleMap.onlineLookup = false;
         return false;
     }
 }
 
-function toggleGoogleMap() {
+su2rad.dialog.googleMap.toggleGoogleMap = function() {
+    log.info("toggleGoogleMap()")
+    if (this.gMapLoaded == false) {
+        su2rad.dialog.googleMap.loadGoogleMap()
+    } else {
+        this.toggleGoogleMap2()
+    }
+}
+
+su2rad.dialog.googleMap.toggleGoogleMap2 = function() {
+    log.debug("toggleGoogleMap2()")
     // now set visibility
-    if (checkGoogleMap() == false) {
+    if (this.checkGoogleMap() == false) {
         return;
     }
     if (document.getElementById("useGoogleMap").checked == true) {
@@ -71,7 +110,7 @@ function toggleGoogleMap() {
             resetCityCountry();
         }
         // set google map location
-        googleMapInitialize(lat,long);
+        su2rad.dialog.googleMap.initialize(lat,long);
     }
     else {
         GUnload();
@@ -79,12 +118,13 @@ function toggleGoogleMap() {
     }
 }
 
+
 /* this map canvas code is taken from the google examples */
-function googleMapCenterMarker() { 
+su2rad.dialog.googleMap.centerMarker = function () { 
     map.panTo(marker.getPoint());
 }
 
-function googleMapDrag() {
+su2rad.dialog.googleMap.Drag = function () {
     // provide feedback via lat/lng display
     var point = marker.getPoint();
     document.getElementById('Latitude').value   = point.lat().toFixed(4);
@@ -93,18 +133,19 @@ function googleMapDrag() {
     //document.getElementById("message").innerHTML = loc;
 }
 
-function googleMapDragend() {
-    googleMapCenterMarker();
+su2rad.dialog.googleMap.Dragend = function () {
+    su2rad.dialog.googleMap.centerMarker();
     var point = marker.getPoint();
-    setLatLong(point.lat(), point.lng());
+    su2rad.dialog.location.setLatLong(point.lat(), point.lng());
     var zoom = map.getZoom(); 
     su2rad.dialog.sky.update();
     geonamesLookup(point.lat(), point.lng(), zoom);
 }
 
-function googleMapSetCenter(lat,long,zoom) {
-    if (checkGoogleMap() == false) {
-        log.warn("googleMapSetCentre: map API not available");
+su2rad.dialog.googleMap.setCenter = function (lat,long,zoom) {
+    log.debug("setCenter")
+    if (this.checkGoogleMap() == false) {
+        log.warn("googleMap.SetCentre: map API not available");
         return;
     }
     var latlong = new GLatLng(lat, long);
@@ -115,11 +156,11 @@ function googleMapSetCenter(lat,long,zoom) {
     map.setCenter(latlong, zoom);
 }
 
-function googleMapInitialize(lat,long) {
-    if (checkGoogleMap() == false) {
+su2rad.dialog.googleMap.initialize = function (lat,long) {
+    log.debug("googleMap.initialize");
+    if (this.checkGoogleMap() == false) {
         return;
     }
-    log.debug("googleMapInitialize");
     // initialize map stuff 
     try {
         var isCompatible = GBrowserIsCompatible()
@@ -129,10 +170,11 @@ function googleMapInitialize(lat,long) {
         } else {
             log.error("google map API not available ('" + e.name + "')")
         }
-        googleMapDisable();
+        this.disable();
         return;
     }
     if (GBrowserIsCompatible()) {
+        log.debug("GBrowserIsCompatible == true")
         var latlong = new GLatLng(lat, long);
         map = new GMap2(document.getElementById("map_canvas"));
         map.addControl(new GLargeMapControl());
@@ -151,18 +193,18 @@ function googleMapInitialize(lat,long) {
         map.addOverlay(marker);
         marker.enableDragging();
         
-        GEvent.addListener(marker, "drag", googleMapDrag);
-        GEvent.addListener(marker, "dragend", googleMapDragend);
+        GEvent.addListener(marker, "drag", su2rad.dialog.googleMap.Drag);
+        GEvent.addListener(marker, "dragend", su2rad.dialog.googleMap.Dragend);
         // GEvent.addListener(map, "zoomend", function() {
         //     document.getElementById("zoom").value=map.getZoom();
-        //     googleMapDrag();
+        //     su2rad.dialog.googleMap.Drag();
         // });
         // GEvent.addListener(map, "moveend", function() {
         //     var center = map.getCenter();
         //     document.getElementById("message").innerHTML = "loc=" + center.toString();
         // });
-        // GEvent.addListener(marker, "dragend", googleMapCenterMarker);
-        googleMapCenterMarker();
+        // GEvent.addListener(marker, "dragend", su2rad.dialog.googleMap.centerMarker);
+        su2rad.dialog.googleMap.centerMarker();
 
         // set marker on mouse click events 
         GEvent.addListener(map, "mousemove", function(currentPoint) {
@@ -174,18 +216,18 @@ function googleMapInitialize(lat,long) {
             marker.setLatLng(lastPoint);    
             var zoomlevel = map.getZoom();
             map.setCenter(lastPoint, zoomlevel+2);
-            //googleMapCenterMarker();
+            // su2rad.dialog.googleMap.centerMarker();
         });
         // set centre to current location coords 
         // window.resizeBy(10,0);
     }
 }  
 
-function googleMapDisable() {
-    googleMapEnable(false);
+su2rad.dialog.googleMap.disable = function () {
+    this.enable(false);
 }
 
-function googleMapEnable(enable) {
+su2rad.dialog.googleMap.enable = function (enable) {
     if (enable == false) {
         log.info("disabling Google Map");
         document.getElementById("useGoogleMap").checked = false; 
@@ -201,17 +243,15 @@ function googleMapEnable(enable) {
     }
 }
 
-
-function googleMapLookup() {
+su2rad.dialog.googleMap.lookup = function () {
     var city = document.getElementById("City").value;
     var country = document.getElementById("Country").value;
     var location = city + ', ' + country;
-    _googleMapLookupLocation(location);
+    this.lookupLocation(location);
 }
 
-
-function _googleMapLookupLocation(location) {
-    // log.info("googleMapLookup(): '" + location + "'");
+su2rad.dialog.googleMap.lookupLocation = function (location) {
+    // log.info("su2rad.dialog.googleMap.Lookup(): '" + location + "'");
     var geocoder = new GClientGeocoder();
     geocoder.getLatLng(location, function(point) {
         if (!point) {
@@ -220,17 +260,21 @@ function _googleMapLookupLocation(location) {
             alert(msg);
         } else {
             su2rad.dialog.setStatusMsg('');  // clear near by cities list
-            setLatLong(point.lat(),point.lng());
-            googleMapEnable();
-            googleMapInitialize(point.lat(),point.lng());
+            su2rad.dialog.location.setLatLong(point.lat(),point.lng());
+            this.enable();
+            this.initialize(point.lat(),point.lng());
             geonamesTimeZone(point.lat(),point.lng()); 
         }
     });
 }
 
-function updateGoogleMapLocation() {
+su2rad.dialog.googleMap.updateLocation = function () {
     // google map initiation
-    if (checkGoogleMap() == false) {
+    log.debug("updateLocation()")
+    if (this.gMapLoaded == false) {
+        return;
+    }
+    if (this.checkGoogleMap() == false) {
         return;
     }
     var lat = modelLocation.Latitude;
@@ -251,5 +295,7 @@ function updateGoogleMapLocation() {
             }
         }
     }
-    // googleMapInitialize(lat,lng);
+    // su2rad.dialog.googleMap.initialize(lat,lng);
 }
+
+

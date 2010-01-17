@@ -101,7 +101,7 @@ function geonamesTimeZoneCallback(jData) {
     try {
         log.info("jData.gmtOffset: " + jData.gmtOffset);
         modelLocation.setValue('TZOffset', jData.gmtOffset);
-        setTZOffsetSelection(jData.gmtOffset);
+        su2rad.dialog.location.setTZOffsetSelection(jData.gmtOffset);
         clearTZWarning();
     }
     catch (e) {
@@ -110,6 +110,23 @@ function geonamesTimeZoneCallback(jData) {
     }
 }
 
+function formatCity(city) {
+    var cityLong = city.name + " (" + city.adminName1 + ")";
+    var lat = parseFloat(city.lat).toFixed(4);
+    var lng = parseFloat(city.lng).toFixed(4);
+    var args = [city.name, city.countryName, lat, lng].join("','");
+    var text = "<a onClick=\"su2rad.dialog.location.onClickCity('" + args + "')\"><b>" + cityLong + "</b></a>"
+    text += " [lat=" + lat + ", lng=" + lng;
+    try {
+        text += ", tzone=" + city.timezone.gmtOffset;
+    } catch (e) {
+        text += ", tzone=none";
+    }
+    text += ", dist=" + city.distance; 
+    text += ", pop=" + city.population; 
+    text += "]";
+    return text
+}
 
 function _setLocationFromGeonames(geoLoc) {
     log.info("new location: " + formatCity(geoLoc))
@@ -120,12 +137,12 @@ function _setLocationFromGeonames(geoLoc) {
         clearTZWarning();
     } catch (e) {
         log.warn("location has no timezone info (" + e.name + ")");
-        offset = calculateTZOffset(parseFloat(geoLoc.lng));
+        offset = su2rad.dialog.location.calculateTZOffset(parseFloat(geoLoc.lng));
     }
     modelLocation.setValue('City', geoLoc.name);
     modelLocation.setValue('Country', geoLoc.countryName);
     modelLocation.setValue('TZOffset', offset);
-    setTZOffsetSelection(offset);
+    su2rad.dialog.location.setTZOffsetSelection(offset);
     // if (document.getElementById("jumpToNearestLocation").checked == true) { 
     //    log.debug("jump=true");
     //    modelLocation.Latitude   = parseFloat(geoLoc.lat);

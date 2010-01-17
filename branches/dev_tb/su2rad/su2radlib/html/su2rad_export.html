@@ -12,10 +12,10 @@
         <script type="text/javascript" src="./blackbirdjs/blackbird.js"></script>
         
         <!-- google map and jsr_class for geonames.org requests -->
-	<!--
-	<script type="text/javascript" src="http://maps.google.com/maps?file=api&amp;v=2&amp;key=ABQIAAAAVkCvvMxWS6sy1KKSLvN3URTDis0fJxnS-wzgwKhlyWVJxXLRhxQq9kdL_d2nO8XPOQO2xIrAWCmccw"></script>
-	-->
-	<script type="text/javascript" src="./js/lib/jsr_class.js"></script>
+        <!-- 
+        <script type="text/javascript" src="http://maps.google.com/maps?file=api&amp;v=2&amp;key=ABQIAAAAVkCvvMxWS6sy1KKSLvN3URTDis0fJxnS-wzgwKhlyWVJxXLRhxQq9kdL_d2nO8XPOQO2xIrAWCmccw"></script>
+        -->
+        <script type="text/javascript" src="./js/lib/jsr_class.js"></script>
         
         <!-- jquery and plugins -->
         <script type="text/javascript" src="./js/lib/jquery-1.2.6.js"></script>
@@ -547,22 +547,22 @@
                 <div class="optionsColumn">
                     <div class="optionsRow">
                         <span class=gridLabel>City:</span>
-                        <input type="text" class="inputCityCountry" name="City" id="City" value="City" tabindex="1" onchange="onCityCountryChanged()"/>
+                        <input type="text" class="inputCityCountry" name="City" id="City" value="City" tabindex="1" onchange="su2rad.dialog.location.onCityCountryChanged()"/>
                     </div>
                     <div class="optionsRow">
                         <span class=gridLabel>Country:</span>
-                        <input type="text" class="inputCityCountry" name="Country" id="Country" value="Country" tabindex="2" onchange="onCityCountryChanged()"/>
+                        <input type="text" class="inputCityCountry" name="Country" id="Country" value="Country" tabindex="2" onchange="su2rad.dialog.location.onCityCountryChanged()"/>
                     </div>
                 </div>
                 
                 <div class="optionsColumn" style="width:170px;">
                     <div class="optionsRow" style="width:160px;">
                         <span class="gridLabel">Latitude:</span>
-                        <input type="text" class="locationOptionInput" name="Latitude" id="Latitude" value="56.7" tabindex="4" onchange="onLatLongChange()" />
+                        <input type="text" class="locationOptionInput" name="Latitude" id="Latitude" value="56.7" tabindex="4" onchange="su2rad.dialog.location.onLatLongChange()" />
                     </div>
                     <div class="optionsRow" style="width:160px;">
                         <span class="gridLabel">Longitude:</span>
-                        <input type="text" class="locationOptionInput" name="Longitude" id="Longitude" value="0.12" tabindex="5" onchange="onLatLongChange()"/>
+                        <input type="text" class="locationOptionInput" name="Longitude" id="Longitude" value="0.12" tabindex="5" onchange="su2rad.dialog.location.onLatLongChange()"/>
                     </div>
                     <div class="optionsRow" style="width:160px;height:14px;min-height:14px;">
                         <div class="gridLabel">
@@ -578,12 +578,12 @@
                 <div class="optionsColumn" style="width:180px;">
                     <div class="optionsRow" style="width: 170px;">
                         <span class=gridLabel style="width:60px;">north:</span>
-                        <input type="text" class="locationOptionInput" name="NorthAngle" id="NorthAngle" value="12.3" tabindex="6" onchange="onNorthAngleChange()" />
+                        <input type="text" class="locationOptionInput" name="NorthAngle" id="NorthAngle" value="12.3" tabindex="6" onchange="su2rad.dialog.location.onNorthAngleChange()" />
                     </div>
                     <div class="optionsRow" style="width: 170px;">
                         <span class=gridLabel style="width:60px;" id="TZOffsetLable">tzone:</span>
                         <select name="TZOffset" id="TZOffset" tabindex="7" style="width:110px;"
-                            onchange="onSelectTZ()" onmousedown="clearTZWarning()">
+                            onchange="su2rad.dialog.location.onSelectTZ()" onmousedown="su2rad.dialog.location.clearTZWarning()">
                             <option value="13"  >NZDT +13</option>
                             <option value="12"  >NZST +12</option>
                             <option value="11"  >AEDT +11</option>
@@ -629,12 +629,12 @@
 
                 <h3>
                     <input type="checkbox" id="useGoogleMap" value="useGoogleMap"
-                    onClick="toggleGoogleMap()"><span id="googleMapHeader"> use Google Map</span>
+                    onClick="su2rad.dialog.googleMap.toggleGoogleMap()"><span id="googleMapHeader"> use Google Map</span>
                 </h3>
                 <div id="googleMapPanel" style="display:none; width:580px;">
                     <div style="margin-left: 30px; width: 400px;">
                         <span style="width: 100px; float: left;">
-                            <input type="button" id="googleMapLookup" value="map lookup" onclick="googleMapLookup()" disabled=true />
+                            <input type="button" id="googleMapLookup" value="map lookup" onclick="su2rad.dialog.googleMap.lookup()" disabled=true />
                         </span>    
                         <input type="checkbox" id="doGeoNamesLookup" checked /> geonames lookup
                     </div>    
