@@ -63,9 +63,9 @@
             $(function() {
                 $('#tab-container').tabs(1, {
                     //disabled: [5], 
-                    onClick: function(a,s,h) { onTabClick(a,s,h); },
-                    onHide:  function(a,s,h) { onTabHide(a,s,h); },
-                    onShow:  function(a,s,h) { onTabShow(a,s,h); }
+                    onClick: function(a,s,h) { su2rad.dialog.onTabClick(a,s,h); },
+                    onHide:  function(a,s,h) { su2rad.dialog.onTabHide(a,s,h); },
+                    onShow:  function(a,s,h) { su2rad.dialog.onTabShow(a,s,h); }
                 } );
             });
             

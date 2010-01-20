@@ -84,6 +84,8 @@ require "su2radlib/radiance_entities.rb"
 require "su2radlib/radiancescene.rb"
 require "su2radlib/webdialog.rb"
 require "su2radlib/config_class.rb"
+require "su2radlib/tests/floor_attrib.rb"
+
 
 ## define defaults if config file is messed up
 $SU2RAD_LOGLEVEL    = 3        #XXX report warnings and errors only
@@ -253,6 +255,10 @@ def addRadianceMenu
     radmenu.add_separator()
     
     radmenu.add_item("weather data") { showWeatherDataDialog() }
+    radmenu.add_separator()
+    
+    attrmenu = radmenu.add_submenu("attributes ...")
+    attrmenu.add_item("workplane") { addWorkplaneCmd() }
     radmenu.add_separator()
     
     radmenu.add_item("Preferences") { preferencesDialog() }

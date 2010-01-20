@@ -3,9 +3,11 @@
 
 // create new namespace for main export functions
 
+var su2rad = su2rad ? su2rad : new Object()
+su2rad.dialog = su2rad.dialog ? su2rad.dialog : new Object()
 
 // set environment
-var _currentStatusDiv = "status_tab-export"
+su2rad.dialog.currentStatusDiv = "status_tab-export"
 
 var map, marker, lastPoint;
 
@@ -21,16 +23,37 @@ try {
     logError(e)
 }
 
-function loadTestData() {
+
+function setSelectionValue(id, value) {
+    // set selection <id> to option <value>
+    try {
+        var select = document.getElementById(id); 
+        for (i=0; i<select.options.length; i++) {
+            if (select.options[i].value == value) {
+                select.selectedIndex = i;
+                return true;
+            }
+        }
+    } catch (e) {
+        log.error("setSelectionValue('" + id + "'): " + e.name)
+        return false;
+    }
+    log.error("selection '" + id + "' has no value '" + value + "'");
+    return false;
+}
+
+    
+
+su2rad.dialog.loadTestData = function () {
     su2rad.dialog.setTest();
     if (su2rad.SKETCHUP == false) {
         // fill dialog with test data
         getExportOptions();
         getViewsList();
         getSkySettings();
-        updateViewsPage();
+        this.updateViewsPage();
         test_getMaterialsLists();
-        updateMaterialsPage()
+        this.updateMaterialsPage()
     } else {
         alert("no testdata within Sketchup!")
     }
@@ -71,7 +94,7 @@ su2rad.dialog.showExportOption = function (opt) {
     }
 }
 
-function disableGlobalOption() {
+su2rad.dialog.disableGlobalOption = function () {
     // remove 'by group' option from selection
     select = document.getElementById('exportMode'); 
     for (i=0; i<select.options.length; i++) {
@@ -84,12 +107,12 @@ function disableGlobalOption() {
 }
 
 
-function disableTextureOption() {
+su2rad.dialog.disableTextureOption = function () {
     document.getElementById("textures").checked = false;
     document.getElementById("global_coords_display").style.display='none';
 }
 
-function toggleClimateTab() {
+su2rad.dialog.toggleClimateTab = function () {
     if (document.getElementById("climate_checkbox").checked == true) {
         $('#tab-container').enableTab(5);
         document.getElementById("edit_climate").disabled=false;
@@ -102,16 +125,11 @@ function toggleClimateTab() {
     }
 }
 
-function setProgressMsg (msg) {
-    log.debug("progress: " + msg);
-    document.getElementById("progressStatus").innerHTML = msg;
-}
-
 su2rad.dialog.setStatusMsg = function (msg) {
-    document.getElementById(_currentStatusDiv).innerHTML = msg;
+    document.getElementById(su2rad.dialog.currentStatusDiv).innerHTML = msg;
 }
 
-function showProgressWindow() {
+su2rad.dialog.showProgressWindow = function () {
     try {
         $('#progressWindow').jqmShow();
     } catch (e) {
@@ -119,39 +137,15 @@ function showProgressWindow() {
     }
 }
 
-function switch_to_tab(id) {
+su2rad.dialog.switchToTab = function (id) {
     return
     $('#tab-container').triggerTab(id);
     //updatePageById(id);
 }
 
-function setValue(id, val) {
-    // set initial variable values
-    document.getElementById(id).value=val;
-}
-
-function setSelectionValue(id, value) {
-    // set selection <id> to option <value>
-    try {
-        var select = document.getElementById(id); 
-        for (i=0; i<select.options.length; i++) {
-            if (select.options[i].value == value) {
-                select.selectedIndex = i;
-                return true;
-            }
-        }
-    } catch (e) {
-        log.error("setSelectionValue('" + id + "'): " + e.name)
-        return false;
-    }
-    log.error("selection '" + id + "' has no value '" + value + "'");
-    return false;
-}
-
-    
 su2rad.dialog.showBusy = function () {
     log.error("TODO: showBusy()")
-    showProgressWindow()
+    this.showProgressWindow()
 }
 
 su2rad.utils.JSON2HTML = function (obj, title, level) {
@@ -194,47 +188,47 @@ su2rad.dialog.showResults = function (msg) {
     document.getElementById("progressStatus").innerHTML = html;
 }
 
-function onTabClick(link,div_show,div_hide) {
-    _currentStatusDiv = "status_" + div_show.id;
-    updatePageById(div_show.id);
+su2rad.dialog.onTabClick = function (link,div_show,div_hide) {
+    su2rad.dialog.currentStatusDiv = "status_" + div_show.id;
+    this.updatePageById(div_show.id);
     return true;
 }
 
-function updatePageById(id) {
+su2rad.dialog.updatePageById = function (id) {
     if (id == "tab-export") {
-        return updateExportPage();
+        return this.updateExportPage();
     } else if  (id == "tab-render") {
-        return updateRenderPage();
+        return this.updateRenderPage();
     } else if (id == "tab-sky") {
-        return su2rad.dialog.sky.update();
+        return this.sky.update();
     } else if (id == "tab-views") {
-        return updateViewsPage();
+        return this.updateViewsPage();
     } else if (id == "tab-materials") {
-        return updateMaterialsPage();
+        return this.updateMaterialsPage();
     } else if (id == "tab-fields") {
-        return updateFieldsPage();
+        return this.updateFieldsPage();
     } else if (id == "tab-climate") {
-        return updateClimatePage();
+        return this.updateClimatePage();
     } else {
         log.warn("unexpected tab id '" + id + "'");
         return false;
     }
 }
 
-function onTabHide(link,div_show,div_hide) {
+su2rad.dialog.onTabHide = function (link,div_show,div_hide) {
     // log.debug("onTabHide:" + link + " show:" + div_show.id + " hide:" + div_hide.id);
 }
 
-function onTabShow(link,div_show,div_hide) {
+su2rad.dialog.onTabShow = function (link,div_show,div_hide) {
     // log.debug("onTabShow:" + link + " show:" + div_show.id + " hide:" + div_hide.id);
 }
 
-function updateExportPage() {
+su2rad.dialog.updateExportPage = function () {
     log.debug("updating 'Export' page ...");
-    su2rad.dialog.sky.setSkyCmdLine();
+    this.sky.setSkyCmdLine();
 }
 
-function updateRenderPage() {
+su2rad.dialog.updateRenderPage = function () {
     log.debug("updating 'Render' page ...");
     // setRpictOptions();
     updateRenderFormValues();
@@ -242,20 +236,20 @@ function updateRenderPage() {
     updateRenderLine();
 }
 
-function updateViewsPage() {
+su2rad.dialog.updateViewsPage = function () {
     log.debug("updating 'Views' page ...");
     updateViewDetailsList();
 }
 
-function updateMaterialsPage() {
+su2rad.dialog.updateMaterialsPage = function () {
     log.debug("updating 'Materials' page ...");
 }
 
-function updateFieldsPage() {
+su2rad.dialog.updateFieldsPage = function () {
     log.debug("updating 'Fields' page ...");
 }
 
-function updateClimatePage() {
+su2rad.dialog.updateClimatePage = function () {
     log.debug("updating 'Climate' page ...");
 }
 
