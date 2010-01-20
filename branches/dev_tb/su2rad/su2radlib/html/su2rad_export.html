@@ -50,9 +50,9 @@
             $(function() {
                 $('#tab-container').tabs(1, {
                     //disabled: [5], 
-                    onClick: function(a,s,h) { onTabClick(a,s,h); },
-                    onHide:  function(a,s,h) { onTabHide(a,s,h); },
-                    onShow:  function(a,s,h) { onTabShow(a,s,h); }
+                    onClick: function(a,s,h) { su2rad.dialog.onTabClick(a,s,h); },
+                    onHide:  function(a,s,h) { su2rad.dialog.onTabHide(a,s,h); },
+                    onShow:  function(a,s,h) { su2rad.dialog.onTabShow(a,s,h); }
                 } );
             });
             $().ready(function() {
@@ -159,7 +159,7 @@
                 
                 <!-- ###   VIEWS   ### --> 
                 <h3>
-                    <!-- <input class="floatright" type="button" value="edit" onclick="switch_to_tab('tab-views')"> -->
+                    <!-- <input class="floatright" type="button" value="edit" onclick="su2rad.dialog.switchToTab('tab-views')"> -->
                     Views
                     <span id="selectAllViews" style="font-size:12px;margin-left:10px;">
                         <a class="clickable" onclick="selectAllViews()">select all</a>
@@ -167,14 +167,14 @@
                 </h3>
                 <div id="viewsSelection">
                 <!-- use this space for test data button --> 
-                <input type="button" id="testDataButton" name="testDataButton" value="load test data" onclick="loadTestData()">
+                <input type="button" id="testDataButton" name="testDataButton" value="load test data" onclick="su2rad.dialog.loadTestData()">
             
                 </div>
                 
                 
                 <!-- ###   RENDER   ### --> 
                 <h3>
-                    <!-- <input class="floatright" type="button" value="edit" onclick="switch_to_tab('tab-render')"> -->
+                    <!-- <input class="floatright" type="button" value="edit" onclick="su2rad.dialog.switchToTab('tab-render')"> -->
                     Render Options
                 </h3>
                 <div id="renderSummary">
@@ -234,7 +234,7 @@
                 
                 
                 <h3>
-                    <!-- <input class="floatright" type="button" value="edit" onclick="switch_to_tab('tab-sky')"> -->
+                    <!-- <input class="floatright" type="button" value="edit" onclick="su2rad.dialog.switchToTab('tab-sky')"> -->
                     Sky
                 </h3>
                 <div id="locationSummary">
@@ -260,9 +260,9 @@
                 
                  
                 <h3 style="display:none;">
-                    <input class="floatright" type="button" id="edit_climate" style="display:none;" value="edit" onclick="switch_to_tab('tab-climate')" disabled>
+                    <input class="floatright" type="button" id="edit_climate" style="display:none;" value="edit" onclick="su2rad.dialog.switchToTab('tab-climate')" disabled>
                     <input type="checkbox" id="climate_checkbox" value="climate"
-                    onClick="toggleClimateTab()"> Climate Data
+                    onClick="su2rad.dialog.toggleClimateTab()"> Climate Data
                 </h3>
                 <div id="climateSummary" style="display:none;">
                     <div class="gridRow">
@@ -540,7 +540,7 @@
                 </div>
                             
                 <h3>
-                    <!-- <input class="floatright" type="button" value="done" onclick="switch_to_tab('tab-export')"> -->
+                    <!-- <input class="floatright" type="button" value="done" onclick="su2rad.dialog.switchToTab('tab-export')"> -->
                     Location Settings
                 </h3>
                 
@@ -659,7 +659,7 @@
             
             <div id="tab-views" style="display:none;">
                 <div id="viewDetails">
-                    <input type="button" id="testDataButton" name="testDataButton" value="load test data" onclick="loadTestData()">
+                    <input type="button" id="testDataButton" name="testDataButton" value="load test data" onclick="su2rad.dialog.loadTestData()">
                 </div>
                 <div class="statusMessage" id="status_tab-views">
                     msg
@@ -680,7 +680,7 @@
                             </div>
                         </div>
                         <div class="mlistPanel" id="skmListPanel">
-                            <input type="button" id="testDataButton" name="testDataButton" value="load test data" onclick="loadTestData()">
+                            <input type="button" id="testDataButton" name="testDataButton" value="load test data" onclick="su2rad.dialog.loadTestData()">
                         </div>
                     </div>
                     <div class="listPanel" style="float:none;">
@@ -735,7 +735,7 @@
             
             <div id="tab-climate" style="display:none">
                 <h3>
-                    <!-- <input class="floatright" type="button" value="done" onclick="switch_to_tab('tab-export')"> -->
+                    <!-- <input class="floatright" type="button" value="done" onclick="su2rad.dialog.switchToTab('tab-export')"> -->
                     Climate Data
                 </h3>
                 

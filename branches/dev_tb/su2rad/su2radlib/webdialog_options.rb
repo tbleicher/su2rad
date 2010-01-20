@@ -66,7 +66,7 @@ class ExportOptions
             #todo? dlg.execute_script('enableGlobalOption()')
         else
             uimessage("'replmarks' not found => disabling 'global coords' options", -1)
-            dlg.execute_script('disableGlobalOption()')
+            dlg.execute_script('su2rad.dialog.disableGlobalOption()')
             if @exportMode == 'by group'
                 @exportMode = 'by color'
             end
@@ -80,7 +80,7 @@ class ExportOptions
             uimessage("'convert' found => keeping 'textures' options", 1)
         else
             uimessage("'convert' not found => disabling 'textures' options", -1)
-            dlg.execute_script("disableTextureOption()")
+            dlg.execute_script("su2rad.dialog.disableTextureOption()")
             @textures = false
         end
         if @exportMode != 'by color'
