@@ -32,10 +32,12 @@
         <!-- su2rad specific javascript files -->
         <script type="text/javascript" src="./js/su2rad_tooltip.js"></script>
         <script type="text/javascript" src="./js/su2rad_test.js"></script>
+        <script type="text/javascript" src="./js/su2rad.utils.js"></script>
         <script type="text/javascript" src="./js/su2rad.dialog.common.js"></script>
+        <script type="text/javascript" src="./js/su2rad.dialog.exporter.js"></script>
         <script type="text/javascript" src="./js/su2rad_backend_interface.js"></script>
         <script type="text/javascript" src="./js/su2rad.dialog.fileselector.js"></script>
-        <script type="text/javascript" src="./js/su2rad_export.js"></script>
+        <script type="text/javascript" src="./js/su2rad.settings.js"></script>
         <script type="text/javascript" src="./js/su2rad_views.js"></script>
         <script type="text/javascript" src="./js/su2rad_googlemap.js"></script>
         <script type="text/javascript" src="./js/su2rad_geonames.js"></script>
@@ -109,7 +111,7 @@
                         <div class="gridLabel">path:</div>
                         <div class="gridCell" style="width:305px;">
                             <input type="text" style="width:275px;" name="scenePath" id="scenePath" value="." onchange="setExportPath()" />
-                            <a onclick="su2rad.dialog.expFunc.showFileSelector()">
+                            <a onclick="su2rad.dialog.exporter.showFileSelector()">
                                 <img class="fileSelectorIcon" src="./css/24-zoom.png"/>
                             </a>
                         </div>
@@ -281,8 +283,8 @@
 
                 
                 <div id="mainButtonRow">
-                    <input type="button" value="export" onclick="su2rad.dialog.expFunc.onExport()">
-                    <input type="button" value="cancel" onclick="su2rad.dialog.expFunc.onCancel()">
+                    <input type="button" value="export" onclick="su2rad.dialog.exporter.onExport()">
+                    <input type="button" value="cancel" onclick="su2rad.dialog.exporter.onCancel()">
                     <div id="showRadSunpath" style="display:none;">
                         <input type="checkbox" id="radSunpath" onClick="su2rad.exportSettings.setOption('radSunpath', this.checked)">start RadSunpath
                     </div>

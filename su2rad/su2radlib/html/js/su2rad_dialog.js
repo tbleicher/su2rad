@@ -148,30 +148,6 @@ su2rad.dialog.showBusy = function () {
     this.showProgressWindow()
 }
 
-su2rad.utils.JSON2HTML = function (obj, title, level) {
-    // show JSON object with HTML markup
-    if (level == null) {
-        level = 3;
-    }
-    var text = "<H"+level+">" + title + "</H"+level+">";
-    if (obj.constructor.toString().match(/Array/i)) { 
-        for (var i=0; i<obj.length; i++) {
-            text += su2rad.utils.JSON2HTML(obj[i], "element "+i, level+1);
-        }
-    } else {
-        log.debug("obj=" + obj);
-        for (var property in obj) {
-            try {
-                text += "<b>" + property.toString() + "</b> = " + obj[property] + "<br/>";
-                log.debug(property.toString() + "=" + obj[property]);
-            } catch (e) {
-                logError(e)
-            }
-        }
-    }
-    return text;
-}
-
 su2rad.dialog.showResults = function (msg) {
     log.debug("TEST: showResults()")
     json = su2rad.utils.decodeJSON(msg)
