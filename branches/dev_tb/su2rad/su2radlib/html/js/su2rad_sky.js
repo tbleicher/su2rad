@@ -175,7 +175,7 @@ SkyOptionsObject.prototype.setValue = function(opt, val) {
     
 SkyOptionsObject.prototype.toString = function() {
     var text = this.generator;
-    text += " " + skyDateTime.toGenskyString();
+    text += " " + su2rad.settings.skytime.toGenskyString();
     text += " " + this.skytype;
     var opts = ['g', 't', 'b', 'B', 'r', 'R'];
     for(var i=0; i<opts.length; i++) {
@@ -294,11 +294,11 @@ su2rad.dialog.sky.onGenskyInputChanged = function(opt) {
     var v = parseFloat(val);
     if (isNaN(v)) {
         alert("value is not a number: '" + val + "'");
-        document.getElementById(id).value = skyOptions[opt];
+        document.getElementById(id).value = su2rad.settings.sky[opt];
     } else {
-        skyOptions.setValue(opt, v);
+        su2rad.settings.sky.setValue(opt, v);
     }
-    // document.getElementById('skyCommandLine').innerHTML = skyOptions.toString();
+    // document.getElementById('skyCommandLine').innerHTML = su2rad.settings.sky.toString();
     this.update();
     applySkySettings();
 }
@@ -310,23 +310,23 @@ su2rad.dialog.sky.setDateTime = function(id) {
         val = val.substring(1,2);
     }
     val = parseInt(val);
-    if (skyDateTime.setValue(id, val) == true) {
+    if (su2rad.settings.skytime.setValue(id, val) == true) {
         log.info("new value for '" + id + "': '" + val + "'");
     } else {
         alert("value out of range:\nid='" + id + "'\nvalue='" + val + "'");
     }
-    document.getElementById(id).value = skyDateTime.getValueString(id);
+    document.getElementById(id).value = su2rad.settings.skytime.getValueString(id);
     if (id == 'skyDateMonth') {
-        document.getElementById('skyDateDay').value = skyDateTime.getValueString('skyDateDay');
+        document.getElementById('skyDateDay').value = su2rad.settings.skytime.getValueString('skyDateDay');
     }
-    modelLocation.setValue('ShadowTime_time_t', skyDateTime.getShadowTime()); 
+    su2rad.settings.location.setValue('ShadowTime_time_t', su2rad.settings.skytime.getShadowTime()); 
     this.update()
     applySkySettings();
 }
 
 su2rad.dialog.sky.setGenerator = function(generator) {
     //var generator = document.getElementById('skyGenerator').value;
-    skyOptions.setGenerator(generator);
+    su2rad.settings.sky.setGenerator(generator);
     this.updateOptionsDisplay()
     this.update()
     applySkySettings();
@@ -345,23 +345,23 @@ su2rad.dialog.sky.onSkyTypeChange = function() {
         sun = '+';
     }
     stype = sun+stype;
-    if (skyOptions.setSkyType(stype)) {
+    if (su2rad.settings.sky.setSkyType(stype)) {
         log.info("new sky type: '" + stype + "'");
     } else {
         log.error("onSkyTypeChange(): error setting sky type '" + stype + "'");
     }
-    //document.getElementById('skyCommandLine').innerHTML = skyOptions.toString();
+    //document.getElementById('skyCommandLine').innerHTML = su2rad.settings.sky.toString();
     this.update()
     applySkySettings();
 }
 
 su2rad.dialog.sky.updateOptionsDisplay = function() {
-    setSelectionValue('skyGenerator', skyOptions.generator);
-    if (skyOptions.generator == 'gensky') {
-        this._updateGenskyOptions();
+    setSelectionValue('skyGenerator', su2rad.settings.sky.generator);
+    if (su2rad.settings.sky.generator == 'gensky') {
+        this._updateGensu2rad.settings.sky();
         this.updateSkyTypeDisplay();
     }
-    this.setOptionsVisibility(skyOptions.generator); 
+    this.setOptionsVisibility(su2rad.settings.sky.generator); 
 }
 
 su2rad.dialog.sky.setOptionsVisibility = function(generator) {
@@ -389,20 +389,20 @@ su2rad.dialog.sky.setOptionsVisibility = function(generator) {
 
 su2rad.dialog.sky.setSkyCmdLine = function () {
     // update command line showing sky generator options
-    var loc = modelLocation.City + ", "+ modelLocation.Country;
+    var loc = su2rad.settings.location.City + ", "+ su2rad.settings.location.Country;
     document.getElementById("skySummaryLocation").innerHTML = loc;
-    document.getElementById("skySummaryNorth").innerHTML = modelLocation.NorthAngle.toFixed(2);
-    var sky = modelLocation.toGenskyString();
+    document.getElementById("skySummaryNorth").innerHTML = su2rad.settings.location.NorthAngle.toFixed(2);
+    var sky = su2rad.settings.location.toGenskyString();
     document.getElementById("skySummaryOptions").innerHTML = sky;
     document.getElementById("skyCommandLine").innerHTML = '<b>cmd:</b> ' + sky;
     su2rad.dialog.setStatusMsg(sky);
 }
 
 su2rad.dialog.sky.updateSkyDateTimeDisplay = function () {
-    document.getElementById('skyDateMonth').value = skyDateTime.getValueString('skyDateMonth');
-    document.getElementById('skyDateDay').value = skyDateTime.getValueString('skyDateDay');
-    document.getElementById('skyTimeHour').value = skyDateTime.getValueString('skyTimeHour');
-    document.getElementById('skyTimeMinute').value = skyDateTime.getValueString('skyTimeMinute');
+    document.getElementById('skyDateMonth').value = su2rad.settings.skytime.getValueString('skyDateMonth');
+    document.getElementById('skyDateDay').value = su2rad.settings.skytime.getValueString('skyDateDay');
+    document.getElementById('skyTimeHour').value = su2rad.settings.skytime.getValueString('skyTimeHour');
+    document.getElementById('skyTimeMinute').value = su2rad.settings.skytime.getValueString('skyTimeMinute');
 }
 
 su2rad.dialog.sky.updateDialog = function () {
@@ -414,14 +414,14 @@ su2rad.dialog.sky.updateDialog = function () {
 
 su2rad.dialog.sky.updateSkyTypeDisplay = function () {
     // set sky type selector and sun check box
-    if (skyOptions.generator == 'gensky') {
-        if (skyOptions.skytype.charAt(0) == "+") {
+    if (su2rad.settings.sky.generator == 'gensky') {
+        if (su2rad.settings.sky.skytype.charAt(0) == "+") {
             document.getElementById('sunOptionCB').checked = true;
         } else {
             document.getElementById('sunOptionCB').checked = false;
         }
-        setSelectionValue('genskySkyType', skyOptions.skytype.charAt(1));
-        if (skyOptions.skytype.charAt(1) == 'i' || skyOptions.skytype.charAt(1) == 's') {
+        setSelectionValue('genskySkyType', su2rad.settings.sky.skytype.charAt(1));
+        if (su2rad.settings.sky.skytype.charAt(1) == 'i' || su2rad.settings.sky.skytype.charAt(1) == 's') {
             document.getElementById('genskySunOption').style.display = '';
         } else {
             document.getElementById('genskySunOption').style.display = 'none';
@@ -429,23 +429,23 @@ su2rad.dialog.sky.updateSkyTypeDisplay = function () {
     }
 }
     
-su2rad.dialog.sky._updateGenskyOptions = function () {
+su2rad.dialog.sky._updateGensu2rad.settings.sky = function () {
     var text = "<div class=\"optionsHeader\" style=\"width:330px;\">";
     text += "<span class=\"gridLabel\" style=\"width:240px;\">gensky options:</span>";
     text += "</div>";
-    text += "<div class=\"genskyOptions\" style=\"width:100px;\">";
+    text += "<div class=\"gensu2rad.settings.sky\" style=\"width:100px;\">";
     text += "<div class=\"rpictOverrideHeader\" style=\"width:80px;\">general</div>";
-    text += this._updateGenskyOptionsDiv("g");
-    text += this._updateGenskyOptionsDiv("t");
+    text += this._updateGensu2rad.settings.skyDiv("g");
+    text += this._updateGensu2rad.settings.skyDiv("t");
     text += "</div>";
-    text += "<div class=\"genskyOptions\">";
+    text += "<div class=\"gensu2rad.settings.sky\">";
     var opts = ["sky radiance","-b","-B","solar radiance","-r","-R"];
     for (var i=0; i<opts.length; i++) {
         opt = opts[i];
         if (opt.charAt(0) != '-') {
             text += "<div class=\"rpictOverrideHeader\">" + opt + "</div>";
         } else {
-            text += this._updateGenskyOptionsDiv(opt.charAt(1));
+            text += this._updateGensu2rad.settings.skyDiv(opt.charAt(1));
         }
     }
     text += "</div>";
@@ -453,11 +453,11 @@ su2rad.dialog.sky._updateGenskyOptions = function () {
     $('.skyOptionInput').numeric({allow:"."});
 }
 
-su2rad.dialog.sky._updateGenskyOptionsDiv = function(opt) {
-    //log.debug("_updateGenskyOptionsDiv(opt='" + opt + "')");
+su2rad.dialog.sky._updateGensu2rad.settings.skyDiv = function(opt) {
+    //log.debug("_updateGensu2rad.settings.skyDiv(opt='" + opt + "')");
     var text = "";
     var state = "";
-    if (skyOptions.isActive(opt) == true) {
+    if (su2rad.settings.sky.isActive(opt) == true) {
         state = "checked";
     }
     if (opt == 'g' || opt == 't') {
@@ -467,7 +467,7 @@ su2rad.dialog.sky._updateGenskyOptionsDiv = function(opt) {
         text += "</a>";
         text += "<input type=\"text\" class=\"valueInput\"";
         text += " id=\"genskyOptionInput" + opt + "\"";
-        text += " value=\"" + skyOptions[opt] + "\"";
+        text += " value=\"" + su2rad.settings.sky[opt] + "\"";
         text += " onChange=\"su2rad.dialog.sky.onGenskyInputChanged('" + opt + "')\" />";
         text += "</div>"
         return text;
@@ -479,10 +479,10 @@ su2rad.dialog.sky._updateGenskyOptionsDiv = function(opt) {
         labels.R = "direct horizontal" 
         var text = "<div class=\"gridRow\">";
         text += this.getCheckBoxLabel(opt, labels[opt]);
-        if (skyOptions.isActive(opt) == true) {
+        if (su2rad.settings.sky.isActive(opt) == true) {
             text += "<input type=\"text\" class=\"valueInput\"";
             text += " id=\"genskyOptionInput" + opt + "\"";
-            text += " value=\"" + skyOptions[opt] + "\"";
+            text += " value=\"" + su2rad.settings.sky[opt] + "\"";
             text += " onChange=\"su2rad.dialog.sky.onGenskyInputChanged('" + opt + "')\" />";
         } else {
             text += "<span class=\"defaultValue\">[not set]</span>";
@@ -498,7 +498,7 @@ su2rad.dialog.sky.getCheckBoxLabel = function(opt, label) {
     if (!label || label == '') {
         label = "-" + opt;
     }
-    if (skyOptions.isActive(opt) == true) {
+    if (su2rad.settings.sky.isActive(opt) == true) {
         var action = " onClick=\"su2rad.dialog.sky.enableGenskyOption('" + opt + "','false')\" "
         var text = '<input type="checkbox" ' + action + 'checked />';
     } else {
@@ -518,24 +518,24 @@ su2rad.dialog.sky.enableGenskyOption = function(opt,enable) {
         enable = true
     }
     log.debug("enableGenskyOption(opt='" + opt + "'");
-    skyOptions.setActive(opt, enable);
-    this._updateGenskyOptions();
+    su2rad.settings.sky.setActive(opt, enable);
+    this._updateGensu2rad.settings.sky();
     this.update();
     applySkySettings();
 }
 
-function su2rad.dialog.sky.update() {
+su2rad.dialog.sky.update = function () {
     log.debug("updating 'Sky' page ...");
     updateLocationFormValues();
     this.updateDialog()
     su2rad.dialog.googleMap.updateLocation();
     // enable 'apply' if location or time has changed
-    if (modelLocation.changed == true || skyDateTime.changed == true) {
+    if (su2rad.settings.location.changed == true || su2rad.settings.skytime.changed == true) {
         document.getElementById("applyLocationValues").disabled=false;
         document.getElementById("reloadShadowInfo").disabled=false;
     } else {
         document.getElementById("applyLocationValues").disabled=true;
         document.getElementById("reloadShadowInfo").disabled=true;
     }
-    skyDateTime.getShadowTime();
+    su2rad.settings.skytime.getShadowTime();
 }

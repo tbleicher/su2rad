@@ -7,13 +7,12 @@ su2rad.dialog.googleMap.onlineLookup = true;
 su2rad.dialog.googleMap.gMapLoaded = false;
 
 
-
 function resetCityCountry() {
     // unused?
     log.info("resetting city and country names ...");
-    modelLocation.setValue('City', "no city");
-    modelLocation.setValue('Country', "no country");
-    modelLocation.changed = true;
+    su2rad.settings.location.setValue('City', "no city");
+    su2rad.settings.location.setValue('Country', "no country");
+    su2rad.settings.location.changed = true;
 }
 
 
@@ -90,8 +89,8 @@ su2rad.dialog.googleMap.toggleGoogleMap2 = function() {
     }
     if (document.getElementById("useGoogleMap").checked == true) {
         document.getElementById("googleMapPanel").style.display='';
-        var lat  = modelLocation.Latitude;
-        var long = modelLocation.Longitude; 
+        var lat  = su2rad.settings.location.Latitude;
+        var long = su2rad.settings.location.Longitude; 
         // check values of input boxes
         var newLat = parseFloat(document.getElementById("Latitude").value);
         if (!isNaN(newLat)) { 
@@ -121,12 +120,12 @@ su2rad.dialog.googleMap.toggleGoogleMap2 = function() {
 
 /* this map canvas code is taken from the google examples */
 su2rad.dialog.googleMap.centerMarker = function () { 
-    map.panTo(marker.getPoint());
+    su2rad.dialog.googleMap.map.panTo(su2rad.dialog.googleMap.marker.getPoint());
 }
 
 su2rad.dialog.googleMap.Drag = function () {
     // provide feedback via lat/lng display
-    var point = marker.getPoint();
+    var point = su2rad.dialog.googleMap.marker.getPoint();
     document.getElementById('Latitude').value   = point.lat().toFixed(4);
     document.getElementById('Longitude').value  = point.lng().toFixed(4);
     //var loc = "loc=(" + point.lat().toFixed(4) + "," + point.lng().toFixed(4) + ")"
@@ -135,11 +134,11 @@ su2rad.dialog.googleMap.Drag = function () {
 
 su2rad.dialog.googleMap.Dragend = function () {
     su2rad.dialog.googleMap.centerMarker();
-    var point = marker.getPoint();
+    var point = su2rad.dialog.googleMap.marker.getPoint();
     su2rad.dialog.location.setLatLong(point.lat(), point.lng());
-    var zoom = map.getZoom(); 
+    var zoom = su2rad.dialog.googleMap.map.getZoom(); 
     su2rad.dialog.sky.update();
-    geonamesLookup(point.lat(), point.lng(), zoom);
+    su2rad.dialog.geonames.lookup(point.lat(), point.lng(), zoom);
 }
 
 su2rad.dialog.googleMap.setCenter = function (lat,long,zoom) {
@@ -149,11 +148,11 @@ su2rad.dialog.googleMap.setCenter = function (lat,long,zoom) {
         return;
     }
     var latlong = new GLatLng(lat, long);
-    marker.setLatLng(latlong);
+    su2rad.dialog.googleMap.marker.setLatLng(latlong);
     if (zoom == null) {
-        zoom = map.getZoom();
+        zoom = su2rad.dialog.googleMap.map.getZoom();
     }
-    map.setCenter(latlong, zoom);
+    su2rad.dialog.googleMap.map.setCenter(latlong, zoom);
 }
 
 su2rad.dialog.googleMap.initialize = function (lat,long) {
@@ -176,10 +175,10 @@ su2rad.dialog.googleMap.initialize = function (lat,long) {
     if (GBrowserIsCompatible()) {
         log.debug("GBrowserIsCompatible == true")
         var latlong = new GLatLng(lat, long);
-        map = new GMap2(document.getElementById("map_canvas"));
-        map.addControl(new GLargeMapControl());
-        map.addControl(new GMapTypeControl());
-        map.setCenter(latlong, 7);
+        su2rad.dialog.googleMap.map = new GMap2(document.getElementById("map_canvas"));
+        su2rad.dialog.googleMap.map.addControl(new GLargeMapControl());
+        su2rad.dialog.googleMap.map.addControl(new GMapTypeControl());
+        su2rad.dialog.googleMap.map.setCenter(latlong, 7);
         
         // dragable marker icon 
         var icon = new GIcon();
@@ -189,12 +188,12 @@ su2rad.dialog.googleMap.initialize = function (lat,long) {
         icon.shadowSize = new GSize(22, 20);
         icon.iconAnchor = new GPoint(6, 20);
 
-        marker = new GMarker(latlong, {icon:icon, draggable:true});
-        map.addOverlay(marker);
-        marker.enableDragging();
+        su2rad.dialog.googleMap.marker = new GMarker(latlong, {icon:icon, draggable:true});
+        su2rad.dialog.googleMap.map.addOverlay(su2rad.dialog.googleMap.marker);
+        su2rad.dialog.googleMap.marker.enableDragging();
         
-        GEvent.addListener(marker, "drag", su2rad.dialog.googleMap.Drag);
-        GEvent.addListener(marker, "dragend", su2rad.dialog.googleMap.Dragend);
+        GEvent.addListener(su2rad.dialog.googleMap.marker, "drag", su2rad.dialog.googleMap.Drag);
+        GEvent.addListener(su2rad.dialog.googleMap.marker, "dragend", su2rad.dialog.googleMap.Dragend);
         // GEvent.addListener(map, "zoomend", function() {
         //     document.getElementById("zoom").value=map.getZoom();
         //     su2rad.dialog.googleMap.Drag();
@@ -203,19 +202,19 @@ su2rad.dialog.googleMap.initialize = function (lat,long) {
         //     var center = map.getCenter();
         //     document.getElementById("message").innerHTML = "loc=" + center.toString();
         // });
-        // GEvent.addListener(marker, "dragend", su2rad.dialog.googleMap.centerMarker);
+        // GEvent.addListener(su2rad.dialog.googleMap.marker, "dragend", su2rad.dialog.googleMap.centerMarker);
         su2rad.dialog.googleMap.centerMarker();
 
         // set marker on mouse click events 
-        GEvent.addListener(map, "mousemove", function(currentPoint) {
+        GEvent.addListener(su2rad.dialog.googleMap.map, "mousemove", function(currentPoint) {
             // store coords in global var lastPoint
-            lastPoint = currentPoint;
+            su2rad.dialog.googleMap.lastPoint = currentPoint;
         });
-        GEvent.addListener(map, "click", function() {
+        GEvent.addListener(su2rad.dialog.googleMap.map, "click", function() {
             // now access coords stored in lastPoint
-            marker.setLatLng(lastPoint);    
-            var zoomlevel = map.getZoom();
-            map.setCenter(lastPoint, zoomlevel+2);
+            su2rad.dialog.googleMap.marker.setLatLng(su2rad.dialog.googleMap.lastPoint);    
+            var zoomlevel = su2rad.dialog.googleMap.map.getZoom();
+            su2rad.dialog.googleMap.map.setCenter(su2rad.dialog.googleMap.lastPoint, zoomlevel+2);
             // su2rad.dialog.googleMap.centerMarker();
         });
         // set centre to current location coords 
@@ -261,9 +260,9 @@ su2rad.dialog.googleMap.lookupLocation = function (location) {
         } else {
             su2rad.dialog.setStatusMsg('');  // clear near by cities list
             su2rad.dialog.location.setLatLong(point.lat(),point.lng());
-            this.enable();
-            this.initialize(point.lat(),point.lng());
-            geonamesTimeZone(point.lat(),point.lng()); 
+            su2rad.dialog.googleMap.enable();
+            su2rad.dialog.googleMap.initialize(point.lat(),point.lng());
+            su2rad.dialog.geonames.timezone(point.lat(),point.lng()); 
         }
     });
 }
@@ -277,15 +276,15 @@ su2rad.dialog.googleMap.updateLocation = function () {
     if (this.checkGoogleMap() == false) {
         return;
     }
-    var lat = modelLocation.Latitude;
-    var lng = modelLocation.Longitude; 
-    var mLat = marker.getPoint().lat()
-    var mLng = marker.getPoint().lng()
+    var lat = su2rad.settings.location.Latitude;
+    var lng = su2rad.settings.location.Longitude; 
+    var mLat = su2rad.dialog.googleMap.marker.getPoint().lat()
+    var mLng = su2rad.dialog.googleMap.marker.getPoint().lng()
     if (lat.toFixed(4) != mLat.toFixed(4) || lng.toFixed(4) != mLng.toFixed(4)) {
         log.debug("updating map: lat='" + lat.toFixed(4) + "' mLat='" + mLat.toFixed(4) + "' lng='" + lng.toFixed(4) + "' mLng='" + mLng.toFixed(4) + "'")
         try {
             var latlng = new GLatLng(lat, lng);
-            map.setCenter(latlng, map.getZoom());
+            su2rad.dialog.googleMap.map.setCenter(latlng, su2rad.dialog.googleMap.map.getZoom());
         } catch (e) {
             // there may not be a map yet
             if (e.name == "TypeError") {

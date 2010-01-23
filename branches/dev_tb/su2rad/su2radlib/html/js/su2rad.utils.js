@@ -1,4 +1,5 @@
 
+var su2rad = su2rad ? su2rad : new Object()
 su2rad.utils = su2rad.utils ? su2rad.utils : new Object()
 
 su2rad.utils.arrayFromJSON = function(json) {

@@ -445,7 +445,7 @@ class SketchupViewsList
             uimessage("Error updateFromString(): %s\n\n%s\n" % [$!.message,e.backtrace.join("\n")], -2)
             return false
         end
-        dlg.execute_script("updateViewDetailsList()")
+        dlg.execute_script("su2rad.dialog.views.updateList()")
     end
  
     def getViewLines
