@@ -3,91 +3,63 @@ var su2rad = su2rad ? su2rad : new Object()
 su2rad.dialog = su2rad.dialog ? su2rad.dialog : new Object()
 su2rad.dialog.exporter = su2rad.dialog.exporter ? su2rad.dialog.exporter : new Object()
 
-
-function onExportModeChange() {
-    // apply new value for exportMode
-    var val=document.getElementById("exportMode").value;
-    //log.debug("new export mode: '" + val + "'"  );
-    su2rad.exportSettings.setMode(val);
-    _setGlobalCoordsDisplay();
-    updateExportFormValues();
-    su2rad.materials.setCurrentMaterialList(val);
-    applyExportOptions();
-}
-
-function _setGlobalCoordsDisplay(val) {
-    // show or hide global_coords checkbox
-    var val = su2rad.exportSettings.exportMode;
-    if (val == 'by group') {
-        document.getElementById("global_coords_display").style.display='';
-    } else {
-        document.getElementById("global_coords_display").style.display='none';
-    }
-    if (val == 'by color') {
-        document.getElementById("textures_display").style.display='';
-    } else {
-        document.getElementById("textures_display").style.display='none';
-    }
-}
-
-
-function onLoadSceneFile() {
+su2rad.dialog.exporter.onLoadSceneFile = function () {
     // open scene file
     try {
         // access file contents via nsIDOMFileList (FireFox, Mozilla)
         var files = document.getElementById("fileselection").files;
         var text = files.item(0).getAsText('UTF-8');
-        _loadSceneFile(text);
+        this._loadSceneFile(text);
     } catch (e) {
         // asigne callback for file access via Sketchup
-        loadFileCallback = loadSceneFile;
+        loadFileCallback = su2rad.dialog.exporter.loadSceneFile;
         var path = su2rad.dialog.exporter._getExportPath();
         loadTextFile(path);
     }
 }
 
-function loadSceneFile(text) {
+su2rad.dialog.exporter.loadSceneFile = function (text) {
     // loadTextFile callback to read scene (*.rif) files
     text = su2rad.utils.decodeText(text);
     su2rad.dialog.setStatusMsg("<b>file contents:</b><br/><code>" + text.replace(/\n/g,'<br/>') + "</code>");
-    _loadSceneFile(text);
+    su2rad.dialog.exporter._loadSceneFile(text);
 }
 
-function _loadSceneFile(text) {
-    if (radOpts.getOptionsFromFileText(text)) {
+su2rad.dialog.exporter._loadSceneFile = function (text) {
+    if (su2rad.settings.radiance.getOptionsFromFileText(text)) {
         document.getElementById("loadSceneButton").value='reload';
-        radOpts.loadedFile = su2rad.dialog.exporter._getExportPath();
+        su2rad.settings.radiance.loadedFile = su2rad.dialog.exporter._getExportPath();
     }
     //document.getElementById("loadSceneButton").style.display='none';
 }
 
-function enableLoadSceneFile(path) {
+su2rad.dialog.exporter.enableLoadSceneFile = function (path) {
     document.getElementById("loadSceneButton").style.display='';
-    if (radOpts.loadedFile == path) {
+    if (su2rad.settings.radiance.loadedFile == path) {
         document.getElementById("loadSceneButton").value='reload';
     }
 }
 
-function setExportModeSelection() {
-    setSelectionValue('exportMode', su2rad.exportSettings.exportMode);
+su2rad.dialog.exporter.setExportModeSelection = function () {
+    setSelectionValue('exportMode', su2rad.settings.exporter.exportMode);
     // set visibility of global_coords checkbox
-    _setGlobalCoordsDisplay();
+    this.setGlobalCoordsDisplay();
 }
 
-function setExportOptionsJSON(msg) {
+su2rad.dialog.exporter.setExportOptionsJSON = function (msg) {
     var json = su2rad.utils.decodeJSON(msg);
     var opts = su2rad.utils.arrayFromJSON(json)
-    su2rad.exportSettings.setOptionsFromArray(opts);
-    updateExportFormValues();
+    su2rad.settings.exporter.setOptionsFromArray(opts);
+    this.update();
 }
 
-function updateExportFormValues() {
-    document.getElementById("scenePath").value = su2rad.exportSettings.scenePath;
-    document.getElementById("sceneName").value = su2rad.exportSettings.sceneName + ".rif";
-    document.getElementById("triangulate").checked = su2rad.exportSettings.triangulate;
-    document.getElementById("textures").checked = su2rad.exportSettings.textures;
-    document.getElementById("radSunpath").checked = su2rad.exportSettings.radSunpath;
-    setExportModeSelection();
+su2rad.dialog.exporter.update = function () {
+    document.getElementById("scenePath").value = su2rad.settings.exporter.scenePath;
+    document.getElementById("sceneName").value = su2rad.settings.exporter.sceneName + ".rif";
+    document.getElementById("triangulate").checked = su2rad.settings.exporter.triangulate;
+    document.getElementById("textures").checked = su2rad.settings.exporter.textures;
+    document.getElementById("radSunpath").checked = su2rad.settings.exporter.radSunpath;
+    this.setExportModeSelection();
 }
 
 
@@ -141,14 +113,34 @@ su2rad.dialog.exporter.onExport = function() {
     }
 }
 
-su2rad.dialog.exporter.setOption = function (optname, optvalue) {
-    log.debug("DEBUG: export.setOption(optname='" + optname + "' optvalue='" + optvalue + "')")
+su2rad.dialog.exporter.onExportModeChange = function () {
+    // apply new value for exportMode
+    var val=document.getElementById("exportMode").value;
+    //log.debug("new export mode: '" + val + "'"  );
+    su2rad.settings.exporter.setMode(val);
+    this.setGlobalCoordsDisplay();
+    this.update();
+    su2rad.materials.setCurrentMaterialList(val);
+    applyExportOptions();
 }
 
-su2rad.dialog.exporter.showFileSelector = function() {
-    su2rad.dialog.fileSelector.callback = setExportPath
-    var scenepath = document.getElementById('scenePath').value
-    su2rad.dialog.fileSelector.show(scenepath)
+su2rad.dialog.exporter.setGlobalCoordsDisplay = function (val) {
+    // show or hide global_coords checkbox
+    var val = su2rad.settings.exporter.exportMode;
+    if (val == 'by group') {
+        document.getElementById("global_coords_display").style.display='';
+    } else {
+        document.getElementById("global_coords_display").style.display='none';
+    }
+    if (val == 'by color') {
+        document.getElementById("textures_display").style.display='';
+    } else {
+        document.getElementById("textures_display").style.display='none';
+    }
+}
+
+su2rad.dialog.exporter.setOption = function (optname, optvalue) {
+    log.debug("DEBUG: export.setOption(optname='" + optname + "' optvalue='" + optvalue + "')")
 }
 
 su2rad.dialog.exporter.setExportPath = function (path) {
@@ -164,9 +156,15 @@ su2rad.dialog.exporter.setExportPath = function (path) {
         path = this._getExportPath()
     } 
     log.debug("new path: '" + path + "'");
-    su2rad.exportSettings.setExportPath(path);
-    updateExportFormValues();
+    su2rad.settings.exporter.setExportPath(path);
+    this.update();
     applyExportOptions();
+}
+
+su2rad.dialog.exporter.showFileSelector = function() {
+    su2rad.dialog.fileSelector.callback = su2rad.dialog.exporter.setExportPath
+    var scenepath = document.getElementById('scenePath').value
+    su2rad.dialog.fileSelector.show(scenepath)
 }
 
     

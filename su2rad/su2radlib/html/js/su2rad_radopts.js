@@ -1,500 +1,89 @@
-function RadOptsObject() {
-    // Quality group
-    this.Quality = "medium";
-    this.Detail = "medium";
-    this.Variability = "high";
-    this.Indirect = 2;
-    this.Penumbras = true;
-    // Image group
-    this.ImageAspect = 1.0;  // XXX
-    this.ImageSizeX = 512;   // XXX
-    this.ImageSizeY = 512;   // XXX
-    this.ImageType = "normal";
-    // Zone group
-    this.ZoneSize = 10.0;  // XXX
-    this.ZoneType = "interior";
-    // Report group
-    this.Report = 0;
-    this.ReportFile = 'scene.log';
-    
-    // hash for rpict options
-    this._rpictOpts = {};
-    // array to hold active overrides
-    this._rpictOverrides = new Array();
 
-    this.loadedFile = ''
-}
 
-RadOptsObject.prototype.getOptionsFromFileText = function (text) {
-    log.debug("TODO: getOptionsFromFileText()")
-    return true;
-}
-
-RadOptsObject.prototype.getRenderLine = function () {
-    // return rpict options for rad 'render' line
-    text = ""
-    // add -i switch
-    if (this.ImageType != "normal") {
-        text += "-i "
-    }
-    // other overrides
-    for (var i=0; i<this._rpictOverrides.length; i++) {
-        var opt = this._rpictOverrides[i][0];
-        if (opt == 'av') {
-            var v = this._rpictOverrides[i][1]; 
-            text += "-" + opt + " " + v[0] + " " + v[1] + " " + v[2] + " ";
-        } else if (isInList(rpictBoolOptions, opt) == true) {
-            var sign = "+";
-            if (this._rpictOverrides[i][1] == false) {
-                sign = "-";
-            }
-            text += "-" + opt + sign + " ";
-        } else {
-            text += "-" + opt + " " + this._rpictOverrides[i][1] + " ";
-        }
-    }
-    return text;
-}
-
-RadOptsObject.prototype.getOption = function (opt) {
-    return this.getRpictOverride(opt);
-}
-
-RadOptsObject.prototype.getRpictOverride = function (opt) {
-    // return value of override or this._rpictOpts value
-    for (var i=0; i<this._rpictOverrides.length; i++) {
-        if (this._rpictOverrides[i][0] == opt) {
-            return this._rpictOverrides[i][1];
-        }
-    }
-    return this._rpictOpts[opt];
-}
-
-RadOptsObject.prototype.rpictOverrideSelected = function (opt) {
-    for (var i=0; i<this._rpictOverrides.length; i++) {
-        if (this._rpictOverrides[i][0] == opt) {
-            return true;
-        }
-    }
-    return false;
-}
-
-RadOptsObject.prototype.toString = function () {
-    text  =  "Quality=" + this.Quality;
-    text += "&Detail=" + this.Detail;
-    text += "&Variability=" + this.Variability;
-    text += "&Indirect=" + this.Indirect;
-    text += "&Penumbras=" + this.Penumbras;
-    text += "&ImageType=" + this.ImageType;
-    text += "&ImageAspect=" + this.ImageAspect;
-    text += "&ImageSizeX=" + this.ImageSizeX;
-    text += "&ImageSizeY=" + this.ImageSizeY;
-    text += "&ZoneSize=" + this.ZoneSize;
-    text += "&ZoneType=" + this.ZoneType;
-    text += "&Report=" + this.Report;
-    text += "&ReportFile=" + this.ReportFile;
-    text += "&render=" + this.getRenderLine();
-    return text
-}
-
-RadOptsObject.prototype.setRpictDefaults = function () {
-    // ambient
-    this._rpictOpts.aa = 0.2;
-    this._rpictOpts.ab = 0;
-    this._rpictOpts.ad = 512;
-    this._rpictOpts.ar = 64;
-    this._rpictOpts.as = 128;
-    this._rpictOpts.av = [0.0,0.0,0.0];
-    // one value for r,g and b
-    this._rpictOpts.aw = 0;
-    // direct calc
-    this._rpictOpts.dc = 0.5;
-    this._rpictOpts.dj = 0.0;
-    this._rpictOpts.dp = 512;
-    this._rpictOpts.dr = 1;
-    this._rpictOpts.ds = 0.25;
-    this._rpictOpts.dt = 0.05;
-    // reflections
-    this._rpictOpts.lr = 7;
-    this._rpictOpts.lw = 0.05;
-    // pixel opts
-    this._rpictOpts.pa = 1.0;
-    this._rpictOpts.pd = 0.0;
-    this._rpictOpts.pj = 0.67;
-    this._rpictOpts.pm = 0.0;
-    this._rpictOpts.ps = 1.0;
-    this._rpictOpts.pt = 0.05;
-    // specular
-    this._rpictOpts.sj = 1.0;
-    this._rpictOpts.st = 0.15;
-    // bool options
-    this._rpictOpts.bv = true;
-    this._rpictOpts.dv = true;
-    this._rpictOpts.u = false;
-    this._rpictOpts.w = true;
-}
-
-RadOptsObject.prototype.setRpictOptions = function () {
-    // calculate and set rpict options from quality settings
-    //log.debug("setRpictOptions(" + this.Quality + ")");
-    this.setRpictDefaults()
-    if (this.Quality == "low") {
-        this._setRpictOptsLow();
-    } else if (this.Quality == "medium") {
-        this._setRpictOptsMedium();
-    } else if (this.Quality == "high") {
-        this._setRpictOptsHigh();
-    } else {
-        log.error("unexpected value for 'quality': '" + this.Quality + "'")
-        log.error("  --> returning 'medium' options")
-        this.Quality = "medium";
-        this._setRpictOptsMedium();
-    } 
-    // todo: ambient file, overture
-    if (this.ZoneType == "interior") {
-        this._rpictOpts.av = [0.1,0.1,0.1];
-    } else {
-        this._rpictOpts.av = [10.0,10.0,10.0];
-    }
-    // apply overrides
-    for (var i=0; i<this._rpictOverrides.length; i++) {
-        var opt = this._rpictOverrides[i][0]; 
-        this._rpictOpts[opt] = this._rpictOverrides[i][1];
-    }
-}
-
-RadOptsObject.prototype._setRpictOptsHigh = function () {
-    this._rpictOpts.ab = this.Indirect + 1;
-    // this._rpictOpts.as = 0;
-    this._rpictOpts.dc = 0.75;
-    this._rpictOpts.dt = 0.05;
-    this._rpictOpts.dr = 3;
-    this._rpictOpts.lr = 12;
-    this._rpictOpts.lw = 0.0005;
-    this._rpictOpts.pt = 0.04;
-    this._rpictOpts.sj = 1.0;
-    this._rpictOpts.st = 0.01;
-    if (this.Detail == "high") {
-        this._rpictOpts.ar = 128 * parseInt(this.ZoneSize);
-        this._rpictOpts.dp = 4096;
-        this._rpictOpts.ps = 3;
-    } else if (this.Detail == "medium") {
-        this._rpictOpts.ar = 32 * parseInt(this.ZoneSize);
-        this._rpictOpts.dp = 2048;
-        this._rpictOpts.ps = 5;
-    } else {
-        this._rpictOpts.ar = 16 * parseInt(this.ZoneSize);
-        this._rpictOpts.dp = 1024;
-        this._rpictOpts.ps = 8;
-    }
-    if (this.Penumbras == true) {
-        this._rpictOpts.dj = 0.65;
-        this._rpictOpts.ds = 0.1;
-        this._rpictOpts.ps = 1;
-    } else {
-        this._rpictOpts.ds = 2;
-    }
-    if (this.Variability == "high") {
-        this._rpictOpts.aa = 0.075;
-        this._rpictOpts.ad = 4096;
-        this._rpictOpts.as = 2048;
-    } else if (this.Variability == "medium") {
-        this._rpictOpts.aa = 0.1;
-        this._rpictOpts.ad = 1536;
-        this._rpictOpts.as = 768;
-    } else {
-        this._rpictOpts.aa = 0.125;
-        this._rpictOpts.ad = 512;
-        this._rpictOpts.as = 64;
-    }
-}
-
-RadOptsObject.prototype._setRpictOptsLow = function () {
-    this._rpictOpts.as = 0;
-    this._rpictOpts.dc = 0.25;
-    this._rpictOpts.dt = 0.2;
-    this._rpictOpts.dr = 0;
-    this._rpictOpts.lr = 6;
-    this._rpictOpts.lw = 0.01;
-    this._rpictOpts.pt = 0.16;
-    this._rpictOpts.sj = 0;
-    this._rpictOpts.st = 0.5;
-    if (this.Detail == "high") {
-        this._rpictOpts.ar = 32 * parseInt(this.ZoneSize);
-        this._rpictOpts.dp = 256;
-        this._rpictOpts.ps = 4;
-    } else if (this.Detail == "medium") {
-        this._rpictOpts.ar = 16 * parseInt(this.ZoneSize);
-        this._rpictOpts.dp = 128;
-        this._rpictOpts.ps = 8;
-    } else {
-        this._rpictOpts.ar = 8 * parseInt(this.ZoneSize);
-        this._rpictOpts.dp = 64;
-        this._rpictOpts.ps = 16;
-    }
-    if (this.Penumbras == true) {
-        this._rpictOpts.ds = 0.4;
-    } else {
-        this._rpictOpts.ds = 0;
-    }
-    if (this.Variability == "high") {
-        this._rpictOpts.aa = 0.2;
-        this._rpictOpts.ad = 1024;
-    } else if (this.Variability == "medium") {
-        this._rpictOpts.aa = 0.25;
-        this._rpictOpts.ad = 512;
-    } else {
-        this._rpictOpts.aa = 0.3;
-        this._rpictOpts.ad = 256;
-    }
-}
-
-RadOptsObject.prototype._setRpictOptsMedium = function () {
-    this._rpictOpts.ab = this.Indirect;
-    // this._rpictOpts.as = 0;
-    this._rpictOpts.dc = 0.5;
-    this._rpictOpts.dt = 0.1;
-    this._rpictOpts.dr = 1;
-    this._rpictOpts.lr = 8;
-    this._rpictOpts.lw = 0.002;
-    this._rpictOpts.pt = 0.08;
-    this._rpictOpts.sj = 0.7;
-    this._rpictOpts.st = 0.1;
-    if (this.Detail == "high") {
-        this._rpictOpts.ar = 64 * parseInt(this.ZoneSize);
-        this._rpictOpts.dp = 1024;
-        this._rpictOpts.ps = 4;
-    } else if (this.Detail == "medium") {
-        this._rpictOpts.ar = 32 * parseInt(this.ZoneSize);
-        this._rpictOpts.dp = 512;
-        this._rpictOpts.ps = 6;
-    } else {
-        this._rpictOpts.ar = 16 * parseInt(this.ZoneSize);
-        this._rpictOpts.dp = 256;
-        this._rpictOpts.ps = 8;
-    }
-    if (this.Penumbras == true) {
-        this._rpictOpts.dj = 0.5;
-        this._rpictOpts.ds = 0.2;
-        this._rpictOpts.ps /= 2;;
-    } else {
-        this._rpictOpts.ds = 0.3;
-    }
-    if (this.Variability == "high") {
-        this._rpictOpts.aa = 0.1;
-        this._rpictOpts.ad = 1024;
-        this._rpictOpts.as = 392;
-    } else if (this.Variability == "medium") {
-        this._rpictOpts.aa = 0.15;
-        this._rpictOpts.ad = 800;
-        this._rpictOpts.as = 128;
-    } else {
-        this._rpictOpts.aa = 0.2;
-        this._rpictOpts.ad = 329;
-        this._rpictOpts.as = 42;
-    }
-}
-
-RadOptsObject.prototype.setRpictOverride = function (opt, newValue) {
-    // update or set override value for 'opt' 
-    if (isInList(rpictBoolOptions, opt) == true) {
-        this._setRpictOverrideBool(opt);
-        newValue = this._rpictOpts[opt]
-    } 
-    var found = false;
-    for (var i=0; i<this._rpictOverrides.length; i++) {
-        if (this._rpictOverrides[i][0] == opt) {
-            this._rpictOverrides[i][1] = newValue;
-            log.info("new value for override: '-" + opt + "' " + newValue);
-            found = true;
-            break;
-        }
-    }
-    if (found == false) {
-        this._rpictOverrides.push([opt, newValue]);
-        log.info("new override: '-" + opt + "': " + newValue);
-    }
-    this._rpictOpts[opt] = newValue;
-    this._rpictOverrides.sort(_sortOverrides);
-}
-
-RadOptsObject.prototype._setRpictOverrideBool = function (opt) {
-    // change this._rpictOpts value to non-default
-    for (var idx=0; idx<rpictBoolOptions.length; idx++) {
-        if (rpictBoolOptions[idx] == opt) {
-            this._rpictOpts[opt] = !rpictBoolDefaults[idx];
-        }
-    }
-}
-
-RadOptsObject.prototype.setValue = function (name, value) {
-    if (name == 'render' && value != '') {
-        parseRenderLine(value)
-    } else if (name == 'ImageSizeX') {
-        var val = parseInt(value);
-        if (val == 0) {
-            alert(name + " can not be 0!");
-        } else {
-            this[name] = val;
-            this.ImageSizeY = parseInt(this.ImageSizeX/this.ImageAspect);
-        }
-    } else if (name == 'ImageSizeY') {
-        var val = parseInt(value);
-        if (val == 0) {
-            alert(name + " can not be 0!");
-        } else {
-            this[name] = val;
-            this.ImageAspect = parseFloat(this.ImageSizeX) / parseFloat(this.ImageSizeY);
-        }
-    } else if (name == 'Indirect' || name == 'Report') {
-        this[name] = parseInt(value);
-    } else if (name == 'ZoneSize') {
-        this[name] = parseFloat(value);
-    } else if (name == 'Penumbras') {
-        if (value == 'false' || value == false) {
-            this[name] = false;
-        } else {
-            this[name] = true;
-        }
-    } else {
-        this[name] = value;
-    }
-}
-
-RadOptsObject.prototype.removeAllOverrides = function () {
-    while (this._rpictOverrides.length > 0) {
-        var opt = this._rpictOverrides[0][0];
-        this.removeRpictOverride(opt);
-    }
-    // reset ImageType to 'normal'
-    this.ImageType = "normal";
-}
-
-RadOptsObject.prototype.removeRpictOverride = function (opt) {
-    if (isInList(rpictBoolOptions, opt) == true) {
-        this._removeRpictOverrideBool(opt);
-    }
-    for (var idx=0; idx<this._rpictOverrides.length; idx++) {
-        if (this._rpictOverrides[idx][0] == opt) {
-            try {
-                var deletedOpt = this._rpictOverrides.splice(idx,1);
-                log.info("override removed for option '" + opt + "'");
-            } catch(e) {
-                log.warn("error removing override for '" + opt + "'(" + e.name + ")");
-            }
-            break;
-        }
-    }
-}
-
-RadOptsObject.prototype._removeRpictOverrideBool = function (opt) {
-    // set default option for bool value 
-    for (var idx=0; idx<rpictBoolOptions.length; idx++) {
-        if (rpictBoolOptions[idx] == opt) {
-            this._rpictOpts[opt] = rpictBoolDefaults[idx];
-        }
-    }
-}
-
-function _sortOverrides(a,b) {
-    if (a[0] < b[0])
-        return -1;
-    if (b[0] < a[0])
-        return 1;
-    return 0;
-}
-
+var su2rad = su2rad ? su2rad : new Object()
+su2rad.dialog = su2rad.dialog ? su2rad.dialog : new Object()
+su2rad.dialog.radiance = su2rad.dialog.radiance ? su2rad.dialog.radiance : new Object()
 
 // arrays to look up option types and defaults
-var rpictBoolOptions  = ["bv", "dv", "u", "w"];
-var rpictBoolComments = ["backface", "direct", "monte carlo", "warnings"];
-var rpictBoolDefaults = [true, true, false, true];
-var rpictIntOptions   = ["ab","ad","ar","as","aw","dp", "dr","lr","ps"];
+su2rad.dialog.radiance.rpictBoolOptions  = ["bv", "dv", "u", "w"];
+su2rad.dialog.radiance.rpictBoolComments = ["backface", "direct", "monte carlo", "warnings"];
+su2rad.dialog.radiance.rpictBoolDefaults = [true, true, false, true];
+su2rad.dialog.radiance.rpictIntOptions   = ["ab","ad","ar","as","aw","dp", "dr","lr","ps"];
 
 
-function isInList(list, element) {
-    // return true if element is in list
-    for (var i=0; i<list.length; i++) {
-        if (list[i] == element) {
-            return true;
-        }
-    }
-    return false;
-}
-
-function getRpictOptionSpan(opt) {
+su2rad.dialog.radiance.getRpictOptionSpan = function (opt) {
     // return text for option span (checkbox and textfield)
     var text = "<div class=\"gridRow\">";
-    var selected = radOpts.rpictOverrideSelected(opt);
-    text += getCheckBoxLabel(opt, "Rpict", selected, '')
+    var selected = su2rad.settings.radiance.rpictOverrideSelected(opt);
+    text += this.getCheckBoxLabel(opt, selected, '')
     // add text input or show default value
     if (opt == "av" && selected == true) { 
         // add 3 text input fields for 'av'
-        text += _getRpictOptionInputAV(opt);
+        text += this.getRpictOptionInputAV(opt);
         text += "</div>"
         return text;
     } else if (selected == true) {
         if (opt == "lr") {
             text += "<input type=\"text\" class=\"valueInputIntN\"";
-        } else if (isInList(rpictIntOptions, opt) == true) {
+        } else if (this.rpictIntOptions.indexOf(opt) >= 0) {
             text += "<input type=\"text\" class=\"valueInputInt\"";
         } else {
             text += "<input type=\"text\" class=\"valueInput\"";
         } 
         text += " id=\"valueInput" + opt + "\"";
-        text += " value=\"" + radOpts.getOption(opt) + "\" onchange=\"validateRpictOverride('" + opt + "')\" />";
+        text += " value=\"" + su2rad.settings.radiance.getOption(opt) + "\" onchange=\"su2rad.dialog.radiance.validateRpictOverride('" + opt + "')\" />";
     } else {
-    	text += "<span class=\"defaultValue\">" + radOpts.getOption(opt) + "</span>";
+    	text += "<span class=\"defaultValue\">" + su2rad.settings.radiance.getOption(opt) + "</span>";
     }
     text += "</div>"
     return text;
 }
 
-function _getRpictOptionInputAV(opt,text) {
+su2rad.dialog.radiance.getRpictOptionInputAV = function (opt,text) {
     var text = ""
     var colors = ['r', 'g', 'b'];
     for (var i=0; i<colors.length; i++) {
         var copt = opt + "_" + colors[i]
         text += "<input type=\"text\" class=\"valueInput\"";
         text += " id=\"valueInput" + copt + "\"";
-        text += " value=\"" + radOpts.getOption(opt)[i] + "\" onchange=\"validateRpictOverride('" + opt + "')\" />";
+        text += " value=\"" + su2rad.settings.radiance.getOption(opt)[i] + "\" onchange=\"su2rad.dialog.radiance.validateRpictOverride('" + opt + "')\" />";
     }
     return text;
 }
 
-function getCheckBoxLabel(opt, group, selected, label) {
+su2rad.dialog.radiance.getCheckBoxLabel = function (opt, selected, label) {
     if (!label || label == '') {
         label = "-" + opt;
     }
     if (selected == true) {
-        var action = " onClick=\"disable" + group + "Override('" + opt + "')\" "
+        var action = " onClick=\"su2rad.dialog.radiance.disableRpictOverride('" + opt + "')\" "
         var text = '<input type="checkbox" ' + action + 'checked />';
     } else {
-        var action = " onClick=\"enable" + group + "Override('" + opt + "')\" "
+        var action = " onClick=\"su2rad.dialog.radiance.enableRpictOverride('" + opt + "')\" "
         var text = '<input type="checkbox" ' + action + ' />';
     }
     text += '<a class="gridLabel" ' + action + ' >' + label + ':';
-    text += getToolTip(group.toLowerCase(), opt);
+    text += getToolTip("rpict", opt);
     text += "</a>";
     return text;
 }
 
-function getRpictOptionSpansBool() {
+su2rad.dialog.radiance.getRpictOptionSpansBool = function () {
     // return text for all bool option checkboxes
     // bool options are selected if current value != default value
     var text = "";
-    for (var i=0; i<rpictBoolOptions.length; i++) {
-        var opt = rpictBoolOptions[i];
-        var bvalue = radOpts.getOption(opt);
-        var selected = (bvalue != rpictBoolDefaults[i])
+    for (var i=0; i<this.rpictBoolOptions.length; i++) {
+        var opt = this.rpictBoolOptions[i];
+        var bvalue = su2rad.settings.radiance.getOption(opt);
+        var selected = (bvalue != this.rpictBoolDefaults[i])
         text += "<div class=\"gridRow\">";
-        text += getCheckBoxLabel(opt, "Rpict", selected, '')
+        text += this.getCheckBoxLabel(opt, selected, '')
         // add comment and 'on'/'off' value
         text += "<span class=\"defaulValue\">";
         if (bvalue == true) {
-            text += rpictBoolComments[i] + " on";
+            text += this.rpictBoolComments[i] + " on";
         } else {
-            text += rpictBoolComments[i] + " off";
+            text += this.rpictBoolComments[i] + " off";
         } 
         text += "</span>";
         text += "</div>"
@@ -502,7 +91,7 @@ function getRpictOptionSpansBool() {
     return text;
 }
 
-function setRenderOptionsJSON(text) {
+su2rad.dialog.radiance.setRenderOptionsJSON = function (text) {
     //log.debug("setRenderOptionsJSON()")
     var json = su2rad.utils.decodeJSON(text);
     try {
@@ -515,18 +104,18 @@ function setRenderOptionsJSON(text) {
     for(var j=0; j<renderOpts.length; j++) {
         var attrib = renderOpts[j];
         if(attrib != null) {
-            radOpts.setValue(attrib.name, attrib.value);
+            su2rad.settings.radiance.setValue(attrib.name, attrib.value);
             var line = '&nbsp;&nbsp;<b>' + attrib.name + ':</b> ' + attrib.value + '<br/>';
             text = text + line;
         }
     }
-    updateRenderFormValues();
-    updateRpictValues();
-    updateRenderLine();
+    this.update();
+    this.updateRpictValues();
+    this.updateRenderLine();
     su2rad.dialog.setStatusMsg(text);
 }
 
-function syncRadOption(id) {
+su2rad.dialog.radiance.syncRadOption = function (id) {
     var suffix = id.slice(-2);
     var other = "";
     if (suffix == "_1") {
@@ -540,58 +129,58 @@ function syncRadOption(id) {
     // set selection for 'other' element
     var opt = id.slice(3,-2);
     if (opt.match(/ImageSize/)) {
-        updateImageSizeDisplay();
+        this.updateImageSizeDisplay();
     } else {
-        setSelectionValue(other, radOpts[opt]);
+        setSelectionValue(other, su2rad.settings.radiance[opt]);
     }
 }
 
-function onRadOptionChange(id) {
+su2rad.dialog.radiance.onRadOptionChange = function (id) {
     var opt=id.slice(3);    
     //log.debug("onRadOptionChange() opt='" + opt + "'");
     if (opt == "Penumbras") {
-        radOpts[opt] = document.getElementById(id).checked;
+        su2rad.settings.radiance[opt] = document.getElementById(id).checked;
     } else if (opt == "ZoneSize") {
-        radOpts[opt] = parseFloat(document.getElementById(id).value);
+        su2rad.settings.radiance[opt] = parseFloat(document.getElementById(id).value);
     } else if (opt == "Indirect") {
-        radOpts[opt] = parseInt(document.getElementById(id).value);
+        su2rad.settings.radiance[opt] = parseInt(document.getElementById(id).value);
     } else {
         var suffix = id.slice(-2);
         if (suffix == "_1" || suffix == "_2") {
             opt = opt.slice(0,-2)
         }
-        radOpts.setValue(opt, document.getElementById(id).value);
+        su2rad.settings.radiance.setValue(opt, document.getElementById(id).value);
         if (suffix == "_1" || suffix == "_2") {
-            syncRadOption(id);
+            this.syncRadOption(id);
         }
     }
-    _onRpictOverrideUpdate();
+    this.onRpictOverrideUpdate();
 }
 
-function onRenderLineChange(inText) {
-    parseRenderLine(inText)
-    _updateRpictOptionDisplay();
-    updateRenderLine();
+su2rad.dialog.radiance.onRenderLineChange = function (inText) {
+    this.parseRenderLine(inText)
+    this.updateRpictOptionDisplay();
+    this.updateRenderLine();
     applyRenderOptions();
 }
 
-function enableRpictOverride(opt) {
-    setOverride(opt, radOpts.getOption(opt));
-    _onRpictOverrideUpdate();
+su2rad.dialog.radiance.enableRpictOverride = function (opt) {
+    this.setOverride(opt, su2rad.settings.radiance.getOption(opt));
+    this.onRpictOverrideUpdate();
 }
 
-function disableRpictOverride(opt) {
-    removeOverride(opt);
-    _onRpictOverrideUpdate();
+su2rad.dialog.radiance.disableRpictOverride = function (opt) {
+    this.removeOverride(opt);
+    this.onRpictOverrideUpdate();
 }
 
-function _onRpictOverrideUpdate() {
-    updateRpictValues();
-    updateRenderLine();
+su2rad.dialog.radiance.onRpictOverrideUpdate = function () {
+    this.updateRpictValues();
+    this.updateRenderLine();
     applyRenderOptions();
 }
 
-function parseRenderLine(inText) {
+su2rad.dialog.radiance.parseRenderLine = function (inText) {
     // validate render line input and set overrides
     if (inText == '') {
         inText = document.getElementById('radRenderLine_2').value;
@@ -604,12 +193,12 @@ function parseRenderLine(inText) {
         }
     }
     if (parts.length == 0) {
-        radOpts.removeAllOverrides();
-        setImageType('normal')
-        updateRpictValues();
+        su2rad.settings.radiance.removeAllOverrides();
+        this.setImageType('normal')
+        this.updateRpictValues();
     }
     var removeIrr = false;
-    if (radOpts.ImageType != "normal") {
+    if (su2rad.settings.radiance.ImageType != "normal") {
         removeIrr = true;
     }
     i = 0;
@@ -621,15 +210,15 @@ function parseRenderLine(inText) {
         }
         if (opt == "i") {
             removeIrr = false;
-            if (radOpts.ImageType == "normal") {
-                setImageType('irridiance')
+            if (su2rad.settings.radiance.ImageType == "normal") {
+                this.setImageType('irridiance')
             }
-        } else if (isInList(rpictBoolOptions, opt.slice(0,-1) )) {
-            parseBoolOverride(opt)
-        } else if (isInList(rpictBoolOptions, opt)) {
-            parseBoolOverride(opt + "+")
+        } else if (this.rpictBoolOptions.indexOf(opt.slice(0,-1)) >= 0) {
+            this.parseBoolOverride(opt)
+        } else if (this.rpictBoolOptions.indexOf(opt) >= 0) {
+            this.parseBoolOverride(opt + "+")
         } else {
-            var value = _validateRpictOverrideValue(opt, parts[i+1]) 
+            var value = this.validateRpictOverrideValue(opt, parts[i+1]) 
             if (opt == "av" && isNaN(value) == false) {
                 // check for green and blue values (which are ignored ...)
                 var r = value;
@@ -653,9 +242,9 @@ function parseRenderLine(inText) {
                     log.error("'-av' value for green not a number: " + parts[i+1] )
                     g = value;
                 }
-                setOverride('av', [r,g,b])
+                this.setOverride('av', [r,g,b])
             } else if (isNaN(value) == false) {
-                setOverride(opt, value);
+                this.setOverride(opt, value);
                 i += 1;
             } else {
                 log.error("'" + opt + "' argument is not a number: '" + parts[i] + "'");
@@ -667,19 +256,19 @@ function parseRenderLine(inText) {
     }
     // if '-i' was removed reset image type
     if (removeIrr == true) {
-        setImageType('normal')
+        this.setImageType('normal')
     }
 
 }
 
-function setImageType(imgType) {
+su2rad.dialog.radiance.setImageType = function (imgType) {
     // set new image type and sync select boxes
-    radOpts.ImageType = imgType;
-    syncRadOption('radImageType_1');
-    syncRadOption('radImageType_2');
+    su2rad.settings.radiance.ImageType = imgType;
+    this.syncRadOption('radImageType_1');
+    this.syncRadOption('radImageType_2');
 }
 
-function parseBoolOverride(txt) {
+su2rad.dialog.radiance.parseBoolOverride = function (txt) {
     var lastChar = txt.charAt(txt.length-1)
     if (lastChar == '-' || lastChar == '+') {
         var opt = txt.slice(0,txt.length-1);
@@ -687,8 +276,8 @@ function parseBoolOverride(txt) {
         var opt = txt
     }
     var idx;
-    for (var i=0; i<rpictBoolOptions.length; i++) {
-        if (rpictBoolOptions[i] == opt) {
+    for (var i=0; i<this.rpictBoolOptions.length; i++) {
+        if (this.rpictBoolOptions[i] == opt) {
             idx = i;
             break;
         }
@@ -702,64 +291,64 @@ function parseBoolOverride(txt) {
     if (txt.slice(-1) == "-") {
         var flag = false;
     }
-    if (flag == rpictBoolDefaults[idx]) {
-        removeOverride(opt);   
+    if (flag == this.rpictBoolDefaults[idx]) {
+        this.removeOverride(opt);   
     } else {
-        setOverride(opt);   
+        this.setOverride(opt);   
     }
 }
 
-function removeOverride(opt) {
-    // remove override from radOpts and clear checkbox
-    radOpts.removeRpictOverride(opt);
+su2rad.dialog.radiance.removeOverride = function (opt) {
+    // remove override from su2rad.settings.radiance and clear checkbox
+    su2rad.settings.radiance.removeRpictOverride(opt);
 }
     
-function selectImageType(id) {
+su2rad.dialog.radiance.selectImageType = function (id) {
     // set new value and sync radImageType select element
     var opt = id.slice(3,-2)
     log.info("new image type: " + document.getElementById(id));
-    radOpts[opt] = document.getElementById(id).value;
-    syncRadOption(id); 
-    updateRenderLine();
+    su2rad.settings.radiance[opt] = document.getElementById(id).value;
+    this.syncRadOption(id); 
+    this.updateRenderLine();
     applyRenderOptions();
 }
 
-function setOverride(opt, newValue) {
+su2rad.dialog.radiance.setOverride = function (opt, newValue) {
     // add override value and set checkbox.checked = true
-    radOpts.setRpictOverride(opt, newValue);
+    su2rad.settings.radiance.setRpictOverride(opt, newValue);
 }
 
-function updateRenderFormValues() {
-    // set dialog options to values of radOpts
-    setSelectionValue('radQuality_1', radOpts.Quality);
-    setSelectionValue('radQuality_2', radOpts.Quality);
-    setSelectionValue('radDetail_1', radOpts.Detail);
-    setSelectionValue('radDetail_2', radOpts.Detail);
-    setSelectionValue('radVariability_1', radOpts.Variability);
-    setSelectionValue('radVariability_2', radOpts.Variability);
+su2rad.dialog.radiance.update = function () {
+    // set dialog options to values of su2rad.settings.radiance
+    setSelectionValue('radQuality_1', su2rad.settings.radiance.Quality);
+    setSelectionValue('radQuality_2', su2rad.settings.radiance.Quality);
+    setSelectionValue('radDetail_1', su2rad.settings.radiance.Detail);
+    setSelectionValue('radDetail_2', su2rad.settings.radiance.Detail);
+    setSelectionValue('radVariability_1', su2rad.settings.radiance.Variability);
+    setSelectionValue('radVariability_2', su2rad.settings.radiance.Variability);
     
-    setSelectionValue('radImageType_1',  radOpts.ImageType);
-    setSelectionValue('radImageType_2',  radOpts.ImageType);
+    setSelectionValue('radImageType_1',  su2rad.settings.radiance.ImageType);
+    setSelectionValue('radImageType_2',  su2rad.settings.radiance.ImageType);
     
-    document.getElementById('radImageSizeX_1').value = radOpts.ImageSizeX;
-    document.getElementById('radImageSizeX_2').value = radOpts.ImageSizeX;
-    document.getElementById('radImageSizeY_1').value = radOpts.ImageSizeY;
-    document.getElementById('radImageSizeY_2').value = radOpts.ImageSizeY;
+    document.getElementById('radImageSizeX_1').value = su2rad.settings.radiance.ImageSizeX;
+    document.getElementById('radImageSizeX_2').value = su2rad.settings.radiance.ImageSizeX;
+    document.getElementById('radImageSizeY_1').value = su2rad.settings.radiance.ImageSizeY;
+    document.getElementById('radImageSizeY_2').value = su2rad.settings.radiance.ImageSizeY;
     
-    document.getElementById('radPenumbras').checked = radOpts.Penumbras;
-    setSelectionValue('radReport', radOpts.Report);
-    document.getElementById('radZoneSize').value = radOpts.ZoneSize; 
-    setSelectionValue('radZoneType', radOpts.ZoneType);
-    document.getElementById('radReportFile').value = radOpts.ReportFile;
+    document.getElementById('radPenumbras').checked = su2rad.settings.radiance.Penumbras;
+    setSelectionValue('radReport', su2rad.settings.radiance.Report);
+    document.getElementById('radZoneSize').value = su2rad.settings.radiance.ZoneSize; 
+    setSelectionValue('radZoneType', su2rad.settings.radiance.ZoneType);
+    document.getElementById('radReportFile').value = su2rad.settings.radiance.ReportFile;
 }
 
-function updateRenderLine() {
-    var text = radOpts.getRenderLine();
+su2rad.dialog.radiance.updateRenderLine = function () {
+    var text = su2rad.settings.radiance.getRenderLine();
     document.getElementById("radRenderLine_1").innerHTML = text;
     document.getElementById("radRenderLine_2").value = text;
 }
 
-function _updateRpictOptionDisplay() {
+su2rad.dialog.radiance.updateRpictOptionDisplay = function () {
     // return HTML code for rpict option overrides
     var options = ["ambient",    "aa", "ab", "ad", "ar", "as", "aw",
                    "NEWCOL", 
@@ -782,7 +371,7 @@ function _updateRpictOptionDisplay() {
             //text += "<span class=\"rpictOverrideHeader\">" + opt + "</span><br/>";
             text += "<div class=\"rpictOverrideHeader\">" + opt + "</div>";
         } else {
-            text += getRpictOptionSpan(opt)
+            text += this.getRpictOptionSpan(opt)
         }
     }
     text += "</div>"
@@ -791,10 +380,10 @@ function _updateRpictOptionDisplay() {
     text += "<div class=\"rpictOptions\" id=\"rpictOptionsRight\">";
     // -av option (3 text inputs)
     text += "<div class=\"rpictOverrideHeader\">ambient value</div>";
-    text += getRpictOptionSpan("av")
+    text += this.getRpictOptionSpan("av")
     // bool options
     text += "<div class=\"rpictOverrideHeader\">bool options</div>";
-    text += getRpictOptionSpansBool();
+    text += this.getRpictOptionSpansBool();
     text += "</div>";
     
     // add to document
@@ -805,29 +394,29 @@ function _updateRpictOptionDisplay() {
     $('.valueInputIntN').numeric({allow:"-"});
 }
 
-function updateRpictValues() {
+su2rad.dialog.radiance.updateRpictValues = function () {
     //log.debug("updateRpictValues()");
-    radOpts.setRpictOptions();
-    updateImageSizeDisplay();
-    _updateRpictOptionDisplay();
+    su2rad.settings.radiance.setRpictOptions();
+    this.updateImageSizeDisplay();
+    this.updateRpictOptionDisplay();
 }
 
-function updateImageSizeDisplay() {
+su2rad.dialog.radiance.updateImageSizeDisplay = function () {
     var opt = "ImageSizeX";
-    document.getElementById("rad" + opt + "_1").value = radOpts[opt];
-    document.getElementById("rad" + opt + "_2").value = radOpts[opt];
+    document.getElementById("rad" + opt + "_1").value = su2rad.settings.radiance[opt];
+    document.getElementById("rad" + opt + "_2").value = su2rad.settings.radiance[opt];
     var opt = "ImageSizeY";
-    document.getElementById("rad" + opt + "_1").value = radOpts[opt];
-    document.getElementById("rad" + opt + "_2").value = radOpts[opt];
+    document.getElementById("rad" + opt + "_1").value = su2rad.settings.radiance[opt];
+    document.getElementById("rad" + opt + "_2").value = su2rad.settings.radiance[opt];
 }
 
-function validateRpictOverride(opt) {
+su2rad.dialog.radiance.validateRpictOverride = function (opt) {
     // validate rpict arg against int or float;
     try {
         if (opt == "av") {
             //log.debug("validateRpictOverride('av')");
             var colors = ['r', 'g', 'b'];
-            var newValue = radOpts.getRpictOverride(opt);
+            var newValue = su2rad.settings.radiance.getRpictOverride(opt);
             for (var i=0; i<colors.length; i++) {
                 var c = colors[i];
                 var id = "valueInput" + opt + "_" + c;
@@ -841,32 +430,32 @@ function validateRpictOverride(opt) {
                     newValue[i] = parseFloat(value);
                 }
             }
-            setOverride(opt, newValue);
+            this.setOverride(opt, newValue);
         } else {
             var id = "valueInput" + opt;
             var value = document.getElementById(id).value;
-            var newValue = _validateRpictOverrideValue(opt, value);
+            var newValue = this.validateRpictOverrideValue(opt, value);
             // check if return value is a valid number and apply
             if (isNaN(newValue)) {
                 // NaN: revert to old value
-                document.getElementById(id).value = radOpts.getRpictOverride(opt);
+                document.getElementById(id).value = su2rad.settings.radiance.getRpictOverride(opt);
                 return
             } else {
                 document.getElementById(id).value = newValue;
-                setOverride(opt, newValue);
+                this.setOverride(opt, newValue);
             }
         }
-        updateRenderLine();
+        this.updateRenderLine();
         applyRenderOptions();
     } catch(e) {
         log.error(e.message)
     }
 }
 
-function _validateRpictOverrideValue(opt, value) {
+su2rad.dialog.radiance.validateRpictOverrideValue = function (opt, value) {
     // find correct validator: parseInt() or parseFloat()
     var integer = false;
-    if (isInList(rpictIntOptions, opt) == true) {
+    if (this.rpictIntOptions.indexOf(opt) >= 0) {
         integer = true;
     }
     var newValue = NaN;

@@ -1,7 +1,7 @@
 
 function applySkySettings() {
     // send back location and sky settings
-    var params = modelLocation.toParamString();
+    var params = su2rad.settings.location.toParamString();
     if (su2rad.SKETCHUP == true) {
         // log.debug("applySkySettings():<br/>" + params.replace(/&/g,"<br/>"));
         window.location = 'skp:applySkySettings@' + params;
@@ -17,9 +17,9 @@ function onApplySkySettingsToModel() {
         window.location = 'skp:writeSkySettingsToShadowInfo@';
     } else {
         log.debug("using dummy backend.writeSkySettingsToShadowInfo() ...");
-        modelLocation.changed = false;
+        su2rad.settings.location.changed = false;
         // TODO:
-        // msg = modelLocation.toJSON();
+        // msg = su2rad.settings.location.toJSON();
         // setShadowInfoFromJSON(msg);
         clearTZWarning();
         su2rad.dialog.sky.update();
@@ -31,15 +31,15 @@ function getExportOptions() {
     if (su2rad.SKETCHUP == true) {
         log.info("getting shadowInfo from SketchUp ...");
         window.location = 'skp:getExportOptions@';
-        // setExportOptionsJSON() called by Sketchup
+        // su2rad.dialog.exporter.setExportOptionsJSON() called by Sketchup
     } else {
         var json = test_getExportOptions();
-        setExportOptionsJSON( su2rad.utils.encodeJSON(json) );
+        su2rad.dialog.exporter.setExportOptionsJSON( su2rad.utils.encodeJSON(json) );
     }
 }
 
 function getSkySettings() {
-    // get SketchUp shadow_info settings and apply to modelLocation
+    // get SketchUp shadow_info settings and apply to su2rad.settings.location
     if (su2rad.SKETCHUP == true) {
         log.info("getting shadowInfo from SketchUp ...");
         window.location = 'skp:getSkySettings@';
@@ -52,7 +52,7 @@ function getSkySettings() {
 }
 
 function applyExportOptions() {
-    var param = su2rad.exportSettings.toString();
+    var param = su2rad.settings.exporter.toString();
     if (su2rad.SKETCHUP == true) {
         // log.debug("applyExportOptions:<br/>" + param.replace(/&/g,"<br/>") );
         window.location = 'skp:applyExportOptions@' + param;
@@ -64,7 +64,7 @@ function applyExportOptions() {
 }
 
 function applyRenderOptions() {
-    param = radOpts.toString();
+    param = su2rad.settings.radiance.toString();
     if (su2rad.SKETCHUP == true) {
         // log.debug("applyRenderOptions:<br/>" + param.replace(/&/g,"<br/>") );
         window.location = 'skp:applyRenderOptions@' + param;
@@ -82,7 +82,7 @@ function setViewJSON(name,text) {
     var obj = {};
     try {
         eval("obj = " + json);
-        viewsList.setView(viewname, obj);
+        su2rad.settings.views.setView(viewname, obj);
         return true;
     } catch (e) {
         log.error("setViewJSON: error in eval() '" + e.name + "'");
@@ -103,8 +103,8 @@ function setViewsListJSON(text) {
         log.error("setViewsListJSON: error in eval() '" + e.name + "'");
         log.error("json= " + json.replace(/,/g,',<br/>'));
     }
-    viewsList.setViewsList(newViews);
-    updateViewsSummary();
+    su2rad.settings.views.setViewsList(newViews);
+    su2rad.dialog.views.updateSummary();
 }
 
 function getViewsList() {
@@ -122,7 +122,7 @@ function getViewsList() {
 function applyViewSettings(viewname) {
     //log.debug('applyViewSettings(' + viewname + ')');
     try {
-        var view = viewsList[viewname];
+        var view = su2rad.settings.views[viewname];
     } catch(e) {
         log.error(e)
         return
@@ -134,7 +134,7 @@ function applyViewSettings(viewname) {
         window.location = 'skp:applyViewSettings@' + param;
     } else {
         log.debug("using dummy backend.applyViewSettings()"); 
-        updateViewDetailsList();
+        su2rad.dialog.views.updateList();
     }
 }
 
@@ -146,7 +146,7 @@ function removeViewOverride(viewname, override) {
     } else {
         log.debug("using dummy backend.removeViewOverride()"); 
         try {
-            var view = viewsList[viewname];
+            var view = su2rad.settings.views[viewname];
             var json = view.toJSON();
             setViewJSON(viewname, json);
         } catch (err) {

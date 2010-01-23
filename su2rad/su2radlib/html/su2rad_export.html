@@ -33,6 +33,7 @@
         <script type="text/javascript" src="./js/su2rad_tooltip.js"></script>
         <script type="text/javascript" src="./js/su2rad_test.js"></script>
         <script type="text/javascript" src="./js/su2rad.utils.js"></script>
+        <script type="text/javascript" src="./js/su2rad.settings.radiance.js"></script>
         <script type="text/javascript" src="./js/su2rad.dialog.common.js"></script>
         <script type="text/javascript" src="./js/su2rad.dialog.exporter.js"></script>
         <script type="text/javascript" src="./js/su2rad_backend_interface.js"></script>
@@ -110,7 +111,7 @@
                     <div class="gridRow">
                         <div class="gridLabel">path:</div>
                         <div class="gridCell" style="width:305px;">
-                            <input type="text" style="width:275px;" name="scenePath" id="scenePath" value="." onchange="setExportPath()" />
+                            <input type="text" style="width:275px;" name="scenePath" id="scenePath" value="." onchange="su2rad.dialog.exporter.setExportPath()" />
                             <a onclick="su2rad.dialog.exporter.showFileSelector()">
                                 <img class="fileSelectorIcon" src="./css/24-zoom.png"/>
                             </a>
@@ -120,8 +121,9 @@
                         <div class="gridLabel">scene:</div>
                         <div class="gridCell" style="width:385px;">
                             <input type="text" class="fileNameInput" style="width:275px;" name="sceneName" id="sceneName" value="unnamed.rif"
-                                onchange="setExportPath()"/>
-                            <input type="button" id="loadSceneButton" class="loadbutton" style="display:none;" value="load" onclick="onLoadSceneFile()"/>
+                                onchange="su2rad.dialog.exporter.setExportPath()"/>
+                            <input type="button" id="loadSceneButton" class="loadbutton" style="display:none;" value="load"
+                                onclick="su2rad.dialog.exporter.onLoadSceneFile()"/>
                         </div>
                     </div>
 
@@ -129,7 +131,7 @@
                     <div class="gridRow" style="margin-top:5px;">
                         <div class="gridLabel">mode:</div>
                         <div class="gridCell">
-                            <select id="exportMode" name="exportMode" onchange="onExportModeChange()">
+                            <select id="exportMode" name="exportMode" onchange="su2rad.dialog.exporter.onExportModeChange()">
                                 <option value="by group">by group</option>
                                 <option value="by layer">by layer</option>
                                 <option value="by color" selected>by color</option>
@@ -138,7 +140,7 @@
                         </div>
                         <div class="gridCell">
                             <input id="triangulate" type="checkbox"
-                            onClick="su2rad.exportSettings.setOption('triangulate', this.checked)"> triangulate
+                            onClick="su2rad.settings.exporter.setOption('triangulate', this.checked)"> triangulate
                         </div>
                     </div>
                     <div class="gridRow">
@@ -146,13 +148,13 @@
                         <div class="gridCell">
                             <span id="global_coords_display" style="display:none;">
                                 <input id="global_coords" type="checkbox" 
-                                onClick="su2rad.exportSettings.setOption('global_coords', this.checked)"> global coords
+                                onClick="su2rad.settings.exporter.setOption('global_coords', this.checked)"> global coords
                             </span>
                         </div>
                         <div class="gridCell">
                             <span id="textures_display">
                                 <input id="textures" type="checkbox"
-                                onClick="su2rad.exportSettings.setOption('textures', this.checked)">
+                                onClick="su2rad.settings.exporter.setOption('textures', this.checked)">
                                 <span id="textures_label"> textures</span>
                             </span>
                         </div>
@@ -164,7 +166,7 @@
                     <!-- <input class="floatright" type="button" value="edit" onclick="su2rad.dialog.switchToTab('tab-views')"> -->
                     Views
                     <span id="selectAllViews" style="font-size:12px;margin-left:10px;">
-                        <a class="clickable" onclick="selectAllViews()">select all</a>
+                        <a class="clickable" onclick="su2rad.dialog.views.selectAllViews()">select all</a>
                     </span>
                 </h3>
                 <div id="viewsSelection">
@@ -183,7 +185,7 @@
                     <div class="gridRow">
                         <div class="gridLabel">quality:</div>
                         <div class="gridCell">
-                            <select id="radQuality_1" name="radQuality_1" onchange="onRadOptionChange('radQuality_1')">
+                            <select id="radQuality_1" name="radQuality_1" onchange="su2rad.dialog.radiance.onRadOptionChange('radQuality_1')">
                                 <option value="high">high</option>
                                 <option value="medium" selected>medium</option>
                                 <option value="low">low</option>
@@ -191,13 +193,13 @@
                         </div>
                         <div class="gridLabel">img x:</div>
                         <div class="gridCell">
-                            <input type="text" class="numeric_int" size="5" name="radImageSizeX_1" id="radImageSizeX_1" value="512" onchange="onRadOptionChange('radImageSizeX_1')" />
+                            <input type="text" class="numeric_int" size="5" name="radImageSizeX_1" id="radImageSizeX_1" value="512" onchange="su2rad.dialog.radiance.onRadOptionChange('radImageSizeX_1')" />
                         </div>
                     </div>
                     <div class="gridRow">
                         <div class="gridLabel">detail:</div>
                         <div class="gridCell">
-                            <select id="radDetail_1" name="radDetail_1" onchange="onRadOptionChange('radDetail_1')">
+                            <select id="radDetail_1" name="radDetail_1" onchange="su2rad.dialog.radiance.onRadOptionChange('radDetail_1')">
                                 <option value="high">high</option>
                                 <option value="medium" selected>medium</option>
                                 <option value="low">low</option>
@@ -205,13 +207,13 @@
                         </div>
                         <div class="gridLabel">img y:</div>
                         <div class="gridCell">
-                            <input type="text" class="numeric_int" size="5" name="radImageSizeY_1" id="radImageSizeY_1" value="512" onchange="onRadOptionChange('radImageSizeY_1')" />
+                            <input type="text" class="numeric_int" size="5" name="radImageSizeY_1" id="radImageSizeY_1" value="512" onchange="su2rad.dialog.radiance.onRadOptionChange('radImageSizeY_1')" />
                         </div>
                     </div>
                     <div class="gridRow">
                         <div class="gridLabel">varia:</div>
                         <div class="gridCell">
-                            <select id="radVariability_1" name="radVariability_1" onchange="onRadOptionChange('radVariability_1')">
+                            <select id="radVariability_1" name="radVariability_1" onchange="su2rad.dialog.radiance.onRadOptionChange('radVariability_1')">
                                 <option value="high" selected>high</option>
                                 <option value="medium">medium</option>
                                 <option value="low">low</option>
@@ -219,7 +221,7 @@
                         </div>
                         <div class="gridLabel">type:</div>
                         <div class="gridCell">
-                            <select id="radImageType_1" name="radImageType_1" style="width: 90px;" onchange="selectImageType('radImageType_1')">
+                            <select id="radImageType_1" name="radImageType_1" style="width: 90px;" onchange="su2rad.dialog.radiance.selectImageType('radImageType_1')">
                                 <option value="normal" selected>normal</option>
                                 <option value="irridiance">irridiance</option>
                             </select>
@@ -229,7 +231,7 @@
                         <div class="gridLabel">render:</div>
                         <div class="gridCell" style="width:400px">
                             <span class="commandLine" id="radRenderLine_1"></span>
-                            <!-- <input type="text" class="column2" name="radRenderLine_1" id="radRenderLine_1" value="" onchnge="onRenderLineChange(this.value)"/> -->
+                            <!-- <input type="text" class="column2" name="radRenderLine_1" id="radRenderLine_1" value="" onchnge="su2rad.dialog.radiance.onRenderLineChange(this.value)"/> -->
                         </div>
                     </div>
                 </div>
@@ -286,7 +288,7 @@
                     <input type="button" value="export" onclick="su2rad.dialog.exporter.onExport()">
                     <input type="button" value="cancel" onclick="su2rad.dialog.exporter.onCancel()">
                     <div id="showRadSunpath" style="display:none;">
-                        <input type="checkbox" id="radSunpath" onClick="su2rad.exportSettings.setOption('radSunpath', this.checked)">start RadSunpath
+                        <input type="checkbox" id="radSunpath" onClick="su2rad.settings.exporter.setOption('radSunpath', this.checked)">start RadSunpath
                     </div>
                 </div>
             
@@ -319,7 +321,7 @@
                         </div>
                         <div class="gridLabel">quality:</div>
                         <div class="gridCell">
-                            <select id="radQuality_2" name="radQuality_2" onchange="onRadOptionChange('radQuality_2')">
+                            <select id="radQuality_2" name="radQuality_2" onchange="su2rad.dialog.radiance.onRadOptionChange('radQuality_2')">
                                 <option value="high">high</option>
                                 <option value="medium" selected>medium</option>
                                 <option value="low">low</option>
@@ -327,7 +329,7 @@
                         </div>
                         <div class="gridLabel">detail:</div>
                         <div class="gridCell">
-                            <select id="radDetail_2" name="radDetail_2" onchange="onRadOptionChange('radDetail_2')">
+                            <select id="radDetail_2" name="radDetail_2" onchange="su2rad.dialog.radiance.onRadOptionChange('radDetail_2')">
                                 <option value="high">high</option>
                                 <option value="medium" selected>medium</option>
                                 <option value="low">low</option>
@@ -335,7 +337,7 @@
                         </div>
                         <div class="gridLabel">varia:</div>
                         <div class="gridCell">
-                            <select id="radVariability_2" name="radVariability_2" onchange="onRadOptionChange('radVariability_2')">
+                            <select id="radVariability_2" name="radVariability_2" onchange="su2rad.dialog.radiance.onRadOptionChange('radVariability_2')">
                                 <option value="high" selected>high</option>
                                 <option value="medium">medium</option>
                                 <option value="low">low</option>
@@ -343,7 +345,7 @@
                         </div>
                         <div class="gridLabel">indirect:</div>
                         <div class="gridCell">
-                            <select id="radIndirect" name="radIndirect" onchange="onRadOptionChange('radIndirect')">
+                            <select id="radIndirect" name="radIndirect" onchange="su2rad.dialog.radiance.onRadOptionChange('radIndirect')">
                                 <option value="0">0</option>
                                 <option value="1">1</option>
                                 <option value="2" selected>2</option>
@@ -354,7 +356,7 @@
                         </div>
                         <div class="gridLabel" style="font-size: 12px;">penumbra:</div>
                         <div class="gridCell">
-                            <input type="checkbox" id="radPenumbras" checked onClick="onRadOptionChange('radPenumbras')" /> 
+                            <input type="checkbox" id="radPenumbras" checked onClick="su2rad.dialog.radiance.onRadOptionChange('radPenumbras')" /> 
                         </div>
                     </div>        
 
@@ -365,15 +367,15 @@
                         </div>
                         <div class="gridLabel">size x:</div>
                         <div class="gridCell">
-                            <input type="text" class="numeric_int" size="4" name="radImageSizeX_2" id="radImageSizeX_2" value="512" onchange="onRadOptionChange('radImageSizeX_2')" />
+                            <input type="text" class="numeric_int" size="4" name="radImageSizeX_2" id="radImageSizeX_2" value="512" onchange="su2rad.dialog.radiance.onRadOptionChange('radImageSizeX_2')" />
                         </div>
                         <div class="gridLabel">size y:</div>
                         <div class="gridCell">
-                            <input type="text" class="numeric_int" size="4" name="radImageSizeY_2" id="radImageSizeY_2" value="512" onchange="onRadOptionChange('radImageSizeY_2')" />
+                            <input type="text" class="numeric_int" size="4" name="radImageSizeY_2" id="radImageSizeY_2" value="512" onchange="su2rad.dialog.radiance.onRadOptionChange('radImageSizeY_2')" />
                         </div>
                         <div class="gridLabel">type:</div>
                         <div class="gridCell">
-                            <select id="radImageType_2" name="radImageType_2" style="width: 90px;" onchange="selectImageType('radImageType_2')">
+                            <select id="radImageType_2" name="radImageType_2" style="width: 90px;" onchange="su2rad.dialog.radiance.selectImageType('radImageType_2')">
                                 <option value="normal" selected>normal</option>
                                 <option value="irridiance">irridiance</option>
                             </select>
@@ -384,11 +386,11 @@
                         </div>
                         <div class="gridLabel">size:</div>
                         <div class="gridCell">
-                            <input type="text" class="numeric_float" name="radZoneSize" id="radZoneSize" size="6" value="10.0" onchange="onRadOptionChange('radZoneSize')"/>
+                            <input type="text" class="numeric_float" name="radZoneSize" id="radZoneSize" size="6" value="10.0" onchange="su2rad.dialog.radiance.onRadOptionChange('radZoneSize')"/>
                         </div>
                         <div class="gridLabel">type:</div>
                         <div class="gridCell">
-                            <select id="radZoneType" name="radZoneType" onchange="onRadOptionChange('radZoneType')">
+                            <select id="radZoneType" name="radZoneType" onchange="su2rad.dialog.radiance.onRadOptionChange('radZoneType')">
                                 <option value="exterior" selected>exterior</option>
                                 <option value="interior">interior</option>
                             </select>
@@ -401,7 +403,7 @@
                         </div>
                         <div class="gridLabel">time:</div>
                         <div class="gridCell">
-                            <select id="radReport" name="radReport" onchange="onRadOptionChange('radReport')">
+                            <select id="radReport" name="radReport" onchange="su2rad.dialog.radiance.onRadOptionChange('radReport')">
                                 <option value="0" selected>none</option>
                                 <option value="60">1 min</option>
                                 <option value="120">2 min</option>
@@ -412,13 +414,13 @@
                         </div>
                         <div class="gridLabel">file:</div>
                         <div class="gridCell">
-                            <input type="text" class="fileNameInput" size="40" style="width:85px;" name="radReportFile" id="radReportFile" value="scene.log" onchange="onRadOptionChange('radReportFile')" />
+                            <input type="text" class="fileNameInput" size="40" style="width:85px;" name="radReportFile" id="radReportFile" value="scene.log" onchange="su2rad.dialog.radiance.onRadOptionChange('radReportFile')" />
                         </div>
                     </div>
                     <div class="gridColumn" style="clear:both;width:585px;margin-top:5px;">
                         <div class="gridLabel">render:</div>
                         <div class="gridCell" style="width:300px">
-                            <input type="text" style="width:287px;" name="radRenderLine_2" id="radRenderLine_2" value="" onchange="onRenderLineChange(this.value)" />
+                            <input type="text" style="width:287px;" name="radRenderLine_2" id="radRenderLine_2" value="" onchange="su2rad.dialog.radiance.onRenderLineChange(this.value)" />
                         </div>
                     </div>
                 </div>

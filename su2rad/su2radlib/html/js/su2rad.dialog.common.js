@@ -2,7 +2,6 @@
 
 //var su2rad = new Object();
 var su2rad = su2rad ? su2rad : new Object()
-
 su2rad.dialog = su2rad.dialog ? su2rad.dialog : new Object()
 
 // flag for backend 

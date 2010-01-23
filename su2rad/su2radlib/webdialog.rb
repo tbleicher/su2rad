@@ -30,7 +30,7 @@ class ExportDialogWeb < ExportBase
         ## allow load of existing rif files
         filepath = File.join(@exportOptions.scenePath,@exportOptions.sceneName)
         if File.exists?(filepath) && (@renderOptions.loaded?(filepath) == false)
-            dlg.execute_script("enableLoadSceneFile('%s')" % filepath)
+            dlg.execute_script("su2rad.dialog.exporter.enableLoadSceneFile('%s')" % filepath)
         end
     end
 

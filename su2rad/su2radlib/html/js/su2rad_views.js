@@ -53,8 +53,8 @@ ViewObject.prototype.calculateFoV = function (attr) {
 }
 
 ViewObject.prototype._calculateFoV = function(wanted) {
-    var imgHor = parseFloat(radOpts.ImageSizeX); 
-    var imgVert = parseFloat(radOpts.ImageSizeY);
+    var imgHor = parseFloat(su2rad.settings.radiance.ImageSizeX); 
+    var imgVert = parseFloat(su2rad.settings.radiance.ImageSizeY);
     if (this.vt == 'l' || this.vt == 'a') {
         // parallel and angular fisheye: linear
         if (wanted == 'vh') {
@@ -102,10 +102,10 @@ ViewObject.prototype.fitViewToImage = function () {
 
 ViewObject.prototype.getCheckBoxLabel = function(opt) {
     if (this._overrides[opt] == true) {
-        var action = " onClick=\"disableViewOverride('" + this.name + "','" + opt + "')\" "
+        var action = " onClick=\"su2rad.dialog.views.disableOverride('" + this.name + "','" + opt + "')\" "
         var text = "<input type=\"checkbox\"" + action + "checked />";
     } else {
-        var action = " onClick=\"enableViewOverride('" + this.name + "','" + opt + "')\" "
+        var action = " onClick=\"su2rad.dialog.views.enableOverride('" + this.name + "','" + opt + "')\" "
         var text = "<input type=\"checkbox\"" + action + " />";
     }
     text += "<a class=\"gridLabel\"" + action + ">-" + opt + ":";
@@ -117,10 +117,10 @@ ViewObject.prototype.getCheckBoxLabel = function(opt) {
 ViewObject.prototype.getDetailsHTML = function () {
     // title (clickable)
     if (this.show_details == false) {
-        text  = "<a class=\"clickable\" onclick=\"showViewDetails('" + this.name + "')\">";
+        text  = "<a class=\"clickable\" onclick=\"su2rad.dialog.views.showDetails('" + this.name + "')\">";
         lable = "[show details]";
     } else {
-        text  = "<a class=\"clickable\" onclick=\"hideViewDetails('" + this.name + "')\">";
+        text  = "<a class=\"clickable\" onclick=\"su2rad.dialog.views.hideViewDetails('" + this.name + "')\">";
         lable = "[hide details]";
     }
     if (this.pageChanged) {
@@ -140,8 +140,8 @@ ViewObject.prototype.getDetailsHTML = function () {
     if (this.pageChanged == true) {
         text += "<div class=\"highlightWarn\" style=\"padding-left:5px;\">"
         text += "page view has changed! "
-        text += "<input type=\"button\" value=\"apply to view\" onclick=\"onResetCamera('" + this.name + "')\">"
-        text += "<input type=\"button\" value=\"remove settings\" onclick=\"onRemoveSettings('" + this.name + "')\">"
+        text += "<input type=\"button\" value=\"apply to view\" onclick=\"su2rad.dialog.views.onResetCamera('" + this.name + "')\">"
+        text += "<input type=\"button\" value=\"remove settings\" onclick=\"su2rad.dialog.views.onRemoveSettings('" + this.name + "')\">"
         text += "</div>"
     }
     
@@ -160,7 +160,7 @@ ViewObject.prototype.getDetailsHTML = function () {
     text += "<div class=\"previewPanel\">"
     text += "<div class=\"imageSizeFrame\" " + this._getStyle(this._getImageSizeFrame()) + " >"
     text += "<div class=\"imageSizeView\" " +  this._getStyle(this._getImageSizeView()) + " >"
-    text += "<input type=\"button\" value=\"TODO: preview\" onclick=\"onCreatePreview('" + this.name + "')\">"
+    text += "<input type=\"button\" value=\"TODO: preview\" onclick=\"su2rad.dialog.views.onResetCamera('" + this.name + "')\">"
     text += "</div></div></div>"
     text += "</div>"
     return text
@@ -194,8 +194,8 @@ ViewObject.prototype._getImageSizeFrame = function () {
     // max w/h = 300/150 (defined in css)
     var maxW = 300.0;
     var maxH = 170.0;
-    var imgW = parseFloat(radOpts.ImageSizeX); 
-    var imgH = parseFloat(radOpts.ImageSizeY);
+    var imgW = parseFloat(su2rad.settings.radiance.ImageSizeX); 
+    var imgH = parseFloat(su2rad.settings.radiance.ImageSizeY);
     var frame = this._fitFrame(maxW,maxH,imgW,imgH);
     frame.m_left = 0;
     return frame;
@@ -226,7 +226,7 @@ ViewObject.prototype.getElementId = function (opt) {
 ViewObject.prototype._getViewTypeSelection = function () {
     var divtext = "<div><div class=\"checkBoxDummy\"></div>";
     divtext += "<div class=\"gridLabel\">-vt:</div>";
-    divtext += "<select id=\"" + this.getElementId('vt') + "\" onchange=\"onViewTypeChange('"+ this.name + "')\">"
+    divtext += "<select id=\"" + this.getElementId('vt') + "\" onchange=\"su2rad.dialog.views.onViewTypeChange('"+ this.name + "')\">"
     for (var i=0; i<this._viewTypes.length; i++) {
         vt = this._viewTypes[i]
         if (this.vt == vt[0]) {
@@ -247,7 +247,7 @@ ViewObject.prototype._getVectorValueInput = function (opt, style) {
         if (this._overrides[opt] == true) {
             divtext += "<input type=\"text\" class=\"viewOptionFloatValue\""
             divtext += " id=\"" + this.getElementId(opt) + "_" + i + "\" value=\"" + vect[i].toFixed(3) + "\""
-            divtext += " onchange=\"onViewVectorOptionChange('" + this.name + "','" + opt + "')\" />"
+            divtext += " onchange=\"su2rad.dialog.views.onViewVectorOptionChange('" + this.name + "','" + opt + "')\" />"
         } else {
             divtext += "<span class=\"defaultValue\">"
             divtext += vect[i].toFixed(3)
@@ -273,7 +273,7 @@ ViewObject.prototype._getFloatValueInput = function (opt) {
     if (this._overrides[opt] == true) {
         divtext += "<input type=\"text\" class=\"viewOptionFloatValue\""
         divtext += " id=\"" + this.getElementId(opt) + "\" value=\"" + this[opt].toFixed(3) + "\""
-        divtext += " onchange=\"onViewFloatOptionChange('" + this.name + "','" + opt + "')\" />"
+        divtext += " onchange=\"su2rad.dialog.views.onViewFloatOptionChange('" + this.name + "','" + opt + "')\" />"
     } else {
         divtext += "<span class=\"defaultValue\">"
         divtext += this[opt].toFixed(3)
@@ -499,7 +499,7 @@ ViewsListObject.prototype.setView = function (viewname, obj) {
     if (view) {
         if (view.setFromJSONObject(obj) == true) {
             log.debug("view '" + viewname + "' updated successfully")
-            updateViewDetailsList();
+            su2rad.dialog.views.updateList();
         }
     } else {
         log.error("view '" + viewname + "' not found")
@@ -519,7 +519,7 @@ ViewsListObject.prototype.setViewsList = function (newViews) {
             }
         }
     }
-    log.info("viewsList: " + this.views.length + " views");
+    log.info("su2rad.settings.views: " + this.views.length + " views");
 }
 
 ViewsListObject.prototype.selectAllViews = function (selected) {
@@ -545,9 +545,10 @@ ViewsListObject.prototype.toString = function (selection_only) {
 }
 
 
+su2rad.dialog.views = su2rad.dialog.views ? su2rad.dialog.views : new Object()
 
 
-function onActivateView(viewname) {
+su2rad.dialog.views.onActivateView = function (viewname) {
     if (su2rad.SKETCHUP == true) {
         window.location = 'skp:activateView@' + su2rad.utils.encodeJSON(viewname);
     } else {
@@ -555,21 +556,21 @@ function onActivateView(viewname) {
     }
 }
 
-function deselectAllViews() {
-    selectAllViews(false); 
+su2rad.dialog.views.deselectAllViews = function () {
+    this.selectAllViews(false); 
 }
 
-function selectAllViews(selected) {
+su2rad.dialog.views.selectAllViews = function (selected) {
     if (selected == false) {
         log.info('deselecting all views');
-        document.getElementById('selectAllViews').innerHTML = "<a class=\"clickable\" onclick=\"selectAllViews()\">[select all]</a>" 
+        document.getElementById('selectAllViews').innerHTML = "<a class=\"clickable\" onclick=\"su2rad.dialog.views.selectAllViews()\">[select all]</a>" 
     } else {
         log.info('selecting all views');
         selected = true;
-        document.getElementById('selectAllViews').innerHTML = "<a class=\"clickable\" onclick=\"deselectAllViews()\">[deselect all]</a>" 
+        document.getElementById('selectAllViews').innerHTML = "<a class=\"clickable\" onclick=\"su2rad.dialog.views.deselectAllViews()\">[deselect all]</a>" 
     }
-    viewsList.selectAllViews(selected);
-    updateViewsSummary();
+    su2rad.settings.views.selectAllViews(selected);
+    su2rad.dialog.views.updateSummary();
     if (su2rad.SKETCHUP == true) {
         window.location = 'skp:selectAllViews@' + selected;
     } else {
@@ -577,56 +578,56 @@ function selectAllViews(selected) {
     }
 }
 
-function hideViewDetails(viewname) {
-    viewsList[viewname].show_details = false;
-    updateViewDetailsList();
+su2rad.dialog.views.hideViewDetails = function (viewname) {
+    su2rad.settings.views[viewname].show_details = false;
+    su2rad.dialog.views.updateList();
 }
 
-function onRemoveSettings(viewname) {
-    //log.debug("onRemoveSettings('" + viewname + "')");
-    if (viewsList[viewname]) {
+su2rad.dialog.views.onRemoveSettings = function (viewname) {
+    //log.debug("su2rad.dialog.views.onRemoveSettings('" + viewname + "')");
+    if (su2rad.settings.views[viewname]) {
         log.info("removing all settings of view '" + viewname + "'");
         removeViewOverride(viewname, 'all');
     } else {
-        log.error("view '" + viewname + "' not found in viewsList!");
+        log.error("view '" + viewname + "' not found in su2rad.settings.views!");
     }
 }
 
-function onResetCamera(viewname) {
+su2rad.dialog.views.onResetCamera = function (viewname) {
     //XXX
-    if (viewsList[viewname]) {
-        var view = viewsList[viewname];
-        log.error("TEST: onResetCamera('" + viewname + "')");
+    if (su2rad.settings.views[viewname]) {
+        var view = su2rad.settings.views[viewname];
+        log.error("TEST: su2rad.dialog.views.onResetCamera('" + viewname + "')");
     } else {
-        log.error("view '" + viewname + "' not found in viewsList!");
+        log.error("view '" + viewname + "' not found in su2rad.settings.views!");
     }
 }
 
-function onCreatePreview(viewname) {
-    if (viewsList[viewname]) {
-        var view = viewsList[viewname];
-        log.error("TEST: onCreatePreview('" + viewname + "')");
+su2rad.dialog.views.onCreatePreview = function (viewname) {
+    if (su2rad.settings.views[viewname]) {
+        var view = su2rad.settings.views[viewname];
+        log.error("TEST: su2rad.dialog.views.onCreatePreview('" + viewname + "')");
     } else {
-        log.error("view '" + viewname + "' not found in viewsList!");
+        log.error("view '" + viewname + "' not found in su2rad.settings.views!");
     }
 }
 
-function onViewFloatOptionChange(viewname, opt) {
+su2rad.dialog.views.onViewFloatOptionChange = function (viewname, opt) {
     // callback for single value text fields
-    if (viewsList[viewname]) {
-        var view = viewsList[viewname];
+    if (su2rad.settings.views[viewname]) {
+        var view = su2rad.settings.views[viewname];
         var id = view.getElementId(opt);
         view.setValue(opt, document.getElementById(id).value);
         applyViewSettings(viewname);
     } else {
-        log.error("view '" + viewname + "' not found in viewsList!");
+        log.error("view '" + viewname + "' not found in su2rad.settings.views!");
     }
 }
 
-function onViewSelectionChange(viewname) {
+su2rad.dialog.views.onViewSelectionChange = function (viewname) {
     // callback for views checkboxes
-    if (viewsList[viewname]) {
-        var view = viewsList[viewname];
+    if (su2rad.settings.views[viewname]) {
+        var view = su2rad.settings.views[viewname];
         var id = view.getElementId('cb');
         if (document.getElementById(id).checked == true) {
             view.setSelection(true); 
@@ -635,24 +636,24 @@ function onViewSelectionChange(viewname) {
         }
         applyViewSettings(viewname);
     } else {
-        log.error("view '" + viewname + "' not found in viewsList!");
+        log.error("view '" + viewname + "' not found in su2rad.settings.views!");
     }
 }
 
-function onViewTypeChange(viewname) {
-    if (viewsList[viewname]) {
-        var view = viewsList[viewname];
+su2rad.dialog.views.onViewTypeChange = function (viewname) {
+    if (su2rad.settings.views[viewname]) {
+        var view = su2rad.settings.views[viewname];
         var id = view.getElementId('vt');
         view.setValue('vt', document.getElementById(id).value);
         applyViewSettings(viewname);
     } else {
-        log.error("view '" + viewname + "' not found in viewsList!");
+        log.error("view '" + viewname + "' not found in su2rad.settings.views!");
     }
 }
 
-function onViewVectorOptionChange(viewname, opt) {
-    if (viewsList[viewname]) {
-        var view = viewsList[viewname];
+su2rad.dialog.views.onViewVectorOptionChange = function (viewname, opt) {
+    if (su2rad.settings.views[viewname]) {
+        var view = su2rad.settings.views[viewname];
         var id = view.getElementId(opt);
         x = document.getElementById(id + '_0').value;
         y = document.getElementById(id + '_1').value;
@@ -660,38 +661,38 @@ function onViewVectorOptionChange(viewname, opt) {
         view.setValue(opt, [x,y,z]);
         applyViewSettings(viewname);
     } else {
-        log.error("view '" + viewname + "' not found in viewsList!");
+        log.error("view '" + viewname + "' not found in su2rad.settings.views!");
     }
 }
 
-function showViewDetails(viewname) {
-    viewsList[viewname].show_details = true;
-    updateViewDetailsList();
+su2rad.dialog.views.showDetails = function (viewname) {
+    su2rad.settings.views[viewname].show_details = true;
+    su2rad.dialog.views.updateList();
     log.debug("DEBUG: activateView('" + viewname + "')");
-    onActivateView(viewname);
+    this.onActivateView(viewname);
 }
 
-function updateViewDetailsList() {
+su2rad.dialog.views.updateList = function () {
     var text = "";
-    for(var i=0; i<viewsList.views.length; i++) {
-        var view = viewsList[viewsList.views[i]];
+    for(var i=0; i<su2rad.settings.views.views.length; i++) {
+        var view = su2rad.settings.views[su2rad.settings.views.views[i]];
         text += view.getDetailsHTML();
     }
     document.getElementById("viewDetails").innerHTML = text;
     $('.viewOptionFloatValue').numeric({allow:".-"});
 }
 
-function updateViewsSummary() {
+su2rad.dialog.views.updateSummary = function () {
     var text = '<div class="gridRow">';
     var col = 0;
-    for(var i=0; i<viewsList.views.length; i++) {
-        var view = viewsList[viewsList.views[i]];
+    for(var i=0; i<su2rad.settings.views.views.length; i++) {
+        var view = su2rad.settings.views[su2rad.settings.views.views[i]];
         if(view != null) {
-            text += _getViewSummaryDiv(view);
+            text += this.getViewSummaryDiv(view);
             col += 1;
         }
         // start new row after 3 views (except for end)
-        if (col == 3 && i != (viewsList.length-1)) {
+        if (col == 3 && i != (su2rad.settings.views.length-1)) {
             text += '</div><div class="gridRow">';
             col = 0;
         }
@@ -700,16 +701,16 @@ function updateViewsSummary() {
     document.getElementById("viewsSelection").innerHTML = text;
 }
 
-function _getViewSummaryDiv(view) {
+su2rad.dialog.views.getViewSummaryDiv = function (view) {
     // return <td> for view line (lable and checkbox)
     var text = '<div class="gridCell">';
     text += '<input id="' + view.getElementId('cb') + '"' 
-    text += 'type="checkbox" onClick="onViewSelectionChange(\'' + view.name + '\')"'
+    text += 'type="checkbox" onClick="su2rad.dialog.views.onViewSelectionChange(\'' + view.name + '\')"'
     if (view.selected == true) {
         text += ' checked'
     }
     text += "/> <a title=\"" + view.getToolTip() + "\" "
-    text += "onClick=\"onActivateView('" + view.name + "')\" >"
+    text += "onClick=\"su2rad.dialog.views.onActivateView('" + view.name + "')\" >"
     if (view.current == true) {
         text += "<i>" + view.name + "</i></a></div>";
     } else {
@@ -718,27 +719,27 @@ function _getViewSummaryDiv(view) {
     return text;
 }
 
-function disableViewOverride(viewname, opt) {
-    //log.debug("disableViewOverride('" + viewname + "','" + opt + "')");
-    if (viewsList[viewname]) {
-        var view = viewsList[viewname];
+su2rad.dialog.views.disableOverride = function (viewname, opt) {
+    //log.debug("su2rad.dialog.views.disableOverride('" + viewname + "','" + opt + "')");
+    if (su2rad.settings.views[viewname]) {
+        var view = su2rad.settings.views[viewname];
         view._overrides[opt] = false;
         removeViewOverride(viewname, opt);
     } else {
-        log.error("view '" + viewname + "' not found in viewsList!");
+        log.error("view '" + viewname + "' not found in su2rad.settings.views!");
     }
 }
 
-function enableViewOverride(viewname, opt) {
-    //log.debug("enableViewOverride('" + viewname + "','" + opt + "')");
-    if (viewsList[viewname]) {
-        var view = viewsList[viewname];
+su2rad.dialog.views.enableOverride = function (viewname, opt) {
+    //log.debug("su2rad.dialog.views.enableOverride('" + viewname + "','" + opt + "')");
+    if (su2rad.settings.views[viewname]) {
+        var view = su2rad.settings.views[viewname];
         view._overrides[opt] = true;
         // TODO: apply settings from text field  
-        updateViewDetailsList();
+        this.updateList();
         applyViewSettings(viewname);
     } else {
-        log.error("view '" + viewname + "' not found in viewsList!");
+        log.error("view '" + viewname + "' not found in su2rad.settings.views!");
     }
 }
 

@@ -9,20 +9,14 @@ su2rad.dialog = su2rad.dialog ? su2rad.dialog : new Object()
 // set environment
 su2rad.dialog.currentStatusDiv = "status_tab-export"
 
-var map, marker, lastPoint;
 
-// object instances
-try {
-    su2rad.exportSettings = new ExportSettingsObject();
-    var skyOptions     = new SkyOptionsObject();      // required by ModelLocationObject
-    var skyDateTime    = new SkyDateTimeObject();
-    var modelLocation  = new ModelLocationObject();
-    var radOpts        = new RadOptsObject();
-    var viewsList      = new ViewsListObject();
-} catch (e) {
-    logError(e)
-}
-
+su2rad.settings = su2rad.settings ? su2rad.settings : new Object()
+su2rad.settings.exporter = new ExportSettingsObject();
+su2rad.settings.sky      = new SkyOptionsObject();      // required by ModelLocationObject
+su2rad.settings.skytime  = new SkyDateTimeObject();
+su2rad.settings.radiance = new RadOptsObject();
+su2rad.settings.location = new ModelLocationObject();
+su2rad.settings.views    = new ViewsListObject();
 
 function setSelectionValue(id, value) {
     // set selection <id> to option <value>
@@ -102,7 +96,7 @@ su2rad.dialog.disableGlobalOption = function () {
             select.options[i] = null;
         }
     }
-    su2rad.exportSettings.setMode('by color');
+    su2rad.settings.exporter.setMode('by color');
     document.getElementById("global_coords_display").style.display='none';
 }
 
@@ -207,14 +201,14 @@ su2rad.dialog.updateExportPage = function () {
 su2rad.dialog.updateRenderPage = function () {
     log.debug("updating 'Render' page ...");
     // setRpictOptions();
-    updateRenderFormValues();
-    updateRpictValues();
-    updateRenderLine();
+    su2rad.dialog.radiance.update();
+    su2rad.dialog.radiance.updateRpictValues();
+    su2rad.dialog.radiance.updateRenderLine();
 }
 
 su2rad.dialog.updateViewsPage = function () {
     log.debug("updating 'Views' page ...");
-    updateViewDetailsList();
+    su2rad.dialog.views.updateList();
 }
 
 su2rad.dialog.updateMaterialsPage = function () {
