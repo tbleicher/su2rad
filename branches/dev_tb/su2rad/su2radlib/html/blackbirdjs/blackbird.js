@@ -300,6 +300,15 @@
 			function( msg ) { addMessage( 'info', msg ); },
 		error:
 			function( msg ) { addMessage( 'error', msg ); },
+                trace:
+                        function( err ) {
+                                var msg = err.toString();
+                                msg = msg + "<br/>e.name=" + err.name;
+                                msg = msg + "<br/>e.message=" + err.message;
+                                msg = msg + "<br/>e.fileName=" + err.fileName;
+                                msg = msg + "<br/>e.lineNumber=" + err.lineNumber;
+                                addMessage( 'error', msg);
+                        },
 		profile: 
 			function( label ) {
 				var currentTime = new Date(); //record the current time when profile() is executed

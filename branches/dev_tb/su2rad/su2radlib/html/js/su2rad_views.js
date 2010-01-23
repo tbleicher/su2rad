@@ -346,7 +346,7 @@ ViewObject.prototype.setValue = function (attr, newval) {
 ViewObject.prototype._setValue = function (attr, newval) {
     if (attr == 'name') {
         this.name = newval
-        this.id = replaceChars(this.name);
+        this.id = su2rad.utils.replaceChars(this.name);
         return true
     }
     if (attr == 'vt') {
