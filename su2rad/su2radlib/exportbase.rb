@@ -425,6 +425,9 @@ class ExportBase
                     next
                 end
                 rg = RadianceGroup.new(e)
+                if rg.isNumeric?(e)
+                    printf("NUMERIC GROUP %s\n" % e.name)
+                end
                 ref = rg.export(parenttrans)
                 references.push(ref)
             elsif e.class == Sketchup::ComponentInstance

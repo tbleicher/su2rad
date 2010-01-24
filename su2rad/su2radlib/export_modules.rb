@@ -1,4 +1,274 @@
 
+module Geometry
+
+    def getCenter(vertices)
+        x_sum = 0
+        y_sum = 0
+        z_sum = 0
+        vertices.each { |v|
+            x_sum += v.position.x
+            y_sum += v.position.y
+            z_sum += v.position.z
+        }
+        n = vertices.length
+        if n > 0
+            return Geom::Point3d.new(x_sum/n, y_sum/n, z_sum/n)
+        else 
+            return nil
+        end
+    end
+
+    def getGlobalTransformation(e)
+        ## find global transformation for entity <e>
+        transStack = []
+        while e.parent
+            if e.parent == Sketchup.active_model
+                break
+            else
+                ## e.parent is SketchUp::ComponentDefinition
+                e = e.parent.instances[0]
+                transStack.push(e.transformation)
+            end
+        end
+        transStack.reverse!
+        gt = Geom::Transformation.new()
+        transStack.each { |t|
+            gt *= t
+        }
+        return gt
+    end
+    
+    def getNearestPoint(p, verts)
+        return verts[getNearestPointIndex(p,verts)]
+    end
+    
+    def getNearestPointDistance(p, verts)
+        v = getNearestPoint(p, verts)
+        return p.distance(v.position)
+    end
+    
+    def getNearestPointIndex(p, verts)
+        dists = verts.collect { |v| p.distance(v.position) }
+        min = dists.sort[0]
+        idx = 0
+        verts.each_index { |i|
+            v = verts[i]
+            if p.distance(v) == min
+                idx = i
+                break
+            end
+        }
+        return idx
+    end
+   
+    def getPolyMesh(face, trans=nil)
+        polymesh = face.mesh 7 
+        if trans != nil
+            polymesh.transform! trans
+        end
+        return polymesh
+    end
+        
+    
+end
+
+
+
+module NumericEntity
+
+    def findIntersection(line, x, y)
+        ## Sketchup's intersect_line_line returns garbage.
+        ## Our requirements are simple so let's do our own function.
+        dx = line[0][0] - line[1][0]
+        dy = line[0][1] - line[1][1]
+        if y == 0
+            ## find intersection on x
+            n = (x-line[0][0])/dx
+            y = n*dy+line[0][1]
+        else
+            n = (y-line[0][1])/dy
+            x = n*dx+line[0][0]
+        end
+        return x,y
+    end
+    
+    def getBBoxOnGrid(p1,p2,p3)
+        ## return bbox for 0.25m grid
+        xs = [p1.x,p2.x,p3.x]
+        ys = [p1.y,p2.y,p3.y]
+        xs.sort!
+        ys.sort!
+        unit = getConfig('UNIT')
+        gsX = getConfig('GRIDSPACINGX')
+        gsY = getConfig('GRIDSPACINGY')
+        xmin = xs[0]*unit - gsX
+        xmin = ((xmin/gsX).to_i-1) * gsX
+        xmax = xs[2]*unit + gsX
+        xmax = ((xmax/gsX).to_i+1) * gsX
+        ymin = ys[0]*unit - gsY
+        ymin = ((ymin/gsY).to_i-1) * gsY
+        ymax = ys[2]*unit + gsY
+        ymax = ((ymax/gsY).to_i+1) * gsY
+        return [xmin/unit, ymin/unit, xmax/unit, ymax/unit]
+    end
+    
+    def getNumericEdgePoints(face)
+        ## return intersection points of edge with 0.25m grid lines
+        unit = getConfig('UNIT')
+        gsX = getConfig('GRIDSPACINGY')
+        gsY = getConfig('GRIDSPACINGX')
+        dx = gsX/unit
+        dy = gsY/unit
+        entities = Sketchup.active_model.entities
+        
+        bbox = Geom::BoundingBox.new()
+        edgePoints = []
+        edgeLines = []
+        zValues = []
+
+        ## add corner points first
+        face.edges.each { |oedge|
+            edge = entities.add_line(oedge.start.position, oedge.end.position)
+            entities.transform_entities($globaltrans, edge)
+            s = edge.start.position
+            e = edge.end.position
+            edgePoints.push("%.2f %.2f %.2f 0 0 1" % [s.x*unit, s.y*unit, s.z*unit])
+            zValues.push(s.z)
+            bbox.add(s)
+            bbox.add(e)
+            edgeLines.push([[s.x,s.y,0],[e.x,e.y,0]])
+            entities.erase_entities(edge)
+        }
+        
+        ## find average z-value of corners
+        if zValues.length > 0
+            sum = 0
+            zValues.each { |z| sum += z }
+            zValue = sum / zValues.length
+        else
+            zValue = 0
+        end
+        uimessage("number of edge verts : #{edgePoints.length}\n", 2)
+
+        ## find edge intersections with grid lines
+        gridBBox = getBBoxOnGrid(bbox.min, bbox.max, bbox.max)
+        edgeLines.each { |line|
+            xmin = [line[0][0],line[1][0]].min
+            xmax = [line[0][0],line[1][0]].max
+            ymin = [line[0][1],line[1][1]].min
+            ymax = [line[0][1],line[1][1]].max
+            deltaX = xmax - xmin
+            deltaY = ymax - ymin
+            
+            if deltaX > deltaY
+                ## edge is more horizontal; intersect with x-grid
+                y1 = gridBBox[1]
+                y2 = gridBBox[3]
+                x = gridBBox[0]
+                while x <= gridBBox[2]
+                    if (xmin < x) && (x < xmax)
+                        px,py = findIntersection(line, x, 0)
+                        if px && (xmin < px) && (xmax > px)
+                            edgePoints.push("%.2f %.2f %.2f 0 0 1" % [px*unit, py*unit, zValue*unit])
+                        end
+                    end
+                    x += dx
+                end
+                
+            else
+                ## edge is more vertical; intersect with y-grid
+                x1 = gridBBox[0]
+                x2 = gridBBox[2]
+                y = gridBBox[1]
+                while y <= gridBBox[3]
+                    if (ymin < y) && (y < ymax)
+                        px,py = findIntersection(line, 0, y)
+                        if py && (ymin < py) && (ymax > py)
+                            edgePoints.push("%.2f %.2f %.2f 0 0 1" % [px*unit, py*unit, zValue*unit])
+                        end
+                    end
+                    y += dy
+                end
+            end 
+        }
+        edgePoints.uniq!
+        uimessage("number of edge points: #{edgePoints.length}\n", 2)
+        return edgePoints
+    end
+    
+    def getNumericMeshes(e,trans=nil)
+        ## return polymesh for each numeric face in <e>
+        if not trans
+            trans = getGlobalTransformation(e)
+        end
+        meshes = []
+        if e.class == Sketchup::Face
+            if isNumeric?(e)
+                meshes.push(getPolyMesh(e,trans))
+            end
+        elsif e.class == Sketchup::Group
+            e.entities.each { |ee|
+                meshes += getNumericMeshes(ee, trans*e.transformation)
+            }
+        elsif e.class == Sketchup::ComponentInstance
+            e.definition.entities.each { |ee|
+                meshes += getNumericMeshes(ee, trans*e.transformation)
+            }
+        end
+        meshes.compact!
+        return meshes
+    end
+    
+    def getNumericPoints(face)
+        ## return array of points on grid lines within face    
+        unit = getConfig('UNIT')
+        gsX = getConfig('GRIDSPACINGX')
+        gsY = getConfig('GRIDSPACINGY')
+        dx = gsX/unit
+        dy = gsY/unit
+        
+        points = getNumericEdgePoints(face)
+        polymeshes = getNumericMeshes(face, $globaltrans)
+        polymeshes.each { |pm|
+            pm.polygons.each { |p|
+                verts = []
+                [0,1,2].each { |i|
+                    idx = p[i]
+                    verts.push(pm.point_at(idx.abs()))
+                }
+                bbox = getBBoxOnGrid(*verts)
+                z = (verts[0].z + verts[1].z + verts[2].z) / 3.0
+                x = bbox[0]
+                while x <= bbox[2]
+                    y = bbox[1] 
+                    while y <= bbox[3]
+                        pt = Geom::Point3d.new(x,y,z)
+                        if Geom::point_in_polygon_2D pt, verts, true
+                            points.push("%.2f %.2f %.2f 0 0 1" % [pt.x*unit, pt.y*unit, pt.z*unit])
+                        end
+                        y += dy
+                    end
+                    x += dx
+                end
+            }
+        }
+        return points
+    end
+    
+    def isNumeric?(entity)
+        ## return true for entities with numeric attributes
+        if entity.layer.name.downcase == 'numeric'
+            return true
+        elsif entity.attribute_dictionary('SU2RAD_NUMERIC')
+            return true
+        end
+        return false
+    end
+    
+end
+
+
+
 module InterfaceBase
 
     def initLog(lines=[])

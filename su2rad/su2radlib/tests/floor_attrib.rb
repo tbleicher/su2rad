@@ -17,7 +17,7 @@ def getOffsetPoints(f)
     offsetDistance = 0.5 / 0.0254
     mesh = f.mesh(0)
     lines = []
-    f.edges.each { |edge|
+    f.outer_loop.edges.each { |edge|
         p1 = edge.start.position
         p2 = edge.end.position
         vector = Geom::Vector3d.new(p2.x-p1.x, p2.y-p1.y, p2.z-p1.z)
@@ -45,8 +45,8 @@ def getOffsetPoints(f)
     }
     return points.collect { |p| p.offset(zVector) }
 end
-        
-def addWorkplane(name="workplane")
+
+def addWorkplane(name="")
     faces = []
     Sketchup.active_model.selection.each { |e|
         if e.class == Sketchup::Face
@@ -54,14 +54,22 @@ def addWorkplane(name="workplane")
         end
     }
     if faces.length != 0
-        grp = faces[0].parent.entities.add_group()
+        parent = faces[0].parent
+        parent.name = parent.name.gsub("#", "_")
+        grp = parent.entities.add_group()
+        if name == ""
+            if parent.name == ""
+                parent.name = (0..3).map{65.+(rand(25)).chr}.join 
+            end
+            name = parent.name + "_workplane"
+        end
+        grp.name = name
         faces.each { |f|
             points = getOffsetPoints(f)
-            #points.each { |p| printf("p = %s\n" % p.to_s) }
             newf = grp.entities.add_face(points)
+            newf.set_attribute("SU2RAD_NUMERIC", "type", "workplane")
         }
-        grp.name = name
-        grp.set_attribute("SU2RAD_NUMERIC", "type", "workplane")
+        grp.set_attribute("SU2RAD_NUMERIC", "type", "workplanegroup")
     end
 end
 

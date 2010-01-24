@@ -88,7 +88,7 @@ require "su2radlib/tests/floor_attrib.rb"
 
 
 ## define defaults if config file is messed up
-$SU2RAD_LOGLEVEL    = 3        #XXX report warnings and errors only
+$SU2RAD_LOGLEVEL    = 0        #XXX report warnings and errors only
 $SU2RAD_LOG = []
 
 ## load configuration from file
@@ -286,4 +286,16 @@ else
     file_loaded("su2rad.rb")
 end
 
-
+def testExport()
+    begin
+        $SU2RAD_CONTEXT = ExportContext.new()
+        $SU2RAD_CONFIG = RunTimeConfig.new()
+        $SU2RAD_COUNTER = ProgressCounter.new()
+        rs = RadianceScene.new()
+        rs.prepareExport()
+        rs.startExportWeb()
+    rescue => e 
+        msg = "%s\n\n%s" % [$!.message,e.backtrace.join("\n")]
+        UI.messagebox msg            
+    end 
+end
