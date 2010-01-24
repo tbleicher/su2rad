@@ -376,6 +376,7 @@ class RadianceScene < ExportBase
     end
     
     def startExportWeb(selected_only=0)
+        uimessage("=== STARTING EXPORT ===", 0)
         sceneDir = getConfig('SCENEPATH')
         if renameExisting(sceneDir) == false
             uimessage("Could not rename existing directory '#{sceneDir}' - files will be replaced", -1)
