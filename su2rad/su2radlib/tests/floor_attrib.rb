@@ -54,14 +54,15 @@ def addWorkplane(name="")
         end
     }
     if faces.length != 0
-        parent = faces[0].parent
-        parent.name = parent.name.gsub("#", "_")
-        grp = parent.entities.add_group()
+        compDef = faces[0].parent
+        parentInstance = compDef.instances[0]
+        parentInstance.name = parentInstance.name.gsub("#", "_")
+        grp = compDef.entities.add_group()
         if name == ""
-            if parent.name == ""
-                parent.name = (0..3).map{65.+(rand(25)).chr}.join 
+            if parentInstance.name == ""
+                parentInstance.name = (0..3).map{65.+(rand(25)).chr}.join 
             end
-            name = parent.name + "_workplane"
+            name = parentInstance.name + "_workplane"
         end
         grp.name = name
         faces.each { |f|
@@ -84,7 +85,6 @@ def addWorkplaneCmd()
         printf("%s\n" % msg)
     end
 end
-
 
 
 

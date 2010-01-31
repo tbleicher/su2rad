@@ -1,10 +1,10 @@
 require 'sketchup.rb'
 require 'export_modules.rb'
-require 'exportbase.rb'
+#require 'exportbase.rb'
 require 'filesystemproxy.rb'
 
 
-class SettingsDialog < ExportBase
+class SettingsDialog
     
     include JSONUtils
     include InterfaceBase

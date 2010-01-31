@@ -85,6 +85,7 @@ require "su2radlib/radiancescene.rb"
 require "su2radlib/webdialog.rb"
 require "su2radlib/config_class.rb"
 require "su2radlib/tests/floor_attrib.rb"
+require "su2radlib/attributes_room.rb"
 
 
 ## define defaults if config file is messed up
@@ -258,7 +259,8 @@ def addRadianceMenu
     radmenu.add_separator()
     
     attrmenu = radmenu.add_submenu("attributes ...")
-    attrmenu.add_item("workplane") { addWorkplaneCmd() }
+    attrmenu.add_item("workplane") { startWorkplaneTool() }
+    #attrmenu.add_item("create workplane") { createWorkplaneCmd() }
     radmenu.add_separator()
     
     radmenu.add_item("Preferences") { preferencesDialog() }
