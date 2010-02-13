@@ -2,6 +2,9 @@
 var su2rad = su2rad ? su2rad : new Object()
 su2rad.utils = su2rad.utils ? su2rad.utils : new Object()
 
+su2rad.utils.HEXMAP = '0123456789ABCDEF'
+su2rad.utils.CHARMAP = " !\"#$%&amp;'()*+'-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~"
+
 su2rad.utils.arrayFromJSON = function(json) {
     try {
         eval("var array = " + json);
@@ -22,6 +25,16 @@ su2rad.utils.decodeText = function (encText) {
     var text = unescape(encText)
     text = text.replace(/\+/g,' ');
     return text;
+}
+
+su2rad.utils.encodeHEX = function (s) {
+    var hex = ""
+    for (var i=0; i<s.length; i++) {
+        var p = this.CHARMAP.indexOf(s[i]);
+        var d = (p <= -1) ? 0 : (p + 32);
+        hex = hex + this.HEXMAP.charAt((d - d % 16)/16) + this.HEXMAP.charAt(d % 16)
+    }
+    return hex;
 }
 
 su2rad.utils.encodeJSON = function (json) {
