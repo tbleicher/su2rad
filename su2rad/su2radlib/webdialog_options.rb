@@ -98,13 +98,14 @@ class ExportOptions
         uimessage("setExportOptions() ...", 2)
         _setDialogOptions(dlg)
         json = toJSON()
+        printf("setExportOptions: json=\n%s\n" % json)
         dlg.execute_script( "su2rad.dialog.exporter.setExportOptionsJSON('%s')" % escape_javascript(json) )
     end 
     
     def toJSON
         ## collect export options and return JSON string
         dict = _getSettings()
-        json = getJSONDictionary(dict)
+        json = getJSONDictionary2(dict)
         return json
     end
         
@@ -236,6 +237,7 @@ class RenderOptions
         ## set general export options
         uimessage("setRenderOptions() ...", 2)
         json = toJSON()
+        printf("setRenderOptions: json=\n%s\n" % json)
         dlg.execute_script( "su2rad.dialog.radiance.setRenderOptionsJSON('%s')" % escape_javascript(json) )
     end 
    
@@ -260,7 +262,7 @@ class RenderOptions
     
     def toJSON
         dict = _getSettingsDict()
-        json = getJSONDictionary(dict)
+        json = getJSONDictionary2(dict)
         return json
     end
     
@@ -416,6 +418,7 @@ class SkyOptions
         uimessage("setSkyOptions() ...\n", 2)
         #_syncSettings()
         json = toJSON()
+        printf("setSkyOptions: json=\n%s\n" % json)
         dlg.execute_script( "su2rad.dialog.location.setShadowInfoJSON('%s')" % escape_javascript(json) )
     end
     
@@ -429,7 +432,7 @@ class SkyOptions
     end
         
     def toJSON
-        json = getJSONDictionary(@_settings)
+        json = getJSONDictionary2(@_settings)
         return json
     end
 

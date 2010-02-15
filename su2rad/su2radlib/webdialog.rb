@@ -147,24 +147,33 @@ class ExportDialogWeb < ExportBase
         dlg.show {
             uimessage("su2rad.dialog.setSketchup()", 2)
             dlg.execute_script("su2rad.dialog.setSketchup()")
-            begin
-                radsunpath = RadSunpath.getProgramPath()
-                if radsunpath
-                    dlg.execute_script("document.getElementById('showRadSunpath').style.display='';")
-                end
-            rescue NameError
-                uimessage("Module 'RadSunpath' not loaded.", 1)
-            end
-            @exportOptions.setExportOptions(dlg, '')
-            @renderOptions.setRenderOptions(dlg, '')
-            @viewsList.setViewsList(dlg, '')
-            @skyOptions.setSkyOptions(dlg, '')
-            @materialLists.setLists(dlg)
-            ## add option for RadSunpath
+            showRadSunpath(dlg)
+            setOptions(dlg)
             dlg.execute_script("updateExportPage()")
         }
     end ## end def show
-        
+
+    def showRadSunpath(dlg)
+        ## add option for RadSunpath
+        begin
+            radsunpath = RadSunpath.getProgramPath()
+            if radsunpath
+                ## unhide RadSunpath option in dialog
+                dlg.execute_script("document.getElementById('showRadSunpath').style.display='';")
+            end
+        rescue NameError
+            uimessage("module 'RadSunpath' not loaded", 1)
+        end
+    end
+
+    def setOptions(dlg)
+        @exportOptions.setExportOptions(dlg, '')
+        @renderOptions.setRenderOptions(dlg, '')
+        @viewsList.setViewsList(dlg, '')
+        @skyOptions.setSkyOptions(dlg, '')
+        @materialLists.setLists(dlg)
+    end
+    
     def startExport(dlg,params)
         #XXX @scene.setOptionsFromDialog(@exportOptions,@renderOptions,@skyOptions,@viewsList)
         @scene.prepareExport()

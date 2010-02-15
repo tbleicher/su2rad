@@ -42,7 +42,7 @@
         <script type="text/javascript" src="./js/su2rad_views.js"></script>
         <script type="text/javascript" src="./js/su2rad_googlemap.js"></script>
         <script type="text/javascript" src="./js/su2rad_geonames.js"></script>
-        <script type="text/javascript" src="./js/su2rad.dialog.sky.js"></script>
+        <script type="text/javascript" src="./js/su2rad.dialog.sky.controllers.js"></script>
         <script type="text/javascript" src="./js/su2rad_location.js"></script>
         <script type="text/javascript" src="./js/su2rad_radopts.js"></script>
         <script type="text/javascript" src="./js/su2rad_materials.js"></script>
@@ -448,7 +448,7 @@
                     SketchUp model settings
                 </h3>
                 
-                <div class="optionsColumn" style="height:120px">
+                <div class="optionsColumn" id="skyControllerOptions" style="height:120px">
                     <div class="optionsHeader">
                         <span class="gridLabel">generator:</span>
                         <select id="skyGenerator" name="skyGenerator" onchange="su2rad.dialog.sky.setGenerator(this.value)">
@@ -457,52 +457,6 @@
                             <!--<option value="hdr-image">hdr-image</option>-->
                         </select>
                     </div>
-                    
-                    <div class="optionsRow" id="genskyTypeOptions" style="width:210px">
-                        <div class="optionsRow" style="width:160px">
-                            <span class="gridLabel">type:</span>
-                            <select id="genskySkyType" name="genskySkyType" style="width:80px;" onchange="su2rad.dialog.sky.onSkyTypeChange()">
-                                <option value="u">uniform</option>
-                                <option value="c" selected>overcast</option>
-                                <option value="i">interm.</option>
-                                <option value="s">clear</option>
-                            </select>
-                        </div>
-                        <div id="genskySunOption" style="display:none;width:45px">
-				<input type="checkbox" id="sunOptionCB" value="sunOption"
-				onClick="su2rad.dialog.sky.onSkyTypeChange()"><span style="font-size:12px">sun</span>
-                        </div>
-                    </div>
-                    
-                    <div class="optionsRow" id="gendaylitTypeOptions">
-                        <div class="optionsRow">
-                            <span class="gridLabel">params:</span>
-                            <select id="gendaylitSkyType" name="gendaylitSkyType" style="width:120px;" onchange="su2rad.dialog.sky.onSkyTypeChange()">
-                                <option value="P">epsilon/delta</option>
-                                <option value="W" selected>irridiance</option>
-                                <option value="L">illuminance</option>
-                            </select>
-                        </div>
-                    </div>
-                
-                    <div class="optionsRow">
-                        <span class="gridLabel">date:</span>
-                        <input type="text" class="timeOptionInput" name="skyDateMonth" id="skyDateMonth" value="03"
-                        onchange="su2rad.dialog.sky.setDateTime('skyDateMonth')"/>
-                        <span class="skyOption" style="width:12px">/</span>
-                        <input type="text" class="timeOptionInput" name="skyDateDay" id="skyDateDay" value="21"
-                        onchange="su2rad.dialog.sky.setDateTime('skyDateDay')"/>
-                    </div>
-                
-                    <div class="optionsRow">
-                        <span class="gridLabel">time:</span>
-                        <input type="text" class="timeOptionInput" name="skyTimeHour" id="skyTimeHour" value="12"
-                        onchange="su2rad.dialog.sky.setDateTime('skyTimeHour')"/>
-                        <span class="skyOption" style="width:12px">:</span>
-                        <input type="text" class="timeOptionInput" name="skyTimeMinute" id="skyTimeMinute" value="00"
-                        onchange="su2rad.dialog.sky.setDateTime('skyTimeMinute')"/>
-                    </div>
-
                 </div>
 
                 <div class="skyGeneratorOptions" id="skyOptsGensky">

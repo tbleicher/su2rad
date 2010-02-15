@@ -526,6 +526,7 @@ class SketchupViewsList
             json += "%s," % v.toJSON()
         }
         json += "]"
+        printf("setViewsList: json=\n%s\n" % json)
         dlg.execute_script("setViewsListJSON('%s')" % escape_javascript(json) )
     end
 
