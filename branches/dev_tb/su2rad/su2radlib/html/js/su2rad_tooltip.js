@@ -57,20 +57,20 @@ tooltips.rpict.w  = "suppress warning messages"
 
 
 function getToolTip(app, opt) {
-    var text = "";
+    var span = document.createElement("SPAN")
+    span.className = "tooltip"
     if (false && su2rad.PLATFORM == "Windows") {
-        return text;
+        return span;
     } else {
         var s = tooltips[app][opt];
-        if (s) {
-            text += "<span class=\"tooltip\">" + htmlEncode(s) + "</span>";
-        } else {
+        if (!s) {
             log.warn("no tooltip defined for app '" + app + "', option '" + opt + "'");
             setToolTip(app, opt, "TODO: tooltip for app '" + app + "', option '" + opt + "'")
-            text += "<span class=\"tooltip\">TODO: tooltip for option '" + opt + "'</span>";
+            s = "TODO: tooltip for option '" + opt + "'";
         }
-        return text
+        span.appendChild(document.createTextNode(s))
     }
+    return span
 }
  
  

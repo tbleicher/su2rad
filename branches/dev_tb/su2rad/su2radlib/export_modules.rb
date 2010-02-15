@@ -398,6 +398,18 @@ module JSONUtils
     
     def getJSONDictionary(dict)
         if(dict == nil)
+            return "{}"
+        else
+            pairs = []
+            dict.each_pair { |k,v|
+                pairs.push("%s:%s" % [toStringJSON(k),toStringJSON(v)])
+            }
+        end
+        return "{%s}" % pairs.join(',')
+    end
+
+    def getJSONDictionary2(dict)
+        if(dict == nil)
             return "[]"
         else
             json = "["
@@ -591,12 +603,12 @@ module RadiancePath
             begin
                 rtmfile = getFilename("objects/#{name}.rtm")
                 cmd = "\"%s\" \"#{objfile}\" \"#{rtmfile}\"" % getConfig('OBJ2MESH')
+                uimessage("cmd=" + cmd, 4)
                 result = runSystemCmd(cmd)
                 if result == true and File.exists?(rtmfile)
                     return "\n#{name} mesh #{name}_obj\n1 objects/#{name}.rtm\n0\n0"
                 else
                     msg = "Error: could not convert obj file '#{objfile}'"
-                    uimessage(msg, -2)
                     return "## #{msg}"
                 end
             rescue => e
@@ -636,8 +648,10 @@ module RadiancePath
            cmd.gsub!(/\//, '\\')
         end
         uimessage("system cmd= %s" % cmd, 3)
+        printf("system cmd= %s\n" % cmd)
         result = system(cmd)
         uimessage("    result= %s" % result, 3)
+        printf("    result= %s\n" % result)
         return result
     end
 

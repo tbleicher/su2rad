@@ -540,7 +540,7 @@ input.file {
 .tooltip {
     display: none;
 }
-a.gridLabel:hover .tooltip {
+span.gridLabel:hover .tooltip {
     display: block;
     position: relative;
     font-size: 12px;
