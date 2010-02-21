@@ -109,7 +109,7 @@ ViewObject.prototype.getCheckBoxLabel = function(opt) {
         var text = "<input type=\"checkbox\"" + action + " />";
     }
     text += "<a class=\"gridLabel\"" + action + ">-" + opt + ":";
-    text += getToolTip('rpict', opt);
+    text += getToolTipHTML('rpict', opt);
     text += "</a>";
     return text;
 }

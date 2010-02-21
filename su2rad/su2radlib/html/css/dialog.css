@@ -343,6 +343,7 @@ input.file {
 
 
 
+
 .skyOption {
     /*font-family: "Monaco", "Courier New", Courier, monospace;*/
     font-weight: bold;
@@ -413,6 +414,9 @@ input.file {
     size: 2;
     padding: 0;
     margin: 0;
+    font-weight: bold;
+    background-color: #d9eaf4;
+    height: 20px;
 }
 .timeOptionsLeft {
     padding: 0;
@@ -572,10 +576,16 @@ span.gridLabel:hover .tooltip {
     background-color: #d9eaf4;
     height: 20px;
 }
+
 .rpictOverrideHeader {
     font-weight: bold;
-    padding-left: 0.5em;
-    /* padding-top: 2.5em; */
+    padding-left: 3px;
+    color: #27537a; /* blue-grey */
+}
+
+.skyOptionHeader {
+    font-weight: bold;
+    padding-left: 3px;
     color: #27537a; /* blue-grey */
 }
 
@@ -591,6 +601,14 @@ span.gridLabel:hover .tooltip {
 .skyGeneratorOptions * div.optionsRow {
     width: 80px;
 }
+
+#skyDateTimeOptions  div.optionsRow {
+    width: 210px;
+}
+#skyDateTimeOptions * span.gridLabel {
+    width: 75px;
+}
+
 
 #scenePath {
     float: left;

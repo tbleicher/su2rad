@@ -10,13 +10,49 @@ su2rad.dialog.weatherdata = function () {
 };
 
 su2rad.dialog.weatherdata.initPage = function () {
-    // set up canvas
+    this.createLayout("tab-fields")
     document.getElementById("messagearea").value = '';
     this.gCanvas = new su2rad.canvas.GridCanvas();
     this.gCanvas.setCanvasId('cv');
     this.evaluateSketchup(); 
     su2rad.dialog.evaluateSketchup = this.evaluateSketchup
     this.updateUI();
+}
+
+su2rad.dialog.weatherdata.createLayout = function (containerId) {
+    // set up control panel, canvas and message area
+    log.debug("creating climate data layout in '" + containerId + "'")
+
+    var container = document.getElementById(containerId)
+    while (container.hasChildNodes() == true) {
+        container.removeChild(container.firstChild)
+    }
+    container.setAttribute("style", "width:850px")
+    
+    var title = document.createElement("H3")
+    title.id = "pageTitle"
+    title.appendChild(document.createTextNode('climate data file'))
+    container.appendChild(title)
+
+    container.appendChild(su2rad.dialog.weatherdata.createGraphOptionsPanel())
+    
+    var canvasDiv = document.createElement("DIV")
+    canvasDiv.id = "canvasContainer"
+    canvasDiv.setAttribute("style", "width:680px; height:400px; padding:0px")
+    //TODO: resize option?
+    var canvas = document.createElement("CANVAS")
+    canvas.id = "cv"
+    canvas.setAttribute("width", 680)
+    canvas.setAttribute("height", 400)
+    canvasDiv.appendChild(canvas)
+    container.appendChild(canvasDiv)
+    
+    // message area
+    var msgArea = document.createElement("TEXTAREA")
+    msgArea.id = "messagearea"
+    msgArea.setAttribute("cols", "100")
+    msgArea.setAttribute("rows", "8")
+    container.appendChild(msgArea)
 }
 
 su2rad.dialog.weatherdata.onResizeCanvas = function () {
@@ -33,6 +69,8 @@ su2rad.dialog.weatherdata.onResizeCanvas = function () {
 
 su2rad.dialog.weatherdata.evaluateSketchup = function () {
     log.debug("weatherdata.evaluateSketchup() su2rad.SKETCHUP='" + su2rad.SKETCHUP + "'")
+    log.debug("weatherdata.evaluateSketchup() su2rad.NSIDOM='" + su2rad.NSIDOM + "'")
+    return
     document.getElementById("loadFileWarning").style.display='';
     document.getElementById("loadFileSUDiv").style.display='none';
     document.getElementById("graphOptions").style.display='none';
@@ -47,7 +85,7 @@ su2rad.dialog.weatherdata.evaluateSketchup = function () {
         document.getElementById("loadFileSUDiv").style.display='';
         document.getElementById("graphOptions").style.display='';
         document.getElementById("statsDiv").style.display='';
-    } else if (su2rad.NSIDOM == true)
+    } else if (su2rad.NSIDOM == true) {
         // this is Firefox -> enable direct load of file text
         log.info("nsIDOMFileList available");
         document.getElementById("loadFileWarning").style.display='none';
@@ -146,14 +184,9 @@ su2rad.dialog.weatherdata.setFilename = function (filename) {
     while (title.hasChildNodes() == true) {
         title.removeChild(title.firstChild)
     }
+    var tNode = document.createTextNode("file: [simulated values]");
     if (filename != "") {
-        var tNode = document.createTextNode("file: " + filename);
-        if (su2rad.SKETCHUP == true) {
-            document.getElementById("useEPWInSUDiv").style.display='';
-        }
-    } else {
-        var tNode = document.createTextNode("file: [simulated values]");
-        document.getElementById("useEPWInSUDiv").style.display='none';
+        tNode = document.createTextNode("file: " + filename);
     }
     title.appendChild(tNode);
 }
@@ -191,6 +224,7 @@ su2rad.dialog.weatherdata.setLabelFromFilename = function (filename) {
 }
 
 su2rad.dialog.weatherdata.simulateGrid = function () {
+    log.debug("simulating climate data")
     document.getElementById('messagearea').value = '';
     document.getElementById("graphOptions").style.display='';
     document.getElementById("statsDiv").style.display='';
@@ -209,11 +243,15 @@ su2rad.dialog.weatherdata.setDataType = function () {
 }
 
 su2rad.dialog.weatherdata.setGridArray = function (gArray) {
+    if (this.gCanvas == null) {
+        this.gCanvas = new su2rad.canvas.GridCanvas();
+        this.gCanvas.setCanvasId('cv');
+        log.debug("new gCanvas: " + this.gCanvas)
+    }
     this.setFilename(gArray.filename)
     this.gCanvas.setArray(gArray);
     this.gCanvas.setLegend('right');
-    this.gCanvas.setDataTypeIndex(0);
-    document.getElementById('weatherDataType').selectedIndex = 0;
+    this.setDataTypeIndex(0)
     this.setComment(gArray.commentLines);
     this.gCanvas.draw();
     this.updateUI();
@@ -266,13 +304,139 @@ su2rad.dialog.weatherdata._splitLongLine = function (line, sep, maxl) {
     return nline;   
 }
 
+su2rad.dialog.weatherdata.createGraphOptionsPanel = function () {
+    // create panel with weather data graph options
+    var gop = document.createElement("DIV")
+    gop.id = "graphOptionsPanel"
+
+    var div1 = document.createElement("DIV")
+    div1.id = "graphButtonDiv"
+    var loadDiv = document.createElement("DIV")
+    loadDiv.className = "importOptionHeader"
+    loadDiv.id = "loadFileSelectionDiv"
+    
+    if (su2rad.SKETCHUP) {
+        var buttonSU = document.createElement("INPUT")
+        //buttonSU.id = "loadFileButton"
+        buttonSU.setAttribute("type", "button")
+        buttonSU.setAttribute("value", "load file SU")
+        buttonSU.onclick = function () { su2rad.dialog.weatherdata.loadFileSU() }
+        loadDiv.appendChild(buttonSU) 
+    } else if (su2rad.NSIDOM) {
+        var loadFile = document.createElement("INPUT")
+        loadFile.id = "loadFileSelection"
+        loadFile.setAttribute("type", "file")
+        loadFile.setAttribute("size", "5")
+        loadFile.className = "file"
+        loadFile.onchange = function () { su2rad.dialog.weatherdata.loadFileIDOM() }
+        loadDiv.appendChild(loadFile) 
+        var buttonFF = document.createElement("INPUT")
+        buttonFF.id = "loadFileButton"
+        buttonFF.setAttribute("type", "button")
+        buttonFF.setAttribute("value", "load file FF")
+        loadDiv.appendChild(buttonFF)
+    } else {
+        var wDiv = document.createElement("DIV")
+        wDiv.id = "loadFileWarning"
+        var span = document.createElement("SPAN")
+        span.appendChild(document.createTextNode("You need Firefox/Mozilla or Sketchup to load a climate data file."))
+        wDiv.appendChild(span)
+        gop.appendChild(wDiv)
+        //XXX implement "simulateGrid"
+        ////var buttonSim = document.createElement("INPUT")
+        //buttonSim.setAttribute("type", "button")
+        //buttonSim.setAttribute("value", "simulate")
+        //buttonSim.onclick = function () { su2rad.dialog.weatherdata.simulateGrid() }
+        //loadDiv.appendChild(buttonSim) 
+    }
+    div1.appendChild(loadDiv)
+    
+    // data type select container
+    div1.appendChild(this.createDataTypeSelector())
+    gop.appendChild(div1)
+
+    // data type select container
+    var graphOptionsDiv = document.createElement("DIV")
+    graphOptionsDiv.id = "graphOptions"
+    gop.appendChild(graphOptionsDiv)
+    
+    // stats table
+    var statsDiv = document.createElement("DIV")
+    statsDiv.id = "statsDiv"
+    var headerDiv = document.createElement("DIV")
+    headerDiv.className = "importOptionHeader"
+    var div2 = document.createElement("DIV")
+    div2.appendChild(document.createTextNode("statistics"))
+    headerDiv.appendChild(div2)
+    statsDiv.appendChild(headerDiv)
+    var tableDiv = document.createElement("DIV")
+    tableDiv.id = "statsTable"
+    statsDiv.appendChild(tableDiv)
+    gop.appendChild(statsDiv)
+    
+    return gop
+    
+    //TODO: import button required? 
+    var buttonSUDiv = document.createElement("DIV")
+    buttonSUDiv.className = "importOptionHeader"
+    buttonSUDiv.id = "useEPWInSUDiv"
+    var buttonSU = document.createElement("INPUT")
+    buttonSU.id = "useEPWInSU"
+    buttonSU.setAttribute("type", "button")
+    buttonSU.setAttribute("value", "use in SketchUp")
+    buttonSU.onclick = function () { su2rad.dialog.weatherdata.importEPWToSketchup() }
+    buttonSUDiv.appendChild(buttonSU)
+    gop.appendChild(buttonSUDiv)
+    
+}
+
+su2rad.dialog.weatherdata.createDataTypeSelector = function () {
+    
+    var container = document.createElement("DIV")
+    var div = document.createElement("DIV")
+    div.className = "importOptionHeader"
+    var div2 = document.createElement("DIV")
+    div2.appendChild(document.createTextNode("data type:"))
+    div.appendChild(div2)
+    container.appendChild(div)
+   
+    select = document.createElement("SELECT")
+    select.id ="weatherDataType"
+    select.onchange = function () { su2rad.dialog.weatherdata.setDataType() }
+    var opts = ["global horizontal", "direct normal", "diffuse horizontal",
+                "global horiz. ill", "direct normal ill", "diffuse horiz. ill"]
+    for (var i=0; i<opts.length; i++) {
+        var o = new Option(opts[i], i, false, false)
+        try {
+            select.add(o, null) 
+        } catch (e) {
+            select.add(o)
+        }
+    }
+    container.appendChild(select)
+    return container
+}
+
+
+su2rad.dialog.weatherdata.setDataTypeIndex = function (idx) {
+    this.gCanvas.setDataTypeIndex(idx);
+    var select = document.getElementById('weatherDataType')
+    select.selectedIndex = idx;
+}
+
 su2rad.dialog.weatherdata.setLegendLabel = function (label) {
+    if (!label) {
+        label = document.getElementById("legendLabelInput").value
+    }
     this.gCanvas.setLegendLabel(label)
     this.updateUI()
 }
 
-su2rad.dialog.weatherdata.setLegendLightness = function (lightness) {
-    var value = parseFloat(lightness)
+su2rad.dialog.weatherdata.setLegendLightness = function (v) {
+    if (!v) {
+        v = document.getElementById("legendLightnessInput").value
+    }
+    var value = parseFloat(v)
     if ( ! isNaN(value) ) {
         this.gCanvas.setLegendLightness(value)
     }
@@ -280,6 +444,9 @@ su2rad.dialog.weatherdata.setLegendLightness = function (lightness) {
 }
 
 su2rad.dialog.weatherdata.setLegendMax = function (v) {
+    if (!v) {
+        v = document.getElementById("legendMaxInput").value
+    }
     var value = parseFloat(v)
     if ( ! isNaN(value) ) {
         this.gCanvas.setLegendMax(value)
@@ -288,6 +455,9 @@ su2rad.dialog.weatherdata.setLegendMax = function (v) {
 }
 
 su2rad.dialog.weatherdata.setLegendMin = function (v) {
+    if (!v) {
+        v = document.getElementById("legendMinInput").value
+    }
     var value = parseFloat(v)
     if ( ! isNaN(value) ) {
         this.gCanvas.setLegendMin(value)
@@ -296,6 +466,9 @@ su2rad.dialog.weatherdata.setLegendMin = function (v) {
 }
 
 su2rad.dialog.weatherdata.setLegendSteps = function (v) {
+    if (!v) {
+        v = document.getElementById("legendStepsInput").value
+    }
     var value = parseFloat(v)
     if ( ! isNaN(value) ) {
         this.gCanvas.setLegendSteps(value)
@@ -331,9 +504,59 @@ su2rad.dialog.weatherdata.updateStats = function () {
     }
 }
 
+su2rad.dialog.weatherdata.createLegendOptions = function () {
+    var graphOptionsDiv = document.getElementById("graphOptions")
+    while (graphOptionsDiv.hasChildNodes() == true) {
+        graphOptionsDiv.removeChild(graphOptionsDiv.firstChild)
+    }
+
+    // stats table
+    var headerDiv = document.createElement("DIV")
+    headerDiv.className = "importOptionHeader"
+    var div2 = document.createElement("DIV")
+    div2.appendChild(document.createTextNode("legendOptions"))
+    headerDiv.appendChild(div2)
+    graphOptionsDiv.appendChild(headerDiv)
+    
+    // options
+    var tableDiv = document.createElement("DIV")
+    var opts = [{"label":"min value", "id":"legendMinInput",       "width":"10", "value":"0",   "func":su2rad.dialog.weatherdata.setLegendMin},
+                {"label":"max value", "id":"legendMaxInput",       "width":"10", "value":"100", "func":su2rad.dialog.weatherdata.setLegendMax},
+                {"label":"steps",     "id":"legendStepsInput",     "width":"3",  "value":"10",  "func":su2rad.dialog.weatherdata.setLegendSteps},
+                {"label":"label",     "id":"legendLabelInput",     "width":"20", "value":"",    "func":su2rad.dialog.weatherdata.setLegendLabel},
+                {"label":"lightness", "id":"legendLightnessInput", "width":"4",  "value":"0.0", "func":su2rad.dialog.weatherdata.setLegendLightness}]
+    try {
+        for (var i=0; i<opts.length; i++) {
+            var o = opts[i]
+            var div = document.createElement("DIV")
+            div.className = "gridRow"
+            var span = document.createElement("SPAN")
+            span.className = "gridLabel"
+            span.appendChild(document.createTextNode(o.label))
+            div.appendChild(span)
+            var input = document.createElement("INPUT")
+            input.id = o.id
+            input.setAttribute("type", "text")
+            input.setAttribute("width", o.width)
+            input.setAttribute("value", o.value)
+            //input.onchange = function (f,i) { return function () { f(i.value) } } (o.func, input)
+            input.onchange = function (f) { return function () { f.call(su2rad.dialog.weatherdata) } }(o.func)
+            div.appendChild(input)
+            tableDiv.appendChild(div)
+        }
+    } catch (e) {
+        logError(e)
+        log.trace(e)
+    }
+    graphOptionsDiv.appendChild(tableDiv)
+}
+
 su2rad.dialog.weatherdata.updateUI = function () {
     //log.debug("updateUI()")
     var opts = this.gCanvas.getLegendOptions();
+    if (! document.getElementById("legendMinInput")) {
+        this.createLegendOptions()
+    }
     document.getElementById("legendMinInput").value = opts.minValue.toFixed(2);
     document.getElementById("legendMaxInput").value = opts.maxValue.toFixed(2);
     document.getElementById("legendStepsInput").value = opts.steps.toFixed();
