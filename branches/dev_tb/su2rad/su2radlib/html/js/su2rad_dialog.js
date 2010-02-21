@@ -195,7 +195,7 @@ su2rad.dialog.onTabShow = function (link,div_show,div_hide) {
 
 su2rad.dialog.updateExportPage = function () {
     log.debug("updating 'Export' page ...");
-    this.sky.setSkyCmdLine();
+    this.sky.controller.setSkyCmdLine();
 }
 
 su2rad.dialog.updateRenderPage = function () {

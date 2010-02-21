@@ -166,17 +166,17 @@ SkyOptionsObject.prototype.parseSkyCommand = function (cmdline) {
     if (cmdline == '') {
         return
     }
-    this.logging = false; // stop info level logging
     log.debug("parsing '" + cmdline + "'");
+    this.logging = false; // stop info level logging
     if (cmdline.charAt(0) == '!') {
         cmdline = cmdline.substring(1,cmdline.length);
     }
     var parts = cmdline.split(' ');
-    for (i=0; i<parts.length; i++) {
+    this.setGenerator(parts[0])
+    //TODO: move option parsing to generator 
+    for (i=1; i<parts.length; i++) {
         var opt = parts[i];
-        if (this.setGenerator(opt) == true) {
-            // log.debug("new generator: '" + opt + "'");
-        } else if (this.setSkyType(opt) == true) {
+        if (this.setSkyType(opt) == true) {
             // log.debug("new skytype: '" + opt + "'");
         } else if (opt == '-ang') {
             log.warn("sky option '-ang' ignored")
@@ -241,17 +241,13 @@ SkyOptionsObject.prototype.setActive = function (opt, checked) {
 }
 
 SkyOptionsObject.prototype.setGenerator = function(val) {
+    log.debug("SkyOptionsObject.setGenerator('" + val + "')")
     var oldGen = this.generator;
-    if (val == 'gensky') {
-        this.generator = 'gensky';
-    } else if (val == 'gendaylit') {
-        this.generator = 'gendaylit';
-        alert("'gendaylit' not enabled yet\ndefault to 'gensky'")
-        this.generator = 'gensky';
-    } else if (val == 'hdr-image') {
-        this.generator = 'hdr-image';
-        alert("'hdr-image' not enabled yet\ndefault to 'gensky'")
-        this.generator = 'gensky';
+    if (su2rad.dialog.sky.hasGenerator(val)) {
+        this.generator = val
+    } else if ( val.charAt(0) == "-" ) {
+        // sky command option; return false for parseSkyCommand 
+        return false
     } else {
         log.error("'unknown sky generator '" + val + "'; generator unchanged")
         return false;

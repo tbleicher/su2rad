@@ -46,12 +46,16 @@ class ExportDialogWeb < ExportBase
     end
     
     def loadTextFile(dlg, filepath)
+        uimessage("loadTextFile('%s')" % filepath, 0)
         text = ''
         if File.exists?(filepath)
             f = File.open(filepath, 'r')
             text = f.read()
-            text = urlEncode(text)
+            text = escape_javascript(text)
+        else
+            uimessage("loadTextFile: path '%s' does not exist" % filepath, -2)
         end
+        uimessage("su2rad.dialog.loadFileCallback() ...", 2)
         dlg.execute_script("su2rad.dialog.loadFileCallback('%s')" % text)
     end
     

@@ -311,6 +311,6 @@ su2rad.dialog.location.update = function () {
     //this.checkValueLatLong("Latitude", 90);
     //this.checkValueLatLong("Longitude", 190);
     //this.checkValueLatLong("NorthAngle", 360);
-    su2rad.dialog.sky.setSkyCmdLine();
+    su2rad.dialog.sky.controller.setSkyCmdLine();
 }
 

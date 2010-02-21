@@ -43,10 +43,16 @@
         <script type="text/javascript" src="./js/su2rad_googlemap.js"></script>
         <script type="text/javascript" src="./js/su2rad_geonames.js"></script>
         <script type="text/javascript" src="./js/su2rad.dialog.sky.controllers.js"></script>
+        <script type="text/javascript" src="./js/su2rad.dialog.sky.js"></script>
         <script type="text/javascript" src="./js/su2rad_location.js"></script>
         <script type="text/javascript" src="./js/su2rad_radopts.js"></script>
         <script type="text/javascript" src="./js/su2rad_materials.js"></script>
         <script type="text/javascript" src="./js/su2rad_dialog.js"></script>
+
+        <script type="text/javascript" src="./js/su2rad.grid.js"></script>
+        <script type="text/javascript" src="./js/su2rad.canvas.js"></script>
+        <script type="text/javascript" src="./js/su2rad.weatherData.Canvas.js"></script>
+        <script type="text/javascript" src="./js/su2rad.weatherData.Import.js"></script>
 
         <script type="text/javascript">
             /* create tabs */
@@ -71,10 +77,12 @@
         <!-- style sheet for the rest of the dialog -->
         <link rel="stylesheet" href="./blackbirdjs/blackbird.css" type="text/css" media="screen">
         <link rel="stylesheet" href="./css/dialog.css"            type="text/css" media="print, projection, screen">
+        <link rel="stylesheet" href="./css/dialog.import.css"     type="text/css" media="print, projection, screen">
         <link rel="stylesheet" href="./css/jqModal.css"           type="text/css" media="screen">
         <link rel="stylesheet" href="./css/jquery.tabs.css"       type="text/css" media="print, projection, screen">
         <link rel="stylesheet" href="./css/jquery.filetree.css"   type="text/css" media="screen" />
-        <link rel="stylesheet" href="./css/jquery.humanmsg.css"   type="text/css" media="screen" />
+        <!-- <link rel="stylesheet" href="./css/jquery.humanmsg.css"   type="text/css" media="screen" /> -->
+
         <!-- Additional IE/Win specific style sheet (Conditional Comments) -->
         <!--[if lte IE 8]>
         <link rel="stylesheet" href="./css/jquery.tabs-ie.css" type="text/css" media="projection, screen">
@@ -441,62 +449,37 @@
             
             <!--  TAB sky  --> 
             
-            <div id="tab-sky">
+            <div id="tab-sky" style="width:650px;">
+                <h3 id="skyGeneratorSelection" style="width:100%;">
+                    <span class="gridLabel">generator:</span>
+                    <select id="skyGenerator" name="skyGenerator" onchange="su2rad.dialog.sky.setGenerator(this.value)">
+                        <option value="gensky" selected>gensky</option>
+                    </select>
+                </h3>
+                
+                <div id="skyOptions">
+                    <div class="skyGeneratorOptions" id="skyControllerOptions">
+                        <!-- filled in by javascript -->
+                    </div>
+
+                    <div class="skyGeneratorOptions" id="skyOptsGensky">
+                        <!-- filled in by javascript -->
+                    </div>
+                </div>
+                
+                <div style="clear:both;"></div>
+                
+                <div class="optionsRow" style="float:none;width:600px;">
+                    <span class="commandLine" id="skyCommandLine">cmd: !gensky</span> 
+                </div>
+
+                <div id="locationControlls">
                 <h3>
                     <input type="button" id="applyLocationValues" value="apply" class="floatright" onclick="onApplySkySettingsToModel()" disabled=true />
                     <input type="button" id="reloadShadowInfo" value="reload" class="floatright" style="display:none;" onclick="getSkySettings()">
                     SketchUp model settings
                 </h3>
                 
-                <div class="optionsColumn" id="skyControllerOptions" style="height:120px">
-                    <div class="optionsHeader">
-                        <span class="gridLabel">generator:</span>
-                        <select id="skyGenerator" name="skyGenerator" onchange="su2rad.dialog.sky.setGenerator(this.value)">
-                            <option value="gensky" selected>gensky</option>
-                            <!--<option value="gendaylit">gendaylit</option>-->
-                            <!--<option value="hdr-image">hdr-image</option>-->
-                        </select>
-                    </div>
-                </div>
-
-                <div class="skyGeneratorOptions" id="skyOptsGensky">
-                    <!-- filled in by javascript -->
-                </div>
-                
-                <div class="skyGeneratorOptions" id="skyOptsGendaylit" style="display:none">
-                    <div class="optionsHeader" style="width:280px;">
-                        <span class="gridLabel" style="width:240px">TODO gendaylit options:</span>
-                    </div>
-                    <div class="optionsColumn">
-                        <div class="rpictOverrideHeader">general</div>
-                        <div class="optionsRow">
-                            <input type="checkbox" id="sunOptionCB" style="float:left;" value="sunOption" onClick="su2rad.dialog.sky.onSkyTypeChange()">
-                            <span class="gridLabel" style="width:60px;">no sun</span>
-                        </div>
-                    </div>
-                </div>
-                <div class="skyGeneratorOptions" id="skyOptsHDRImage" style="display:none">
-                    <div class="optionsHeader" style="width:340px;">
-                        <span class="gridLabel" style="width:240px">TODO hdr-image options:</span>
-                    </div>
-                    <div class="gridLabel" style="width:40px;">path:</div>
-                    <div class="gridCell" style="width:305px;">
-                        <div class="fileinputs">
-                            <input type="file" class="file" id="fileselection" onchange="onSelectSkyImage()" />
-                            <div class="fakefile">
-                                <img src="./css/24-zoom.png" />
-                            </div>
-                        </div>
-                        <input type="text" style="width:275px;" name="skyImagePath" id="skyImagePath" value=".pic"/>
-                    </div>
-                </div>
-                            
-                <div style="clear:both;"></div>
-                
-                <div class="optionsRow" style="float:none;width:600px;">
-                    <span class="commandLine" id="skyCommandLine">cmd: !gensky</span> 
-                </div>
-                            
                 <h3>
                     <!-- <input class="floatright" type="button" value="done" onclick="su2rad.dialog.switchToTab('tab-export')"> -->
                     Location Settings
@@ -600,15 +583,10 @@
                     <div id="map_canvas" style="left: 30px; margin-top: 5px; width: 520px; height: 320px"></div>
                     <div id="message" style="margin-left: 32px; width: 518; font-size: 12px;">&nbsp;</div>
                 </div>
-                
+                </div> 
                 <div class="statusMessage" id="status_tab-sky">
                     msg
                 </div>
-                <h3 style="display:none;">
-                    <input type="button" value="apply" class="floatright" onclick="onApplySkySettingsToModel()" />
-                    <input type="button" value="reload" class="floatright" onclick="getSkySettings()">
-                    test buttons
-                </h3>
             
             </div>
 

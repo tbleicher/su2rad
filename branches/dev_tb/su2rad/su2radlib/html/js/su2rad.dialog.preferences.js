@@ -210,8 +210,9 @@ su2rad.dialog.preferences.test = function () {
     var json =   "[{name: 'SU2RAD_FOO_1', value: 'true',   help: 'help for foo1', options: 'true|false', type: 'choice'},"
     json = json + "{name: 'SU2RAD_FOO_2', value: 'false',  help: 'help for foo2', options: 'true|false', type: 'choice'},"
     json = json + "{name: 'SU2RAD_FOO_3', value: 'value3', help: 'help for foo3', options: ''          , type: 'string'},"
+    json = json + "{name: 'SU2RAD_FOO_4', value: '/usr/local/bin/replmarks', help: 'help for replmarks', type: 'path', options: ''},"
     json = json + "{name: 'LOG_LEVEL', value: '0', help: 'help for log level', options: '-2|-1|0|1|2|3', type: 'choice'},"
-    json = json + "{name: 'SU2RAD_FOO_4', value: '/usr/local/bin/replmarks', help: 'help for replmarks', type: 'path', options: ''}]"
+    json = json + "{name: 'SU2RAD_FOO_5', value: '0.254', help: 'help for foo3', options: ''           , type: 'number'}]"
     su2rad.dialog.preferences.setCurrentOptions(json)
 }
 

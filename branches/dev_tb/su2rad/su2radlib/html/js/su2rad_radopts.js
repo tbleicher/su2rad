@@ -63,7 +63,7 @@ su2rad.dialog.radiance.getCheckBoxLabel = function (opt, selected, label) {
         var text = '<input type="checkbox" ' + action + ' />';
     }
     text += '<a class="gridLabel" ' + action + ' >' + label + ':';
-    text += getToolTip("rpict", opt);
+    text += getToolTipHTML("rpict", opt);
     text += "</a>";
     return text;
 }

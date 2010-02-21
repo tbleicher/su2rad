@@ -7,18 +7,18 @@ H3 {
     background-color: lightblue;
     height: 24px;
     margin: 0;
-    margin-bottom 10px;
+    margin-bottom: 10px;
 }
 
 .importOptionHeader div {
     font-weight: bold;
+    margin:0;
     padding: 0;
     padding-left: 5px;
     padding-top: 3px;
-    margin-bottom: 3px;
 }
 
-.importOptionHeader > input[type=button], .importOptionHeader > select {
+.importOptionHeader > input[type=button], #weatherDataType {
     width: 130px;
     margin: 0;
     margin-top: 5px;
@@ -54,7 +54,7 @@ H3 {
 */
 
 #weatherDataType {
-    margin-top: 2px;
+    margin-top: 0px;
 }
 
 #simulateGrid {
@@ -62,8 +62,40 @@ H3 {
     margin: 2;
 }
 
-#graphOptions, #statsDiv, #dataTypeDiv {
+#graphOptionsPanel {
+    height: 150px;
+    width: 680px;
+    padding: 0px;
+    margin: 0px;
+    margin-bottom: 10px;
+    border: 1px solid lightblue;
+}
+
+#graphOptionsPanel > div {
+    float: left;
+    width: 145px;
+    height: 100%;
+    padding: 0px;
     background-color: #eef;
+}
+
+#graphOptionsPanel .gridRow {
+    width: 145px;
+    margin: 0px;
+    /* outline: 1px solid #27537a; */
+}
+
+#graphOptions, #statsDiv {
+    margin: 0px;
+    margin-left: 10px;
+}
+
+#graphButtonDiv {
+    margin: 0px;
+}
+
+#dataTypeDiv {
+    margin-left: 0;
     margin-top: 10px;
 }
 
@@ -108,23 +140,10 @@ canvas {
     background: url(arrow_se_blue.gif) no-repeat right bottom; 
 }
 
-#graphOptionsPanel {
-    float: left;
-    /* min-height: 200px; */
-    width: 145px;
-    padding: 0px;
-    margin: 0px;
-}
-
-#graphOptionsPanel .gridRow {
-    width: 145px;
-    margin: 0px;
-    /* outline: 1px solid #27537a; */
-}
-
 #messagearea {
-    border: 0;
+    border: 1px solid lightblue;
     /* color: lightblue; */
     font-size: 11px;
+    padding: 3px;
 }
 
