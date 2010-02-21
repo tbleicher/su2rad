@@ -73,6 +73,23 @@ function getToolTip(app, opt) {
     return span
 }
  
+function getToolTipHTML(app, opt) {
+    var text = "";
+    var span = document.createElement("SPAN")
+    span.className = "tooltip"
+    if (false && su2rad.PLATFORM == "Windows") {
+        return span;
+    } else {
+        var s = tooltips[app][opt];
+        if (!s) {
+            log.warn("no tooltip defined for app '" + app + "', option '" + opt + "'");
+            setToolTip(app, opt, "TODO: tooltip for app '" + app + "', option '" + opt + "'")
+            s = "TODO: tooltip for option '" + opt + "'";
+        }
+        span.appendChild(document.createTextNode(s))
+    }
+    return span
+}
  
 function setToolTip(app, opt, s) {
     if (!tooltips[app]) {
