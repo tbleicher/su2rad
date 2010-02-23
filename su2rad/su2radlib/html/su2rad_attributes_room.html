@@ -1,0 +1,98 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+
+<html lang="en">
+    <head>
+        <meta http-equiv="Content-Type"        content="text/html; charset=utf-8">
+        <meta http-equiv="Content-Style-Type"  content="text/css">
+        <meta http-equiv="Content-Script-Type" content="text/javascript">
+
+        <title>Workplane Tool</title>
+        
+        <!-- log panel for debugging -->
+        <script type="text/javascript" src="./blackbirdjs/blackbird.js"></script>
+        <script type="text/javascript" src="./js/lib/jsr_class.js"></script>
+        
+        <script type="text/javascript" src="./js/lib/jquery-1.2.6.js"></script>
+        <script type="text/javascript" src="./js/lib/jquery.alphanumeric.js"></script>
+
+        <link rel="stylesheet" href="./blackbirdjs/blackbird.css"    type="text/css" media="screen">
+        <link rel="stylesheet" href="./css/dialog.css"               type="text/css" media="screen" />
+        <link rel="stylesheet" href="./css/dialog.preferences.css"   type="text/css" media="screen" />
+
+        <style type="text/css">
+            .preferences div input {
+                width: 100px;
+            }
+        </style>
+
+        <script type="text/javascript">
+            var dialog = new Object()
+            dialog.onCreate = function() {
+                window.location = "skp:createWorkplane@"
+            }
+            dialog.onCancel = function() {
+                window.location = "skp:cancelTool@"
+            }
+            dialog.setValues = function(json) {
+                log.debug("json=" + json)
+                try {
+                    eval("var obj = " + json)
+                } catch (e) {
+                    log.error(e);
+                    var obj = new Object();
+                }
+                log.debug("obj=" + obj)
+                try {
+                    for (var o in obj) {
+                        log.debug("debug: setting " + o + " = " + obj[o] )
+                        document.getElementById(o).value = obj[o]
+                    }
+                } catch (e) {
+                    log.error(e)
+                }
+            }
+            dialog.test = function() {
+                var json = "{'roomname':'foo_room','wallzone':'0.23','wpheight':'0.77'}"
+                this.setValues(json)
+            }
+            dialog.updateSettings = function() {
+                var params =      "roomname=" + document.getElementById("roomname").value + "&"
+                params = params + "wallzone=" + document.getElementById("wallzone").value + "&"
+                params = params + "wpheight=" + document.getElementById("wpheight").value
+                window.location = "skp:updateSettings@" + params
+            }
+        </script>
+
+    </head>
+
+    <body onload='dialog.test()'>
+        
+        <input type="button" id="showLogButton" name="showLogButton" value="log" onclick="log.toggle()">
+        
+        <h3>workplane settings</h3>
+
+        <div class="preferences" id="preferences_container">
+            <div>
+                <span class="setting_name">name</span>
+                <input type="text" id="roomname" value="name" onchange="dialog.updateSettings()"/>
+                <div class="setting_help">name for the room group and workplane</div>
+            </div>
+            <div>
+                <span class="setting_name">height offset</span>
+                <input type="text" id="wpheight" value="0.88" onchange="dialog.updateSettings()"/>
+                <div class="setting_help">height of workplane above ground</div>
+            </div>
+            <div>
+                <span class="setting_name">wall zone</span>
+                <input type="text" id="wallzone" value="0.12" onchange="dialog.updateSettings()"/>
+                <div class="setting_help">distance of workplane edge to wall</div>
+            </div>
+        </div>
+
+        <div id="mainButtonRow">
+            <input type="button" value="apply" id="apply_button"  onclick="dialog.onCreate()">
+            <input type="button" value="close" id="cancel_button" onclick="dialog.onCancel()">
+        </div>
+
+    </body>
+</html>

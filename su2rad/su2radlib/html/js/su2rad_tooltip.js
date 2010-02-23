@@ -75,20 +75,19 @@ function getToolTip(app, opt) {
  
 function getToolTipHTML(app, opt) {
     var text = "";
-    var span = document.createElement("SPAN")
-    span.className = "tooltip"
-    if (false && su2rad.PLATFORM == "Windows") {
-        return span;
+    if (false && PLATFORM == "Windows") {
+        return text;
     } else {
         var s = tooltips[app][opt];
-        if (!s) {
+        if (s) {
+            text += "<span class=\"tooltip\">" + htmlEncode(s) + "</span>";
+        } else {
             log.warn("no tooltip defined for app '" + app + "', option '" + opt + "'");
             setToolTip(app, opt, "TODO: tooltip for app '" + app + "', option '" + opt + "'")
-            s = "TODO: tooltip for option '" + opt + "'";
+            text += "<span class=\"tooltip\">TODO: tooltip for option '" + opt + "'</span>";
         }
-        span.appendChild(document.createTextNode(s))
+        return text
     }
-    return span
 }
  
 function setToolTip(app, opt, s) {

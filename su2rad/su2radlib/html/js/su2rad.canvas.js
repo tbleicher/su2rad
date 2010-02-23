@@ -195,8 +195,10 @@ su2rad.canvas.GridCanvas = function () {
 su2rad.canvas.GridCanvas.prototype.draw = function () {
     // nothing to draw?
     if (this.canvas == null || this.array == null || this.array.empty() == true) {
+        log.debug("GridCanvas.draw() => NOT DRAWING")
         return;
     }
+    log.debug("GridCanvas.draw()")
     // get canvas context
     var ctx = this.canvas.getContext('2d');
     if (ctx) {
@@ -663,6 +665,7 @@ su2rad.canvas.GridCanvas.prototype.getLegendOptions = function () {
     opts.steps = this.legendSteps;
     opts.label = this.legendLabel;
     opts.lightness = this.gradient.lightness;
+    opts.datatype = this.array.dataTypeIndex;
     return opts
 }
 
@@ -682,6 +685,7 @@ su2rad.canvas.GridCanvas.prototype.setCanvas = function (canvas) {
 
 su2rad.canvas.GridCanvas.prototype.setCanvasId = function (canvasid) {
     var canvas = document.getElementById(canvasid);
+    log.debug("setCanvasId() canvas='" + canvas + "'")
     this.setCanvas(canvas)
     try {
         $("#" + canvasid).click( function(e) {

@@ -149,6 +149,8 @@ SkyController.prototype.updateSkyDateTimeDisplay = function () {
 }
 
 
+
+
 function SkyControllerClimateData () {
 }
 SkyControllerClimateData.prototype = new SkyController
@@ -177,9 +179,18 @@ SkyControllerClimateData.prototype.updateDialog = function () {
 }
 
 SkyControllerClimateData.prototype.updateCanvas = function() {
-    if (! this.canvas) {
+    var cc = document.getElementById("canvasContainer")
+    if (cc) {
+        log.debug("canvasContainer exists => redraw()")
+    } else {
+        log.debug("canvasContainer missing => createLayout()")
         su2rad.dialog.weatherdata.createLayout("skyOptions")
-        this.canvas = true
+        su2rad.dialog.weatherdata.redraw()
+    }
+    var datafile = su2rad.dialog.weatherdata.getFilename()
+    log.debug("datafile = '" + datafile + "'")
+    if (datafile != "") {
+        su2rad.dialog.weatherdata.redraw()
     }
 }
 
@@ -212,6 +223,8 @@ SkyControllerClimateData.prototype.updateCanvasOLD = function() {
     container.appendChild(msgArea)
     
 }
+
+
 
 
 function SkyControllerGendaylit () {
@@ -253,8 +266,6 @@ SkyControllerGendaylit.prototype.updateTimeOptions = function() {
     container.appendChild(this.createDateTimeControlls())
     skyOpts.appendChild(container)
 }
-
-
 
 
 

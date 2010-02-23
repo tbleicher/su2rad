@@ -18,20 +18,21 @@ su2rad.dialog.sky.addController = function (cObj) {
 }
 
 su2rad.dialog.sky.update = function () {
-    var container = document.getElementById("skyGeneratorSelection")
-    while (container.hasChildNodes() == true) {
-        container.removeChild(container.firstChild)
-    }
-    this.createGeneratorControl(container)
+    this.createGeneratorControl()
     this.controller.update()
     //XXX apply?
 }
 
-su2rad.dialog.sky.createGeneratorControl = function (container) {
+su2rad.dialog.sky.createGeneratorControl = function () {
+    var container = document.getElementById("skyGeneratorSelection")
+    while (container.hasChildNodes() == true) {
+        container.removeChild(container.firstChild)
+    }
     var span = document.createElement("SPAN")
     span.className = "gridLabel"
     span.appendChild(document.createTextNode("generator:"))
     container.appendChild(span)
+
     var select = document.createElement("SELECT")
     select.id = "skyGenerator"
     select.onchange = function () { su2rad.dialog.sky.setGenerator(this.value) }

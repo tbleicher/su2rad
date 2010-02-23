@@ -62,9 +62,9 @@ su2rad.dialog.radiance.getCheckBoxLabel = function (opt, selected, label) {
         var action = " onClick=\"su2rad.dialog.radiance.enableRpictOverride('" + opt + "')\" "
         var text = '<input type="checkbox" ' + action + ' />';
     }
-    text += '<a class="gridLabel" ' + action + ' >' + label + ':';
+    text += '<span class="gridLabel" ' + action + ' >' + label + ':';
     text += getToolTipHTML("rpict", opt);
-    text += "</a>";
+    text += "</span>";
     return text;
 }
 
