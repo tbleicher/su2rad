@@ -253,7 +253,7 @@ SkyOptionsObject.prototype.setGenerator = function(val) {
         return false;
     }
     if (oldGen != this.generator) {
-        log.debug("new generator: '" + opt + "'");
+        log.debug("new generator: '" + this.generator + "'");
     }
     return true;
 }

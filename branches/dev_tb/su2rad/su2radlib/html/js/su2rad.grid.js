@@ -148,6 +148,7 @@ su2rad.grid.GridArray.prototype.init = function () {
     this.bbox = null;
     this.cols = new su2rad.grid.UniqueArray();
     this.commentLines = [];
+    this.dataTypeIndex = 0;
     this.filename = "";
     this.gridByY = {};
     this.rows = [];
@@ -241,6 +242,7 @@ su2rad.grid.GridArray.prototype.makeConvex = function() {
 }
 
 su2rad.grid.GridArray.prototype.setDataTypeIndex = function (idx) {
+    this.dataTypeIndex = idx;
     this.values = [];
     for (var i=0; i<this.rows.length; i+=1) {
         var y = this.rows[i];

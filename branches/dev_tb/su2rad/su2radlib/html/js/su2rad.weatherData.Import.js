@@ -12,8 +12,6 @@ su2rad.dialog.weatherdata = function () {
 su2rad.dialog.weatherdata.initPage = function () {
     this.createLayout("tab-fields")
     document.getElementById("messagearea").value = '';
-    this.gCanvas = new su2rad.canvas.GridCanvas();
-    this.gCanvas.setCanvasId('cv');
     this.evaluateSketchup(); 
     su2rad.dialog.evaluateSketchup = this.evaluateSketchup
     this.updateUI();
@@ -31,7 +29,11 @@ su2rad.dialog.weatherdata.createLayout = function (containerId) {
     
     var title = document.createElement("H3")
     title.id = "pageTitle"
-    title.appendChild(document.createTextNode('climate data file'))
+    var text = this.getFilename()
+    if (text == "") {
+        text = "[climate data file]"
+    }
+    title.appendChild(document.createTextNode(text))
     container.appendChild(title)
 
     container.appendChild(su2rad.dialog.weatherdata.createGraphOptionsPanel())
@@ -46,6 +48,10 @@ su2rad.dialog.weatherdata.createLayout = function (containerId) {
     canvas.setAttribute("height", 400)
     canvasDiv.appendChild(canvas)
     container.appendChild(canvasDiv)
+    if (! this.gCanvas) {
+        this.gCanvas = new su2rad.canvas.GridCanvas();
+    }
+    this.gCanvas.setCanvasId('cv');
     
     // message area
     var msgArea = document.createElement("TEXTAREA")
@@ -53,6 +59,7 @@ su2rad.dialog.weatherdata.createLayout = function (containerId) {
     msgArea.setAttribute("cols", "100")
     msgArea.setAttribute("rows", "8")
     container.appendChild(msgArea)
+    
 }
 
 su2rad.dialog.weatherdata.onResizeCanvas = function () {
@@ -97,6 +104,15 @@ su2rad.dialog.weatherdata.evaluateSketchup = function () {
         log.warn("Sketchup and nsIDOMFileList not available - no functionality");
         log.debug("broser: " + su2rad.BROWSER);
     }
+}
+
+su2rad.dialog.weatherdata.getFilename = function () {
+    if (this.gCanvas != null) {
+        if (this.gCanvas.array != null) {
+            return this.gCanvas.array.filename
+        }
+    }
+    return ""
 }
 
 su2rad.dialog.weatherdata.importEPWToSketchup = function () {
@@ -175,6 +191,19 @@ su2rad.dialog.weatherdata.parseFileText = function (text, filename) {
             //this.setLabelFromFilename(filename)
         }
         this.setGridArray(gArray);
+        log.debug("DEBUG: end of parseFileText()")
+    }
+}
+
+su2rad.dialog.weatherdata.redraw = function () {
+    log.debug("weatherdata.redraw()")
+    try {
+        this.gCanvas.draw();
+        this.updateUI();
+        this.updateStats();
+        this.setComment(this.gCanvas.array.commentLines);
+    } catch (e) {
+        log.trace(e)
     }
 }
 
@@ -189,6 +218,9 @@ su2rad.dialog.weatherdata.setFilename = function (filename) {
         tNode = document.createTextNode("file: " + filename);
     }
     title.appendChild(tNode);
+    if (filename != "") {
+        su2rad.settings.sky.climateDataFile = filename
+    }
 }
 
 su2rad.dialog.weatherdata.setFileFromSketchup = function (encText,filename) {
@@ -203,6 +235,7 @@ su2rad.dialog.weatherdata.setFileFromSketchup = function (encText,filename) {
     } catch (e) {
         logError(e)
     }
+    log.debug("DEBUG: end of setFileFromSketchup()")
 }
 
 su2rad.dialog.weatherdata.setLabelFromFilename = function (filename) {
@@ -230,7 +263,7 @@ su2rad.dialog.weatherdata.simulateGrid = function () {
     document.getElementById("statsDiv").style.display='';
     var gArray = new su2rad.grid.GridArray();
     gArray.generate();
-    gArray.filename = ""
+    gArray.filename = "[simulated]"
     this.setGridArray(gArray)
 }
 
@@ -557,6 +590,7 @@ su2rad.dialog.weatherdata.updateUI = function () {
     if (! document.getElementById("legendMinInput")) {
         this.createLegendOptions()
     }
+    document.getElementById('weatherDataType').selectedIndex = opts.datatype;
     document.getElementById("legendMinInput").value = opts.minValue.toFixed(2);
     document.getElementById("legendMaxInput").value = opts.maxValue.toFixed(2);
     document.getElementById("legendStepsInput").value = opts.steps.toFixed();
