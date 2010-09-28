@@ -396,7 +396,7 @@ class MaterialContext < ExportBase
     end
     
     def getBaseMaterial(skm, name)
-        ## TODO: proper conversion between color spaces
+        ## fixed conversion of alpha (bug found by Anthony Rowlands) 
         text = ""
         c = skm.color
         r,g,b = rgb2rgb(c)
@@ -407,13 +407,13 @@ class MaterialContext < ExportBase
             text += "\nvoid glass #{name}"
             text += "\n0\n0\n3"
             text += "  %.4f %.4f %.4f\n" % [r,g,b]
-        ## use c.alpha to decide on material type (alpha between 0 and 1!) 
-        elsif c.alpha >= 0.95
+        ## use color.alpha to decide on material type (alpha between 0 and 255!)
+        elsif c.alpha >= 245
             text += "\nvoid plastic #{name}"
             text += "\n0\n0\n"
             text += "5 %.4f %.4f %.4f %.3f %.3f\n" % [r,g,b,spec,rough]
-        elsif c.alpha >= 0.2     ## treshold to use glass or trans
-            trans = c.alpha
+        elsif c.alpha >= 50     ## treshold to use glass or trans
+            trans = c.alpha / 255.0
             transspec = 0.2
             text += "\nvoid trans #{name}"
             text += "\n0\n0\n"
@@ -428,7 +428,7 @@ class MaterialContext < ExportBase
     
     def rgb2rgb(color)
         ## simple conversion from RGB to RGB
-        #return rgb2rgb_TEST(color)
+        ## TODO: proper conversion between color spaces
         r = color.red/255.0
         g = color.green/255.0
         b = color.blue/255.0
