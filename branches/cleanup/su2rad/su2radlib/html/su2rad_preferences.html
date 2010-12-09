@@ -1,0 +1,57 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+
+<html lang="en">
+    <head>
+        <meta http-equiv="Content-Type"        content="text/html; charset=utf-8">
+        <meta http-equiv="Content-Style-Type"  content="text/css">
+        <meta http-equiv="Content-Script-Type" content="text/javascript">
+
+        <title>su2rad preferences</title>
+        
+        <script type="text/javascript" src="./blackbirdjs/blackbird.js"></script>
+        <script type="text/javascript" src="./js/lib/jsr_class.js"></script>
+        
+        <script type="text/javascript" src="./js/lib/jquery-1.2.6.js"></script>
+        <script type="text/javascript" src="./js/lib/jquery.alphanumeric.js"></script>
+        <script type="text/javascript" src="./js/lib/jquery.filetree.js"></script>
+        <script type="text/javascript" src="./js/lib/jquery.jqModal.js"></script>
+	
+        <script type="text/javascript" src="./js/su2rad.dialog.common.js"></script>
+        <script type="text/javascript" src="./js/su2rad.dialog.fileselector.js"></script>
+        <script type="text/javascript" src="./js/su2rad.dialog.preferences.js"></script>
+
+        <link rel="stylesheet" href="./blackbirdjs/blackbird.css" type="text/css" media="screen" />
+        <link rel="stylesheet" href="./css/dialog.css"            type="text/css" media="screen" />
+        <link rel="stylesheet" href="./css/dialog.preferences.css"   type="text/css" media="screen" />
+        <link rel="stylesheet" href="./css/jqModal.css"           type="text/css" media="screen" />
+        <link rel="stylesheet" href="./css/jquery.filetree.css"   type="text/css" media="screen" />
+        <!-- <link rel="stylesheet" href="./css/jquery.humanmsg.css"   type="text/css" media="screen" /> -->
+
+        <script type="text/javascript">
+        </script>
+
+    </head>
+
+    <body>
+        
+        <input type="button" id="showLogButton" name="showLogButton" value="log" onclick="log.toggle()">
+        
+        <h3>su2rad preferences</h3>
+
+        <div class="preferences" id="preferences_container">
+            <div>
+                <span class="setting_name">SU2RAD_OPT_NAME</span>
+                <input type="text" value="SU2RAD_OPT_VALUE" />
+                <div class="setting_help" >This setting will do nothing at all.
+                It is set by magic and should be left unchanged until lunchtime.</div>
+            </div>
+        </div>
+
+        <div id="mainButtonRow">
+            <input type="button" value="apply" id="apply_button"  onclick="su2rad.dialog.preferences.onApply()">
+            <input type="button" value="close" id="cancel_button" onclick="su2rad.dialog.preferences.onClose()">
+            <input type="button" value="test"  onclick="su2rad.dialog.preferences.test()">
+        </div>
+
+    </body>
+</html>
