@@ -165,7 +165,7 @@ class MaterialLists < ExportBase
             jsonList = chunk.collect { |m| m.toJSON() }
             json = escape_javascript( "[%s]" % jsonList.join(',') )
             uimessage("mList %s: setting materials %d to %d" % [mtype, startIdx, startIdx+chunk.length])
-            dlg.execute_script("setMaterialsListJSON('%s','%s')" % [json,mtype])
+            dlg.execute_script("su2rad.materials.setMaterialsListJSON('%s','%s')" % [json,mtype])
             startIdx += nChunk
         end
     end
