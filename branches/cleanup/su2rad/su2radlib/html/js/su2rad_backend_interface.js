@@ -179,35 +179,6 @@ function skpSetMaterialAlias(skmname, radname, mtype) {
     }
 }
 
-function setMaterialsListJSON(text, type) {
-    try {
-        var json = su2rad.utils.decodeJSON(text);
-        //log.error("TEST: setMaterialsListJSON=<br/>json.length=" + json.length);
-        var newMats = new Array();
-        try {
-            eval("newMats = " + json);
-            //log.debug("materials found: " + newMats.length); 
-        } catch (e) {
-            log.error("setMaterialsListJSON: error in eval() '" + e.name + "'");
-            log.error("json= " + json.replace(/,/g,',<br/>'));
-        }
-        if (type == 'skm') {
-            su2rad.materials.skmList.update(newMats);
-            su2rad.materials.buildMaterialListByType('skm')
-        } else if (type == 'layer') {
-            su2rad.materials.layersList.update(newMats);
-            su2rad.materials.buildMaterialListByType('layer')
-        } else if (type == 'rad') {
-            su2rad.materials.radList.update(newMats);
-            su2rad.materials.setGroupSelection()
-            su2rad.materials.buildMaterialListRad()
-        } else {
-            log.warn("unknown material list type '" + type + "'");
-        }
-    } catch (err) {
-        log.error("setMaterialsListJSON:'" + err.message + "'");
-    }
-}
 
 
 

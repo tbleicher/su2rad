@@ -36,7 +36,7 @@ su2rad.dialog.fileSelector.createWindow = function () {
     fsw.className = "jqmWindow2"
     fsw.id = "fileSelectorWindow"
     var title = document.createElement("h3")
-    title.appendChild(document.createTextNode("Select file ..."))
+    title.appendChild(document.createTextNode("DEBUG: Select file ..."))
     fsw.appendChild(title)
     var tree = document.createElement("div");
     tree.className = "fileSelector"
@@ -111,7 +111,6 @@ su2rad.dialog.fileSelector.show = function(ftRoot) {
 
 su2rad.dialog.fileSelector.setFileTreeJSON = function (tree, setPosition) {
     // eval JSON views string from SketchUp
-    log.debug("TEST: setFileTreeJSON")
     var json = su2rad.utils.decodeJSON(tree);
     var entries = new Array();
     try {
@@ -123,9 +122,9 @@ su2rad.dialog.fileSelector.setFileTreeJSON = function (tree, setPosition) {
         log.error("json= " + json.replace(/,/g,',<br/>'));
         logError(e);
     }
-    log.debug("TEST: setFileTreeJSON entries.length=" + entries.length)
     var listing = this.formatTree(entries); 
     this._callback( listing );
+
     if (setPosition == 'true') {
         try {
             log.debug("setting scroll position ...");
