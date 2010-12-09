@@ -219,7 +219,7 @@ su2rad.dialog.weatherdata.setFilename = function (filename) {
     }
     title.appendChild(tNode);
     if (filename != "") {
-        su2rad.settings.sky.climateDataFile = filename
+        //XXX su2rad.settings.sky.climateDataFile = filename
     }
 }
 
