@@ -1,0 +1,210 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+
+<html lang="en">
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+        <meta http-equiv="Content-Style-Type" content="text/css">
+        <meta http-equiv="Content-Script-Type" content="text/javascript">
+
+        <title>Radiance Export</title>
+        
+        <!-- log panel for debugging -->
+        <script type="text/javascript" src="./blackbirdjs/blackbird.js"></script>
+        
+        <!-- google map and jsr_class for geonames.org requests -->
+	<!--
+	<script type="text/javascript" src="http://maps.google.com/maps?file=api&amp;v=2&amp;key=ABQIAAAAVkCvvMxWS6sy1KKSLvN3URTDis0fJxnS-wzgwKhlyWVJxXLRhxQq9kdL_d2nO8XPOQO2xIrAWCmccw"></script>
+	-->
+	<script type="text/javascript" src="./js/lib/jsr_class.js"></script>
+        
+        <!-- jquery and plugins -->
+        <!-- <script type="text/javascript" src="./js/lib/jquery-1.2.6.js"></script> -->
+        <script type="text/javascript" src="./js/lib/jquery-1.3.2.js"></script>
+        <script type="text/javascript" src="./js/lib/jquery.history_remote.pack.js"></script>
+        <script type="text/javascript" src="./js/lib/jquery.tabs.pack.js"></script>
+        <script type="text/javascript" src="./js/lib/jquery.alphanumeric.js"></script>
+        <script type="text/javascript" src="./js/lib/jquery.filetree.js"></script>
+        <script type="text/javascript" src="./js/lib/jquery.jqModal.js"></script>
+        <script type="text/javascript" src="./js/lib/ui/ui.core.1.7.2.js"></script>
+        <script type="text/javascript" src="./js/lib/ui/ui.draggable.1.7.2.js"></script>
+        <script type="text/javascript" src="./js/lib/ui/ui.droppable.1.7.2.js"></script>
+        <script type="text/javascript" src="./js/lib/ui/ui.resizable.1.7.2.js"></script>
+        
+        <!--[if IE]><script type="text/javascript" src="./js/lib/excanvas.js"></script><![endif]-->
+        <script type="text/javascript" src="./js/lib/canvas.text.js"></script>
+        <script type="text/javascript" src="./js/lib/faces/arial-normal-normal.js"></script>
+          
+        <!-- su2rad specific javascript files -->
+        <script type="text/javascript" src="./js/su2rad_tooltip.js"></script>
+        <script type="text/javascript" src="./js/su2rad_test.js"></script>
+        <script type="text/javascript" src="./js/su2rad.dialog.common.js"></script>
+        <script type="text/javascript" src="./js/su2rad_backend_interface.js"></script>
+        <script type="text/javascript" src="./js/su2rad.dialog.fileselector.js"></script>
+        <script type="text/javascript" src="./js/su2rad_export.js"></script>
+        <script type="text/javascript" src="./js/su2rad_views.js"></script>
+        <script type="text/javascript" src="./js/su2rad_googlemap.js"></script>
+        <script type="text/javascript" src="./js/su2rad_geonames.js"></script>
+        <script type="text/javascript" src="./js/su2rad_sky.js"></script>
+        <script type="text/javascript" src="./js/su2rad_location.js"></script>
+        <script type="text/javascript" src="./js/su2rad_radopts.js"></script>
+        <script type="text/javascript" src="./js/su2rad_materials.js"></script>
+        <script type="text/javascript" src="./js/su2rad_dialog.js"></script>
+        <script type="text/javascript" src="./js/su2rad.delaunay.js"></script>
+        <script type="text/javascript" src="./js/su2rad.grid.js"></script>
+        <script type="text/javascript" src="./js/su2rad.canvas.js"></script>
+        <script type="text/javascript" src="./js/su2rad.gridImport.js"></script>
+
+        <script type="text/javascript">
+
+            var gi = su2rad.dialog.gridImport;
+            evaluateSketchup = gi.evaluateSketchup;
+            
+            /* create tabs */
+            $(function() {
+                $('#tab-container').tabs(1, {
+                    //disabled: [5], 
+                    onClick: function(a,s,h) { su2rad.dialog.onTabClick(a,s,h); },
+                    onHide:  function(a,s,h) { su2rad.dialog.onTabHide(a,s,h); },
+                    onShow:  function(a,s,h) { su2rad.dialog.onTabShow(a,s,h); }
+                } );
+            });
+            
+            $().ready(function() {
+                // executed before <body onload()>
+                $('#legendMaxInput').numeric({allow:".-"});
+                $('#legendMinInput').numeric({allow:".-"});
+                $('#legendStepsInput').numeric();
+                $('#legendLightnessInput').numeric({allow:".-"});
+                $('#progressWindow').jqm();
+                $('#progressWindow').jqmAddTrigger('.showProgress');
+                // make canvas resizable
+                $("#canvasContainer").resizable( {
+                    stop: function (event, ui) {
+                        gi.onResizeCanvas()
+                    }
+                });
+            });
+
+        </script>
+        
+        <!-- style sheet for the rest of the dialog -->
+        <link rel="stylesheet" href="./blackbirdjs/blackbird.css" type="text/css" media="screen">
+        <link rel="stylesheet" href="./css/dialog.css"            type="text/css" media="print, projection, screen">
+        <link rel="stylesheet" href="./css/dialog.import.css"     type="text/css" media="print, projection, screen">
+        <link rel="stylesheet" href="./css/jqModal.css"           type="text/css" media="screen">
+        <link rel="stylesheet" href="./css/jquery.tabs.css"       type="text/css" media="print, projection, screen">
+        <link rel="stylesheet" href="./css/jquery.filetree.css"   type="text/css" media="screen" />
+        <link rel="stylesheet" href="./css/ui.resizable.css"      type="text/css" media="screen" />
+        <!-- Additional IE/Win specific style sheet (Conditional Comments) -->
+        <!--[if lte IE 8]>
+        <link rel="stylesheet" href="./css/jquery.tabs-ie.css" type="text/css" media="projection, screen">
+        <link rel="stylesheet" href="./css/dialog-ie.css" type="text/css" media="print, projection, screen">
+        <![endif]-->
+    
+    </head>
+    
+    <body style="background-color: white" onLoad="gi.initPage()">
+        
+        <input type="button" id="showLogButton" name="showLogButton" value="log" onclick="log.toggle()">
+    
+        <div id="tab-container">
+            <ul class="tabs-nav">
+                <li><a href="#tab-fields"><span>import grid results</span></a></li>
+            </ul>
+
+            
+            <!-- TAB export -->
+            
+            <div id="tab-fields">
+
+                <!-- title needs id to set filename -->
+                <h3 id="pageTitle" style="display:none">import grid results</h3>
+
+                <div style="width:100%; height: 420px; border: 1px solid red;">
+                    <!-- the canvas -->
+                    <div id="canvasContainer" style="padding:0;">
+                        <canvas id="cv" width="600" height="400" style="margin: 0; padding:0"></canvas>
+                    </div>
+
+                    <!-- graph options -->
+                    <div id="graphOptionsPanel">
+
+                        <!-- load button options --> 
+                        <div class="importOptionHeader" id="loadFileSelectionDiv" style="display: none;">
+                            <input type="file" class="file" size="5" id="loadFileSelection" onchange="gi.loadFileIDOM()" />
+                            <input type="button" id="loadFileButton" value="load file IDOM">
+                        </div>
+                        <div class="importOptionHeader" id="loadFileSUDiv">
+                            <input type="button" id="loadFileSU" value="load file SU" onclick="gi.loadFileSU()" />
+                        </div>
+                        <div id="loadFileWarning">
+                            <span>You need Firefox/Mozilla or Sketchup to load a results file.</span>
+                            <input type="button" id="simulateGrid" value="simulate" onclick="gi.simulateGrid()">
+                        </div>
+
+                        <!-- options for graph and legend--> 
+                        <div id="graphOptions"> 
+                            <div class="importOptionHeader">
+                                <div>legend options</div>
+                            </div>
+                            <div>
+                                <div class="gridRow">
+                                    <span class="gridLabel">min value</span>
+                                    <input type="text" width="10" value="0" id="legendMinInput" onchange="gi.setLegendMin(this.value)"/>
+                                </div>
+                                <div class="gridRow">
+                                    <span class="gridLabel">max value</span>
+                                    <input type="text" width="10" value="100" id="legendMaxInput" onchange="gi.setLegendMax(this.value)"/>
+                                </div>
+                                <div class="gridRow">
+                                    <span class="gridLabel">steps</span>
+                                    <input type="text" width="3" value="10" id="legendStepsInput" onchange="gi.setLegendSteps(this.value)"/>
+                                </div>
+                                <div class="gridRow">
+                                    <span class="gridLabel">label</span>
+                                    <input type="text" width="20" value="" id="legendLabelInput" onchange="gi.setLegendLabel(this.value)"/>
+                                </div>
+                                <div class="gridRow">
+                                    <span class="gridLabel">lightness</span>
+                                    <input type="text" width="4" value="0.4" id="legendLightnessInput" onchange="gi.setLegendLightness(this.value)" />
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- statistics table (filled in via JS) --> 
+                        <div id="statsDiv"> 
+                            <div class="importOptionHeader">
+                                <div>statistics</div>
+                            </div>
+                            <div id="statsTable"></div>
+                        </div>
+                        
+                        <!-- import button option only within Sketchup --> 
+                        <div class="importOptionHeader" id="importGraphToSketchupDiv" style="display: none; margin-top: 10px;">
+                            <input type="button" value="import to SU" id="importToSketchup" onclick="gi.importGraphToSketchup()" />
+                        </div>
+                        <div class="importOptionHeader" style="margin-top:5px;">
+                            <input type="button" value="make convex" id="makeGraphConvex" onclick="gi.makeConvex()" />
+                        </div>
+                        
+                    </div>
+                    <!-- end of graphOptionsPanel -->
+                
+                </div>
+                <!-- end of first row -->
+                
+                <!-- for debugging -->
+                <div style="width:100%; border: 1px solid green;">
+                    <textarea id="messagearea" cols=120 rows=8></textarea>
+                    <textarea id="textfilecontent" cols=80 rows=4 style="display:none"></textarea>
+                    <textarea id="trianglesjson" cols=80 rows=4 style="display:none"></textarea>
+                </div>
+            
+            </div>
+            
+             
+        </div>
+        <!-- end of tabs -->
+
+    </body>
+</html>

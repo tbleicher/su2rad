@@ -1,9 +1,12 @@
 # Sketchup To Radiance Exporter
 #
-# su2rad.rb - version 0.0d
-#
+# su2rad.rb 
+
+$SU2RAD_VERSION = "$Rev$" #XXX
+
 # Written by Thomas Bleicher
-# based on ogre_export by Kojack
+#
+# tbleicher@gmail.com
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU Lesser General Public License
@@ -23,6 +26,25 @@
 
 
 # revisions:
+# ===========
+#
+# current                :  $Rev$
+#                           $Date::                     $
+#                           $Author$
+#
+# branch 1.0:
+# -----------
+# daysim r02 - 28/06/09  :  basic features for DAYSIM support
+#                           creation of DAYSIM scene description files
+#                           import of rtrace values as colored contour plot
+# daysim r01 - 15/06/09  :  non-public - for feedback from C. Reinhart only
+# v 1.0alpha - 18/01/09  :  pre-releas for feedback (including Windows)
+#                           new interface pages for views and materials
+# Xmas_special_2008      :  pre-releas for feedback (Mac only)
+#                           all new webdialog JavaScript interface
+#
+# branch 0.0:
+# -----------
 # v 0.0d - tbc       :  fixed bug in cleaning of colour names
 #                         (thanks to Rob Guglielmetti for reporting)
 #                       fixed export of hidden layers in components
@@ -37,84 +59,94 @@
 #                       added exception error display to export function
 # v 0.0  - 28/10/07  :  initial release
 
+
+
 if PLATFORM =~ /darwin/
-    $OS = 'MAC'
+    ##TODO add option for PPC
+    $SU2RAD_PLATFORM = 'MAC'
 else
-    $OS = 'WIN'
+    $SU2RAD_PLATFORM = 'WIN'
 end
 
-require "su2radlib/preferences.rb"
+## extend search path to subdirectories
+basedir = File.dirname(__FILE__)
+$:.push(File.join(basedir, 'su2radlib'))
+#$:.push(File.join(basedir, 'su2radlib', 'rubylib'))
+
+require "sketchup.rb"
+require "su2radlib/su2rad.module.rb"
 require "su2radlib/exportbase.rb"
-require "su2radlib/interface.rb"
+require "su2radlib/context.rb"
 require "su2radlib/numeric.rb"
+require "su2radlib/weatherdata.rb"
 require "su2radlib/material.rb"
 require "su2radlib/radiance_entities.rb"
 require "su2radlib/radiancescene.rb"
-
-$RADPRIMITIVES = {  "plastic"    => 1,
-                    "glass"      => 1,
-                    "trans"      => 1, "trans2" => 1,
-                    "metal"      => 1, "metal2" => 1,
-                    "glow"       => 1,
-                    "light"      => 1,
-                    "source"     => 1,
-                    "mirror"     => 1,
-                    "dielectric" => 1, "dielectric2" => 1,
-                    "void"       => 1}
-
-$testdir = ""
-
-## reload all script files for debugging
-if $DEBUG
-    load "su2radlib/preferences.rb"
-    load "su2radlib/exportbase.rb"
-    load "su2radlib/interface.rb"
-    load "su2radlib/numeric.rb"
-    load "su2radlib/material.rb"
-    load "su2radlib/radiance_entities.rb"
-    load "su2radlib/radiancescene.rb"
-end
+require "su2radlib/webdialog.rb"
+require "su2radlib/config_class.rb"
+require "su2radlib/tests/floor_attrib.rb"
+require "su2radlib/attributes_room.rb"
 
 
 ## define defaults if config file is messed up
-$BUILD_MATERIAL_LIB = false
-$EXPORTALLVIEWS     = false 
-$MAKEGLOBAL         = false     
-$LOGLEVEL           = 0                ## don't report details
-$MODE               = 'by group'       ## "by group"|"by layer"|"by color"
-$RAD                = ''
-$REPLMARKS          = '/usr/local/bin/replmarks' 
-$PREVIEW            = false        
-$SHOWRADOPTS        = true
-$SUPPORTDIR         = '/Library/Application Support/Google Sketchup 6/Sketchup'
-$TRIANGULATE        = false    
-$UNIT               = 0.0254           ## inch (SU native unit) to meters (Radiance)
-$UTC_OFFSET         = nil
-$ZOFFSET            = nil     
+$SU2RAD_LOGLEVEL    = 0        #XXX report warnings and errors only
+$SU2RAD_LOG = []
 
-## try to load configuration from file
-loadPreferences()
-
-## define scale matrix for unit conversion
-$SCALETRANS = Geom::Transformation.new(1/$UNIT)
+## load configuration from file
+#loadPreferences()
 
 
 def startExport(selected_only=0)
     begin
-        $MatLib = MaterialLibrary.new()
+        $SU2RAD_CONTEXT = ExportContext.new()
+        $SU2RAD_CONFIG = RunTimeConfig.new()
+        $SU2RAD_COUNTER = ProgressCounter.new()
         rs = RadianceScene.new()
-        rs.export(selected_only)
+        rs.startExport(selected_only)
     rescue => e 
         msg = "%s\n\n%s" % [$!.message,e.backtrace.join("\n")]
         UI.messagebox msg            
     end 
 end
 
+def startWebExport(selected_only=0)
+    begin
+        if $SU2RAD_DIALOG_WINDOW
+            $SU2RAD_DIALOG_WINDOW.bring_to_front()
+        else 
+            $SU2RAD_CONTEXT = ExportContext.new()
+            $SU2RAD_CONFIG = RunTimeConfig.new()
+            $SU2RAD_COUNTER = ProgressCounter.new()
+            edw = ExportDialogWeb.new()
+            edw.show()
+        end
+    rescue => e 
+        msg = "%s\n\n%s" % [$!.message,e.backtrace.join("\n")]
+        UI.messagebox msg            
+    end 
+end
 
+def su2radTestExport
+    begin
+        if $SU2RAD_DIALOG_WINDOW
+            $SU2RAD_DIALOG_WINDOW.bring_to_front()
+        else 
+            $SU2RAD_CONTEXT = ExportContext.new()
+            $SU2RAD_CONFIG = RunTimeConfig.new()
+            $SU2RAD_COUNTER = ProgressCounter.new()
+            edw = ExportDialogWeb.new()
+            edw.testExport()
+        end
+    rescue => e 
+        msg = "%s\n\n%s" % [$!.message,e.backtrace.join("\n")]
+        UI.messagebox msg            
+    end 
+end 
 
 $matConflicts = nil
 
 def countConflicts
+    $SU2RAD_CONFIG = RunTimeConfig.new()
     if $matConflicts == nil
         $matConflicts = MaterialConflicts.new()
     end
@@ -122,60 +154,131 @@ def countConflicts
 end
 
 def resolveConflicts
+    $SU2RAD_CONFIG = RunTimeConfig.new()
     if $matConflicts == nil
         $matConflicts = MaterialConflicts.new()
     end
     $matConflicts.resolve()
 end
 
-
-
-def startImport(f='')
+def startImport()
+    $SU2RAD_CONFIG = RunTimeConfig.new()
     ni = NumericImport.new()
-    if $DEBUG
-        ni.loadFile(f)
-        ni.createMesh
-        ni.addContourLines
-        ni.addLabels
+    if $SU2RAD_DEBUG
+        if ni.loadFile('/Users/ble/tmp/numimport/ADF_medium.df') == true
+            ni.confirmDialog
+        end
     else
-        ni.loadFile
-        ni.confirmDialog
+        if ni.loadFile() == true
+            ni.confirmDialog
+        end
     end
 end
 
-
-
-def preferencesDialog
-    pd = PreferencesDialog.new()
-    pd.showDialog()
+def startImportWeb()
+    $SU2RAD_CONFIG = RunTimeConfig.new()
+    ni = NumericImport.new()
+    ni.showWebDialog()
 end
 
+def showWeatherDataDialog()
+    $SU2RAD_CONFIG = RunTimeConfig.new()
+    wDlg = WeatherDataImportDialog.new()
+    wDlg.show()
+end
 
+def aboutDialog
+    msg = "su2rad.rb\nSketchUp to Radiance exporter\nversion:  #{$SU2RAD_VERSION}"
+    msg += "\n(c) Thomas Bleicher, 2008\ntbleicher@gmail.com"
+    UI.messagebox(msg, MB_OK, 'su2rad.rb')
+end
+
+def acknowledgementDialog
+    dlg = UI::WebDialog.new("su2rad - acknowledgement", true, nil, 650, 800, 50, 50, true);
+    html = File.join(File.dirname(__FILE__), "su2radlib", "html","acknowledgement.html")
+    dlg.set_file(html, nil)
+    dlg.show()
+end
+    
+def preferencesDialog
+    $SU2RAD_CONFIG = RunTimeConfig.new()
+    load 'su2radlib/preferences.rb'
+    sd = SettingsDialog.new()
+    sd.show()
+end
 
 def runTest
-    sky = RadianceSky.new()
-    sky.test()
+    $SU2RAD_CONFIG = RunTimeConfig.new()
+    load 'su2radlib/preferences.rb'
+    sd = SettingsDialog.new()
+    sd.show()
+end
+
+def su2rad_reload
+    ## reload all script files for debugging
+    printf "reloading modules ...\n"
+    load "su2radlib/export_modules.rb"
+    load "su2radlib/exportbase.rb"
+    load "su2radlib/filesystemproxy.rb"
+    load "su2radlib/context.rb"
+    load "su2radlib/numeric.rb"
+    load "su2radlib/weatherdata.rb"
+    load "su2radlib/material.rb"
+    load "su2radlib/radiance.rb"
+    load "su2radlib/radiance_entities.rb"
+    load "su2radlib/radiancescene.rb"
+    load "su2radlib/webdialog.rb"
+    load "su2radlib/webdialog_options.rb"
+    load "su2radlib/webdialog_views.rb"
+    load "su2radlib/scene_materials.rb"
+    load "su2radlib/config_class.rb"
+    # set debug flag and reload main file to start dialog
+    $SU2RAD_DEBUG = true
+    load "su2rad.rb"
 end
 
 
+def addRadianceMenu
+    pmenu = UI.menu("Plugin")
+    radmenu = pmenu.add_submenu("Radiance")
+    radmenu.add_item("export (#{$SU2RAD_VERSION})") { startWebExport(0) }
+    radmenu.add_separator()
+    #radmenu.add_item("export scene") { startExport(0) }
+    #radmenu.add_item("export selection") { startExport(1) }
+    
+    #matmenu = radmenu.add_submenu("Material")
+    #matmenu.add_item("count conflicts") { countConflicts }
+    #matmenu.add_item("resolve conflicts") { resolveConflicts }
+    
+    importmenu = radmenu.add_submenu("Import")
+    importmenu.add_item("rtrace values") { startImport() }
+    importmenu.add_item("rtrace values (web)") { startImportWeb() }
+    radmenu.add_separator()
+    
+    radmenu.add_item("weather data") { showWeatherDataDialog() }
+    radmenu.add_separator()
+    
+    attrmenu = radmenu.add_submenu("attributes ...")
+    attrmenu.add_item("workplane") { startWorkplaneTool() }
+    #attrmenu.add_item("create workplane") { createWorkplaneCmd() }
+    radmenu.add_separator()
+    
+    radmenu.add_item("Preferences") { preferencesDialog() }
+    radmenu.add_item("About") { aboutDialog() }
+    radmenu.add_item("Acknowledgement") { acknowledgementDialog() }
+    radmenu.add_separator()
+    radmenu.add_item("reload") { su2rad_reload() }
+end
 
-if $DEBUG
+
+if $SU2RAD_DEBUG
     printf "debug mode\n"
-    startExport()
+    startWebExport(0)
 else
     ## create menu entry
     begin
         if (not file_loaded?("su2rad.rb"))
-            pmenu = UI.menu("Plugin")
-            radmenu = pmenu.add_submenu("Radiance")
-            radmenu.add_item("export scene") { startExport(0) }
-            radmenu.add_item("export selection") { startExport(1) }
-            matmenu = radmenu.add_submenu("Material")
-            matmenu.add_item("count conflicts") { countConflicts }
-            matmenu.add_item("resolve conflicts") { resolveConflicts }
-            importmenu = radmenu.add_submenu("Import")
-            importmenu.add_item("numeric results") { startImport }
-            radmenu.add_item("Preferences") { preferencesDialog() }
+            addRadianceMenu()
         end
     rescue => e
         msg = "%s\n\n%s" % [$!.message,e.backtrace.join("\n")]
@@ -185,4 +288,16 @@ else
     file_loaded("su2rad.rb")
 end
 
-
+def testExport()
+    begin
+        $SU2RAD_CONTEXT = ExportContext.new()
+        $SU2RAD_CONFIG = RunTimeConfig.new()
+        $SU2RAD_COUNTER = ProgressCounter.new()
+        rs = RadianceScene.new()
+        rs.prepareExport()
+        rs.startExportWeb()
+    rescue => e 
+        msg = "%s\n\n%s" % [$!.message,e.backtrace.join("\n")]
+        UI.messagebox msg            
+    end 
+end

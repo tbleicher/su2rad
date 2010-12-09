@@ -43,11 +43,14 @@ a:hover             {   color: #CC0000; text-decoration: none; }
 
 function dohelp() {
     var os = navigator.appVersion.indexOf('Mac') != -1? 'Mac' : 'Win';
-    if(os == 'Win') {
-        window.open('http://sketchup.google.com/gsu6/help/gsuwin.html');
-    } else {
-        window.open('http://sketchup.google.com/gsu6/help/gsumac.html', 'Help');
-    }
+    if(os == 'Win')
+        {
+                window.open('http://sketchup.google.com/gsu6/help/gsuwin.html');
+        }
+        else
+        {
+                window.open('http://sketchup.google.com/gsu6/help/gsumac.html', 'Help');
+        }
 }
 
 function expand(id) {
@@ -58,9 +61,11 @@ function expand(id) {
         document.getElementById(id+'_link').innerHTML="show help";
         // resize window - a bit annoying
         // window.location = "skp:small_window";
-    } else {
+    }
+    else {
         // first hide all help text
-        for ( var n=1; n<=4; n++ ) {
+        for ( var n=1; n<=4; n++ )
+        {
             document.getElementById('help' + n).style.display='none';
             document.getElementById('help' + n + '_link').innerHTML="show help";
         }
@@ -73,14 +78,16 @@ function expand(id) {
 }
 
 function expand_old(id) {
-    styleObj=document.getElementById().style;
-    if (styleObj.display=='none') {
+  styleObj=document.getElementById().style;
+   if (styleObj.display=='none')
+   {
         styleObj.display='';
         tag.innerHTML = "<span style=\"font-family:'sans-serif'; font-size:83%; cursor:hand; color:blue;\">hide Help<\/span>";
-    } else {
+   }
+   else {
         styleObj.display='none';
         tag.innerHTML = "<span style=\"font-family:'sans-serif'; font-size:83%; cursor:hand; color:blue;\">show Help<\/span>";
-    }
+   }
 }
 
 function checkNumberLessThan60(id) {
@@ -169,11 +176,6 @@ function onCheckboxChanged(id) {
 }
     
 function onSelectionChanged(id) {
-    if (id=='layoutSize') {
-        if (document.getElementById(id).value == '1,1') {
-            document.getElementById('onlyShadows').checked = true;
-        }
-    }
     window.location='skp:on_selection_changed@' + id + ',' + document.getElementById(id).value;
 }
     
@@ -257,10 +259,10 @@ function setValue(id, val) {
 
               <td class="optfield">
                 <select id="monthsSelect" onchange="onSelectionChanged('monthsSelect')" name="monthsSelect" style="width: 120px;">
-                  <option value="Jun | Sep | Dec">Jun | Sep | Dec</option>
+                  <option value="Jun | Sep | Dec" selected>Jun | Sep | Dec</option>
                   <option value="Jun - Dec">Jun - Dec</option>
                   <option value="Jan - Dec">Jan - Dec</option>
-                  <option value="current" selected>current</option>
+                  <option value="current">current</option>
                 </select>
               </td>
 
@@ -274,10 +276,10 @@ function setValue(id, val) {
 
               <td class="optfield">
                 <select id="daysSelect" onchange="onSelectionChanged('daysSelect')" name="daysSelect" style="width: 120px;">
-                  <option value="21">21</option>
+                  <option value="21" selected>21</option>
                   <option value="7|21">7|21</option>
                   <option value="7|14|21|28">7|14|21|28</option>
-                  <option value="current" selected>current</option>
+                  <option value="current">current</option>
                 </select>
               </td>
 
@@ -567,7 +569,7 @@ function setValue(id, val) {
 
               <td class="optlabel">only shadows</td>
 
-              <td class="optfield2"><input name="onlyShadows" type="checkbox" id="onlyShadows" onchange="onCheckboxChanged('onlyShadows')" checked></td>
+              <td class="optfield2"><input name="onlyShadows" type="checkbox" id="onlyShadows" onchange="onCheckboxChanged('onlyShadows')"></td>
             </tr>
 
             <tr>
@@ -575,8 +577,7 @@ function setValue(id, val) {
 
               <td class="optfield">
                 <select id="layoutSize" onchange="onSelectionChanged('layoutSize')" name="layoutSize" style="width: 120px;">
-                  <option value="1,1" selected>fan (1x1)</option>
-                  <option value="3,3">7 (3x3)</option>
+                  <option value="3,3" selected>7 (3x3)</option>
                   <option value="4,3"> 8 (4x3)</option>
                   <option value="3,4"> 9 (3x4)</option>
                   <option value="5,3"> 9 (5x3)</option>
@@ -591,10 +592,10 @@ function setValue(id, val) {
             </tr>
 
             <tr>
-              <td class="optlabel"></td>
+              <td class="optlabel">time stamp</td>
 
               <td class="optfield">
-                <select id="timeStamp" onchange="onSelectionChanged('timeStamp')" name="timeStamp" style="width:120px; display:none">
+                <select id="timeStamp" onchange="onSelectionChanged('timeStamp')" name="timeStamp" style="width: 120px;">
                   <option value="none">none</option>
                   <option value="NorthWest" selected>top right</option>
                   <option value="North"     >top</option>
