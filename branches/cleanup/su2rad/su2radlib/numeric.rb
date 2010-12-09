@@ -72,7 +72,8 @@ class NumericImportDialog < ExportBase
             dirs = FileSystemProxy.listDirectory(dirpath)
         end
         json = toStringJSON(dirs)
-        dlg.execute_script("su2rad.dialog.fileSelector.setFileTreeJSON('%s', '%s')" % [escape_javascript(json),root])
+        json = escape_javascript(json)
+        dlg.execute_script("su2rad.dialog.fileSelector.setFileTreeJSON('%s', '%s')" % [json,root])
     end
     
     def importFromWebDialog(dlg, opts)

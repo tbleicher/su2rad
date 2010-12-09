@@ -5,8 +5,6 @@ require 'radiance.rb'
 require 'radiance_entities.rb'
 require 'radiancescene.rb'
 require 'filesystemproxy.rb'
-#require 'webdialog_options.rb'
-#require 'webdialog_views.rb'
 
 
 
@@ -66,7 +64,6 @@ class ExportDialogWeb < ExportBase
             return
         end
         dlg = UI::WebDialog.new(title, true, nil, 650, 800, 50, 50, true);
-        #dlg.set_background_color("0000ff")
             
         ## export and cancel actions
         dlg.add_action_callback("onCancel") { |d,p|
@@ -143,7 +140,7 @@ class ExportDialogWeb < ExportBase
         }
         
         ## set contents
-        html = File.join(File.dirname(__FILE__), "html","su2rad_export.html")
+        html = File.join(File.dirname(__FILE__), "html", "su2rad_export.html")
         dlg.set_file(html, nil)
         
         ## show dialog
