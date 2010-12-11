@@ -121,7 +121,7 @@ h3,th {
     padding-bottom: 5px;
     font-weight: bold;
     color: #27537a;
-    background: url(gradient.png) repeat-x;
+    /* background: url(gradient.png) repeat-x; */
     height: 18px;     /* IE 6 treats height as min-height */
     min-height: 18px; /* IE 6 treats height as min-height */
     max-width: 600px;

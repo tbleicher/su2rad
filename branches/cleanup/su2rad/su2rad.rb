@@ -163,6 +163,8 @@ end
 
 def startImport()
     $SU2RAD_CONFIG = RunTimeConfig.new()
+    $SU2RAD_CONTEXT = ExportContext.new()
+    #$SU2RAD_COUNTER = ProgressCounter.new()
     ni = NumericImport.new()
     if $SU2RAD_DEBUG
         if ni.loadFile('/Users/ble/tmp/numimport/ADF_medium.df') == true
@@ -177,6 +179,8 @@ end
 
 def startImportWeb()
     $SU2RAD_CONFIG = RunTimeConfig.new()
+    $SU2RAD_CONTEXT = ExportContext.new()
+    $SU2RAD_COUNTER = ProgressCounter.new()
     ni = NumericImport.new()
     ni.showWebDialog()
 end

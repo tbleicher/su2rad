@@ -18,8 +18,8 @@
 	<script type="text/javascript" src="./js/lib/jsr_class.js"></script>
         
         <!-- jquery and plugins -->
-        <!-- <script type="text/javascript" src="./js/lib/jquery-1.2.6.js"></script> -->
-        <script type="text/javascript" src="./js/lib/jquery-1.3.2.js"></script>
+        <!-- <script type="text/javascript" src="./js/lib/jquery-1.3.2.js"></script> -->
+        <script type="text/javascript" src="./js/lib/jquery-1.4.4.js"></script>
         <script type="text/javascript" src="./js/lib/jquery.history_remote.pack.js"></script>
         <script type="text/javascript" src="./js/lib/jquery.tabs.pack.js"></script>
         <script type="text/javascript" src="./js/lib/jquery.alphanumeric.js"></script>
@@ -37,6 +37,7 @@
         <!-- su2rad specific javascript files -->
         <script type="text/javascript" src="./js/su2rad_tooltip.js"></script>
         <script type="text/javascript" src="./js/su2rad_test.js"></script>
+        <script type="text/javascript" src="./js/su2rad.utils.js"></script>
         <script type="text/javascript" src="./js/su2rad.dialog.common.js"></script>
         <script type="text/javascript" src="./js/su2rad_backend_interface.js"></script>
         <script type="text/javascript" src="./js/su2rad.dialog.fileselector.js"></script>
@@ -143,7 +144,7 @@
                         </div>
 
                         <!-- options for graph and legend--> 
-                        <div id="graphOptions"> 
+                        <div id="graphOptions" class="importOption"> 
                             <div class="importOptionHeader">
                                 <div>legend options</div>
                             </div>
@@ -172,7 +173,7 @@
                         </div>
                         
                         <!-- statistics table (filled in via JS) --> 
-                        <div id="statsDiv"> 
+                        <div id="statsDiv" class="importOption"> 
                             <div class="importOptionHeader">
                                 <div>statistics</div>
                             </div>

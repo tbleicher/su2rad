@@ -44,12 +44,15 @@ class WeatherDataImportDialog < ExportBase
         
         ## load html file and show dialog
         html = File.join(File.dirname(__FILE__), "html","importWeatherData.html")
+        uimessage("DEBUG: html path='%s'" % html, 2)
         dlg.set_file(html, nil)
         $SU2RAD_DIALOG_WINDOW = dlg
         epwpath, epwdata = getEPWPathFromAttribute()
         dlg.show {
-            printf "DEBUG: su2rad.dialog.setSketchup()\n"
+            printf("DEBUG: su2rad.dialog.setSketchup()\n")
             dlg.execute_script("su2rad.dialog.setSketchup()")
+            dlg.execute_script("su2rad.dialog.evaluateSketchup()")
+            dlg.execute_script("su2rad.dialog.weatherdata.evaluateSketchup()")
             epwpath, epwdata = getEPWPathFromAttribute()
             if epwpath != ""
                 path = urlEncode(epwpath)
@@ -57,7 +60,7 @@ class WeatherDataImportDialog < ExportBase
                 uimessage("setting file path '#{epwpath}'", 2)
                 dlg.execute_script("su2rad.dialog.weatherdata.setFileFromSketchup('#{data}', '#{path}')")
             else
-                path = '/Users/ble/tmp/su2rad' 
+                path = '/Users/ble/tmp/svn/Ruby/sketchup/branches/cleanup/su2rad/su2radlib/html/testdata' 
                 uimessage("starting file selector ... (path='#{path}')", 2)
                 dlg.execute_script("su2rad.dialog.weatherdata.loadFileSU('#{path}')")
             end 
