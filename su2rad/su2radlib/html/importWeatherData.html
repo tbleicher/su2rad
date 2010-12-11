@@ -40,8 +40,6 @@
         <script type="text/javascript" src="./js/su2rad.dialog.common.js"></script>
         <script type="text/javascript" src="./js/su2rad_backend_interface.js"></script>
         <script type="text/javascript" src="./js/su2rad.dialog.fileselector.js"></script>
-        <script type="text/javascript" src="./js/su2rad_sky.js"></script>
-	<script type="text/javascript" src="./js/su2rad_dialog.js"></script>
 	
         <script type="text/javascript" src="./js/su2rad.grid.js"></script>
         <script type="text/javascript" src="./js/su2rad.canvas.js"></script>
@@ -115,7 +113,7 @@
             <div id="tab-fields">
 
                 <!-- title needs id to set filename -->
-                <h3 id="pageTitle">import grid results</h3>
+                <h3 id="pageTitle">no file selected</h3>
                 
                 <!-- the canvas -->
                 <div id="canvasContainer" style="width: 680px; padding:0;">
@@ -124,77 +122,6 @@
                 
                 <!-- graph options -->
                 <div id="graphOptionsPanel">
-                    
-                    <!-- load button options --> 
-                    <div class="importOptionHeader" id="loadFileSelectionDiv" style="display: none;">
-                        <input type="file" class="file" size="5" id="loadFileSelection" onchange="su2rad.dialog.weatherdata.loadFileIDOM()" />
-                        <input type="button" id="loadFileButton" value="load file FF">
-                    </div>
-                    <div class="importOptionHeader" id="loadFileSUDiv">
-                        <input type="button" id="loadFileSU" value="load file SU" onclick="su2rad.dialog.weatherdata.loadFileSU()" />
-                    </div>
-                    <div id="loadFileWarning">
-                        <span>You need Firefox/Mozilla or Sketchup to load a results file.</span>
-                        <input type="button" id="simulateGrid" value="simulate" onclick="su2rad.dialog.weatherdata.simulateGrid()">
-                    </div>
-                    
-                    <!-- select data to display --> 
-                    <div id="dataTypeDiv">
-                        <div class="importOptionHeader">
-                            <select id="weatherDataType" onchange="su2rad.dialog.weatherdata.setDataType()">
-                                <option value="0" selected>global horizontal</option>
-                                <option value="1" >direct normal</option>
-                                <option value="2" >diffuse horizontal</option>
-                                <option value="3" >global horiz. ill</option>
-                                <option value="4" >direct normal ill</option>
-                                <option value="5" >diffuse horiz. ill</option>
-                            </select>
-                        </div>
-                    </div>
-                    
-                    <!-- options for display --> 
-                    <div id="graphOptions"> 
-                        <!-- 
-                        <div class="importOptionHeader">
-                            <div>legend options</div>
-                        </div>
-                        <div>
-                            <div class="gridRow">
-                                <span class="gridLabel">min value</span>
-                                <input type="text" width="10" value="0" id="legendMinInput" onchange="su2rad.dialog.weatherdata.setLegendMin(this.value)"/>
-                            </div>
-                            <div class="gridRow">
-                                <span class="gridLabel">max value</span>
-                                <input type="text" width="10" value="100" id="legendMaxInput" onchange="su2rad.dialog.weatherdata.setLegendMax(this.value)"/>
-                            </div>
-                            <div class="gridRow">
-                                <span class="gridLabel">steps</span>
-                                <input type="text" width="3" value="10" id="legendStepsInput" onchange="su2rad.dialog.weatherdata.setLegendSteps(this.value)"/>
-                            </div>
-                            <div class="gridRow">
-                                <span class="gridLabel">label</span>
-                                <input type="text" width="20" value="" id="legendLabelInput" onchange="su2rad.dialog.weatherdata.setLegendLabel(this.value)"/>
-                            </div>
-                            <div class="gridRow">
-                                <span class="gridLabel">lightness</span>
-                                <input type="text" width="4" value="0.0" id="legendLightnessInput" onchange="su2rad.dialog.weatherdata.setLegendLightness(this.value)" />
-                            </div>
-                        </div>
-                        -->
-                    </div>
-                    
-                    <div id="statsDiv"> 
-                        <div class="importOptionHeader">
-                            <div>statistics</div>
-                        </div>
-                        <div id="statsTable"></div>
-                    </div>
-                    
-                    <!-- import button option only within Sketchup --> 
-                    <div class="importOptionHeader" id="useEPWInSUDiv">
-                        <input type="button" id="useEPWInSU" value="use in SketchUp" onclick="su2rad.dialog.weatherdata.importEPWToSketchup()" />
-                    </div>
-                    
                 </div>
                 
                 <!-- text area to show file header -->

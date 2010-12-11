@@ -1,5 +1,5 @@
 
-H3 {
+h3 {
     width: 100%;
 }
 
@@ -20,24 +20,6 @@ H3 {
     font-size: 12px;
     color: darkred;
 }
-/*
-#loadFileSelectionDiv {
-    height: 10px;
-}
-*/
-
-/*
-#importToSketchup, #importAllToSketchup, #loadFileSU, #useEPWInSU, #weatherDataType {
-    width: 130px;
-    margin: 0;
-    margin-top: 5px;
-    margin-left: 7px;
-}
-*/
-
-#weatherDataType {
-    margin-top: 0px;
-}
 
 #simulateGrid {
     width: 120px;
@@ -45,23 +27,16 @@ H3 {
 }
 
 #graphOptionsPanel {
-    /* height: 150px; */
+    height: 400px;
     width: 145px;
     padding: 0px;
     margin: 0px;
     margin-bottom: 10px;
+    float: left; 
     /* outline: 1px solid lightblue; */
-    float: left;
+    /* margin-right: 20px; */
 }
-/*
-#graphOptionsPanel > div {
-    width: 145px;
-    background-color: #eef;
-    /* float: left;
-    height: 100%;
-    padding: 0px; */
-}
-*/
+
 #graphOptionsPanel .gridRow {
     width: 145px;
     margin: 0px;
@@ -71,10 +46,6 @@ H3 {
 #graphOptions, #statsDiv {
     margin: 0px;
     /* margin-left: 10px; */
-}
-
-#graphButtonDiv {
-    margin: 0px;
 }
 
 #dataTypeDiv {
@@ -102,9 +73,9 @@ H3 {
     width: 50px;
     color: blue;
     vertical-align: middle;
+    border: 1px dotted #888;
     /* position: relative; */
     /* top: 1px; */
-    border: 1px dotted #888;
 }
 
 canvas {
@@ -117,17 +88,18 @@ canvas {
     height: 400px;
     float: left;
     margin: 0px;
-    margin-right: 20px;
-    margin-bottom: 20px;
-    border: 1px solid lightblue;
+    margin-left: 15px;
+    margin-bottom: 13px;
+    outline: 1px solid lightblue;
     background: url(arrow_se_blue.gif) no-repeat right bottom; 
 }
 
 #messagearea {
     border: 1px solid lightblue;
-    /* color: lightblue; */
     font-size: 11px;
     padding: 3px;
+    margin-left: 159px;
+    /* color: lightblue; */
 }
 
 .importOption {
@@ -138,16 +110,18 @@ canvas {
     background-color: lightblue;
     height: 24px;
     margin: 0;
-    margin-bottom: 10px;
+    margin-top: 10px;
+    margin-bottom: 5px;
 }
 
 .importOptionHeader div {
     font-weight: bold;
-    margin:0;
+    margin: 0;
     padding: 0;
     padding-left: 5px;
-    padding-top: 3px;
+    padding-top: 5px;
 }
+
 
 .importOptionHeader > input[type=button], #weatherDataType {
     width: 130px;
@@ -156,4 +130,27 @@ canvas {
     margin-left: 7px;
 }
 
+#weatherDataType {
+    margin-top: 0px;
+}
 
+#pageTitle {
+    outline: 1px solid lightblue;
+    padding: 7px;
+    padding-bottom: 4px;
+    margin-bottom: 10px;
+    width: 826px;
+    max-width: 826px;
+}
+
+#graphButtonDiv {
+    margin-top: 0px;
+}
+
+#graphOptionsPanel div:first-child {
+    margin-top: 0px;
+}
+
+#graphOptions, #statsDiv, #applyButtonDiv {
+    margin-top: 10px;
+}

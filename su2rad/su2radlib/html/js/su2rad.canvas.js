@@ -665,7 +665,11 @@ su2rad.canvas.GridCanvas.prototype.getLegendOptions = function () {
     opts.steps = this.legendSteps;
     opts.label = this.legendLabel;
     opts.lightness = this.gradient.lightness;
-    opts.datatype = this.array.dataTypeIndex;
+    if (this.array) {
+        opts.datatype = this.array.dataTypeIndex;
+    } else {
+        opts.datatype = 0;
+    }
     return opts
 }
 
