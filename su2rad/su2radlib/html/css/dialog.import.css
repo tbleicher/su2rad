@@ -33,6 +33,7 @@ h3 {
     margin: 0px;
     margin-bottom: 10px;
     float: left; 
+    
     /* outline: 1px solid lightblue; */
     /* margin-right: 20px; */
 }
@@ -89,8 +90,9 @@ canvas {
     float: left;
     margin: 0px;
     margin-left: 15px;
-    margin-bottom: 13px;
+    margin-bottom: 15px;
     outline: 1px solid lightblue;
+    padding: 0px;
     background: url(arrow_se_blue.gif) no-repeat right bottom; 
 }
 
@@ -153,4 +155,7 @@ canvas {
 
 #graphOptions, #statsDiv, #applyButtonDiv {
     margin-top: 10px;
+    background-color: #eef;
 }
+
+
