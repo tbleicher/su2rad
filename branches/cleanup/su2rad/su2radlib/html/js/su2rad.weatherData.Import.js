@@ -63,6 +63,7 @@ su2rad.dialog.weatherdata.createLayout = function (containerId) {
     msgArea.id = "messagearea"
     msgArea.setAttribute("cols", "100")
     msgArea.setAttribute("rows", "8")
+    msgArea.setAttribute("style", "width:674px;")
     container.appendChild(msgArea)
     
     
@@ -567,7 +568,7 @@ su2rad.dialog.weatherdata.createLegendOptions = function () {
     var headerDiv = document.createElement("DIV")
     headerDiv.className = "importOptionHeader"
     var div2 = document.createElement("DIV")
-    div2.appendChild(document.createTextNode("legend options"))
+    div2.appendChild(document.createTextNode("legend options:"))
     headerDiv.appendChild(div2)
     graphOptionsDiv.appendChild(headerDiv)
     
