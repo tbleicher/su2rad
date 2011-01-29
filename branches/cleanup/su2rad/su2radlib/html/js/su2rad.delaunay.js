@@ -13,6 +13,7 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
+
 su2rad.geom = su2rad.geom ? su2rad.geom : new Object();
 
 su2rad.geom.Delaunay = function() {
@@ -57,6 +58,28 @@ su2rad.geom.Delaunay = function() {
         // AddVertex
     };
             
+    // bounding box class
+    function BBox2D ( xmin, xmax, ymin, ymax ) {
+        return {
+            'xmin' : xmin,
+            'xmax' : xmax ? xmax : xmin,
+            'ymin' : ymin,
+            'ymax' : ymax ? ymax : ymin,
+            'fit' : function ( o ) {
+                if ( this.xmin <= o.xmin && this.xmax >= o.xmax && this.ymin <= o.ymin && this.ymax >= o.ymax ) {
+                    return true
+                }
+                return false;
+            },
+            'hit' : function ( p ) {
+                if ( this.xmin <= p.x && p.x <= this.xmax && this.ymin <= p.y && p.y <= this.ymax ) {
+                    return true
+                }
+                return false;
+            }
+        }
+    };
+
     function CalcCircumcircle(triangle) {   
 	// From: http://www.exaflop.org/docs/cgafaq/cga1.html
 
@@ -103,12 +126,8 @@ su2rad.geom.Delaunay = function() {
         return triangle 
     };
     
-    // Internal: create a triangle that bounds the given vertices, with room to spare
+    // Internal: create a triangle that bounds the given vertices,
     function CreateBoundingTriangle( vertices ) {
-
-        // NOTE: There's a bit of a heuristic here. If the bounding triangle 
-        // is too large and you see overflow/underflow errors. If it is too small 
-        // you end up with a non-convex hull.
         
         var minx, miny, maxx, maxy;
         for( var i in vertices )
@@ -120,24 +139,68 @@ su2rad.geom.Delaunay = function() {
             if( maxy === undefined || vertex.y > maxy ) { maxy = vertex.y; }
         }
 
-        var dx = ( maxx - minx ) * 10;
-        var dy = ( maxy - miny ) * 10;
+        var dx = ( maxx - minx );
+        var dy = ( maxy - miny );
         
-        var stv0 = _Vertex( minx - dx,   miny - dy*3 , 0 );
-        var stv1 = _Vertex( minx - dx,   maxy + dy   , 0 );
-        var stv2 = _Vertex( maxx + dx*3, maxy + dy   , 0 );
+        var stv0 = _Vertex( minx - 1,      maxy + 1,      0 );
+        var stv1 = _Vertex( minx - 1,      miny - dy - 1, 0 );
+        var stv2 = _Vertex( maxx + dx + 1, maxy + 1 ,     0 );
 
         return Triangle( stv0, stv1, stv2 );
             
     } // CreateBoundingTriangle
     
-    // Edge Class
+    // edge class
     function Edge ( v0, v1 ) {
         return {
             'v0' : v0,
-            'v1' : v1
+            'v1' : v1,
+            'getBBox' : function () {
+                var xmin = (v0.x < v1.x) ? v0.x : v1.x 
+                var xmax = (v0.x > v1.x) ? v0.x : v1.x 
+                var ymin = (v0.y < v1.y) ? v0.y : v1.y 
+                var ymax = (v0.y > v1.y) ? v0.y : v1.y 
+                return new BBox2D( xmin,xmax,ymin,ymax )
+            },
+            'intersectsEdge' : function ( edge ) {
+                // this is taken from Kevin Lindsey's Intersection.js 
+                var a1 = this.v0;
+                var a2 = this.v1;
+                var b1 = edge.v0;
+                var b2 = edge.v1;
+                
+                var ua_t = (b2.x - b1.x) * (a1.y - b1.y) - (b2.y - b1.y) * (a1.x - b1.x);
+                var ub_t = (a2.x - a1.x) * (a1.y - b1.y) - (a2.y - a1.y) * (a1.x - b1.x);
+                var u_b  = (b2.y - b1.y) * (a2.x - a1.x) - (b2.x - b1.x) * (a2.y - a1.y);
+
+                if ( u_b != 0 ) {
+                    var ua = ua_t / u_b;
+                    var ub = ub_t / u_b;
+                    if ( 0 <= ua && ua <= 1 && 0 <= ub && ub <= 1 ) {
+                        return true;   
+                    }
+                }
+                return false;
+            },
+            'onEdge' : function ( v ) {
+                var xmin = (this.v0.x < this.v1.x) ? this.v0.x : this.v1.x
+                var xmax = (this.v0.x > this.v1.x) ? this.v0.x : this.v1.x
+                if ( xmin <= v.x && v.x <= xmax ) {
+                    var ymin = (this.v0.y < this.v1.y) ? this.v0.y : this.v1.y
+                    var ymax = (this.v0.y > this.v1.y) ? this.v0.y : this.v1.y
+                    if ( ymin <= v.y && v.y <= ymax ) {
+                        return true;
+                    }
+                }
+                return false;
+            },
+            'toString' : function () {
+                var s = "E [" + this.v0.x.toFixed(2) + "," + this.v0.y.toFixed(2) + "]"
+                s += " - [" + this.v1.x.toFixed(2) + "," + this.v1.y.toFixed(2) + "]"
+                return s
+            }
         }	
-    }
+    };
 
     // simplified "hit test"
     function InCircumcircle( triangle, v ) {
@@ -194,7 +257,167 @@ su2rad.geom.Delaunay = function() {
             }
         }
         return uniqueEdges;
-    } // UniqueEdges
+    } 
+    
+    // create bounding box for triangle
+    function TriangleBBox2D( t ) {
+        var xmin = t.v0.x < t.v1.x ? t.v0.x : t.v1.x;
+        xmin = xmin < t.v2.x ? xmin : t.v2.x;
+        var xmax = t.v0.x > t.v1.x ? t.v0.x : t.v1.x;
+        xmax = xmax > t.v2.x ? xmax : t.v2.x;
+        var ymin = t.v0.y < t.v1.y ? t.v0.y : t.v1.y;
+        ymin = ymin < t.v2.y ? ymin : t.v2.y;
+        var ymax = t.v0.y > t.v1.y ? t.v0.y : t.v1.y;
+        ymax = ymax > t.v2.y ? ymax : t.v2.y;
+        return new BBox2D ( xmin, xmax, ymin, ymax );
+    }
+
+    // QuatTree node class
+    function QuatTreeNode ( xmin, xmax, ymin, ymax, nodeid ) {
+        return {
+            'bbox' : new BBox2D ( xmin, xmax, ymin, ymax ),
+            'nodeid': nodeid,
+            'triangles' : [],
+            'leaves': false,
+            // add new subnodes to this node
+            'addLeaves' : function () {
+                if ( this.leaves === false ) {
+                    var bbox = this.bbox;
+                    var x1 = (bbox.xmin + bbox.xmax) / 2.0;
+                    var y1 = (bbox.ymin + bbox.ymax) / 2.0;
+                    this.leaves = [];
+                    this.leaves.push( new QuatTreeNode( bbox.xmin, x1, bbox.ymin, y1, this.nodeid+"A") );
+                    this.leaves.push( new QuatTreeNode( x1, bbox.xmax, bbox.ymin, y1, this.nodeid+"B") );
+                    this.leaves.push( new QuatTreeNode( bbox.xmin, x1, y1, bbox.ymax, this.nodeid+"C") );
+                    this.leaves.push( new QuatTreeNode( x1, bbox.xmax, y1, bbox.ymax, this.nodeid+"D") );
+                }
+                // check existing triangles against new nodes
+                var oldTriangles = this.triangles;
+                this.triangles = [];
+                for (var i=0; i<oldTriangles.length; i++) {
+                    var triangle = oldTriangles[i];
+                    this.addTriangle(triangle);
+                }
+            },
+
+            // add triangle to this node or subnodes based on bbox size
+            'addTriangle' : function( triangle ) {
+                if ( !triangle.bbox ) {
+                    triangle.bbox = TriangleBBox2D( triangle )
+                }
+                if ( !this.bbox.fit(triangle.bbox) ) {
+                    // does not fit in this box!
+                    return false
+                }
+                if ( this.leaves ) {
+                    for (var i=0; i<4; i++) {
+                        if ( this.leaves[i].addTriangle(triangle) === true ) {
+                            return true
+                        }
+                    }
+                }
+                // set parentNode property to this node (for remove() later)
+                triangle.parentNode = this;
+                this.triangles.push(triangle);
+                // subdivide if there are more than 4 triangles
+                if ( this.leaves === false && this.triangles.length > 4) {
+                    this.addLeaves()
+                }
+                return true
+            },
+
+            // delete triangle from node list when it's subdivided
+            'removeTriangle' : function( triangle ) {
+                for (var j=0; j<this.triangles.length; j++) {
+                    if ( triangle === this.triangles[j] ) {
+                        this.triangles.splice(j,1)
+                    }
+                }
+            },
+            
+            // accurate hit test for triangle
+            'pointInTriangle' : function ( t, v ) {
+                var e1 = new Edge( new _Vertex(t.bbox.xmin-1, v.y), v )
+                var edges = [];
+                edges.push( Edge( t.v0, t.v1 ) );
+                edges.push( Edge( t.v1, t.v2 ) );
+                edges.push( Edge( t.v2, t.v0 ) );
+                var intersections = 0;
+                for (var i=0; i<3; i++) {
+                    if ( e1.intersectsEdge(edges[i]) === true ) {
+                        intersections += 1;
+                    }
+                }
+                if ( intersections === 1 ) {
+                    return true;
+                }
+            },
+
+            // add new vertex by dividing existing triangles
+            'addVertex' : function( vertex ) {
+                var edges = [];
+                var triangles = this.getTrianglesAt( vertex );
+                // split triangles with bbox overlapping the vertex
+                for( var i=0; i<triangles.length; i++) {
+                    var triangle = triangles[i];
+                    if ( triangle ) {
+                        if ( this.pointInTriangle( triangle, vertex ) ) {
+                            edges.push( Edge( triangle.v0, triangle.v1 ) );
+                            edges.push( Edge( triangle.v1, triangle.v2 ) );
+                            edges.push( Edge( triangle.v2, triangle.v0 ) );
+                            // remove triangle from parentNode.triangles
+                            triangle.parentNode.removeTriangle(triangle);
+                        }
+                    }
+                }
+                // there should be only one triangle that overlaps with vertex;
+                // if ( edges.length > 3 ) {
+                //     log.warn("more than 3 edges");
+                // }
+                // Create new triangles from the unique edges and new vertex
+                for( var i=0; i<edges.length; i++ ) {
+                    var edge = edges[i];
+                    var t = new Triangle( edge.v0, edge.v1, vertex );
+                    this.addTriangle( t )
+                }
+            },
+            
+            // return all triangles in quattree
+            'getTriangles' : function () {
+                var triangles = []
+                if ( this.leaves ) {
+                    for (var i=0; i<4; i++) {
+                        var leaf = this.leaves[i]
+                        triangles = triangles.concat( leaf.getTriangles() );
+                    }
+                }
+                triangles = triangles.concat( this.triangles );
+                return triangles
+            },
+
+            // return triangles with bbox overlapping point
+            'getTrianglesAt' : function( point ) {
+                if ( !this.bbox.hit(point) ) {
+                    return []
+                }
+                var triangles = []
+                if ( this.leaves ) {
+                    for (var i=0; i<4; i++) {
+                        var leaf = this.leaves[i]
+                        triangles = triangles.concat( leaf.getTrianglesAt(point) );
+                    }
+                }
+                for ( var j=0; j<this.triangles.length; j++ ) {
+                    var t = this.triangles[j];
+                    if ( t.bbox.hit(point) ) {
+                        triangles.push( t );
+                    }
+                }
+                return triangles
+            }
+        }
+    } // QuatTreeNode
+
 
     // Triangle Class
     function Triangle ( v0, v1, v2 ) {
@@ -206,7 +429,6 @@ su2rad.geom.Delaunay = function() {
             'displayTriangles' : [],
             'draw' : function(ctx, colorgradient, indent) {
                 if (this.displayTriangles.length == 0) {
-                    //log.debug("TEST: triangle.draw()")
                     color = colorgradient.getColorByValue(this.z)
                     ctx.fillStyle = color;
                     ctx.strokeStyle = color;
@@ -218,19 +440,15 @@ su2rad.geom.Delaunay = function() {
                     ctx.stroke()
                     ctx.closePath();
                 } else {
-                    //log.debug("TEST: displayTriangles.draw()")
                     indent = indent + "+"
                     for (var i=0; i<this.displayTriangles.length; i++) {
                         var dtri = this.displayTriangles[i];
-                        //log.debug("test: dtri.v0 x=" + dtri.v0.x + " y=" + dtri.v0.y)
-                        //log.debug("test: dtri.v1 x=" + dtri.v1.x + " y=" + dtri.v1.y)
-                        //log.debug("test: dtri.v2 x=" + dtri.v2.x + " y=" + dtri.v2.y)
                         dtri.draw(ctx, colorgradient, indent)
                     }
                 }
             },
             'toString' : function() {
-                var s = "tri [" + this.v0.x.toFixed(2) + "," + this.v0.y.toFixed(2) + "]"
+                var s = "T [" + this.v0.x.toFixed(2) + "," + this.v0.y.toFixed(2) + "]"
                 s += " [" + this.v1.x.toFixed(2) + "," + this.v1.y.toFixed(2) + "]"
                 s += " [" + this.v2.x.toFixed(2) + "," + this.v2.y.toFixed(2) + "]"
                 return s
@@ -315,14 +533,63 @@ su2rad.geom.Delaunay = function() {
             }
         }
         return CalcCircumcircle(triangle);
-    };
+    }
+    
+    
+    // triangulation based on triangle arrays
+    function TriangulateArray ( vertices ) {
+        var triangles = [];
+        
+        // First, create a "supertriangle" that bounds all vertices
+        var st = CreateBoundingTriangle( vertices );
+        triangles.push( st );
+        
+        // Next, begin the triangulation one vertex at a time
+        for( var i=0; i<vertices.length; i++ ) {
+            // NOTE: This is O(n^2) - can be optimized by sorting vertices
+            // along the x-axis and only considering triangles that have 
+            // potentially overlapping circumcircles
+            var vertex = vertices[i];
+            triangles = AddVertex( vertex, triangles );
+        }
+
+        // return triangle without bounding triangles
+        return RemoveBoundingTriangle(triangles, st)
+    }
+    
+    
+    // triangulation based on quattree 
+    function TriangulateQuatTree ( vertices ) {
+        
+        // First, create a "supertriangle" that bounds all vertices
+        var st = CreateBoundingTriangle( vertices );
+        var bb = TriangleBBox2D( st );
+        
+        // create quattree root and add super triangle
+        var qtree = QuatTreeNode( bb.xmin,bb.xmax,bb.ymin,bb.ymax, "0");
+        qtree.addTriangle(st)
+
+        // Next, begin the triangulation one vertex at a time
+        for( var i=0; i<vertices.length; i++ ) {
+            var vertex = vertices[i];
+            qtree.addVertex( vertex );
+        }
+
+        // return triangle without bounding triangles
+        var triangles = qtree.getTriangles();
+        return RemoveBoundingTriangle(triangles, st)
+    }
+
 
     // Vertex Class
     function _Vertex (x,y,z) {
         return {
             'x' : x,
             'y' : y,
-            'z' : z
+            'z' : z,
+            'toString' : function() {
+                return "V [" + this.x.toFixed(2) + "," + this.y.toFixed(2) + "]"
+            }
         }
     }; 
 
@@ -341,25 +608,19 @@ su2rad.geom.Delaunay = function() {
         // vertices : Array of DelaunayVertex objects
         // returns  : Array of DelaunayTriangles
         //------------------------------------------------------------
-        Triangulate : function ( vertices ) {
-            var triangles = [];
-            
-            // First, create a "supertriangle" that bounds all vertices
-            var st = CreateBoundingTriangle( vertices );
-            triangles.push( st );
-            
-            // Next, begin the triangulation one vertex at a time
-            for( var i=0; i<vertices.length; i++ ) {
-                // NOTE: This is O(n^2) - can be optimized by sorting vertices
-                // along the x-axis and only considering triangles that have 
-                // potentially overlapping circumcircles
-                var vertex = vertices[i];
-                triangles = AddVertex( vertex, triangles );
+        Triangulate : function (vertices) {
+            var triangulate = TriangulateArray;
+            if ( this.USEQUATTREE != 0 && vertices.length >= this.USEQUATTREE ) {
+                triangulate = TriangulateQuatTree
             }
+            return triangulate( vertices );
+        },
 
-            // return triangle without bounding triangles
-            return RemoveBoundingTriangle(triangles, st)
-        }
+        //------------------------------------------------------------
+        // Delaunay.Triangulate
+        // min vertices to start quattree triangulation (0=never)
+        //------------------------------------------------------------
+        'USEQUATTREE' : 0
 
     } // end return
     
