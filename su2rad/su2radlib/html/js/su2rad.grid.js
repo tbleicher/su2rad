@@ -209,13 +209,19 @@ su2rad.grid.GridArray.prototype.addRecord = function (p) {
 }
 
 su2rad.grid.GridArray.prototype.analyzeGrid = function () {
-    log.debug("analyzeGrid: " + this.vertices.length + " vertices")
+    log.debug("analyzeGrid() [" + this.vertices.length + " points]");
+    
+    // TriangulateQTree does not work properly
+    su2rad.geom.Delaunay.USEQUADTREE = 0; 
     try {
+        var time1 = new Date().getTime()
         this.triangles = su2rad.geom.Delaunay.Triangulate( this.vertices );
-        log.debug("analyzeGrid: " + this.triangles.length + " triangles")
+        var time2 = new Date().getTime()
+        log.debug("-> " + this.triangles.length + " triangles")
     } catch (e) {
         logError(e)
     }
+
     this.values.sort(this.sortByFloatValue);
     this.calcStats();
     this.fillRows();
@@ -354,7 +360,7 @@ su2rad.grid.GridArray.prototype.fillRows = function () {
 }
 
 su2rad.grid.GridArray.prototype.generate = function () {
-    // create values to display by formula
+    // create values to display
     var minX =          Math.floor(Math.random()*11) * 0.25
     var maxX = minX*2 + Math.floor(Math.random()*44) * 0.25
     var minY =          Math.floor(Math.random()*11) * 0.25
@@ -379,6 +385,52 @@ su2rad.grid.GridArray.prototype.generate = function () {
     //this.printStats();
 }
 
+su2rad.grid.GridArray.prototype.generate_random = function () {
+    // create values with random distribution 
+    var minX =          Math.floor(Math.random()*11) * 0.25
+    var maxX = minX*2 + Math.floor(Math.random()*44) * 0.25
+    var minY =          Math.floor(Math.random()*11) * 0.25
+    var maxY = minY*2 + Math.floor(Math.random()*44) * 0.25
+    
+    minX = 1.0
+    maxX = 2.5
+    minY = 1.0
+    maxY = 2.5
+
+    var mag  = Math.pow(Math.random()*10, 3)
+    var dz   = Math.random()
+    var grid = new Array();
+    
+    var x=minX;
+    while ( x < maxX ) {
+        var y=minY;
+        while ( y < maxY ) {
+            var z = mag * ( dz + 0.2 * ( 1+Math.sin(x*2) ) / ( 1.3+Math.cos(y+1) ) )
+            grid.push( [x,y,0.75,0,0,1,z] );
+            y = y + 0.25;
+        }
+        x = x + 0.25;
+    }
+
+    var grid = new Array();
+    var maxVerts = Math.floor(Math.random()*1000)+200
+    var n=0;
+    while ( n < maxVerts) {
+        var x = Math.random()*5+5;
+        var y = Math.random()*5+5;
+        var z = mag * ( dz + 0.2 * ( 1+Math.sin(x*2) ) / ( 1.3+Math.cos(y+1) ) )
+        grid.push( [x,y,0.75,0,0,1,z] );
+        n = n+1;
+    }
+
+
+
+
+    // now read in like file based grid
+    this.readArray(grid);
+    //this.printStats();
+}
+
 su2rad.grid.GridArray.prototype.getArrayIndex = function (a,v) {
     for (var i=0; i<a.length; i++) {
         if (a[i] == v) {
@@ -395,7 +447,7 @@ su2rad.grid.GridArray.prototype.getCommentLines = function () {
 su2rad.grid.GridArray.prototype.getContourLinesAtOld = function (level) {
     // return array of contour line segments 
     
-    log.debug("getContourLinesAt(level=" + level.toFixed(2) + ")") 
+    // log.debug("getContourLinesAt(level=" + level.toFixed(2) + ")") 
     // check cache first
     if (this._contourCache[level] != null) {
         return this._contourCache[level]
@@ -490,7 +542,7 @@ su2rad.grid.GridArray.prototype.trianglesToText = function () {
 su2rad.grid.GridArray.prototype.getContourLinesAt = function (level) {
     // return array of contour line segments 
     
-    log.info("getContourLinesAt(level=" + level.toFixed(2) + ")") 
+    // log.info("getContourLinesAt(level=" + level.toFixed(2) + ")") 
     // check cache first
     // if (this._contourCache[level] != null) {
     //    return this._contourCache[level]
@@ -504,14 +556,14 @@ su2rad.grid.GridArray.prototype.getContourLinesAt = function (level) {
         if (points == false) {
             errorTris += 1
         } else if (points.length == 1) {
-            log.error("DEBUG: points.length = " + points.length)
+            log.error("getContourLinesAt() points.length=1!")
         } else if (points.length == 2) {
             lines.push( [points[0], points[1]] )
             //t.splitAt(level)
         }
     }
     // this._contourCache[level] = lines;
-    log.info("=> getContourLinesAtNew() lines=" + lines.length) 
+    //log.info("=> getContourLinesAtNew() lines=" + lines.length) 
     return lines;
 }
 

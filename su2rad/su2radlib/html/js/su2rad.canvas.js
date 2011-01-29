@@ -288,21 +288,16 @@ su2rad.canvas.GridCanvas.prototype.drawOutlines = function (ctx) {
 
 
 su2rad.canvas.GridCanvas.prototype.drawContourLines = function (ctx) {
-    log.debug("TEST: drawContourLines")
+    // log.debug("TEST: drawContourLines")
     var dValue = (this.gradient.maxValue - this.gradient.minValue) / this.legendSteps
     ctx.save()
     ctx.lineWidth = 2/this.canvasscale;
     ctx.strokeStyle = this.fgcolor
     ctx.strokeStyle = 'rgba(0,0,0,0.3)'
     for (var n=1; n<=Math.floor(this.gradient.maxValue/dValue); n++) {
-        // try {
-        //     var lines = this.array.getContourLinesAt(n*dValue);
-        // } catch(e) {
-        //     logError(e)
-        //     continue
-        // }
+        var lines = [];
         try {
-            var lines = this.array.getContourLinesAt(n*dValue);
+            lines = this.array.getContourLinesAt(n*dValue);
         } catch(e) {
             logError(e)
             continue
