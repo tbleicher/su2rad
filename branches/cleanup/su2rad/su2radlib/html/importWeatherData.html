@@ -73,7 +73,7 @@
                 // make canvas resizable
                 $("#canvasContainer").resizable( {
                     stop: function (event, ui) {
-                        onResizeCanvas()
+                        onResizeCanvas();
                     }
                 });
             });
@@ -96,9 +96,9 @@
     
     </head>
     
-    <body style="background-color: white" onLoad="su2rad.dialog.weatherdata.initPage()">
+    <body style="background-color: white" onLoad="su2rad.dialog.weatherdata.initPage();">
         
-        <input type="button" id="showLogButton" name="showLogButton" value="log" onclick="log.toggle()">
+        <input type="button" id="showLogButton" name="showLogButton" value="log" onclick="log.toggle();">
     
         <div id="tab-container">
             <ul class="tabs-nav">

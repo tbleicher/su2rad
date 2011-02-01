@@ -61,7 +61,7 @@
             
             $().ready(function() {
                     // executed before <body onload()>
-                log.debug("$().ready()")
+                log.debug("$().ready()");
                 $('#legendMaxInput').numeric({allow:".-"});
                 $('#legendMinInput').numeric({allow:".-"});
                 $('#legendStepsInput').numeric();
@@ -71,7 +71,7 @@
                 // make canvas resizable
                 $("#canvasContainer").resizable( {
                     stop: function (event, ui) {
-                        gi.onResizeCanvas()
+                        gi.onResizeCanvas();
                     }
                 });
             });
@@ -94,9 +94,9 @@
     
     </head>
     
-    <body style="background-color: white" onLoad="gi.initPage()">
+    <body style="background-color: white" onLoad="gi.initPage();">
         
-        <input type="button" id="showLogButton" name="showLogButton" value="log" onclick="log.toggle()">
+        <input type="button" id="showLogButton" name="showLogButton" value="log" onclick="log.toggle();">
     
         <div id="tab-container">
             <ul class="tabs-nav">
@@ -117,15 +117,15 @@
 
                         <!-- load button options --> 
                         <div class="importOptionHeader" id="loadFileSelectionDiv" style="display: none;">
-                            <input type="file" class="file" size="5" id="loadFileSelection" onchange="gi.loadFileIDOM()" />
+                            <input type="file" class="file" size="5" id="loadFileSelection" onchange="gi.loadFileIDOM();" />
                             <input type="button" id="loadFileButton" value="load file IDOM">
                         </div>
                         <div class="importOptionHeader" id="loadFileSUDiv">
-                            <input type="button" id="loadFileSU" value="load file SU" onclick="gi.loadFileSU()" />
+                            <input type="button" id="loadFileSU" value="load file SU" onclick="gi.loadFileSU();" />
                         </div>
                         <div id="loadFileWarning">
                             <span>You need Firefox/Mozilla or Sketchup to load a results file.</span>
-                            <input type="button" id="simulateGrid" value="simulate" onclick="gi.simulateGrid()">
+                            <input type="button" id="simulateGrid" value="simulate" onclick="gi.simulateGrid();">
                         </div>
 
                         <!-- options for graph and legend--> 
@@ -136,23 +136,23 @@
                             <div>
                                 <div class="gridRow">
                                     <span class="gridLabel">min value</span>
-                                    <input type="text" width="10" value="0" id="legendMinInput" onchange="gi.setLegendMin(this.value)"/>
+                                    <input type="text" width="10" value="0" id="legendMinInput" onchange="gi.setLegendMin(this.value);"/>
                                 </div>
                                 <div class="gridRow">
                                     <span class="gridLabel">max value</span>
-                                    <input type="text" width="10" value="100" id="legendMaxInput" onchange="gi.setLegendMax(this.value)"/>
+                                    <input type="text" width="10" value="100" id="legendMaxInput" onchange="gi.setLegendMax(this.value);"/>
                                 </div>
                                 <div class="gridRow">
                                     <span class="gridLabel">steps</span>
-                                    <input type="text" width="3" value="10" id="legendStepsInput" onchange="gi.setLegendSteps(this.value)"/>
+                                    <input type="text" width="3" value="10" id="legendStepsInput" onchange="gi.setLegendSteps(this.value);"/>
                                 </div>
                                 <div class="gridRow">
                                     <span class="gridLabel">label</span>
-                                    <input type="text" width="20" value="" id="legendLabelInput" onchange="gi.setLegendLabel(this.value)"/>
+                                    <input type="text" width="20" value="" id="legendLabelInput" onchange="gi.setLegendLabel(this.value);"/>
                                 </div>
                                 <div class="gridRow">
                                     <span class="gridLabel">lightness</span>
-                                    <input type="text" width="4" value="0.4" id="legendLightnessInput" onchange="gi.setLegendLightness(this.value)" />
+                                    <input type="text" width="4" value="0.4" id="legendLightnessInput" onchange="gi.setLegendLightness(this.value);" />
                                 </div>
                             </div>
                         </div>
@@ -167,10 +167,10 @@
                         
                         <!-- import button option only within Sketchup --> 
                         <div class="importOptionHeader" id="importGraphToSketchupDiv" style="display: none; margin-top: 10px;">
-                            <input type="button" value="import to SU" id="importToSketchup" onclick="gi.importGraphToSketchup()" />
+                            <input type="button" value="import to SU" id="importToSketchup" onclick="gi.importGraphToSketchup();" />
                         </div>
                         <div class="importOptionHeader">
-                            <input type="button" value="make convex" id="makeGraphConvex" onclick="gi.makeConvex()" />
+                            <input type="button" value="make convex" id="makeGraphConvex" onclick="gi.makeConvex();" />
                         </div>
                         
                     </div>

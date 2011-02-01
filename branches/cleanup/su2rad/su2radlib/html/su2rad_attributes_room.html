@@ -26,72 +26,72 @@
         </style>
 
         <script type="text/javascript">
-            var dialog = new Object()
+            var dialog = {};
             dialog.onCreate = function() {
-                window.location = "skp:createWorkplane@"
-            }
+                window.location = "skp:createWorkplane@";
+            };
             dialog.onCancel = function() {
-                window.location = "skp:cancelTool@"
-            }
+                window.location = "skp:cancelTool@";
+            };
             dialog.setValues = function(json) {
-                log.debug("json=" + json)
+                log.debug("json=" + json);
                 try {
-                    eval("var obj = " + json)
+                    eval("var obj = " + json);
                 } catch (e) {
                     log.error(e);
-                    var obj = new Object();
+                    var obj = {};
                 }
-                log.debug("obj=" + obj)
+                log.debug("obj=" + obj);
                 try {
                     for (var o in obj) {
-                        log.debug("debug: setting " + o + " = " + obj[o] )
-                        document.getElementById(o).value = obj[o]
+                        log.debug("debug: setting " + o + " = " + obj[o]);
+                        document.getElementById(o).value = obj[o];
                     }
                 } catch (e) {
-                    log.error(e)
+                    log.error(e);
                 }
-            }
+            };
             dialog.test = function() {
-                var json = "{'roomname':'foo_room','wallzone':'0.23','wpheight':'0.77'}"
-                this.setValues(json)
-            }
+                var json = "{'roomname':'foo_room','wallzone':'0.23','wpheight':'0.77'}";
+                this.setValues(json);
+            };
             dialog.updateSettings = function() {
-                var params =      "roomname=" + document.getElementById("roomname").value + "&"
-                params = params + "wallzone=" + document.getElementById("wallzone").value + "&"
-                params = params + "wpheight=" + document.getElementById("wpheight").value
-                window.location = "skp:updateSettings@" + params
-            }
+                var params =      "roomname=" + document.getElementById("roomname").value + "&";
+                params = params + "wallzone=" + document.getElementById("wallzone").value + "&";
+                params = params + "wpheight=" + document.getElementById("wpheight").value;
+                window.location = "skp:updateSettings@" + params;
+            };
         </script>
 
     </head>
 
-    <body onload='dialog.test()'>
+    <body onload='dialog.test();'>
         
-        <input type="button" id="showLogButton" name="showLogButton" value="log" onclick="log.toggle()">
+        <input type="button" id="showLogButton" name="showLogButton" value="log" onclick="log.toggle();">
         
         <h3>workplane settings</h3>
 
         <div class="preferences" id="preferences_container">
             <div>
                 <span class="setting_name">name</span>
-                <input type="text" id="roomname" value="name" onchange="dialog.updateSettings()"/>
+                <input type="text" id="roomname" value="name" onchange="dialog.updateSettings();"/>
                 <div class="setting_help">name for the room group and workplane</div>
             </div>
             <div>
                 <span class="setting_name">height offset</span>
-                <input type="text" id="wpheight" value="0.88" onchange="dialog.updateSettings()"/>
+                <input type="text" id="wpheight" value="0.88" onchange="dialog.updateSettings();"/>
                 <div class="setting_help">height of workplane above ground</div>
             </div>
             <div>
                 <span class="setting_name">wall zone</span>
-                <input type="text" id="wallzone" value="0.12" onchange="dialog.updateSettings()"/>
+                <input type="text" id="wallzone" value="0.12" onchange="dialog.updateSettings();"/>
                 <div class="setting_help">distance of workplane edge to wall</div>
             </div>
         </div>
 
         <div id="mainButtonRow">
-            <input type="button" value="apply" id="apply_button"  onclick="dialog.onCreate()">
-            <input type="button" value="close" id="cancel_button" onclick="dialog.onCancel()">
+            <input type="button" value="apply" id="apply_button"  onclick="dialog.onCreate();">
+            <input type="button" value="close" id="cancel_button" onclick="dialog.onCancel();">
         </div>
 
     </body>
