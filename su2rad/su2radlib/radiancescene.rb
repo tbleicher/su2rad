@@ -512,15 +512,20 @@ class RadianceScene < ExportBase
         end
         files = []
         meshes = []
-        Dir.foreach(getFilename("objects")) { |f|
-            if f =~ /\.rad\z/i
-                files.push("objects/#{f}")
-            elsif f =~ /\.rtm\z/i
-                meshes.push("objects/#{f}")
-            else
-                uimessage("XXX object file: %s\n" % f, 3)
-            end
-        }
+        objectsdir = getFilename("objects")
+        if (File.directory?(objectsdir))
+            Dir.foreach(objectsdir) { |f|
+                if f =~ /\.rad\z/i
+                    files.push("objects/#{f}")
+                elsif f =~ /\.rtm\z/i
+                    meshes.push("objects/#{f}")
+                elsif f =~ /\A\./
+                    uimessage("XXX hidden file: %s\n" % f, 3)
+                else
+                    uimessage("XXX object file: %s\n" % f, 3)
+                end
+            }
+        end
         files += meshes
         i=0
         lines = ["## scene object files (total=%d)" % files.length]
