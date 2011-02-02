@@ -148,15 +148,22 @@ class RadianceComponent < ExportBase
         if cpath == nil or cpath == false
             return
         end
-        if FileTest.exists?(cpath.sub(/\.skp\z/i, '.ies'))
-            @iesdata = cpath.sub(/\.skp\z/i, '.ies')
+        ## IES files
+        iespath = cpath.sub(/\.skp/i, '.ies')
+        if (cpath != iespath && FileTest.exists?(iespath))
+            @iesdata = iespath
             uimessage("ies data file '#{@iesdata}' found", 1)
         end
-        if FileTest.exists?(cpath.sub(/\.skp\z/i, '.oct'))
-            @replacement = cpath.sub(/\.skp\z/i, '.oct')
+        ## rad files
+        radpath = cpath.sub(/\.skp/i, '.rad')
+        if (cpath != radpath && FileTest.exists?(radpath))
+            @replacement = radpath
             uimessage("replacement file '#{@replacement}' found", 1)
-        elsif FileTest.exists?(cpath.sub(/\.skp\z/i, '.rad'))
-            @replacement = cpath.sub(/\.skp\z/i, '.rad')
+        end
+        ## oct files
+        octpath = cpath.sub(/\.skp/i, '.oct')
+        if (cpath != octpath && FileTest.exists?(octpath))
+            @replacement = octpath
             uimessage("replacement file '#{@replacement}' found", 1)
         end
     end
