@@ -2,7 +2,7 @@
 #
 # su2rad.rb 
 
-$SU2RAD_VERSION = "daysim r02" #XXX
+$SU2RAD_VERSION = "2014.0.0" #XXX
 
 # Written by Thomas Bleicher
 #
@@ -28,11 +28,19 @@ $SU2RAD_VERSION = "daysim r02" #XXX
 # revisions:
 # ===========
 #
+# 2014.0.0:
+# ---------
+# 2014 - 22-May-2014  :  giving up previous revision scheme to follow SU versions
+#			 updating script to work with new Ruby version  
+#
 # branch 1.0:
 # -----------
+# daysim r03 - 28/07/10  :  fix in material export for layer mode (untested)
+#                           support of IE8
 # daysim r02 - 28/06/09  :  basic features for DAYSIM support
 #                           creation of DAYSIM scene description files
 #                           import of rtrace values as colored contour plot
+#                           for presentation by C. Reinhart only
 # daysim r01 - 15/06/09  :  non-public - for feedback from C. Reinhart only
 # v 1.0alpha - 18/01/09  :  pre-releas for feedback (including Windows)
 #                           new interface pages for views and materials
@@ -57,8 +65,7 @@ $SU2RAD_VERSION = "daysim r02" #XXX
 
 
 
-if PLATFORM =~ /darwin/
-    ##TODO add option for PPC
+if RUBY_PLATFORM =~ /darwin/
     $SU2RAD_PLATFORM = 'MAC'
 else
     $SU2RAD_PLATFORM = 'WIN'
@@ -80,7 +87,7 @@ require "su2radlib/webdialog.rb"
 require "su2radlib/config_class.rb"
 
 ## define defaults if config file is messed up
-$SU2RAD_LOGLEVEL    = 3        #XXX report warnings and errors only
+$SU2RAD_LOGLEVEL    = -1        #XXX report warnings and errors only
 $SU2RAD_LOG = []
 
 ## load configuration from file

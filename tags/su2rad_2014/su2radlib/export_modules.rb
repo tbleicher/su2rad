@@ -362,7 +362,7 @@ module RadiancePath
             name = "unnamed_scene"
         end
         path = Sketchup.active_model.path
-        if path == '':
+        if path == ''
             ## use user home directory or temp
             if ENV.has_key?('HOME')
                 path = ENV['HOME']

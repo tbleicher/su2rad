@@ -401,7 +401,7 @@ class NumericImport < ExportBase
         uimessage("maximum value: %.2f" % @maxvalue, 2) 
         max = values[-1]
         divider = 1
-        while max > 10:
+        while max > 10
             max = max / 10.0
             divider *= 10
         end
