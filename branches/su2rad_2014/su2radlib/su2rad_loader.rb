@@ -168,7 +168,7 @@ module Su2rad
     def self.addRadianceMenu
         pmenu = UI.menu("Plugin")
         radmenu = pmenu.add_submenu("Radiance")
-        radmenu.add_item("export (#{VERSION})") { startWebExport(0) }
+        radmenu.add_item("export") { startWebExport(0) }
         radmenu.add_separator()
         #radmenu.add_item("export scene") { startExport(0) }
         #radmenu.add_item("export selection") { startExport(1) }
@@ -182,7 +182,7 @@ module Su2rad
         radmenu.add_separator()
         
         #radmenu.add_item("Preferences") { preferencesDialog() }
-        radmenu.add_item("About") { aboutDialog() }
+        radmenu.add_item("About (#{VERSION})") { aboutDialog() }
         radmenu.add_item("Acknowledgement") { acknowledgementDialog() }
         #radmenu.add_separator()
         #radmenu.add_item("reload") { su2rad_reload() }
