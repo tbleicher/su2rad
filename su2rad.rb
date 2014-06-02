@@ -28,8 +28,9 @@
 #
 # 2014.0.0:
 # ---------
-# 2014 - 22-May-2014  :  giving up previous revision scheme to follow SU versions
+# 2014 - 02-Jun-2014  :  giving up previous revision scheme to follow SU versions
 #			 updating script to work with new Ruby version  
+#                        packaging script as extension (*.rbz)
 #
 # branch 1.0:
 # -----------
