@@ -1,136 +1,189 @@
-require "su2radlib/exportbase.rb"
+require "exportbase.rb"
+require "context.rb"
+require "export_modules.rb"
 
-class RadianceScene < ExportBase
+require 'webdialog_options.rb'
+require 'webdialog_views.rb'
+require 'scene_materials.rb'
 
-    def initialize
-        @model = Sketchup.active_model
-        initGlobals() 
-        initGlobalHashes()
-        initLog()
-        @radOpts = RadianceOptions.new()
-        
-        $scene_name = "unnamed_scene"
-        $export_dir = Dir.pwd()
-        setExportDirectory()
-        
-        #@copy_textures = true
-        #@texturewriter = Sketchup.create_texture_writer
-    end
 
-    def initGlobals
-        $materialNames = {}
-        $materialDescriptions = {}
-        $usedMaterials = {}
-        $materialContext = MaterialContext.new()
-        $nameContext = []
-        $components = []
-        $componentNames = {}
-        $uniqueFileNames = {}
-        $skyfile = ''
-        $log = []
-        $facecount = 0
-        $filecount = 0
-        $createdFiles = Hash.new()
-        $inComponent = [false]
+class StatusPage 
+   
+    include InterfaceBase
+
+    attr_reader :tmplpath, :htmlpath
+    attr_writer :tmplpath, :htmlpath
+    
+    def initialize(htmlpath)
+        @htmlpath = htmlpath
+        @tmplpath = File.join(File.dirname(__FILE__), "html", "exportStatsProgress.html")
+        @statusHash = {"status" => "initializing"}
+        @statusHash.default = 0
+        @timeStart = Time.now()
+        @csspath = "file://" + File.join(File.dirname(__FILE__), "html", "css") + File::SEPARATOR
+        if $SU2RAD_PLATFORM == 'WIN'
+            @csspath.gsub!(File::SEPARATOR, '/')
+        end
+        @shortnames = { "Sketchup::ComponentInstance" => "components",
+                        "Sketchup::Group"    => "groups",
+                        "Sketchup::Material" => "materials",
+                        "Sketchup::Texture"  => "textures" }
     end
     
-    def initGlobalHashes
-        $byColor = {}
-        $byLayer = {}
-        $visibleLayers = {}
-        @model.layers.each { |l|
-            $byLayer[remove_spaces(l.name)] = []
-            if l.visible?
-                $visibleLayers[l] = 1
+    def showFinal()
+        if @statusHash['errors'] != 0
+            @statusHash.update({"status" => "finished (errors)"})
+        elsif @statusHash['warnings'] != 0
+            @statusHash.update({"status" => "finished (warnings)"})
+        else
+            @statusHash.update({"status" => "finished"})
+        end
+        begin
+            newtmpl = File.join(File.dirname(@tmplpath), 'exportStatsFinal.html')
+            t = File.open(newtmpl, 'r')
+            template = t.read()
+            t.close()
+            @template = template.gsub(/\.\/css\//, @csspath)
+        rescue
+            @template = @template.sub('onload="updateTimeStamp()"', '')
+        end
+        update()
+    end
+    
+    def create
+        begin
+            t = File.open(@tmplpath, 'r')
+            template = t.read()
+            t.close()
+            @template = template.gsub(/\.\/css\//, @csspath)
+            html = @template.sub(/--STATUS--/, "initializing ...")
+            h = File.open(@htmlpath, 'w')
+            h.write(html)
+            h.close()
+            update()
+            return true
+        rescue => e
+            puts $!.message, e.backtrace.join("\n")
+            @template = ''
+            return false
+        end
+    end
+
+    def getStatusHTML(dict=nil)
+        if dict != nil
+            @statusHash.update(dict)
+        end
+        v = @statusHash['status']
+        if v =~ /warn/i
+            style = "highlightWarn"
+        elsif v =~ /err/i
+            style = "highlightError"
+        else
+            style = "highlight"
+        end
+        html = "<div class=\"gridLabel\"><span class=\"%s\">status:</span></div>" % style
+        html += "<div class=\"gridCell\"><span class=\"%s\">%s</span></div>" % [style,v]
+        a = @statusHash.to_a 
+        a = a.sort()
+        a.each { |k,v|
+            if k != "status"
+                k = @shortnames[k] if @shortnames.has_key?(k)
+                html += "<div class=\"gridLabel\">%s</div><div class=\"gridCell\">%s</div>" % [v,k]
             end
         }
+        html += "<div class=\"gridLabel\"><span class=\"highlight\">time:</span></div>"
+        html += "<div class=\"gridCell\"><span class=\"highlight\">%d sec</span></div>" % getTimeDiff()
+        return html
+    end
+
+    def getTimeDiff
+        return Integer(Time.now() - @timeStart)
+    end
+
+    def show
+        @timeStart = Time.now()
+        if $SU2RAD_PLATFORM == 'MAC'
+            browser = "open"
+	    htmlpath = @htmlpath
+        elsif $SU2RAD_PLATFORM == 'WIN'
+            browser = "\"C:\\Program Files\\Internet Explorer\\iexplore.exe\""
+	    htmlpath = @htmlpath.gsub(/\//, '\\')
+	    ## separate browser thread does not work in windows ...
+	    return
+	end
+	Thread.new do
+	    system(`#{browser} "#{htmlpath}"`)
+	end
+    end
+    
+    def update(dict=nil)
+	if @template == ''
+            return false
+        end
+        begin
+            html = @template.sub(/--STATUS--/, getStatusHTML(dict))
+            h = File.open(@htmlpath, 'w')
+            h.write(html)
+            h.close()
+            return true
+        rescue => e
+            puts $!.message, e.backtrace.join("\n")
+            return false
+        end
+    end 
+end
+
+
+
+class RadianceScene < ExportBase
+    
+    attr_reader :exportOptions, :renderOptions, :viewsList, :skyOptions, :materialLists
+    
+    def initialize
+        @model = Sketchup.active_model
+        
+        $inComponent = [false]
+        @@materialContext = MaterialContext.new()
+        
+        resetState()
+        initLog()
+        
+        @sky = RadianceSky.new()
+        setExportDirectory()
+        
+        @exportOptions = ExportOptions.new()
+        @renderOptions = RenderOptions.new()
+        @viewsList     = SketchupViewsList.new()
+        @skyOptions    = SkyOptions.new()
+        @materialLists = MaterialLists.new() 
     end
     
     def initLog
-        super
-        line1 = "###  su2rad.rb export ###" 
+        line1 = "###  su2rad.rb export  ###" 
         line2 = "###  %s  ###" % Time.now.asctime
-        $log = [line1,line2]
-        printf "%s\n" % line1
+        super([line1,line2])
+        printf "\n\n%s\n" % line1
         Sketchup.set_status_text(line1)
     end
-    
-    def setExportDirectory
-        ## get name of subdir for Radiance file structure
-        page = @model.pages.selected_page
-        if page != nil
-            $scene_name = remove_spaces(page.name)
-        end
-        path = Sketchup.active_model.path
-        if path != '' and path.length > 5:
-            $export_dir = path[0..-5]
-        end
-    end
-   
-    def confirmExportDirectory
-        ## show user dialog for export options
-        ud = UserDialog.new()
-        ud.addOption("export path", $export_dir)
-        ud.addOption("scene name", $scene_name)
-        ud.addOption("show options", $SHOWRADOPTS) 
-        ud.addOption("all views", $EXPORTALLVIEWS) 
-        ud.addOption("mode", $MODE, "by group|by layer|by color")
-        ud.addOption("triangulate", $TRIANGULATE)
-        if $REPLMARKS != '' and File.exists?($REPLMARKS)
-            ud.addOption("global coords", $MAKEGLOBAL) 
-        end
-        #if $RAD != ''
-        #    ud.addOption("run preview", $PREVIEW)
-        #end
-        if ud.show('export options') == true
-            $export_dir = ud.results[0] 
-            $scene_name = ud.results[1] 
-            $SHOWRADOPTS = ud.results[2] 
-            $EXPORTALLVIEWS = ud.results[3] 
-            $MODE = ud.results[4]
-            $TRIANGULATE = ud.results[5]
-            if $REPLMARKS != '' and File.exists?($REPLMARKS)
-                $MAKEGLOBAL = ud.results[6]
-            end
-            #if $RAD != ''
-            #    $PREVIEW = ud.result[7]
-            #end
-        else
-            uimessage('export canceled')
-            return false
-        end
-        
-        ## use test directory in debug mode
-        if $DEBUG and  $testdir != ''
-            $export_dir = $testdir
-            scene_dir = "#{$export_dir}/#{$scene_name}"
-            if FileTest.exists?(scene_dir)
-                system("rm -rf #{scene_dir}")
-            end
-        end
-        if $export_dir[-1,1] == '/'
-            $export_dir = $export_dir[0,$export_dir.length-1]
-        end
-        return true
-    end
-    
+
     def createMainScene(references, faces_text, parenttrans=nil)
         ## top level scene split in references (*.rad) and faces ('objects/*_faces.rad')
-        if $MODE != 'by group'
+        if getConfig('MODE') != 'by group'
             ## start with replacement files for components
-            ref_text = $components.join("\n")
+            ref_text = @@components.join("\n")
             ref_text += "\n"
         else
             ref_text = ""
         end
         ## create 'objects/*_faces.rad' file
         if faces_text != ''
-            faces_filename = getFilename("objects/#{$scene_name}_faces.rad")
+            fpath = File.join('objects', getConfig('SCENENAME') + '_faces.rad')
+            faces_filename = getFilename(fpath)
             if createFile(faces_filename, faces_text)
-                xform = "!xform objects/#{$scene_name}_faces.rad"
+                xform = "!xform %s" % fpath
             else
                 msg = "ERROR creating file '#{faces_filename}'"
-                uimessage(msg)
+                uimessage(msg, -2)
                 xform = "## " + msg
             end
             references.push(xform)
@@ -138,42 +191,64 @@ class RadianceScene < ExportBase
         ref_text += references.join("\n")
         ## add materials and sky at top of file
         ref_text = "!xform ./materials.rad\n" + ref_text
-        if $skyfile != ''
-            ref_text = "!xform #{$skyfile} \n" + ref_text
+        if @sky.filename != ''
+            ref_text = "!xform #{@sky.filename} \n" + ref_text
         end
-        ref_filename = getFilename("#{$scene_name}.rad")
+        ref_filename = getFilename(getConfig('SCENENAME') + ".rad")
         if not createFile(ref_filename, ref_text)
             msg = "\n## ERROR: error creating file '%s'\n" % filename
-            uimessage(msg)
+            uimessage(msg, -2)
             return msg
         end
     end
     
-    def export(selected_only=0)
-        scene_dir = "#{$export_dir}/#{$scene_name}"
-        if not confirmExportDirectory or not removeExisting(scene_dir)
-            return
+    def showStatusPage
+        htmlpath = getFilename(File.join('logfiles', 'status.html'))
+        if not createFile(htmlpath, "foo")
+            return nil
         end
-        if $SHOWRADOPTS == true
-            @radOpts.showDialog
+        statusPage = StatusPage.new(htmlpath)
+        if statusPage.create() == true
+            statusPage.show()
+            $SU2RAD_COUNTER.setStatusPage(statusPage)
+            return statusPage
+        else
+            return nil
         end
-        
-        ## check if global coord system is required
-        if $MODE != 'by group'
-            uimessage("export mode '#{$MODE}' requires global coordinates")
-            $MAKEGLOBAL = true
-        elsif $REPLMARKS == '' or not File.exists?($REPLMARKS)
-            if $MAKEGLOBAL == false
-                uimessage("WARNING: 'replmarks' not found.")
-                uimessage("=> global coordinates will be used in files")
-                $MAKEGLOBAL = true
+    end
+    
+    def startExportWeb(selected_only=0)
+        sceneDir = getConfig('SCENEPATH')
+        if renameExisting(sceneDir) == false
+            uimessage("Could not rename existing directory '#{sceneDir}' - files will be replaced", -1)
+        end
+        if getConfig('SHOW_STATUS_PAGE')
+            statusPage = showStatusPage()
+        else
+            statusPage = nil
+        end
+        begin 
+            prepareSceneDir(sceneDir)
+            $SU2RAD_COUNTER.setStartTime()
+            success = export(selected_only)
+        rescue => e
+            uimessage($!.message, -2)
+            printf e.backtrace.join("\n")
+            success = false
+        ensure
+            if statusPage
+                $SU2RAD_COUNTER.updateStatus() 
+                statusPage.showFinal()
             end
         end
-        
+        return success
+    end 
+    
+    def export(selected_only=0)
+       
         ## write sky first for <scene>.rad file
-        sky = RadianceSky.new()
-        sky.skytype = @radOpts.skytype
-        $skyfile = sky.export()
+        #@sky.skytype = @radOpts.skytype
+        @sky.export()
         
         ## export geometry
         if selected_only != 0
@@ -183,26 +258,88 @@ class RadianceScene < ExportBase
             entities = Sketchup.active_model.entities
         end
         $globaltrans = Geom::Transformation.new
-        $nameContext.push($scene_name) 
+        @@nameContext.push(getConfig('SCENENAME')) 
+        
+        uimessage("\nOBJECTS:", 0)
         sceneref = exportByGroup(entities, Geom::Transformation.new)
-        saveFilesByCL()
-        $nameContext.pop()
-        $materialContext.export()
+        emode = getConfig('MODE')
+        if emode == 'by color' || emode == 'daysim'
+            refs = _saveFilesByColor(@@byColor)
+            createMainScene(refs, '')
+        elsif emode == 'by layer' 
+            refs = _saveFilesByLayer(@@byLayer)
+            createMainScene(refs, '')
+        end
+        
+        @@nameContext.pop()
+        uimessage("\nMATERIALS:", 0)
+        @@materialContext.export(@materialLists.matLib)
         createRifFile()
-        runPreview()
+
+        if getConfig('MODE') == 'daysim'
+            puts "DAYSIM == true"
+            hea = createDaysimFiles()
+            if hea != ''
+                startDaysim(hea)
+            end
+        end
+            
         writeLogFile()
+        
+        if getConfig('MODE') == 'daysim'
+        end
+        return true
     end
-    
-    def saveFilesByCL
-        if $MODE == 'by layer'
-            hash = $byLayer
-        elsif $MODE == 'by color'
-            hash = $byColor
-        else
+  
+    def startDaysim(heafile)
+        if $SU2RAD_PLATFORM != 'WIN'
+            uimessage("platform != 'WIN' ('%s') -> can't start daysim" % $SU2RAD_PLATFORM, 4)
             return
         end
+        uimessage("trying to start daysim ...", 1)
+        daysim = "C:\\daysim\\bin_windows\\daysimExe.jar"
+        heafile.gsub!(/\//, "\\")
+        olddir = Dir.pwd()
+        Dir.chdir("C:/daysim/bin_windows")
+        begin
+            Thread.new do
+                #system(`java -jar #{daysim} <"#{heafile}"`)
+                system(`start #{daysim} "#{heafile}"`)
+            end
+        rescue
+            uimessage("Error starting 'daysimExe.jar' thread", -2)
+            uimessage("%s\n%s\n" % [$!.message, e.backtrace.join("\n")], -2)
+        end
+        Dir.chdir(olddir)
+    end
+    
+    def _saveFilesByColor(byColor)
         references = []
-        hash.each_pair { |name,lines|
+        uimessage("\nSCENEFILES:", 0)
+        byColor.each_pair { |name,lines|
+            if lines.length == 0
+                next
+            end
+            skm = @@materialContext.getByName(name)
+            name = remove_spaces(name)
+            if doTextures(skm) == false
+                filename = getFilename("objects/#{name}.rad")
+                if not createFile(filename, lines.join("\n"))
+                    uimessage("Error: could not create file '#{filename}'")
+                else
+                    references.push("!xform objects/#{name}.rad")
+                end
+            else
+                uimessage("material='#{skm}' texture='#{skm.texture}'", 2)
+                references.push(obj2mesh(name, lines))
+            end
+        }
+        return references
+    end
+    
+    def _saveFilesByLayer(byLayer)
+        references = []
+        byLayer.each_pair { |name,lines|
             if lines.length == 0
                 next
             end
@@ -211,151 +348,173 @@ class RadianceScene < ExportBase
             if not createFile(filename, lines.join("\n"))
                 uimessage("Error: could not create file '#{filename}'")
             else
-                references.push("!xform objects/#{name}.rad")
+                references.push("\n!xform objects/#{name}.rad")
             end
         }
-        createMainScene(references, '')
+        return references
     end
-    
+
     def runPreview
-        ##TODO: preview
-        if $RAD == '' or $PREVIEW != true
+        if $SU2RAD_PLATFORM != 'MAC'
+            uimessage("'rvu' only available on Mac OS X",-1)
             return
         end
-        dir, riffile = File.split(getFilename("%s.rif" % $scene_name))
-        #Dir.chdir("#{$export_dir}/#{$scene_name}")
-        #cmd = "%s -o x11 %s" % [$RAD, riffile]
+        if getConfig('RAD') == ''
+            uimessage("Radiance not found in search path!",-1) 
+            return
+        end
+        #TODO: set temporary directory
+        #      export to temp directory
+        #      run subshell with 'rad -x 11 ...'
     end
     
-    def writeLogFile
-        line = "###  finished: %s  ###" % Time.new()
-        $log.push(line)
-        line2 = "### success: #{$export_dir}/#{$scene_name})  ###"
-        $log.push(line2)
-        logname = getFilename("%s.log" % $scene_name)
-        if not createFile(logname, $log.join("\n"))
-            uimessage("Error: Could not create log file '#{logname}'")
-            line = "### export failed: %s  ###" % Time.new()
-            printf "%s\n" % line
-            Sketchup.set_status_text(line)
-        else
-            printf "%s\n" % line
-            Sketchup.set_status_text(line)
-            printf "%s\n" % line2
-            Sketchup.set_status_text(line2)
-        end
-    end
-   
     def getRifObjects
         text = ''
-        if $skyfile != ''
-            text += "objects=\t#{$skyfile}\n"
+        if @sky.filename != ''
+            text += "objects=\t#{@sky.filename}\n"
         end
-        i = 0
-        j = 0
-        line = ""
+        files = []
+        meshes = []
         Dir.foreach(getFilename("objects")) { |f|
-            if f[0,1] == '.'
-                next
-            elsif f[-4,4] == '.rad'
-                line += "\tobjects/#{f}"
-                i += 1
-                j += 1
-                if i == 3
-                    text += "objects=#{line}\n"
-                    i = 0
-                    line = ""
-                end
-                if j == 63
-                    uimessage("too many objects for rif file")
-                    break
-                end
+            if f =~ /\.rad\z/i
+                files.push("objects/#{f}")
+            elsif f =~ /\.rtm\z/i
+                meshes.push("objects/#{f}")
+            else
+                uimessage("XXX object file: %s\n" % f, 3)
             end
         }
-        if line != ""
-            text += "objects=#{line}\n"
+        files += meshes
+        i=0
+        lines = ["## scene object files (total=%d)" % files.length]
+        while i < files.length()
+            lines.push("objects=\t%s" % files.slice(i,3).join("\t"))
+            i += 3
+        end
+        text += lines.slice(0,51).join("\n")
+        if lines.length > 50
+            text += "\n## total number of objects too large\n"
         end
         return text
     end
+  
+    def createDaysimFiles
+        ## create subdirectory 'daysim' with geometry and control files
+        dsdir = getFilename("Daysim")
+        uimessage("creating DAYSIM structure in '#{dsdir}'", 1)
+        createDirectory(dsdir)
+        ['res', 'rad', 'pts', 'tmp', 'wea'].each { |d|
+            createDirectory(File.join(dsdir, d))
+        }
+        radfile = _createDaysimRAD()
+        ptsfile = _createDaysimPTS()
+        if radfile != ''
+            return _createDaysimHEA(radfile,ptsfile)
+        end
+        return ''
+    end
+    
+    def _createDaysimRAD
+        ## remove sky from radiance scene and convert to single file
+        radfile = getFilename(getConfig('SCENENAME') + ".rad")
+        lines = File.new(radfile).readlines()
+        dspath = getFilename("Daysim/%s.rad" % getConfig('SCENENAME'))
+        begin
+            fDaysim = File.new(dspath, 'w')
+            lines.each { |l|
+                if l.strip() =~ /.sky$/
+                    uimessage("stripping sky: '#{l.strip}'", 1)
+                elsif l =~ /^!xform/
+                    if l.strip =~ /materials.rad$/
+                        uimessage("identified materials file: '#{l.strip}'", 2)
+                        uimessage("-> TODO: convert to greyscale", 2)
+                    end
+                    uimessage("adding scene file '%s'" % l.split()[-1], 2)
+                    scenefile = getFilename(l.split()[-1])
+                    if File.exists?(scenefile)
+                        fDaysim.write(File.open(scenefile).read())
+                        fDaysim.write("\n\n")
+                    else
+                        uimessage("Error: Could not locate  scene file '#{scenefile}'", -2)
+                    end
+                else
+                    fDaysim.write(l)
+                end
+            }
+            fDaysim.write("\n")
+            fDaysim.close()
+        rescue => e
+            uimessage("Error: Could not create daysim scene file '#{dspath}'", -2)
+            uimessage("error message: '%s'\n%s\n" % [$!.message, e.backtrace.join("\n")], -2)
+            return ''
+        end
+        return dspath
+    end
+     
+    def _createDaysimHEA(radfile, ptsfile='')
+        ## create Daysim/*.hea file
+        lines = ["project_name %s" % getConfig('SCENENAME'),
+                 @sky.getDaysimSiteInfo(),
+                 "\n########################\n# building information #\n########################",
+                 "material_file %s_material.rad" % getConfig('SCENENAME'),
+                 "geometry_file %s_geometry.rad" % getConfig('SCENENAME'),
+                 "radiance_source_files 1,%s"    % File.basename(radfile)]
+        if ptsfile != ''
+            lines.push("sensor_file %s" % File.basename(ptsfile))
+        end
+        lines.push("shading 0\nViewPoint 0\n")
+        
+        heafile = getFilename("Daysim/%s.hea" % getConfig('SCENENAME'))
+        text = lines.join("\n")
+        if not createFile(heafile, text)
+            uimessage("Error: Could not create DAYSIM hea file '#{heafile}'", -2)
+            return ''
+        end
+        return heafile
+    end
+    
+    def _createDaysimPTS
+        ## add field descriptions
+        numdir = getFilename('numeric')
+        if not File.exists?(numdir)
+            return ''
+        end
+        Dir.foreach(numdir) { |f|
+            if f =~ /.fld$/
+                fullpath = File.join(numdir, f)
+                ptsfile = getFilename("Daysim/%s.pts" % getConfig('SCENENAME'))
+                if not createFile(ptsfile, File.open(fullpath).read())
+                    uimessage("Error: Could not create DAYSIM pts file '#{ptsfile}'", -2)
+                else
+                    uimessage("created DAYSIM pts file '#{ptsfile}'", 1)
+                    return ptsfile
+                end
+            end
+        }
+        ## default: empty string (no file copied)
+        return ''
+    end
     
     def createRifFile
-        text =  "# scene input file for rad\n"
-        text += @radOpts.getRadOptions
+        ## last step in Radiance export: write radiance input file
+        sceneName = getConfig('SCENENAME')
+        text = @renderOptions.getRifOptionsText()
         text += "\n"
-        project = remove_spaces(File.basename($export_dir))
-        text += "PICTURE=      images/#{project}\n" 
-        text += "OCTREE=       octrees/#{$scene_name}.oct\n"
-        text += "AMBFILE=      ambfiles/#{$scene_name}.amb\n"
-        text += "REPORT=       3 logfiles/#{$scene_name}.log\n"
-        text += "scene=        #{$scene_name}.rad\n"
         text += "materials=    materials.rad\n\n"
-        text += "%s\n\n" % exportViews()
+        text += "%s\n\n" % @viewsList.getViewLines()
         text += getRifObjects
         text += "\n"
         
-        filename = getFilename("%s.rif" % $scene_name)
+        filename = getFilename("%s.rif" % sceneName)
         if not createFile(filename, text)
-            uimessage("Error: Could not create rif file '#{filename}'")
+            uimessage("Error: Could not create rif file '#{filename}'", -2)
         end
     end
         
-    def exportViews
-        views = []
-        views.push(createViewFile(@model.active_view.camera, $scene_name))
-        if $EXPORTALLVIEWS == true
-            pages = @model.pages
-            pages.each { |page|
-                if page == @model.pages.selected_page
-                    next
-                elsif page.use_camera? == true
-                    name = remove_spaces(page.name)
-                    views.push(createViewFile(page.camera, name))
-                end
-            }
-        end
-        return views.join("\n")
+    def prepareExport()
+        @exportOptions.writeOptionsToConfig()
+        @sky.setSkyOptions(@skyOptions.getSettings())
     end
 
-    def createViewFile(c, viewname)
-        text =  "-vp %.3f %.3f %.3f  " % [c.eye.x*$UNIT,c.eye.y*$UNIT,c.eye.z*$UNIT]
-        text += "-vd %.3f %.3f %.3f  " % [c.zaxis.x,c.zaxis.y,c.zaxis.z]
-        text += "-vu %.3f %.3f %.3f  " % [c.up.x,c.up.y,c.up.z]
-        imgW = @model.active_view.vpwidth.to_f
-        imgH = @model.active_view.vpheight.to_f
-        aspect = imgW/imgH
-        if c.perspective?
-            type = '-vtv'
-            if aspect > 1.0
-                vv = c.fov
-                vh = getFoVAngle(vv, imgH, imgW)
-            else
-                vh = c.fov
-                vv = getFoVAngle(vh, imgW, imgH)
-            end
-        else
-            type = '-vtl'
-            vv = c.height*$UNIT
-            vh = vv*aspect
-        end
-        text += "-vv %.3f -vh %.3f" % [vv, vh]
-        text = "rvu #{type} " + text
-        
-        filename = getFilename("views/%s.vf" % viewname)
-        if not createFile(filename, text)
-            msg = "## Error: Could not create view file '#{filename}'"
-            uimessage(msg)
-            return msg
-        else
-            return "view=   #{viewname} -vf views/#{viewname}.vf" 
-        end
-    end
-    
-    def getFoVAngle(ang1, side1, side2)
-        ang1_rad = ang1*Math::PI/180
-        dist = side1 / (2.0*Math::tan(ang1_rad/2.0))
-        ang2_rad = 2 * Math::atan2(side2/(2*dist), 1)
-        ang2 = (ang2_rad*180.0)/Math::PI
-        return ang2
-    end
 end
 
