@@ -28,10 +28,12 @@
 #
 # 2014.0.0:
 # ---------
+# 2014.1.0:
+# ---------             : Changes to comply with Extension Warehouse guidelines:
+#                           - renamed folder 'su2radlib' to 'su2rad' 
+#
 # 2014 - 02-Jun-2014  :  giving up previous revision scheme to follow SU versions
 #			 updating script to work with new Ruby version  
-#                        packaging script as extension (*.rbz)
-#
 # branch 1.0:
 # -----------
 # daysim r03 - 28/07/10  :  fix in material export for layer mode (untested)
@@ -74,7 +76,7 @@ end
 require "sketchup.rb"
 require "extensions.rb"
 
-su2rad_extension = SketchupExtension.new('su2rad', 'su2radlib/su2rad_loader.rb')
+su2rad_extension = SketchupExtension.new('su2rad', 'su2rad/su2rad_loader.rb')
 su2rad_extension.copyright = Su2rad::COPYRIGHT
 su2rad_extension.creator = Su2rad::CREATOR
 su2rad_extension.description = "SketchUp to Radiance exporter; " +
