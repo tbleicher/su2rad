@@ -1,90 +1,35 @@
-require "su2radlib/exportbase.rb"
-
-class ObjMesh < ExportBase
-
-    def getObjText(polymeshes)
-        verts = []
-        norms = []
-        texuv = []
-        tris  = []
-        offset = 0
-        polymeshes.each { |p|
-            nverts = p.count_points
-            i = 1
-            while i <= nverts
-                verts.push(p.point_at(i))
-                norms.push(p.normal_at(i))
-                texuv.push(p.uv_at(i))
-            end
-            p.polygons.each { |poly|
-                v1 = poly[0] > 0 ? poly[0] : poly[0]*-1
-                v2 = poly[1] > 0 ? poly[1] : poly[1]*-1
-                v3 = poly[2] > 0 ? poly[2] : poly[2]*-1
-                f = [v1+offset, v2+offset, v3=offset]
-                ## if there are more than 3 vertices
-                if poly.length == 4
-                    v4 = poly[3] > 0 ? poly[3] : poly[3]*-1
-                    f.push(v4+offset)
-                end
-                tris.push(f)
-            }
-            offset += nverts
-        }
-        lines = []
-        verts.each { |v|
-            lines.push("v  %.f %.f %.f" % v.to_a)
-        }
-        norms.each { |vn|
-            lines.push("vn %.f %.f %.f" % vn.to_a)
-        }
-        texuv.each { |vt|
-            lines.push("vt %.f %.f %.f" % vt.to_a)
-        }
-        tris.each { |t|
-            line = "f %d/%d/%d %d/%d/%d %d/%d/%d" % [t[0],t[0],t[0],t[1],t[1],t[1],t[2],t[2],t[2]]
-            if t.length == 4
-                line += " %d/%d/%d" % [t[3],t[3],t[3]]
-            end
-            lines.push(line)
-        }
-        return lines.join("\n")
-    end
-end
+require "exportbase.rb"
 
 
 class RadianceGroup < ExportBase
    
     def initialize(entity)
         @entity = entity
-        uimessage("RadGroup: '%s'" % entity.name)
+        uimessage("group: '%s'" % entity.name, 1)
     end
        
     def export(parenttrans)
+        push()
         entities = @entity.entities
         name = getUniqueName(@entity.name)
-        resetglobal = false
-        if isMirror(@entity.transformation) and not $MAKEGLOBAL
-            resetglobal = true
-            $MAKEGLOBAL = true
-            uimessage("group '#{name}' is mirrored; using global coords")
-        end
-        if $MAKEGLOBAL == true
-            parenttrans *= @entity.transformation
-        else
-            parenttrans = @entity.transformation
-        end
+        resetglobal = checkTransformation()
+        parenttrans = setTransformation(parenttrans, resetglobal)
         
-        $nameContext.push(name)
-        $materialContext.push(getMaterial(@entity))
+        @@nameContext.push(name)
+        @@materialContext.push(getMaterial(@entity))
+        
         oldglobal = $globaltrans
         $globaltrans *= @entity.transformation
         ref = exportByGroup(entities, parenttrans)
         $globaltrans = oldglobal
-        $materialContext.pop()
-        $nameContext.pop()
+        
+        @@materialContext.pop()
+        @@nameContext.pop()
+        
         if resetglobal == true
-            $MAKEGLOBAL = false
+            setConfig('MAKEGLOBAL', false)
         end
+        pop()
         return ref
     end
     
@@ -102,7 +47,7 @@ class RadianceComponent < ExportBase
         @iesdata = ''
         @lampMF = 0.8
         @lampType = 'default'
-        if $REPLMARKS != ''
+        if getConfig('REPLMARKS') != ''
             searchReplFile()
         end
     end
@@ -113,7 +58,7 @@ class RadianceComponent < ExportBase
         if cpath == nil or cpath == false
             return
         end
-        datapath = cpath.sub('.skp', '.dat')
+        datapath = cpath.sub(/\.skp\z/i, '.dat')
         if FileTest.exists?(datapath)
             uimessage("distribution data file '#{datapath}' found", 1)
         else
@@ -125,7 +70,7 @@ class RadianceComponent < ExportBase
             datatext = f.read()
             f.close()
             if createFile(datafilename, datatext) != true
-                uimessage("## error creating data file '#{datafilename}'")
+                uimessage("Error creating data file '#{datafilename}'", -2)
                 return false
             end
         end
@@ -177,7 +122,7 @@ class RadianceComponent < ExportBase
         
         if $createdFiles[filename] != 1 and createFile(filename, radtext) != true
             msg = "Error creating replacement file '#{filename}'"
-            uimessage(msg)
+            uimessage(msg, -2)
             return "\n## #{msg}\n"
         else
             ref = getXform(filename, transformation)
@@ -185,7 +130,7 @@ class RadianceComponent < ExportBase
         cpdata = copyDataFile(transformation)
         if cpdata == false
             msg = "Error: could not copy data file for '#{filename}'"
-            uimessage(msg)
+            uimessage(msg, -2)
             return "\n## #{msg}\n"
         else
             return "\n" + ref
@@ -197,20 +142,21 @@ class RadianceComponent < ExportBase
         if cpath == nil or cpath == false
             return
         end
-        if FileTest.exists?(cpath.sub('.skp', '.ies'))
-            @iesdata = cpath.sub('.skp', '.ies')
+        if FileTest.exists?(cpath.sub(/\.skp\z/i, '.ies'))
+            @iesdata = cpath.sub(/\.skp\z/i, '.ies')
             uimessage("ies data file '#{@iesdata}' found", 1)
         end
-        if FileTest.exists?(cpath.sub('.skp', '.oct'))
-            @replacement = cpath.sub('.skp', '.oct')
+        if FileTest.exists?(cpath.sub(/\.skp\z/i, '.oct'))
+            @replacement = cpath.sub(/\.skp\z/i, '.oct')
             uimessage("replacement file '#{@replacement}' found", 1)
-        elsif FileTest.exists?(cpath.sub('.skp', '.rad'))
-            @replacement = cpath.sub('.skp', '.rad')
+        elsif FileTest.exists?(cpath.sub(/\.skp\z/i, '.rad'))
+            @replacement = cpath.sub(/\.skp\z/i, '.rad')
             uimessage("replacement file '#{@replacement}' found", 1)
         end
     end
-    
+   
     def export(parenttrans)
+        push()
         entities = @entity.definition.entities
         defname = getComponentName(@entity)
         iname = getUniqueName(@entity.name)
@@ -218,43 +164,28 @@ class RadianceComponent < ExportBase
         mat = getMaterial(@entity)
         matname = getMaterialName(mat)
         alias_name = "%s_material" % defname
-        $materialContext.setAlias(mat, alias_name)
-        $materialContext.push(alias_name)
+        @@materialContext.setAlias(mat, alias_name)
+        @@materialContext.push(alias_name)
         
         ## force export to global coords if transformation
         ## can't be reproduced with xform
-        resetglobal = false
-        if isMirror(@entity.transformation)
-            if $MAKEGLOBAL == false
-                $MAKEGLOBAL = true
-                resetglobal = true
-                uimessage("instance '#{iname}' is mirrored; using global coords")
-            end
-        end
+        resetglobal = checkTransformation()
         
         skip_export = false
-        if $MAKEGLOBAL == false
+        if makeGlobal?() == false
             filename = getFilename("objects/#{defname}.rad")
             if $createdFiles[filename] == 1
                 skip_export = true
                 uimessage("file 'objects/#{defname}.rad' exists -> skipping export")
                 uimessage("creating new ref for instance '#{iname}'")
             end
-            $nameContext.push(defname)  ## use definition name for file
+            @@nameContext.push(defname)  ## use definition name for file
         else
             filename = getFilename("objects/#{iname}.rad")
-            $nameContext.push(iname)    ## use instance name for file
+            @@nameContext.push(iname)    ## use instance name for file
         end
         
-        if $MAKEGLOBAL == true and not resetglobal == true
-            showTransformation(parenttrans)
-            showTransformation(@entity.transformation)
-            parenttrans *= @entity.transformation
-            showTransformation(parenttrans)
-        else
-            parenttrans = @entity.transformation
-        end
-        
+        parenttrans = setTransformation(parenttrans, resetglobal)
         if @iesdata != ''
             ## luminaire from IES data
             ref = copyIESLuminaire(parenttrans)
@@ -272,15 +203,16 @@ class RadianceComponent < ExportBase
             $globaltrans = oldglobal
         end
         
-        $materialContext.pop()
-        $nameContext.pop()
+        @@materialContext.pop()
+        @@nameContext.pop()
+        pop()
         if resetglobal == true
-            $MAKEGLOBAL = false
+            setConfig('MAKEGLOBAL', false)
         end
         if @replacement != '' or @iesdata != ''
             ## no alias for replacement files
             ## add to scene level components list
-            $components.push(ref)
+            @@components.push(ref)
             return ref
         else
             ref = ref.sub(defname, iname)
@@ -291,15 +223,15 @@ class RadianceComponent < ExportBase
     def getComponentName(e)
         ## find name for component instance
         d = e.definition
-        if $componentNames.has_key?(d)
-            return $componentNames[d]
+        if @@componentNames.has_key?(d)
+            return @@componentNames[d]
         elsif d.name != '' and d.name != nil
             name = remove_spaces(d.name)
-            $componentNames[d] = name
+            @@componentNames[d] = name
             return name
         else
             name = getUniqueName('component')
-            $componentNames[d] = name
+            @@componentNames[d] = name
             return name
         end
     end
@@ -310,14 +242,15 @@ class RadiancePolygon < ExportBase
 
     attr_reader :material, :layer
     
-    def initialize(face, index=0)
+    def initialize(face)
+        $SU2RAD_COUNTER.add("faces")
         @face = face
         @layer = face.layer
         @material = getMaterial(face)
-        @index = index
+        @index = $SU2RAD_COUNTER.getCount("faces")
         @verts = []
         @triangles = []
-        if $TRIANGULATE == true
+        if getConfig('TRIANGULATE') == true
             polymesh = @face.mesh 7 
             polymesh.polygons.each { |p|
                 verts = []
@@ -390,6 +323,10 @@ class RadiancePolygon < ExportBase
         end
         return verts
     end
+
+    def getCenter(l)
+        return getCentre(l)
+    end 
     
     def getCentre(l)
         verts = l.vertices
@@ -432,7 +369,11 @@ class RadiancePolygon < ExportBase
     end
         
     def getText(trans=nil)
-        if $TRIANGULATE == true
+        if @face.area == 0
+            uimessage("face.area == 0! skipping face", 1)
+            return ''
+        end 
+        if getConfig('TRIANGULATE') == true
             if @triangles.length == 0
                 uimessage("WARNING: no triangles found for polygon")
                 return ""
@@ -440,53 +381,150 @@ class RadiancePolygon < ExportBase
             text = ''
             count = 0
             @triangles.each { |points|
-                text += getPolygon(points, count, trans)
+                text += getPolygonText(points, count, trans)
                 count += 1
             }
         else
             points = @verts.collect { |v| v.position }
-            text = getPolygon(points, 0, trans)
+            text = getPolygonText(points, 0, trans)
         end
         return text       
     end
 
-    def getPolygon(points,count, trans)
-        ## store text for byColor/byLayer export
-        worldpoints = points.collect { |p| p.transform($globaltrans) }
-        matname = getMaterialName(@material)
-        poly = "\n%s polygon f_%d_%d\n" % [matname, @index, count]
-        poly += "0\n0\n%d\n" % [worldpoints.length*3]
-        worldpoints.each { |wp|
-            poly += "    %f  %f  %f\n" % [wp.x*$UNIT,wp.y*$UNIT,wp.z*$UNIT]
-        }
-        if not $byColor.has_key?(matname)
-            $byColor[matname] = []
-            uimessage("new material for 'by Color': '#{matname}'")
+    def getEffectiveLayer(entity)
+        layer = entity.layer
+        if layer.name == 'Layer0'
+            ## use layer of parent group (on stack)
+            layer_s = @@layerstack.get()
+            if layer_s != nil
+                layer = layer_s
+            else
+                ## safety catch if no group on stack
+                layer = Sketchup.active_model.layers["Layer0"]
+            end
         end
-        $byColor[matname].push(poly)
-        
-        layername = remove_spaces(@layer.name)
-        if $RADPRIMITIVES.has_key?(layername)
+        return layer
+    end
+    
+    def getEffectiveLayerName(entity)
+        layer = getEffectiveLayer(entity)
+        return getLayerName(layer)
+    end
+    
+    def getLayerName(layer=nil)
+        if not layer
+            layer = getEffectiveLayer(@face)
+        end
+        layername = remove_spaces(layer.name)
+        if isRadianceKeyword?(layername)
             layername = "layer_" + layername
         end
-        if not $byLayer.has_key?(layername)
-            $byLayer[layername] = []
+        if not @@byLayer.has_key?(layername)
+            @@byLayer[layername] = []
         end
-        $byLayer[layername].push(poly.sub(matname, layername))
+        return layername
+    end
+        
+    def getPolygonText(points, count, trans)
+        ## return chunk of text to describe face in global/local space
+        skm = getEffectiveMaterial(@face)
+        if skm == nil
+            printf "## no material\n"
+        end
+        matname = getMaterialName(skm)
+        
+        ## create text of polygon in world coords for byColor/byLayer
+        scale = getConfig('UNIT')
+        worldpoints = points.collect { |p| p.transform($globaltrans) }
+        wpoly = "\n%s polygon f_%d_%d\n" % [matname, @index, count]
+        wpoly += "0\n0\n%d\n" % [worldpoints.length*3]
+        worldpoints.each { |wp|
+            wpoly += "    %f  %f  %f\n" % [wp.x*scale,wp.y*scale,wp.z*scale]
+        }
+
+        ## 'by layer': replace material in text name with layer name
+        layername = getEffectiveLayerName(@face) 
+        if not @@byLayer.has_key?(layername)
+            @@byLayer[layername] = []
+        end
+        @@byLayer[layername].push(wpoly.sub(matname, layername))
             
-        ## return text for byGroup export
+        ## 'by color' export: if material has texture create obj format
+        if not @@byColor.has_key?(matname)
+            @@byColor[matname] = []
+        end
+        if doTextures(skm) == true
+            #XXX $globaltrans or trans?
+            @@byColor[matname].push(getTexturePolygon($globaltrans, matname,skm))
+        else
+            @@byColor[matname].push(wpoly)
+        end
+        
+        ## 'by group': create polygon text with coords in local space
         text = "\n%s polygon t_%d_%d\n" % [getMaterialName(@material), @index, count]
         text += "0\n0\n%d\n" % [points.length*3]
         points.each { |p|
             if trans != nil
                 p.transform!(trans)
             end
-            text += "    %f  %f  %f\n" % [p.x*$UNIT,p.y*$UNIT,p.z*$UNIT]
+            text += "    %f  %f  %f\n" % [p.x*scale,p.y*scale,p.z*scale]
         }
         return text
     end
 
-    def isNumeric 
+    def getTexturePolygon(trans, matname, skm)
+        ## create '.obj' format description of face with uv-coordinates
+        if not @@meshStartIndex.has_key?(matname)
+            @@meshStartIndex[matname] = 1
+        end
+        imgx = skm.texture.width
+        imgy = skm.texture.height
+        m = getPolyMesh(trans)
+        si = @@meshStartIndex[matname]
+        unit = getConfig('UNIT')
+        text = ''
+        
+        m.polygons.each { |p|
+            [0,1,2].each { |i|
+                idx = p[i]
+                if idx < 0
+                    idx *= -1
+                end
+                v = m.point_at(idx)
+                if @face.material == skm || @face.back_material == skm
+                    ## textures applied to face need UVHelper
+                    if @face.material == skm
+                        uvHelp = @face.get_UVHelper(true, false, @@materialContext.texturewriter)
+                    else
+                        uvHelp = @face.get_UVHelper(false, true, @@materialContext.texturewriter)
+                    end 
+                    uvq = uvHelp.get_back_UVQ(v)
+                    tx = uvq.x
+                    ty = uvq.y
+                    if (tx > 10 || ty > 10)
+                        ## something's probably not working right
+                        ## TODO: find better criterium for use of uv_at
+                        t = m.uv_at(idx,1)
+                        tx = t.x
+                        ty = t.y
+                    end
+                else
+                    ## textures applied to group have to be scaled
+                    t = m.uv_at(idx,1)
+                    tx = t.x/imgx
+                    ty = t.y/imgy
+                end
+                text += "v    %f  %f  %f\n" % [v.x*unit, v.y*unit, v.z*unit]
+                text += "vt   %f  %f\n"     % [tx,ty]
+            }
+            text += "f   %d/%d  %d/%d  %d/%d\n" % [si,si, si+1,si+1, si+2,si+2]
+            si += 3
+        }
+        @@meshStartIndex[matname] = si
+        return text
+    end
+    
+    def isNumeric?
         if @face.layer.name.downcase == 'numeric'
             return true
         end
@@ -497,6 +535,7 @@ class RadiancePolygon < ExportBase
         polymesh = @face.mesh 7 
         polymesh.transform!($globaltrans)
         points = []
+        unit = getConfig('UNIT')
         polymesh.polygons.each { |p|
             verts = []
             [0,1,2].each { |i|
@@ -508,14 +547,14 @@ class RadiancePolygon < ExportBase
             }
             bbox = getbbox(*verts)
             z = (verts[0].z + verts[1].z + verts[2].z) / 3.0
-            d = 0.25/$UNIT 
+            d = 0.25/unit 
             x = bbox[0]
             while x <= bbox[2]
                 y = bbox[1] 
                 while y <= bbox[3]
                     p = Geom::Point3d.new(x,y,z)
                     if Geom::point_in_polygon_2D p, verts, true
-                        points.push("%.2f %.2f %.2f 0 0 1" % [p.x*$UNIT, p.y*$UNIT, p.z*$UNIT])
+                        points.push("%.2f %.2f %.2f 0 0 1" % [p.x*unit, p.y*unit, p.z*unit])
                     end
                     y += d
                 end
@@ -526,152 +565,140 @@ class RadiancePolygon < ExportBase
     end
     
     def getbbox(p1,p2,p3)
+        ## return bbox for 0.25m grid
         xs = [p1.x,p2.x,p3.x]
         ys = [p1.y,p2.y,p3.y]
         xs.sort!
         ys.sort!
         d = 0.25
-        xmin = xs[0]*$UNIT - d
-        xmin = ((xmin*4).to_i-1) / 4.0
-        xmax = xs[2]*$UNIT + d
-        xmax = ((xmax*4).to_i+1) / 4.0
-        ymin = ys[0]*$UNIT - d
-        ymin = ((ymin*4).to_i-1) / 4.0
-        ymax = ys[2]*$UNIT + d
-        ymax = ((ymax*4).to_i+1) / 4.0
-        return [xmin/$UNIT, ymin/$UNIT, xmax/$UNIT, ymax/$UNIT]
+        unit = getConfig('UNIT')
+        xmin = xs[0]*unit - d
+        xmin = ((xmin/d).to_i-1) * d
+        xmax = xs[2]*unit + d
+        xmax = ((xmax/d).to_i+1) * d
+        ymin = ys[0]*unit - d
+        ymin = ((ymin/d).to_i-1) * d
+        ymax = ys[2]*unit + d
+        ymax = ((ymax/d).to_i+1) * d
+        return [xmin/unit, ymin/unit, xmax/unit, ymax/unit]
     end
 end 
 
 
 class RadianceSky < ExportBase
     
+    attr_reader :filename
     attr_reader :skytype
     attr_writer :skytype 
     
     def initialize
-        @skytype = "-c"
+        @skytype = getSkyType()
+        @filename = ''
         @comments = ''
+        @sinfo = nil
+    end
+    
+    def getDaysimSiteInfo
+        ## return site/sky information for Daysim *.hea file
+        if @sinfo == nil
+            sinfo = Sketchup.active_model.shadow_info
+        else
+            sinfo = @sinfo
+        end
+        city = sinfo['City'].gsub(/\s/, '_').gsub(/\W/, '')
+        text =  ""
+        text += "########################\n"
+        text += "### site information ###\n"
+        text += "########################\n"
+        text += "place %s\n"       % city
+        text += "latitude %.3f\n"  % sinfo['Latitude']
+        text += "longitude %.3f\n" % (sinfo['Longitude']*-1)
+        text += "time_zone %d\n"   % (sinfo['TZOffset']*-15.0)
+        text += "site_elevation 0.0\n"       
+        text += "ground_reflectance 0.2\n"       
+        text += "scene_rotation_angle %.2d\n" % sinfo['NorthAngle']
+        text += "time_step 60\n"              
+        text += "#wea_data_file_short C:\\DAYSIM\\wea\\CAN_ON_Ottawa_CWEC_5min.wea"
+        return text
+    end
+
+    def getSkyType
+        sinfo = Sketchup.active_model.shadow_info
+        type = "-c"
+        if sinfo['DisplayShadows'] == true
+            type = "+i"
+            if sinfo['UseSunForAllShading'] == true
+                type = "+s" + type
+            end
+        end
+        return type
     end
     
     def export
-        sinfo = Sketchup.active_model.shadow_info
+        if @sinfo == nil
+            sinfo = Sketchup.active_model.shadow_info
+            skycmd = "!%s" % getGenSkyOptions(sinfo)
+            skycmd += " | xform -rz %.1f\n\n" % (-1*sinfo['NorthAngle']) #XXX
+        else
+            sinfo = @sinfo
+            skycmd = "!%s\n\n" % sinfo['SkyCommand']
+        end
         
-        text = getGenSkyOptions(sinfo)
-        text += " #{@skytype} -g 0.2 -t 1.7"
-        text += " | xform -rz %.1f\n\n" % (-1*sinfo['NorthAngle']) 
+        text =  "## sky description for %s, %s\n" % [sinfo['City'], sinfo['Country']]
+        text += "##   latitude:  %.3f\n" % sinfo['Latitude']
+        text += "##   longitude: %.3f\n" % sinfo['Longitude']
+        text += "\n"
+        text += skycmd
         text += "skyfunc glow skyglow\n0\n0\n4 1.000 1.000 1.000 0\n"
         text += "skyglow source sky\n0\n0\n4 0 0 1 180\n\n"
         text += "skyfunc glow groundglow\n0\n0\n4 1.000 1.000 1.000 0\n"
         text += "groundglow source ground\n0\n0\n4 0 0 -1 180\n"
 
         city = remove_spaces(sinfo['City'])
-        timestamp = sinfo['ShadowTime'].strftime("%m%d_%H%M")
-        filename = getFilename("skies/%s_%s.sky" % [city, timestamp])
-        filetext = @comments + "\n" + text
-        if not createFile(filename, filetext)
-            uimessage("Error: Could not create sky file '#{filename}'")
-            return ''
+        if sinfo['ShadowTime'].class == Time
+            timestamp = sinfo['ShadowTime'].strftime("%m%d_%H%M")
         else
-            return "skies/%s_%s.sky" % [city, timestamp]
-        end
-    end
-    
-    def getGenSkyOptions(sinfo)
-        ## Time zone of ShadowTime is UTC. When strftime is used
-        ## local tz is applied which shifts the time string for gensky.
-        ## $UTC_OFFSET has to be defined to compensate this. Without
-        ## it sky can only by definded by '-ang alti azi' syntax.
-        if $UTC_OFFSET != nil
-            ## if offset is defined change time before strftime
-            skytime = sinfo['ShadowTime']
-            skytime -= $UTC_OFFSET*3600
+            skytime = Time.at(sinfo['ShadowTime_time_t'])
             if skytime.isdst == true
                 skytime -= 3600
             end
-            lat  = sinfo['Latitude']
-            long = sinfo['Longitude']
-            mer  = "%.1f" % (sinfo['TZOffset']*-15.0)
-            text = "!gensky %s " % skytime.strftime("%m %d %H:%M")
-            text += " -a %.2f -o %.2f -m %1.f" % [lat, -1*long, mer]
-        else
-            ## use gensky with angles derieved from sun direction
-            text = "## set $UTC_OFFSET to allow gensky spec with daytime\n"
-            d = sinfo['SunDirection']
-            dXY = Geom::Vector3d.new(d.x, d.y, 0)
-            south = Geom::Vector3d.new(0, -1, 0)
-            alti = d.angle_between(dXY) * 180 / 3.141592654
-            if d.z < 0.0
-                alti *= -1
-            end
-            azi  = dXY.angle_between(south) * 180 / 3.141592654
-            if d.x > 0.0
-                azi *= -1
-            end
-            text += "!gensky -ang %.3f %.3f " % [alti, azi]
+            skytime.utc             ## time zone of ShadowTime is UTC
+            timestamp = skytime.strftime("%m%d_%H%M")
         end
-        return text
+        rpath = File.join("skies","%s_%s.sky" % [city, timestamp])
+        filename = getFilename(rpath)
+        filetext = @comments + "\n" + text
+        if not createFile(filename, filetext)
+            uimessage("Error: Could not create sky file '#{filename}'")
+            @filename = ''
+        else
+            @filename = rpath
+        end
+        return @filename
     end
     
-    def getTimeZone(country, city, long)
-        ## unused
-        meridian = ''
-        ## location data file depends on platform
-        if $OS == 'MAC'
-            locationdata = 'locations.dat'
-        else
-            locationdata = 'SketchUp.tzl'
+    def getGenSkyOptions(sinfo=nil)
+        if sinfo == nil
+            sinfo = Sketchup.active_model.shadow_info
         end
-        files = Sketchup.find_support_file(locationdata)
-        if files == nil
-            uimessage("support file '#{locationdata}' not found")
-            files = []
+        skytime = sinfo['ShadowTime']
+        if skytime.isdst == true
+            skytime -= 3600
         end
-        locations = []
-        files.each { |f|
-            begin
-                uimessage("using locations file '#{f}'")
-                fd = File.new(f, 'r')
-                locations = fd.readlines()
-                fd.close()
-                break
-            rescue
-                uimessage("could not use location file: '#{f}'")
-            end
-        }
-        re_country = Regexp.new(country)
-        re_city = Regexp.new(city)
-        locations.each { |l|
-            l = l.strip()
-            begin
-                a = l.split(",")
-                co = a[0].gsub('"','')
-                ci = a[1].gsub('"','')
-                if country == co 
-                    if city == ci
-                        uimessage("found location: '#{l}'")
-                        @comments += "## location data: %s '#{l}'\n"
-                        delta = a[-1].to_f
-                        meridian = "%.1f" % (delta*-15.0)
-                        break
-                    end
-                end
-            rescue
-                uimessage("Could not use location line '#{l}'")
-            end
-        }
-        if meridian == ''
-            ## not found in locations
-            msg = "meridian not found in location data -> calculating from long"
-            uimessage(msg)
-            @comments += "## %s\n" % msg
-            delta = long.to_f / 15.0
-            delta = delta.to_i
-            meridian = "%.1f" % (delta*-15.0)
-        end
-        return meridian
+        skytime.utc                 ## time zone of ShadowTime is UTC
+        lat = sinfo['Latitude']
+        lng = sinfo['Longitude']
+        mer = "%.1f" % (sinfo['TZOffset']*-15.0)
+        text = "gensky %s #{@skytype}" % skytime.strftime("%m %d %H:%M")
+        text += " -a %.3f -o %.3f -m %1.f" % [lat, -1*lng, mer]
+        text += " -g 0.2 -t 1.7"
+        return text
     end
-
+   
+    def setSkyOptions(sinfo)
+        @sinfo = sinfo
+    end
+    
     def test
         sinfo = Sketchup.active_model.shadow_info
         lat = sinfo['Latitude']

@@ -135,8 +135,9 @@ module Delauney
         nedge = 0
         
         # Verbose  
-        Sketchup.set_status_text("Triangulating point %d/%d" % [i,nvert])
-      
+        if i % 100 == 100
+            Sketchup.set_status_text("Triangulating point %d/%d" % [i,nvert])
+        end
         # Set up the edge buffer. If the point (xp, yp) lies inside the
         # circumcircle then the three edges of that triangle are added to
         # the edge buffer.

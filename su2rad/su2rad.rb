@@ -1,9 +1,10 @@
 # Sketchup To Radiance Exporter
 #
-# su2rad.rb - version 0.0d
-#
+# su2rad.rb 
+
 # Written by Thomas Bleicher
-# based on ogre_export by Kojack
+#
+# tbleicher@gmail.com
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU Lesser General Public License
@@ -23,6 +24,30 @@
 
 
 # revisions:
+# ===========
+#
+# 2014.0.0:
+# ---------
+# 2014 - 02-Jun-2014  :  giving up previous revision scheme to follow SU versions
+#			 updating script to work with new Ruby version  
+#                        packaging script as extension (*.rbz)
+#
+# branch 1.0:
+# -----------
+# daysim r03 - 28/07/10  :  fix in material export for layer mode (untested)
+#                           support of IE8
+# daysim r02 - 28/06/09  :  basic features for DAYSIM support
+#                           creation of DAYSIM scene description files
+#                           import of rtrace values as colored contour plot
+#                           for presentation by C. Reinhart only
+# daysim r01 - 15/06/09  :  non-public - for feedback from C. Reinhart only
+# v 1.0alpha - 18/01/09  :  pre-releas for feedback (including Windows)
+#                           new interface pages for views and materials
+# Xmas_special_2008      :  pre-releas for feedback (Mac only)
+#                           all new webdialog JavaScript interface
+#
+# branch 0.0:
+# -----------
 # v 0.0d - tbc       :  fixed bug in cleaning of colour names
 #                         (thanks to Rob Guglielmetti for reporting)
 #                       fixed export of hidden layers in components
@@ -37,152 +62,25 @@
 #                       added exception error display to export function
 # v 0.0  - 28/10/07  :  initial release
 
-if PLATFORM =~ /darwin/
-    $OS = 'MAC'
-else
-    $OS = 'WIN'
-end
+module Su2rad
 
-require "su2radlib/preferences.rb"
-require "su2radlib/exportbase.rb"
-require "su2radlib/interface.rb"
-require "su2radlib/numeric.rb"
-require "su2radlib/material.rb"
-require "su2radlib/radiance_entities.rb"
-require "su2radlib/radiancescene.rb"
+    COPYRIGHT = "(c) 2014 by Thomas Bleicher"
+    CREATOR = "Thomas Bleicher"
+    VERSION = "2014.0.0"
 
-$RADPRIMITIVES = {  "plastic"    => 1,
-                    "glass"      => 1,
-                    "trans"      => 1, "trans2" => 1,
-                    "metal"      => 1, "metal2" => 1,
-                    "glow"       => 1,
-                    "light"      => 1,
-                    "source"     => 1,
-                    "mirror"     => 1,
-                    "dielectric" => 1, "dielectric2" => 1,
-                    "void"       => 1}
-
-$testdir = ""
-
-## reload all script files for debugging
-if $DEBUG
-    load "su2radlib/preferences.rb"
-    load "su2radlib/exportbase.rb"
-    load "su2radlib/interface.rb"
-    load "su2radlib/numeric.rb"
-    load "su2radlib/material.rb"
-    load "su2radlib/radiance_entities.rb"
-    load "su2radlib/radiancescene.rb"
 end
 
 
-## define defaults if config file is messed up
-$BUILD_MATERIAL_LIB = false
-$EXPORTALLVIEWS     = false 
-$MAKEGLOBAL         = false     
-$LOGLEVEL           = 0                ## don't report details
-$MODE               = 'by group'       ## "by group"|"by layer"|"by color"
-$RAD                = ''
-$REPLMARKS          = '/usr/local/bin/replmarks' 
-$PREVIEW            = false        
-$SHOWRADOPTS        = true
-$SUPPORTDIR         = '/Library/Application Support/Google Sketchup 6/Sketchup'
-$TRIANGULATE        = false    
-$UNIT               = 0.0254           ## inch (SU native unit) to meters (Radiance)
-$UTC_OFFSET         = nil
-$ZOFFSET            = nil     
+require "sketchup.rb"
+require "extensions.rb"
 
-## try to load configuration from file
-loadPreferences()
+su2rad_extension = SketchupExtension.new('su2rad', 'su2radlib/su2rad_loader.rb')
+su2rad_extension.copyright = Su2rad::COPYRIGHT
+su2rad_extension.creator = Su2rad::CREATOR
+su2rad_extension.description = "SketchUp to Radiance exporter; " +
+    "creates new entry in \"Plugins\" menu when loaded"
+su2rad_extension.version = Su2rad::VERSION
 
-## define scale matrix for unit conversion
-$SCALETRANS = Geom::Transformation.new(1/$UNIT)
-
-
-def startExport(selected_only=0)
-    begin
-        $MatLib = MaterialLibrary.new()
-        rs = RadianceScene.new()
-        rs.export(selected_only)
-    rescue => e 
-        msg = "%s\n\n%s" % [$!.message,e.backtrace.join("\n")]
-        UI.messagebox msg            
-    end 
-end
-
-
-
-$matConflicts = nil
-
-def countConflicts
-    if $matConflicts == nil
-        $matConflicts = MaterialConflicts.new()
-    end
-    $matConflicts.count()
-end
-
-def resolveConflicts
-    if $matConflicts == nil
-        $matConflicts = MaterialConflicts.new()
-    end
-    $matConflicts.resolve()
-end
-
-
-
-def startImport(f='')
-    ni = NumericImport.new()
-    if $DEBUG
-        ni.loadFile(f)
-        ni.createMesh
-        ni.addContourLines
-        ni.addLabels
-    else
-        ni.loadFile
-        ni.confirmDialog
-    end
-end
-
-
-
-def preferencesDialog
-    pd = PreferencesDialog.new()
-    pd.showDialog()
-end
-
-
-
-def runTest
-    sky = RadianceSky.new()
-    sky.test()
-end
-
-
-
-if $DEBUG
-    printf "debug mode\n"
-    startExport()
-else
-    ## create menu entry
-    begin
-        if (not file_loaded?("su2rad.rb"))
-            pmenu = UI.menu("Plugin")
-            radmenu = pmenu.add_submenu("Radiance")
-            radmenu.add_item("export scene") { startExport(0) }
-            radmenu.add_item("export selection") { startExport(1) }
-            matmenu = radmenu.add_submenu("Material")
-            matmenu.add_item("count conflicts") { countConflicts }
-            matmenu.add_item("resolve conflicts") { resolveConflicts }
-            importmenu = radmenu.add_submenu("Import")
-            importmenu.add_item("numeric results") { startImport }
-            radmenu.add_item("Preferences") { preferencesDialog() }
-        end
-    rescue => e
-        msg = "%s\n\n%s" % [$!.message,e.backtrace.join("\n")]
-        UI.messagebox msg
-        printf "su2rad: entry to menu 'Plugin' failed:\n\n%s\n" % msg
-    end
-    file_loaded("su2rad.rb")
-end
+Sketchup.register_extension(su2rad_extension, true)
 
 
