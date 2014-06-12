@@ -40,14 +40,16 @@ require "config_class.rb"
 module Su2rad
 
     if RUBY_PLATFORM =~ /darwin/
-        $SU2RAD_PLATFORM = 'MAC'
+        SU2RAD_PLATFORM = 'MAC'
     else
-        $SU2RAD_PLATFORM = 'WIN'
+        SU2RAD_PLATFORM = 'WIN'
     end
-
+    
     ## define defaults if config file is messed up
-    $SU2RAD_LOGLEVEL = -1        #XXX report warnings and errors only
+    SU2RAD_LOGLEVEL = -1        #XXX report warnings and errors only
     $SU2RAD_LOG = []
+    CONST2 = 2
+    SU2RAD_DEBUG = false
 
     ## load configuration from file
     #loadPreferences()
@@ -84,28 +86,28 @@ module Su2rad
 
 
 
-    $matConflicts = nil
+    matConflicts = nil
 
     def self.countConflicts
         $SU2RAD_CONFIG = RunTimeConfig.new()
-        if $matConflicts == nil
-            $matConflicts = MaterialConflicts.new()
+        if matConflicts == nil
+            matConflicts = MaterialConflicts.new()
         end
-        $matConflicts.count()
+        matConflicts.count()
     end
 
     def self.resolveConflicts
         $SU2RAD_CONFIG = RunTimeConfig.new()
-        if $matConflicts == nil
-            $matConflicts = MaterialConflicts.new()
+        if matConflicts == nil
+            matConflicts = MaterialConflicts.new()
         end
-        $matConflicts.resolve()
+        matConflicts.resolve()
     end
 
     def self.startImport()
         $SU2RAD_CONFIG = RunTimeConfig.new()
         ni = NumericImport.new()
-        if $SU2RAD_DEBUG
+        if SU2RAD_DEBUG
             if ni.loadFile('/Users/ble/tmp/numimport/ADF_medium.df') == true
                 ni.confirmDialog
                 #ni.createMesh
@@ -161,7 +163,7 @@ module Su2rad
         load "scene_materials.rb"
         load "config_class.rb"
         # set debug flag and reload main file to start dialog
-        $SU2RAD_DEBUG = true
+        #su2rad_debug = true
         load "su2rad.rb"
     end
 
@@ -191,7 +193,7 @@ module Su2rad
 end #end module
 
 
-if $SU2RAD_DEBUG
+if Su2rad::SU2RAD_DEBUG
     printf "debug mode\n"
     startWebExport(0)
 else
@@ -208,4 +210,4 @@ else
     file_loaded("su2rad")
 end
 
-
+#
