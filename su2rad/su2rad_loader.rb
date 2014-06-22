@@ -26,15 +26,16 @@
 ## extend search path to subdirectories
 $:.push(File.dirname(__FILE__))
 
+require "su2rad_module"
 require "sketchup.rb"
-require "exportbase.rb"
-require "context.rb"
-require "numeric.rb"
-require "material.rb"
-require "radiance_entities.rb"
-require "radiancescene.rb"
-require "webdialog.rb"
-require "config_class.rb"
+require "exportbase"
+require "context"
+require "numeric"
+require "material"
+require "radiance_entities"
+require "radiancescene"
+require "webdialog"
+require "config_class"
 
 
 module Su2rad
@@ -48,17 +49,19 @@ module Su2rad
     ## define defaults if config file is messed up
     SU2RAD_LOGLEVEL = -1        #XXX report warnings and errors only
     $SU2RAD_LOG = []
-    CONST2 = 2
     SU2RAD_DEBUG = false
 
     ## load configuration from file
     #loadPreferences()
-
+    
+    class Session
+    end
 
     def self.startExport(selected_only=0)
         begin
             $SU2RAD_CONFIG = RunTimeConfig.new()
             $SU2RAD_COUNTER = ProgressCounter.new()
+            session = Session.new()
             rs = RadianceScene.new()
             rs.startExport(selected_only)
         rescue => e 

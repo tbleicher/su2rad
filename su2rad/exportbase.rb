@@ -75,7 +75,6 @@ module Su2rad
     end
 
 
-
     class ExportBase
 
         include InterfaceBase
