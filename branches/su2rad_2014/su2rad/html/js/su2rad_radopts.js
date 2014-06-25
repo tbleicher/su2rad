@@ -125,7 +125,7 @@ RadOptsObject.prototype.setRpictDefaults = function () {
     this._rpictOpts.ps = 1.0;
     this._rpictOpts.pt = 0.05;
     // specular
-    this._rpictOpts.sj = 1.0;
+    //this._rpictOpts.sj = 1.0;
     this._rpictOpts.st = 0.15;
     // bool options
     this._rpictOpts.bv = true;
@@ -172,7 +172,7 @@ RadOptsObject.prototype._setRpictOptsHigh = function () {
     this._rpictOpts.lr = 12;
     this._rpictOpts.lw = 0.0005;
     this._rpictOpts.pt = 0.04;
-    this._rpictOpts.sj = 1.0;
+    //this._rpictOpts.sj = 1.0;
     this._rpictOpts.st = 0.01;
     if (this.Detail == "high") {
         this._rpictOpts.ar = 128 * parseInt(this.ZoneSize);
@@ -217,7 +217,7 @@ RadOptsObject.prototype._setRpictOptsLow = function () {
     this._rpictOpts.lr = 6;
     this._rpictOpts.lw = 0.01;
     this._rpictOpts.pt = 0.16;
-    this._rpictOpts.sj = 0;
+    //this._rpictOpts.sj = 0;
     this._rpictOpts.st = 0.5;
     if (this.Detail == "high") {
         this._rpictOpts.ar = 32 * parseInt(this.ZoneSize);
@@ -258,7 +258,7 @@ RadOptsObject.prototype._setRpictOptsMedium = function () {
     this._rpictOpts.lr = 8;
     this._rpictOpts.lw = 0.002;
     this._rpictOpts.pt = 0.08;
-    this._rpictOpts.sj = 0.7;
+    //this._rpictOpts.sj = 0.7;
     this._rpictOpts.st = 0.1;
     if (this.Detail == "high") {
         this._rpictOpts.ar = 64 * parseInt(this.ZoneSize);
@@ -767,7 +767,7 @@ function _updateRpictOptionDisplay() {
                    "limits",     "lr", "lw",
                    "NEWCOL",
                    "pixel",      "pa", "pd", "pj", "pm", "ps", "pt",
-                   "specular",   "sj", "st"]
+                   "specular",   "st"] // "sj", "st"]
     
     // start with 'rpictOptions' column
     text = "<div class=\"rpictOptions\">"
