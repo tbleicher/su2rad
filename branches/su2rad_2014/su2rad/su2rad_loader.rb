@@ -189,8 +189,10 @@ module Su2rad
         #radmenu.add_item("Preferences") { preferencesDialog() }
         radmenu.add_item("About (#{VERSION})") { aboutDialog() }
         radmenu.add_item("Acknowledgement") { acknowledgementDialog() }
-        #radmenu.add_separator()
-        #radmenu.add_item("reload") { su2rad_reload() }
+        if self.debug
+            radmenu.add_separator()
+            radmenu.add_item("debug") { su2rad_reload() }
+        end
     end
 
 end #end module
