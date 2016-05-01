@@ -1,0 +1,10 @@
+source "https://rubygems.org"
+ 
+gem 'su2rad'
+ 
+group :development do
+  gem 'guard'
+  gem 'guard-rspec'
+  gem 'pry'
+end
+
