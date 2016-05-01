@@ -415,6 +415,12 @@ class RadiancePolygon < ExportBase
         if not layer
             layer = getEffectiveLayer(@face)
         end
+        begin
+			layername = remove_spaces(layer.name)
+		rescue => ex
+			uimessage("ERROR: no layer.name (%s)" % ex.message, -2)
+			layername = 'Layer0'
+		end
         layername = remove_spaces(layer.name)
         if isRadianceKeyword?(layername)
             layername = "layer_" + layername
