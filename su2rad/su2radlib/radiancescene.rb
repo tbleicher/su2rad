@@ -21,7 +21,7 @@ class StatusPage
         @statusHash.default = 0
         @timeStart = Time.now()
         @csspath = "file://" + File.join(File.dirname(__FILE__), "html", "css") + File::SEPARATOR
-        if $SU2RAD_PLATFORM == 'WIN'
+        if RUBY_PLATFORM !~ /darwin/
             @csspath.gsub!(File::SEPARATOR, '/')
         end
         @shortnames = { "Sketchup::ComponentInstance" => "components",
@@ -102,13 +102,13 @@ class StatusPage
 
     def show
         @timeStart = Time.now()
-        if $SU2RAD_PLATFORM == 'MAC'
+        if RUBY_PLATFORM =~ /darwin/
             browser = "open"
-	    htmlpath = @htmlpath
-        elsif $SU2RAD_PLATFORM == 'WIN'
+            htmlpath = @htmlpath
+        else 
             browser = "\"C:\\Program Files\\Internet Explorer\\iexplore.exe\""
-	    htmlpath = @htmlpath.gsub(/\//, '\\')
-	    ## separate browser thread does not work in windows ...
+            htmlpath = @htmlpath.gsub(/\//, '\\')
+            ## separate browser thread does not work in windows ...
 	    return
 	end
 	Thread.new do
@@ -292,8 +292,8 @@ class RadianceScene < ExportBase
     end
   
     def startDaysim(heafile)
-        if $SU2RAD_PLATFORM != 'WIN'
-            uimessage("platform != 'WIN' ('%s') -> can't start daysim" % $SU2RAD_PLATFORM, 4)
+        if RUBY_PLATFORM =~ /darwin/
+            uimessage("platform != 'WIN' -> can't start daysim", 4)
             return
         end
         uimessage("trying to start daysim ...", 1)
@@ -355,7 +355,7 @@ class RadianceScene < ExportBase
     end
 
     def runPreview
-        if $SU2RAD_PLATFORM != 'MAC'
+        if RUBY_PLATFORM !~ /darwin/
             uimessage("'rvu' only available on Mac OS X",-1)
             return
         end

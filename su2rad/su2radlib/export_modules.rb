@@ -344,12 +344,13 @@ module RadiancePath
     end
     
     def runSystemCmd(cmd)
-        if $SU2RAD_PLATFORM == 'WIN'
-           cmd.gsub!(/\//, '\\')
+        if RUBY_PLATFORM !~ /darwin/
+            ## if not on a Mac substitute path separators
+            cmd.gsub!(/\//, '\\')
         end
         uimessage("system cmd= %s" % cmd, 3)
         result = system(cmd)
-        uimessage("    result= %s" % result, 3)
+        uimessage(" => result= %s" % result, 3)
         return result
     end
 

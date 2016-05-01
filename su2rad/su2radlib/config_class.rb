@@ -57,11 +57,16 @@ class RunTimeConfig
     
     def initPaths
         uimessage("RunTimeConfig: initPaths() ...", 1)
-        bindir = File.join(File.dirname(__FILE__), 'bin', $SU2RAD_PLATFORM)
+        if RUBY_PLATFORM =~ /darwin/
+            platform = 'MAC'
+        else 
+            platform = 'WIN'
+        end
+        bindir = File.join(File.dirname(__FILE__), 'bin', platform)
         keys = ['REPLMARKS', 'CONVERT', 'RA_PPM', 'OBJ2MESH']
         keys.each { |k|
             app = k.downcase()
-            if $SU2RAD_PLATFORM == 'WIN'
+            if platform == 'WIN'
                 app += '.exe'
             end
             uimessage("  searching '#{app}' ...", 1)
@@ -69,7 +74,7 @@ class RunTimeConfig
             if File.exists?(binpath)
                 set(k, binpath)
                 uimessage("  => found '#{app}' in '#{bindir}'", 1) 
-            elsif $SU2RAD_PLATFORM == 'MAC'
+            elsif platform == 'MAC'
                 p = IO.popen('which %s' % app)
                 lines = p.readlines()
                 p.close()
@@ -93,7 +98,7 @@ class RunTimeConfig
                         break
                     end
                 }
-	          end
+                end
             if get(k) == ''
                 uimessage("  => application '#{app}' not found", -1)
             end

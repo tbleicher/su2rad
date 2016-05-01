@@ -39,12 +39,6 @@ require "config_class.rb"
 
 module Su2rad
 
-    if RUBY_PLATFORM =~ /darwin/
-        $SU2RAD_PLATFORM = 'MAC'
-    else
-        $SU2RAD_PLATFORM = 'WIN'
-    end
-
     ## define defaults if config file is messed up
     $SU2RAD_LOGLEVEL = -1        #XXX report warnings and errors only
     $SU2RAD_LOG = []
