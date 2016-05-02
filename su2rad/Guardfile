@@ -34,6 +34,11 @@ guard :rspec, cmd: "bundle exec rspec" do
   watch(%r{^su2radlib/(.+).rb$}) do |m|
     "spec/#{m[1]}_spec.rb"
   end
+
+  # watch /su2radlib/modules/ files
+  watch(%r{^su2radlib/modules/(.+).rb$}) do |m|
+    "spec/modules/#{m[1]}_spec.rb"
+  end
  
   # watch /spec/ files
   watch(%r{^spec/(.+).rb$}) do |m|
