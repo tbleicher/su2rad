@@ -1,5 +1,6 @@
 module SU2RAD
 
+
     module Logger
 
         Logger::LOG = []

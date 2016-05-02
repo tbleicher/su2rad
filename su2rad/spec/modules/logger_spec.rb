@@ -1,9 +1,8 @@
-require_relative '../su2radlib/modules/logger.rb'
+require_relative '../../su2radlib/modules/logger.rb'
 
 class LogUser
 	include SU2RAD::Logger
 end
-
 
 describe SU2RAD::Logger do
 
