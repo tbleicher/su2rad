@@ -38,16 +38,18 @@ module SU2RAD
         
         def writeLogFile(filename, status="", sketchup_module=Sketchup)
 
-            SU2RAD::Logger::LOG.push( "###  finished: %s  ###" % Time.new() )
-            SU2RAD::Logger::LOG.push( "###  %s  ###" % status )
+            footer1 = "###  finished: %s  ###" % Time.new()
+            footer2 = "###  %s  ###" % status
+            SU2RAD::Logger::LOG.push( footer1 )
+            SU2RAD::Logger::LOG.push( footer2 )
 
-            if not createFile(filename, SU2RAD::Logger::LOG.join("\n"))
+            if createFile(filename, SU2RAD::Logger::LOG.join("\n"))
+                printf "%s\n%s\n" % [footer1,footer2]
+            else
                 uimessage("Error: Could not create log file '#{filename}'", -2, sketchup_module)
                 line = "### creating log file failed: %s  ###" % Time.new()
                 printf "%s\n" % line
-                sketchup_module.set_status_text(line)
-            else
-                printf "%s\n" % line
+                sketchup_module.set_status_text(line)    
             end
         end
     end
