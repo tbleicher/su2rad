@@ -283,11 +283,11 @@ class RadianceScene < ExportBase
                 startDaysim(hea)
             end
         end
-            
-        writeLogFile()
         
-        if getConfig('MODE') == 'daysim'
-        end
+        logname = File.join('logfiles', "%s_export.log" % getConfig('SCENENAME'))
+        logname = getFilename(logname)
+        writeLogFile( logname, $SU2RAD_COUNTER.getStatusLine() )
+
         return true
     end
   

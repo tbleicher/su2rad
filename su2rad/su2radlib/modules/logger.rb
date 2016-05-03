@@ -1,33 +1,33 @@
 module SU2RAD
 
-
     module Logger
 
         Logger::LOG = []
         Logger::LOGLEVEL = 0
 
         def initLog(lines=[])
-            self.class.const_set(SU2RAD::Logger::LOG, lines)
+            SU2RAD::Logger::LOG.clear()
+            SU2RAD::Logger::LOG.concat(lines)
         end
         
         def getNestingLevel
             return 0
         end
         
-        def uimessage(msg, loglevel=0)
+        def uimessage(msg, loglevel=0, sketchup_module=Sketchup, counter=nil)
             begin
                 prefix = "  " * getNestingLevel()
                 levels = ["I", "V", "D", "3", "4", "5", "E", "W"]  ## [0,1,2,3,4,5,-2,-1]
                 line = "%s[%s] %s" % [prefix, levels[loglevel], msg]
                 if loglevel <= SU2RAD::Logger::LOGLEVEL
-                    Sketchup.set_status_text(line.strip())
+                    sketchup_module.set_status_text(line.strip())
                     msg.split("\n").each { |l|  printf "%s[%s] %s\n" % [prefix,levels[loglevel],l] }
                     SU2RAD::Logger::LOG.push(line)
                 end
-                if loglevel == -2
-                    $SU2RAD_COUNTER.add('errors')
-                elsif loglevel == -1
-                    $SU2RAD_COUNTER.add('warnings')
+                if counter && loglevel == -2
+                    counter.add('errors')
+                elsif counter && loglevel == -1
+                    counter.add('warnings')
                 end
             rescue => e
                 printf "## %s" % $!.message
@@ -36,22 +36,18 @@ module SU2RAD
             end
         end
         
-        def writeLogFile(counter)
+        def writeLogFile(filename, status="", sketchup_module=Sketchup)
 
             SU2RAD::Logger::LOG.push( "###  finished: %s  ###" % Time.new() )
-            SU2RAD::Logger::LOG.push( "###  %s  ###" % counter.getStatusLine() )
+            SU2RAD::Logger::LOG.push( "###  %s  ###" % status )
 
-            logname = File.join('logfiles', "%s_export.log" % getConfig('SCENENAME'))
-            logname = getFilename(logname)
-            
-            if not createFile(logname, SU2RAD::Logger::LOG.join("\n"))
-                uimessage("Error: Could not create log file '#{logname}'")
+            if not createFile(filename, SU2RAD::Logger::LOG.join("\n"))
+                uimessage("Error: Could not create log file '#{filename}'", -2, sketchup_module)
                 line = "### creating log file failed: %s  ###" % Time.new()
                 printf "%s\n" % line
-                Sketchup.set_status_text(line)
+                sketchup_module.set_status_text(line)
             else
                 printf "%s\n" % line
-                printf "%s\n" % line2
             end
         end
     end
