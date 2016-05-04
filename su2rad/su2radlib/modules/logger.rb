@@ -1,57 +1,98 @@
-module SU2RAD
+## logger2.rb
 
-    module Logger
+module Su2Rad
 
-        Logger::LOG = []
-        Logger::LOGLEVEL = 0
+	module Logger
 
-        def initLog(lines=[])
-            SU2RAD::Logger::LOG.clear()
-            SU2RAD::Logger::LOG.concat(lines)
-        end
-        
-        def getNestingLevel
-            return 0
-        end
-        
-        def uimessage(msg, loglevel=0, sketchup_module=Sketchup, counter=nil)
-            begin
-                prefix = "  " * getNestingLevel()
-                levels = ["I", "V", "D", "3", "4", "5", "E", "W"]  ## [0,1,2,3,4,5,-2,-1]
-                line = "%s[%s] %s" % [prefix, levels[loglevel], msg]
-                if loglevel <= SU2RAD::Logger::LOGLEVEL
-                    sketchup_module.set_status_text(line.strip())
-                    msg.split("\n").each { |l|  printf "%s[%s] %s\n" % [prefix,levels[loglevel],l] }
-                    SU2RAD::Logger::LOG.push(line)
+		Levels = ["I", "V", "D", "3", "4", "5", "E", "W"]
+		
+		class << self
+
+			def clear
+				@output = []
+			end
+
+			def closeLog(status="")
+				output << "###  finished: %s  ###" % Time.new()
+                output << "###  %s  ###" % status
+			end
+
+			def initLog(lines=[])
+				@output = lines
+			end
+
+			def output
+				@output ||= []
+			end
+
+			def error(message, sketchup=nil)
+				log(message, -2, sketchup)
+			end
+
+			def nesting
+				@nesting || 0
+			end
+
+			def level
+				@level || 0
+			end
+
+			def level=(l)
+				@level = l
+			end
+
+	        def log(message, loglevel=0, sketchup=nil, counter=nil)
+	            begin
+	                if loglevel <= level
+
+	                	lines = format_message(message, loglevel, nesting)
+	                    lines.each { |line| 
+	                    	sketchup && sketchup.set_status_text(line)
+	                    	printf "#{line}\n"
+	                    	output << line
+	                    }
+	                end
+	                if counter && loglevel == -2
+	                    counter.add('errors')
+	                elsif counter && loglevel == -1
+	                    counter.add('warnings')
+	                end
+
+	            rescue => e
+	                printf "## %s\n" % $!.message
+	                printf "## %s\n" % e.backtrace.join("\n## ")
+	                printf "\n[uimessage rescue] #{message}\n"
+	            end
+	        end
+			
+			def warning(message, sketchup=Sketchup)
+				log(message, -1, sketchup)
+			end
+
+			def write(filename, sketchup=nil)
+				begin
+					f = File.open(filename, "a") #{ |f| f << output.join("\n") }
+					f << output.join("\n")
+				rescue => e
+					printf "#ERR# %s\n" % $!.message
+	                printf "## %s\n\n" % e.backtrace.join("\n## ")
+					error("Error: Could not create log file '#{filename}'", sketchup)
+                	error("### creating log file failed: %s  ###" % Time.new(), sketchup)
                 end
-                if counter && loglevel == -2
-                    counter.add('errors')
-                elsif counter && loglevel == -1
-                    counter.add('warnings')
-                end
-            rescue => e
-                printf "## %s" % $!.message
-                printf "## %s" % e.backtrace.join("\n## ")
-                printf "\n[uimessage rescue] #{msg}\n"
-            end
-        end
-        
-        def writeLogFile(filename, status="", sketchup_module=Sketchup)
+			end
 
-            footer1 = "###  finished: %s  ###" % Time.new()
-            footer2 = "###  %s  ###" % status
-            SU2RAD::Logger::LOG.push( footer1 )
-            SU2RAD::Logger::LOG.push( footer2 )
+			#private
 
-            if createFile(filename, SU2RAD::Logger::LOG.join("\n"))
-                printf "%s\n%s\n" % [footer1,footer2]
-            else
-                uimessage("Error: Could not create log file '#{filename}'", -2, sketchup_module)
-                line = "### creating log file failed: %s  ###" % Time.new()
-                printf "%s\n" % line
-                sketchup_module.set_status_text(line)    
-            end
-        end
-    end
+			def format_message(message, level, nlevel)
+				prefix = "  " * nlevel
+				mtype = Levels[level]
+				message.split("\n").map { |line| "#{prefix}[#{mtype}] #{line}" }
+			end
+		end
 
+		## mixin level methods from here
+		def uimessage(message, level=0, sketchup=Sketchup, counter=nil)
+			Su2Rad::Logger.log(message, level, sketchup, counter)
+		end
+	end
 end

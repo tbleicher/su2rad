@@ -1,11 +1,11 @@
 require_relative '../../su2radlib/modules/logger.rb'
 
 class LogUser
-  include SU2RAD::Logger
+  include Su2Rad::Logger
 end
 
 class LogUserB
-  include SU2RAD::Logger
+  include Su2Rad::Logger
 end
 
 $createFileReturnValue = true
@@ -13,49 +13,45 @@ def createFile(filename, text)
   return $createFileReturnValue
 end
 
-describe SU2RAD::Logger do
+describe Su2Rad::Logger do
 
   before(:each) do
     @foo = LogUser.new()
     @sketchup = double("Sketchup")
-    SU2RAD::Logger::LOG.clear()
+    Su2Rad::Logger.clear()
   end
 
 
-  it "is defined within the SU2RAD module" do
-    expect(SU2RAD::Logger).to be_truthy
-  end
-
-  it "has a constant LOG defined" do
-    expect(SU2RAD::Logger::LOG).to be_truthy
+  it "is defined within the Su2Rad module" do
+    expect(Su2Rad::Logger).to be_truthy
   end
 
   it "is shared among all users" do
     allow(@sketchup).to receive(:set_status_text)
-    expect(SU2RAD::Logger::LOG.length).to be(0)
+    expect(Su2Rad::Logger.output.length).to be(0)
     @foo.uimessage('message from a', 0, @sketchup)
-    expect(SU2RAD::Logger::LOG.length).to be(1)
+    expect(Su2Rad::Logger.output.length).to be(1)
     b = LogUserB.new()
     b.uimessage('message from b', 0, @sketchup)
-    expect(SU2RAD::Logger::LOG.length).to be(2)
+    expect(Su2Rad::Logger.output.length).to be(2)
   end
 
 
   describe '#initLog' do 
 
-    it "resets SU2RAD::Logger::LOG" do
+    it "resets Su2Rad::Logger::LOG" do
       allow(@sketchup).to receive(:set_status_text)
       @foo.uimessage("a message", 0, @sketchup)
-      expect(SU2RAD::Logger::LOG.length).to be(1)
-      @foo.initLog()
-      expect(SU2RAD::Logger::LOG.length).to be(0)
+      expect(Su2Rad::Logger.output.length).to be(1)
+      Su2Rad::Logger.initLog()
+      expect(Su2Rad::Logger.output.length).to be(0)
     end
 
-    it "sets initial lines of SU2RAD::Logger::LOG" do
+    it "sets initial lines of Su2Rad::Logger::LOG" do
       arr = ['line 1','line 2']
-      @foo.initLog(arr)
-      expect(SU2RAD::Logger::LOG.length).to be(2)
-      expect(SU2RAD::Logger::LOG).to eq(arr)
+      Su2Rad::Logger.initLog(arr)
+      expect(Su2Rad::Logger.output.length).to be(2)
+      expect(Su2Rad::Logger.output).to eq(arr)
     end
 
   end # #initLog
@@ -80,52 +76,63 @@ describe SU2RAD::Logger do
 
     it "adds warning messages to the counter" do
       allow(@sketchup).to receive(:set_status_text).with("[W] log message")
-      counter = double("SU2RAD::Counter")
+      counter = double("Su2Rad::Counter")
       allow(counter).to receive(:add).with("warnings")
       @foo.uimessage('log message', -1, @sketchup, counter)
     end
 
     it "adds error messages to the counter" do
       allow(@sketchup).to receive(:set_status_text).with("[E] log message")
-      counter = double("SU2RAD::Counter")
+      counter = double("Su2Rad::Counter")
       allow(counter).to receive(:add).with("errors")
       @foo.uimessage('log message', -2, @sketchup, counter)
     end
 
-    it "adds messages to SU2RAD::Logger::LOG" do
+    it "adds messages to Su2Rad::Logger::LOG" do
       allow(@sketchup).to receive(:set_status_text)
-      expect(SU2RAD::Logger::LOG.length).to be(0)
+      expect(Su2Rad::Logger.output.length).to be(0)
       @foo.uimessage('log message', 0, @sketchup)
-      expect(SU2RAD::Logger::LOG.length).to be(1)
+      expect(Su2Rad::Logger.output.length).to be(1)
     end
 
   end # #uimessage
 
 
-  describe '#writeLogFile' do
-    it "adds final lines before closing" do
+  describe '#closeLog' do
+    it "adds final lines to output" do
       allow(@sketchup).to receive(:set_status_text)
       @foo.uimessage('log message', 0, @sketchup)
-      expect(SU2RAD::Logger::LOG.length).to be(1)
-      @foo.writeLogFile("/path/to/logfile.log", "status", @sketchup)
-      expect(SU2RAD::Logger::LOG.length).to be(3)
-      lines = SU2RAD::Logger::LOG[1..2]
+      expect(Su2Rad::Logger.output.length).to be(1)
+      Su2Rad::Logger.closeLog()
+      expect(Su2Rad::Logger.output.length).to be(3)
+      lines = Su2Rad::Logger.output[1..2]
       expect(lines[0]).to start_with("###")
       expect(lines[1]).to start_with("###")
     end
+  end
 
+
+  describe '#write' do
     it "writes a log file" do
+
+      path = "/path/to/logfile.log"
+      io = "" 
+      allow(File).to receive(:open).with(path, "a").and_return(io)
       allow(@sketchup).to receive(:set_status_text)
-      @foo.uimessage('log message', 0, @sketchup)
-      expect(SU2RAD::Logger::LOG.length).to be(1)
-      @foo.writeLogFile("/path/to/logfile.log", "status", @sketchup)
+
+      @foo.uimessage('final message', 0, @sketchup)
+      expect(Su2Rad::Logger.output.length).to be(1)
+      Su2Rad::Logger.write("/path/to/logfile.log")
+      expect( io ).to eq("[I] final message")
     end
 
     it "may fail writing a log file" do
-      $createFileReturnValue = false
+      path = "/path/to/logfile.log"
+      allow(File).to receive(:open).with(path, "a").and_raise("boom")
       allow(@sketchup).to receive(:set_status_text).with(/failed/)
       allow(@sketchup).to receive(:set_status_text).with(/logfile\.log/)
-      @foo.writeLogFile("/path/to/logfile.log", "status", @sketchup)
+
+      Su2Rad::Logger.write(path, @sketchup)
     end
   
   end # #writeLogFile
