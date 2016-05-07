@@ -8,12 +8,16 @@ require 'filesystemproxy.rb'
 #require 'webdialog_options.rb'
 #require 'webdialog_views.rb'
 
+require 'modules/logger.rb'
+
+
 
 
 class ExportDialogWeb < ExportBase
     
     include JSONUtils
     include InterfaceBase
+    include Tbleicher::Su2Rad::Logger
     
     def initialize()
         @scene = RadianceScene.new()

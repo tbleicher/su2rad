@@ -2,6 +2,9 @@
 require 'radiance.rb'
 require 'export_modules.rb'
 require 'exportbase.rb'
+require 'modules/logger.rb'
+
+
 
 class ListMaterial
     
@@ -71,6 +74,7 @@ class MaterialLists < ExportBase
     
     include JSONUtils
     include InterfaceBase
+    include Tbleicher::Su2Rad::Logger
 
     attr_reader :matLib
     

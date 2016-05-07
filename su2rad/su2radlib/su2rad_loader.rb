@@ -40,7 +40,7 @@ require "config_class.rb"
 module Su2rad
 
     ## define defaults if config file is messed up
-    $SU2RAD_LOGLEVEL = -1        #XXX report warnings and errors only
+    $SU2RAD_LOGLEVEL = 3        #XXX report warnings and errors only
     $SU2RAD_LOG = []
 
     ## load configuration from file
@@ -178,8 +178,8 @@ module Su2rad
         #radmenu.add_item("Preferences") { preferencesDialog() }
         radmenu.add_item("About (#{VERSION})") { aboutDialog() }
         radmenu.add_item("Acknowledgement") { acknowledgementDialog() }
-        #radmenu.add_separator()
-        #radmenu.add_item("reload") { su2rad_reload() }
+        radmenu.add_separator()
+        radmenu.add_item("reload") { su2rad_reload() }
     end
 
 end #end module

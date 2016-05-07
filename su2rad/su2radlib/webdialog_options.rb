@@ -2,12 +2,15 @@ require 'sketchup.rb'
 require 'radiance_entities.rb'
 require 'export_modules.rb'
 require 'radiance.rb'
+require 'modules/logger.rb'
+
 
 
 class ExportOptions
 
     include JSONUtils
     include InterfaceBase
+    include Tbleicher::Su2Rad::Logger
     include RadiancePath
 
     attr_reader :sceneName
@@ -138,6 +141,7 @@ class RenderOptions
 
     include JSONUtils
     include InterfaceBase
+    include Tbleicher::Su2Rad::Logger
     
     def initialize
         @Quality = 'medium'
@@ -309,6 +313,7 @@ class SkyOptions
     
     include JSONUtils
     include InterfaceBase
+    include Tbleicher::Su2Rad::Logger
 
     def initialize
         @rsky = RadianceSky.new()

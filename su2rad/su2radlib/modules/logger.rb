@@ -71,9 +71,13 @@ module Tbleicher
 				end
 
 				def write(filename, sketchup=nil)
+					puts "Logger.write(%s)" % filename
+					puts "Logger: %d lines" % @output.length
+					puts
 					begin
-						f = File.open(filename, "a") #{ |f| f << output.join("\n") }
-						f << output.join("\n")
+						f = File.open(filename, 'a+') #{ |f| f << output.join("\n") }
+						f.write(output.join("\n"))
+						f.close()
 					rescue => e
 						printf "#ERR# %s\n" % $!.message
 		                printf "## %s\n\n" % e.backtrace.join("\n## ")

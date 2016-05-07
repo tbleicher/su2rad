@@ -6,10 +6,13 @@ require 'webdialog_options.rb'
 require 'webdialog_views.rb'
 require 'scene_materials.rb'
 
+require 'modules/logger.rb'
+
 
 class StatusPage 
    
     include InterfaceBase
+    include Tbleicher::Su2Rad::Logger
 
     attr_reader :tmplpath, :htmlpath
     attr_writer :tmplpath, :htmlpath
@@ -161,7 +164,7 @@ class RadianceScene < ExportBase
     def initLog
         line1 = "###  su2rad.rb export  ###" 
         line2 = "###  %s  ###" % Time.now.asctime
-        super([line1,line2])
+        Tbleicher::Su2Rad::Logger.initLog([line1,line2])
         printf "\n\n%s\n" % line1
         Sketchup.set_status_text(line1)
     end
@@ -286,7 +289,8 @@ class RadianceScene < ExportBase
         
         logname = File.join('logfiles', "%s_export.log" % getConfig('SCENENAME'))
         logname = getFilename(logname)
-        writeLogFile( logname, $SU2RAD_COUNTER.getStatusLine() )
+        Tbleicher::Su2Rad::Logger.closeLog( $SU2RAD_COUNTER.getStatusLine() )
+        Tbleicher::Su2Rad::Logger.write( logname )
 
         return true
     end

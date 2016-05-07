@@ -140,20 +140,20 @@ describe Tbleicher::Su2Rad::Logger do
   describe '#write' do
     it "writes a log file" do
       path = "/path/to/logfile.log"
-      io = "" 
-      allow(File).to receive(:open).with(path, "a").and_return(io)
+      io = StringIO.new() 
+      allow(File).to receive(:open).with(path, 'a+').and_return(io)
       allow(@sketchup).to receive(:set_status_text)
       printed = capture_stdout do
         @foo.uimessage('final message', 0, @sketchup)
       end
       expect(Tbleicher::Su2Rad::Logger.output.length).to be(1)
       Tbleicher::Su2Rad::Logger.write("/path/to/logfile.log")
-      expect( io ).to eq("[I] final message")
+      expect( io.string ).to eq("[I] final message")
     end
 
     it "may fail writing a log file" do
       path = "/path/to/logfile.log"
-      allow(File).to receive(:open).with(path, "a").and_raise("boom")
+      allow(File).to receive(:open).with(path, 'a+').and_raise("boom")
       allow(@sketchup).to receive(:set_status_text).with(/failed/)
       allow(@sketchup).to receive(:set_status_text).with(/logfile\.log/)
       printed = capture_stdout do  

@@ -1,5 +1,6 @@
 require 'sketchup.rb'
 require 'export_modules.rb'
+require 'modules/logger.rb'
 
 
 class SketchupView
@@ -11,6 +12,7 @@ class SketchupView
     
     include JSONUtils
     include InterfaceBase
+    include Tbleicher::Su2Rad::Logger
     include RadiancePath
     
     def initialize (name, current=false)
@@ -420,6 +422,7 @@ class SketchupViewsList
     
     include JSONUtils
     include InterfaceBase
+    include Tbleicher::Su2Rad::Logger
 
     def initialize
         @_views = {}
