@@ -1,9 +1,8 @@
-require 'export_modules.rb'
-
+require 'modules/radiancepath.rb'
 
 class Stack
 
-    include RadiancePath
+    include Tbleicher::Su2Rad::RadiancePath
 
     def initialize(default=nil)
         @stack = []

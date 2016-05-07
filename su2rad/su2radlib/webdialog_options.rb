@@ -3,15 +3,16 @@ require 'radiance_entities.rb'
 require 'export_modules.rb'
 require 'radiance.rb'
 require 'modules/logger.rb'
-
+require 'modules/jsonutils.rb'
+require 'modules/radiancepath.rb'
 
 
 class ExportOptions
 
-    include JSONUtils
+    include Tbleicher::Su2Rad::JSONUtils
     include InterfaceBase
     include Tbleicher::Su2Rad::Logger
-    include RadiancePath
+    include Tbleicher::Su2Rad::RadiancePath
 
     attr_reader :sceneName
     attr_reader :scenePath
@@ -139,7 +140,7 @@ end
 
 class RenderOptions
 
-    include JSONUtils
+    include Tbleicher::Su2Rad::JSONUtils
     include InterfaceBase
     include Tbleicher::Su2Rad::Logger
     
@@ -311,7 +312,7 @@ end
 
 class SkyOptions
     
-    include JSONUtils
+    include Tbleicher::Su2Rad::JSONUtils
     include InterfaceBase
     include Tbleicher::Su2Rad::Logger
 

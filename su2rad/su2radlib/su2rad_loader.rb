@@ -27,6 +27,7 @@
 $:.push(File.dirname(__FILE__))
 
 require "sketchup.rb"
+require "modules/logger.rb"
 require "exportbase.rb"
 require "context.rb"
 require "numeric.rb"
@@ -40,6 +41,7 @@ require "config_class.rb"
 module Su2rad
 
     ## define defaults if config file is messed up
+    Tbleicher::Su2Rad::Logger.level=3
     $SU2RAD_LOGLEVEL = 3        #XXX report warnings and errors only
     $SU2RAD_LOG = []
 
@@ -140,6 +142,9 @@ module Su2rad
     def self.su2rad_reload
         ## reload all script files for debugging
         printf "reloading modules ...\n"
+        load "modules/logger.rb"
+        load "modules/jsonutils.rb"
+        load "modules/radiancepath.rb"
         load "export_modules.rb"
         load "exportbase.rb"
         load "filesystemproxy.rb"

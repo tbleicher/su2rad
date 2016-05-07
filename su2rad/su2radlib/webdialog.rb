@@ -9,13 +9,14 @@ require 'filesystemproxy.rb'
 #require 'webdialog_views.rb'
 
 require 'modules/logger.rb'
+require 'modules/jsonutils.rb'
 
 
 
 
 class ExportDialogWeb < ExportBase
     
-    include JSONUtils
+    include Tbleicher::Su2Rad::JSONUtils
     include InterfaceBase
     include Tbleicher::Su2Rad::Logger
     

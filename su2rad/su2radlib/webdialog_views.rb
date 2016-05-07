@@ -1,7 +1,9 @@
 require 'sketchup.rb'
 require 'export_modules.rb'
-require 'modules/logger.rb'
 
+require 'modules/logger.rb'
+require 'modules/jsonutils.rb'
+require 'modules/radiancepath.rb'
 
 class SketchupView
     
@@ -10,10 +12,10 @@ class SketchupView
     attr_reader :current
     attr_writer :selected
     
-    include JSONUtils
+    include Tbleicher::Su2Rad::JSONUtils
     include InterfaceBase
     include Tbleicher::Su2Rad::Logger
-    include RadiancePath
+    include Tbleicher::Su2Rad::RadiancePath
     
     def initialize (name, current=false)
         @name = name
@@ -420,7 +422,7 @@ end
 
 class SketchupViewsList
     
-    include JSONUtils
+    include Tbleicher::Su2Rad::JSONUtils
     include InterfaceBase
     include Tbleicher::Su2Rad::Logger
 

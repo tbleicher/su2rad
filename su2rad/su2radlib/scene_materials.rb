@@ -3,12 +3,12 @@ require 'radiance.rb'
 require 'export_modules.rb'
 require 'exportbase.rb'
 require 'modules/logger.rb'
-
+require 'modules/jsonutils.rb'
 
 
 class ListMaterial
     
-    include JSONUtils
+    include Tbleicher::Su2Rad::JSONUtils
     include RadianceUtils
    
     attr_reader :name, :alias
@@ -24,7 +24,7 @@ class ListMaterial
     def getDict
         dict = {'name'     => '%s' % @material.name,
                 'nameRad'  => '%s' % getRadianceIdentifier(@material.name),
-                'nameHTML' => '%s' % JSONUtils::escapeHTML(@material.name),
+                'nameHTML' => '%s' % escapeHTML(@material.name),
                 'alias'    => '%s' % @alias,
                 'group'    => '%s' % @group}
         return dict
@@ -72,8 +72,8 @@ class MaterialLists < ExportBase
     
     ## creates SketchUp, Radiance and 'layer' materials
     
-    include JSONUtils
     include InterfaceBase
+    include Tbleicher::Su2Rad::JSONUtils
     include Tbleicher::Su2Rad::Logger
 
     attr_reader :matLib

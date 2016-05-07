@@ -3,6 +3,7 @@ require 'export_modules.rb'
 require 'context.rb'
 require 'radiance.rb'
 require 'modules/logger.rb'
+require 'modules/radiancepath.rb'
 
 class ProgressCounter
     
@@ -79,7 +80,7 @@ class ExportBase
 
     include InterfaceBase
     include Tbleicher::Su2Rad::Logger
-    include RadiancePath
+    include Tbleicher::Su2Rad::RadiancePath
     include RadianceUtils
     
     if not $SU2RAD_LOG
