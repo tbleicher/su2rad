@@ -34,27 +34,25 @@ require "numeric.rb"
 require "material.rb"
 require "radiance_entities.rb"
 require "radiancescene.rb"
+require "sessionstate.rb"
 require "webdialog.rb"
 require "config_class.rb"
 
 
 module Su2rad
 
-    ## define defaults if config file is messed up
-    Tbleicher::Su2Rad::Logger.level=3
-    $SU2RAD_LOGLEVEL = 3        #XXX report warnings and errors only
-    $SU2RAD_LOG = []
+    Tbleicher::Su2Rad::Logger.level=3 #XXX report warnings and errors only
 
-    ## load configuration from file
+    ## load stateuration from file
     #loadPreferences()
 
 
     def self.startExport(selected_only=0)
         begin
-            $SU2RAD_CONFIG = RunTimeConfig.new()
+            state = Tbleicher::Su2Rad::SessionState.new()
             $SU2RAD_COUNTER = ProgressCounter.new()
-            rs = RadianceScene.new()
-            rs.startExport(selected_only)
+            scene = RadianceScene.new(state)
+            scene.startExport(selected_only)
         rescue => e 
             msg = "%s\n\n%s" % [$!.message,e.backtrace.join("\n")]
             UI.messagebox msg            
@@ -63,13 +61,15 @@ module Su2rad
 
 
     def self.startWebExport(selected_only=0)
+        SKETCHUP_CONSOLE.show()
         begin
             if $SU2RAD_DIALOG_WINDOW
                 $SU2RAD_DIALOG_WINDOW.bring_to_front()
-            else 
-                $SU2RAD_CONFIG = RunTimeConfig.new()
-                $SU2RAD_COUNTER = ProgressCounter.new()
-                edw = ExportDialogWeb.new()
+            else
+                $SU2RAD_COUNTER = ProgressCounter.new() 
+                state = Tbleicher::Su2Rad::SessionState.new()
+                scene = RadianceScene.new(state)
+                edw = ExportDialogWeb.new(scene)
                 edw.show()
             end
         rescue => e 
@@ -83,24 +83,24 @@ module Su2rad
     $matConflicts = nil
 
     def self.countConflicts
-        $SU2RAD_CONFIG = RunTimeConfig.new()
+        state = Tbleicher::Su2Rad::SessionState.new()
         if $matConflicts == nil
-            $matConflicts = MaterialConflicts.new()
+            $matConflicts = MaterialConflicts.new(state)
         end
         $matConflicts.count()
     end
 
     def self.resolveConflicts
-        $SU2RAD_CONFIG = RunTimeConfig.new()
+        state = Tbleicher::Su2Rad::SessionState.new()
         if $matConflicts == nil
-            $matConflicts = MaterialConflicts.new()
+            $matConflicts = MaterialConflicts.new(state)
         end
         $matConflicts.resolve()
     end
 
     def self.startImport()
-        $SU2RAD_CONFIG = RunTimeConfig.new()
-        ni = NumericImport.new()
+        state = Tbleicher::Su2Rad::SessionState.new()
+        ni = NumericImport.new(state)
         if $SU2RAD_DEBUG
             if ni.loadFile('/Users/ble/tmp/numimport/ADF_medium.df') == true
                 ni.confirmDialog
@@ -133,19 +133,13 @@ module Su2rad
         pd.showDialog()
     end
 
-    def self.runTest
-        $SU2RAD_CONFIG = RunTimeConfig.new()
-        sky = RadianceSky.new()
-        sky.test()
-    end
-
     def self.su2rad_reload
         ## reload all script files for debugging
         printf "reloading modules ...\n"
         load "modules/logger.rb"
         load "modules/jsonutils.rb"
         load "modules/radiancepath.rb"
-        load "export_modules.rb"
+        load "modules/session.rb"
         load "exportbase.rb"
         load "filesystemproxy.rb"
         load "context.rb"
@@ -159,9 +153,8 @@ module Su2rad
         load "webdialog_views.rb"
         load "scene_materials.rb"
         load "config_class.rb"
-        # set debug flag and reload main file to start dialog
-        $SU2RAD_DEBUG = true
-        load "su2rad.rb"
+        # set debug flag
+        Tbleicher::Su2Rad::Logger.level=4
     end
 
     def self.addRadianceMenu

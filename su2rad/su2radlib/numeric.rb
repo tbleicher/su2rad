@@ -5,11 +5,8 @@ class NumericImport < ExportBase
     
     include Delauney
     
-    if not $SU2RAD_LOG
-        $SU2RAD_LOG = [] #XXX make singleton class instance
-    end
-
-    def initialize(filename='')
+    def initialize(state, filename='')
+        @state = state
         @bbox = [0,0,1,1]   ## [xmin,ymin,xmax,ymax]
         @clevels = []       ## list of contour level heights
         @filename = ''      ## values file to be read

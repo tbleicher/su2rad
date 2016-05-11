@@ -4,7 +4,8 @@ require "exportbase.rb"
 
 class MaterialConflicts < ExportBase
 
-    def initialize
+    def initialize(state)
+        @state = state
         @model = Sketchup.active_model
         @faces = [] 
         getVisibleLayers

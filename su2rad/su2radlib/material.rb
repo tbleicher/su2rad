@@ -1,12 +1,14 @@
-
 require "exportbase.rb"
-
+require "modules/session.rb"
 
 class MaterialContext < ExportBase
     
+    include Tbleicher::Su2Rad::Session
+
     attr_reader :texturewriter
     
-    def initialize
+    def initialize(state)
+        @state = state
         @texturewriter = Sketchup.create_texture_writer
         @newMatLib = nil
         clear()

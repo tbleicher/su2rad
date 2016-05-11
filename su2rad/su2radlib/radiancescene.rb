@@ -1,18 +1,17 @@
 require "exportbase.rb"
 require "context.rb"
-require "export_modules.rb"
 
 require 'webdialog_options.rb'
 require 'webdialog_views.rb'
 require 'scene_materials.rb'
 
 require 'modules/logger.rb'
+require 'modules/session.rb'
 
 
 class StatusPage 
    
-    include InterfaceBase
-    include Tbleicher::Su2Rad::Logger
+    include Tbleicher::Su2Rad::Session
 
     attr_reader :tmplpath, :htmlpath
     attr_writer :tmplpath, :htmlpath
@@ -140,24 +139,32 @@ end
 
 class RadianceScene < ExportBase
     
+    include Tbleicher::Su2Rad::Session
+
+    attr_accessor :state
     attr_reader :exportOptions, :renderOptions, :viewsList, :skyOptions, :materialLists
     
-    def initialize
+    def initialize(state)
+        
+        @state = state 
         @model = Sketchup.active_model
         
         $inComponent = [false]
-        @@materialContext = MaterialContext.new()
+        @@materialContext = MaterialContext.new(state)
         
         resetState()
         initLog()
         
-        @sky = RadianceSky.new()
+        @sky = RadianceSky.new(@state)
+        
+        setConfig("Foo", "bar")
+        puts "Foo set"
         setExportDirectory()
         
-        @exportOptions = ExportOptions.new()
-        @renderOptions = RenderOptions.new()
-        @viewsList     = SketchupViewsList.new()
-        @skyOptions    = SkyOptions.new()
+        @exportOptions = ExportOptions.new(state)
+        @renderOptions = RenderOptions.new(state)
+        @viewsList     = SketchupViewsList.new(state)
+        @skyOptions    = SkyOptions.new(state)
         @materialLists = MaterialLists.new() 
     end
     

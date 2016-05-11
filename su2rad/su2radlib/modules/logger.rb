@@ -1,4 +1,6 @@
-## logger2.rb
+##
+## Tbleicher::Su2Rad::Logger
+##
 module Tbleicher
 
 	module Su2Rad
@@ -15,76 +17,65 @@ module Tbleicher
 
 				def closeLog(status="")
 					output << "###  finished: %s  ###" % Time.new()
-	                output << "###  %s  ###" % status
-				end
+          output << "###  %s  ###" % status
+        end
 
-				def initLog(lines=[])
-					@output = lines
-				end
+        def initLog(lines=[])
+          @output = lines
+        end
 
-				def output
-					@output ||= []
-				end
+        def output
+          @output ||= []
+        end
 
-				def error(message, sketchup=nil)
-					log(message, -2, sketchup)
-				end
+        def error(message, sketchup=nil)
+          log(message, -2, sketchup)
+        end
 
-				def nesting
-					@nesting || 0
-				end
+        def nesting
+          @nesting || 0
+        end
 
-				def level
-					@level || 0
-				end
+        def level
+          @level || 0
+        end
 
-				def level=(l)
-					@level = l
-				end
+        def level=(l)
+          @level = l
+        end
 
-		        def log(message, loglevel=0, sketchup=nil, counter=nil)
-		            begin
-		                if loglevel <= level
+        def log(message, loglevel=0, sketchup=nil, counter=nil)
+          if loglevel <= level
+            lines = format_message(message, loglevel, nesting)
+            lines.each { |line| 
+              sketchup && sketchup.set_status_text(line)
+              printf "#{line}\n"
+              output << line
+            }
+          end
+          if counter && loglevel == -2
+            counter.add('errors')
+          elsif counter && loglevel == -1
+            counter.add('warnings')
+          end
+        end
 
-		                	lines = format_message(message, loglevel, nesting)
-		                    lines.each { |line| 
-		                    	sketchup && sketchup.set_status_text(line)
-		                    	printf "#{line}\n"
-		                    	output << line
-		                    }
-		                end
-		                if counter && loglevel == -2
-		                    counter.add('errors')
-		                elsif counter && loglevel == -1
-		                    counter.add('warnings')
-		                end
+        def warning(message, sketchup=Sketchup)
+          log(message, -1, sketchup)
+        end
 
-		            rescue => e
-		                printf "## %s\n" % $!.message
-		                printf "## %s\n" % e.backtrace.join("\n## ")
-		                printf "\n[uimessage rescue] #{message}\n"
-		            end
-		        end
-				
-				def warning(message, sketchup=Sketchup)
-					log(message, -1, sketchup)
-				end
-
-				def write(filename, sketchup=nil)
-					puts "Logger.write(%s)" % filename
-					puts "Logger: %d lines" % @output.length
-					puts
-					begin
+        def write(filename, sketchup=nil)
+          begin
 						f = File.open(filename, 'a+') #{ |f| f << output.join("\n") }
 						f.write(output.join("\n"))
 						f.close()
 					rescue => e
 						printf "#ERR# %s\n" % $!.message
-		                printf "## %s\n\n" % e.backtrace.join("\n## ")
-						error("Error: Could not create log file '#{filename}'", sketchup)
-	                	error("### creating log file failed: %s  ###" % Time.new(), sketchup)
-	                end
-				end
+            printf "## %s\n\n" % e.backtrace.join("\n## ")
+            error("Error: Could not create log file '#{filename}'", sketchup)
+            error("### creating log file failed: %s  ###" % Time.new(), sketchup)
+          end
+        end
 
 				#private
 
@@ -99,6 +90,6 @@ module Tbleicher
 			def uimessage(message, level=0, sketchup=Sketchup, counter=nil)
 				Su2Rad::Logger.log(message, level, sketchup, counter)
 			end
-		end
-	end
-end
+		end # end Logger
+	end # end Su2Rad
+end # end Tbleicher

@@ -1,5 +1,4 @@
 require 'sketchup.rb'
-require 'export_modules.rb'
 require 'exportbase.rb'
 require 'radiance.rb'
 require 'radiance_entities.rb'
@@ -8,20 +7,19 @@ require 'filesystemproxy.rb'
 #require 'webdialog_options.rb'
 #require 'webdialog_views.rb'
 
-require 'modules/logger.rb'
 require 'modules/jsonutils.rb'
-
+require 'modules/session.rb'
 
 
 
 class ExportDialogWeb < ExportBase
     
     include Tbleicher::Su2Rad::JSONUtils
-    include InterfaceBase
-    include Tbleicher::Su2Rad::Logger
+    include Tbleicher::Su2Rad::Session
     
-    def initialize()
-        @scene = RadianceScene.new()
+    def initialize(scene)
+
+        @scene = scene
         
         @exportOptions = @scene.exportOptions
         @renderOptions = @scene.renderOptions

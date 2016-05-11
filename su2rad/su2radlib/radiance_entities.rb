@@ -3,7 +3,8 @@ require "exportbase.rb"
 
 class RadianceGroup < ExportBase
    
-    def initialize(entity)
+    def initialize(entity, state)
+        @state = state
         @entity = entity
         uimessage("group: '%s'" % entity.name, 1)
     end
@@ -40,7 +41,8 @@ class RadianceComponent < ExportBase
 
     attr_reader :replacement, :iesdata, :lampMF, :lampType
     
-    def initialize(entity)
+    def initialize(entity, state)
+        @state = state
         @entity = entity
         uimessage("RadComponent: '%s' [def='%s']" % [entity.name, entity.definition.name])
         @replacement = ''
@@ -242,7 +244,8 @@ class RadiancePolygon < ExportBase
 
     attr_reader :material, :layer
     
-    def initialize(face)
+    def initialize(face, state)
+        @state = state
         $SU2RAD_COUNTER.add("faces")
         @face = face
         @layer = face.layer
@@ -597,7 +600,8 @@ class RadianceSky < ExportBase
     attr_reader :skytype
     attr_writer :skytype 
     
-    def initialize
+    def initialize(state)
+        @state = state
         @skytype = getSkyType()
         @filename = ''
         @comments = ''

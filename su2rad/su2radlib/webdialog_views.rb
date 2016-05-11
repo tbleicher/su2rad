@@ -1,23 +1,25 @@
 require 'sketchup.rb'
-require 'export_modules.rb'
 
-require 'modules/logger.rb'
+require 'modules/session.rb'
 require 'modules/jsonutils.rb'
 require 'modules/radiancepath.rb'
 
 class SketchupView
     
+    include Tbleicher::Su2Rad::JSONUtils
+    include Tbleicher::Su2Rad::Session
+    include Tbleicher::Su2Rad::RadiancePath
+
+    attr_accessor :state
     attr_reader :name
     attr_reader :selected
     attr_reader :current
     attr_writer :selected
     
-    include Tbleicher::Su2Rad::JSONUtils
-    include InterfaceBase
-    include Tbleicher::Su2Rad::Logger
-    include Tbleicher::Su2Rad::RadiancePath
+
     
-    def initialize (name, current=false)
+    def initialize (name, current=false, state={})
+      @state = state
         @name = name
         @current = current
         @_fitted = false
@@ -423,12 +425,14 @@ end
 class SketchupViewsList
     
     include Tbleicher::Su2Rad::JSONUtils
-    include InterfaceBase
-    include Tbleicher::Su2Rad::Logger
+    include Tbleicher::Su2Rad::Session
 
-    def initialize
-        @_views = {}
-        initViews()
+    attr_accessor :state
+
+    def initialize(state={})
+      @state = state
+      @_views = {}
+      initViews()
     end
 
     def activateView(viewname)
@@ -461,19 +465,19 @@ class SketchupViewsList
     def initViews
         pages = Sketchup.active_model.pages
         if pages.count == 0
-            view = SketchupView.new("unnamed_view", true)
+            view = SketchupView.new("unnamed_view", true, @state)
             view.setViewParameters(Sketchup.active_model.active_view.camera)
             @_views[view.name] = view
         else
             pages.each { |page|
                 viewname = replaceChars(page.name)
                 if page == pages.selected_page
-                    view = SketchupView.new(viewname, true)
+                    view = SketchupView.new(viewname, true, @state)
                     view.setViewParameters(page.camera)
                     view.setPage(page)
                     @_views[view.name] = view
                 elsif page.use_camera? == true
-                    view = SketchupView.new(viewname)
+                    view = SketchupView.new(viewname, false, @state)
                     view.setViewParameters(page.camera)
                     view.setPage(page)
                     @_views[view.name] = view

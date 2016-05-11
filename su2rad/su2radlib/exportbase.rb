@@ -1,9 +1,9 @@
-require 'config_class.rb'
-require 'export_modules.rb'
 require 'context.rb'
 require 'radiance.rb'
+
 require 'modules/logger.rb'
 require 'modules/radiancepath.rb'
+require 'modules/session.rb'
 
 class ProgressCounter
     
@@ -78,14 +78,10 @@ end
 
 class ExportBase
 
-    include InterfaceBase
-    include Tbleicher::Su2Rad::Logger
+    include Tbleicher::Su2Rad::Session
     include Tbleicher::Su2Rad::RadiancePath
     include RadianceUtils
     
-    if not $SU2RAD_LOG
-        $SU2RAD_LOG = [] #XXX make singleton class instance
-    end
     @@materialContext = nil
     
     @@materialstack = MaterialStack.new()
@@ -163,7 +159,7 @@ class ExportBase
                 lines += exportByCL(e.definition.entities, e.material, gtrans)
                 $inComponent.pop()
             elsif e.class == Sketchup::Face
-                rp = RadiancePolygon.new(e)
+                rp = RadiancePolygon.new(e, @state)
                 if rp.material == nil or rp.material.texture == nil
                     face = rp.getText(globaltrans)
                 else
@@ -185,14 +181,14 @@ class ExportBase
                 if not isVisible(e)
                     next
                 end
-                rg = RadianceGroup.new(e)
+                rg = RadianceGroup.new(e, @state)
                 ref = rg.export(parenttrans)
                 references.push(ref)
             elsif e.class == Sketchup::ComponentInstance
                 if not isVisible(e)
                     next
                 end
-                rg = RadianceComponent.new(e)
+                rg = RadianceComponent.new(e, @state)
                 ref = rg.export(parenttrans)
                 references.push(ref)
             elsif e.class == Sketchup::Face
@@ -214,7 +210,7 @@ class ExportBase
         numpoints = []
         faces.each_index { |i|
             f = faces[i]
-            rp = RadiancePolygon.new(f)
+            rp = RadiancePolygon.new(f, @state)
             if rp.isNumeric?
                 numpoints += rp.getNumericPoints()
             elsif makeGlobal?()

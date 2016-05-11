@@ -142,16 +142,16 @@ module Tbleicher
 
       def runSystemCmd(cmd)
         if RUBY_PLATFORM !~ /darwin/
-            ## if not on a Mac substitute path separators
-            cmd.gsub!(/\//, '\\')
-          end
-          uimessage("system cmd= %s" % cmd, 3)
-          result = system(cmd)
-          uimessage(" => result= %s" % result, 3)
-          return result
+          ## if not on a Mac substitute path separators
+          cmd.gsub!(/\//, '\\')
         end
+        uimessage("system cmd= %s" % cmd, 3)
+        result = system(cmd)
+        uimessage(" => result= %s" % result, 3)
+        return result
+      end
 
-        def setExportDirectory
+      def setExportDirectory
         ## get name of subdir for Radiance file structure
         page = Sketchup.active_model.pages.selected_page
         if page != nil

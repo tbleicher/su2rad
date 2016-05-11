@@ -1,10 +1,10 @@
 
 require 'radiance.rb'
-require 'export_modules.rb'
 require 'exportbase.rb'
-require 'modules/logger.rb'
-require 'modules/jsonutils.rb'
 
+require 'modules/jsonutils.rb'
+require 'modules/logger.rb'
+require 'modules/session.rb'
 
 class ListMaterial
     
@@ -72,9 +72,8 @@ class MaterialLists < ExportBase
     
     ## creates SketchUp, Radiance and 'layer' materials
     
-    include InterfaceBase
     include Tbleicher::Su2Rad::JSONUtils
-    include Tbleicher::Su2Rad::Logger
+    include Tbleicher::Su2Rad::Session
 
     attr_reader :matLib
     

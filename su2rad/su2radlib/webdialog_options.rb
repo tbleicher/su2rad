@@ -1,23 +1,23 @@
 require 'sketchup.rb'
 require 'radiance_entities.rb'
-require 'export_modules.rb'
 require 'radiance.rb'
-require 'modules/logger.rb'
+
 require 'modules/jsonutils.rb'
+require 'modules/session.rb'
 require 'modules/radiancepath.rb'
 
 
 class ExportOptions
 
     include Tbleicher::Su2Rad::JSONUtils
-    include InterfaceBase
-    include Tbleicher::Su2Rad::Logger
+    include Tbleicher::Su2Rad::Session
     include Tbleicher::Su2Rad::RadiancePath
 
     attr_reader :sceneName
     attr_reader :scenePath
     
-    def initialize
+    def initialize(state={})
+        @state = state
         uimessage("ExportOptions.initialize()", 2)
         setExportDirectory()
         @scenePath     = getConfig('SCENEPATH')
@@ -141,10 +141,12 @@ end
 class RenderOptions
 
     include Tbleicher::Su2Rad::JSONUtils
-    include InterfaceBase
-    include Tbleicher::Su2Rad::Logger
+    include Tbleicher::Su2Rad::Session
+
+    attr_accessor :state
     
-    def initialize
+    def initialize(state={})
+        @state = state
         @Quality = 'medium'
         @Detail = 'medium'
         @Variability = 'high'
@@ -288,7 +290,7 @@ class RenderOptions
         dict.each_pair { |k,v|
             old = eval("@%s" % k)
             if old != v
-                uimessage("new Value for %s: %s", 1)
+                uimessage("new value for '#{k}': '#{v}'", 1)
             end
             if old.class == String
                 v = "'%s'" % v
@@ -313,11 +315,14 @@ end
 class SkyOptions
     
     include Tbleicher::Su2Rad::JSONUtils
-    include InterfaceBase
-    include Tbleicher::Su2Rad::Logger
+    include Tbleicher::Su2Rad::Session
 
-    def initialize
-        @rsky = RadianceSky.new()
+    attr_accessor :state
+
+    def initialize(state)
+        @state = state
+        @rsky = RadianceSky.new(state)
+        
         @_settings = {}
         @_settings['SkyCommand'] = getSkyCommand()
         @_sinfo_unused = ['DisplayNorth', 'EdgesCastShadows', 'Light', 'Dark', 
