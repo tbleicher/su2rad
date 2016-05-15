@@ -1,0 +1,252 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <title>Su2rad - User Documentation</title>
+
+    <link rel="stylesheet" href="stylesheets/styles.css">
+    <link rel="stylesheet" href="stylesheets/github-light.css">
+    <meta name="viewport" content="width=device-width">
+    <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+  </head>
+  <body>
+
+<div class="wrapper">
+
+      <header>
+        <h1>Su2rad</h1>
+        <p>SketchUp to Radiance Exporter</p>
+
+        <p class="view"><a href="https://github.com/tbleicher/su2rad">View the Project on GitHub</a><br>
+        <small>maintained by <a href="https://github.com/tbleicher">tbleicher</a></small></p>
+
+        <ul>
+          <li></li>
+          <li><a href="https://github.com/tbleicher/su2rad/releases/download/su2rad_2014.0.0/su2rad_2014.0.0.rbz">Download 2014.0.0<strong>RBZ file</strong></a></li>
+          <li><a href="https://github.com/tbleicher/su2rad">View On <strong>GitHub</strong></a></li>
+        </ul>
+
+        <div class="nav-title">Site Content</div>
+        <div class="nav">  
+          <div id="index"><a href="./index.html">Home</a></div>
+          <div id="user_doc" class="current">User Documentation</div>
+          <div id="testing"><a href="./testing.html">Unit Testing SketchUp Plugins</a></div>
+          <div id="rspec_setup"><a href=rspec_setup.html>Rspec Setup</a></div>
+        </div>
+      </header>
+
+
+      <section>
+<h3>
+  <a id="su2rad-user-documentation" class="anchor" href="#su2rad-user-documentation" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Su2rad User Documentation</h3>
+
+<p>The interface is based on JavaScript and displayed in a web browser window
+from within Sketchup. The web browser can communicate with Sketchup and load
+data on demand or send data to the Ruby script. Essential for the interface
+is that we can use all the interactivity of modern web pages to update the
+content of the web page based on user input.</p>
+
+<p>The interface is structured with a common <em>tab-style</em> interface that spreads
+the content of one long page onto multiple tab pages. Each of these pages
+contains controls for a particular context. You can switch between the tabs by
+clicking on the tab names or via the 'edit' buttons to the right of a section
+header.</p>
+
+<p>Most settings are now stored in the Sketchup file. If you open a file that
+you have exported before all your settings (like render quality or material
+assignments) should be restored. The settings are only permanent if you save
+the file after you have opened the export dialog. You will be asked to save
+your file if you try to close Sketchup. So even if you did not change any
+of the geometry yourself, the export might have modified some settings which
+need saving.</p>
+
+<h3>
+  <a id="export-tab" class="anchor" href="#export-tab" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Export Tab</h3>
+
+<p>The 'Export' tab combines general export options with a selection of views
+to export and the most common Radiance options used by rad (*.rif file).</p>
+
+<p>Export OptionsThe general Export Options are the
+  <ul>
+    <li>export path (directory to export to)</li>
+    <li>scene name (the name for the scene files in the directory)</li>
+    <li>export mode and depending on this
+      <ul>
+        <li>triangulate</li>
+        <li>textures - texture coordinates are reported in two ways by Sketchup.
+        There is no good way to decide which is the correct one so the result of
+        the texture mapping may be incorrect. Textures require the installation
+        of ImageMagick on your computer.</li>
+        <li>global coordinates</li>
+      </ul>
+    </li>
+  </ul>
+</p>
+
+<p>Previously the export created a new subfolder for every active scene that
+was exported. This guaranteed that different visibility settings in scenes
+were exported correctly. Now the default path is controlled via a template
+to allow you to choose between on common export folder or individual folders
+for each scene. Unfortunately there is no dialog to set this template yet so
+you're stuck with the default of one common export folder per project.</p>
+
+<h3>Views</h3>
+
+<p>You can now select which of the scenes (if there are any in the Sketchup
+file) should be exported as view files. Only scenes that save the camera
+position are considered in this list. Please note that all views are exported
+to files but only the selected views will be active in the '*.rif' file.
+Unselected views are still exported but placed into the *.rif file as a
+comment.</p>
+
+<h3>Render Options</h3>
+
+<p>The render options allow you to change the QUALITY etc settings for rad.
+On this page only a subset of the options is shown. More are available on
+the Render tab.</p>
+
+<p>The image size settings are taken from the previous export settings or
+the current SketchUp screen. If you change the x-size the y-size will be
+changed proportionally. If you change the y-size you will modify the aspect
+of the image. So if you want to set a fixed image size first change x, then
+change y.</p>
+
+<h3>Sky</h3>
+
+<p>The Sky settings show a summary of the shadow and location settings and
+how these are translated into a gensky command for Radiance. You can edit
+this command on the Sky tab.</p>
+
+<p><img src="./images/export.png"></p>
+
+<h3>Render Tab</h3>
+
+<p>The Render tab allows you to set advanced options for the rad input file.
+The upper part has common options affecting the quality setting of the
+rtrace/rpict command while the details part gives you control over the
+individual settings. This page is fully interactive and updates nearly every
+time you change an option. If you have an older Mac you might notice the slow
+refresh while the browser recalculates the new options.</p>
+
+<p>This page duplicates the some of the rad functionality in JavaScript to
+calculate the render options from the quality settings. Therefore you will
+see some of the detailed options change their value if you change ie. the
+'quality' option. You have two ways to overwrite the render settings:
+  <ul>
+    <li>select the check box next to an option and enter the new values in the
+     text filed that appears</li>
+    <li>type directly in the render line text field. The script will reject all
+    options it does not know about or which are incorrect specified on the command
+    line. Sadly that means that you can't enter any options that are not yet
+    implemented.</li>
+  </ul>
+</p>
+
+<p><img src="./images/render.png"></p>
+
+<h3>Sky Tab</h3>
+
+<p>On the Sky tab you can add additional options to gensky (and in the
+future other sky generators). The apply button in the top right corner
+allows you write back your settings to the Sketchup model (like time and
+location). The settings will only be saved when you save the Sketchup
+file, though.</p>
+
+<p>The gensky options work like the options for rpict/rtrace. There is a
+blue status line at the bottom of the page that shows the gensky command
+line options as they will be written to the sky file.</p>
+
+<p><img src="./images/sky_1.png"></p>
+
+<h3>Views Page</h3>
+
+<p>The all-new 'Views' page gives more detailed information on the views
+set up in SketchUp. You can open the details by clicking on the header
+label or the '[show details]' on the right side. The headers are usually
+in a blue color; only if the view on the SketchUp page was changed since
+you first used the export dialog, they are shown in yellowish-brown. There
+will be a feature to update the view from the page and vice versa but it's
+just not there yet.</p>
+
+<p>You can, however, use the select and entry boxes to set Radiance-only
+view options, like special projection types and clipping planes. These
+settings are stored in an attribute and will be read from the file if
+you have to open it again. The preview option does not work yet.</p>
+
+<p class="note">There are some handling issues with these controls that
+have to be worked out. The settings are not coordinated well with view
+changes in the SketchUp model, selection of views and the image size
+settings. These are known issues.</p>
+
+<p><img src="./images/su2rad_1.0alpha_views.png"></p>
+
+<h3>Materials Page</h3>
+
+<p>On the 'Materials' page you can assign Radiance material definitons
+to Sketchup materials. Radiance materials are read in from Radiance scene
+files in the 'su2radlib/ray' subfolder that have a '*.rad' or '*.mat' file
+extension. Example materials from the Radiance distribution are already in
+place. Not all material definitions can be read by the script but those 
+hat follow the</p>
+
+<pre>
+&lt;mod&gt; &lt;primitive&gt; &lt;id&gt;
+&lt;nargs&gt; [args]
+&lt;nargs&gt; [args]
+&lt;nargs&gt; [args]
+</pre>
+
+<p>syntax should work. There is no verification of dependencies on .cal or
+data files. If these are required they have to be in the Radiance search
+path during rendering. Dependencies on other definitions ('patterns') are
+only checked against materials that have already been read from the file
+or a previous file.</p>
+
+<p>Currently there is no way of grouping materials, i. e. by file name or
+by tags. I'm open for ideas on this. You can filter by material type and
+extend the display to include aliases. These are usually not displayed.</p>
+
+<p>The SketchUp materials are displayed in three diffferent ways:
+
+<ul>
+  <li><strong>Materials without corresponding names</strong> in the Radiance
+  library are yellowish-brown. If there is no alias assigned to them for the
+  export there will be a simple conversion of the Sketchup color.</li>
+  <li><strong>Materials with corresponding names</strong> in the library are
+  displayed in blue. They are exported with the definition from the library
+  unless they are assigned another material.</li>
+  <li><strong>Materials that have been assigned a Radiance definition</strong> 
+  are blue, too, and show the definition below the name. The definition from
+  the library will be copied to the 'materials.rad' file and an alias for the
+  SketchUp material name will be added.</li>
+</ul>
+
+<p>To assign a material to a SketchUp material drag the entry from the right
+column over the material in the left. The color of the SketchUp entry will
+change to a darker shade and if you are about to replace an existing alias
+it will be outlined in red.</p>
+
+<p>Below the two list panels there is a window showing the definition of the
+Radiance material. The display is set by a click on the material label. The
+preview panel to the right will show a rendering of the material once this
+information can be stored with the material or it can be created dynamically.</p>
+
+<p><img src="./images/su2rad_1.0alpha_materials.png" width="336"></p>
+
+
+
+
+      </section>
+
+      <footer>
+        <p>This project is maintained by <a href="https://github.com/tbleicher">tbleicher</a></p>
+        <p><small>Hosted on GitHub Pages &mdash; Theme by <a href="https://github.com/orderedlist">orderedlist</a></small></p>
+      </footer>
+
+</div>
+<script src="javascripts/scale.fix.js"></script>
+</body>
+</html>
