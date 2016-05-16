@@ -1,9 +1,9 @@
 require "exportbase.rb"
-require "delauney_mod.rb"
+require "modules/delauney.rb"
 
 class NumericImport < ExportBase
     
-    include Delauney
+    include Tbleicher::Su2Rad::Delauney
     
     def initialize(state, filename='')
         @state = state

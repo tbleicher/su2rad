@@ -50,6 +50,9 @@ class Stack
     end
 end
 
+
+require 'stack.rb'
+
 class LayerStack < Stack
 
     def initialize
@@ -69,6 +72,7 @@ class LayerStack < Stack
 end 
 
 
+require 'stack.rb'
 
 class MaterialStack < Stack
 

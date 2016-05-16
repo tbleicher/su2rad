@@ -29,7 +29,6 @@ $:.push(File.dirname(__FILE__))
 require "sketchup.rb"
 require "modules/logger.rb"
 require "exportbase.rb"
-require "context.rb"
 require "numeric.rb"
 require "material.rb"
 require "radiance_entities.rb"
@@ -37,6 +36,7 @@ require "radiancescene.rb"
 require "sessionstate.rb"
 require "webdialog.rb"
 require "config_class.rb"
+require "progresscounter.rb"
 
 
 module Su2rad
@@ -50,7 +50,7 @@ module Su2rad
     def self.startExport(selected_only=0)
         begin
             state = Tbleicher::Su2Rad::SessionState.new()
-            $SU2RAD_COUNTER = ProgressCounter.new()
+            $SU2RAD_COUNTER = Tbleiher::Su2Rad::ProgressCounter.new()
             scene = RadianceScene.new(state)
             scene.startExport(selected_only)
         rescue => e 
@@ -66,7 +66,7 @@ module Su2rad
             if $SU2RAD_DIALOG_WINDOW
                 $SU2RAD_DIALOG_WINDOW.bring_to_front()
             else
-                $SU2RAD_COUNTER = ProgressCounter.new() 
+                $SU2RAD_COUNTER = Tbleicher::Su2Rad::ProgressCounter.new() 
                 state = Tbleicher::Su2Rad::SessionState.new()
                 scene = RadianceScene.new(state)
                 edw = ExportDialogWeb.new(scene)
