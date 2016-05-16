@@ -137,6 +137,8 @@ end
 
 
 
+require 'materialcontext.rb'
+
 class RadianceScene < ExportBase
     
     include Tbleicher::Su2Rad::Session
@@ -150,7 +152,7 @@ class RadianceScene < ExportBase
         @model = Sketchup.active_model
         
         $inComponent = [false]
-        @@materialContext = MaterialContext.new(state)
+        @@materialContext = Tbleicher::Su2Rad::MaterialContext.new(state)
         
         resetState()
         initLog()

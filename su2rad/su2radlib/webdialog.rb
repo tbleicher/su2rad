@@ -3,10 +3,11 @@ require 'exportbase.rb'
 require 'radiance.rb'
 require 'radiance_entities.rb'
 require 'radiancescene.rb'
-require 'filesystemproxy.rb'
+
 #require 'webdialog_options.rb'
 #require 'webdialog_views.rb'
 
+require 'modules/filesystemproxy.rb'
 require 'modules/jsonutils.rb'
 require 'modules/session.rb'
 
@@ -40,9 +41,9 @@ class ExportDialogWeb < ExportBase
     def getDirectoryListing(dlg, dirpath)
         dirpath,root = dirpath.split('&')
         if root == 'true'
-            dirs = FileSystemProxy.listDirectoryTree(dirpath)
+            dirs = Tbleicher::Su2Rad::FileSystemProxy.listDirectoryTree(dirpath)
         else
-            dirs = FileSystemProxy.listDirectory(dirpath)
+            dirs = Tbleicher::Su2Rad::FileSystemProxy.listDirectory(dirpath)
         end
         json = toStringJSON(dirs)
         dlg.execute_script( "fileSelector.setFileTreeJSON('%s', '%s')" % [encodeJSON(json),root])

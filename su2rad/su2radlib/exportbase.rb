@@ -8,9 +8,6 @@ require 'modules/radiancepath.rb'
 require 'modules/session.rb'
 
 
-
-
-
 class ExportBase
 
     include Tbleicher::Su2Rad::Session
