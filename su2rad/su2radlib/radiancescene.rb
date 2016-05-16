@@ -6,6 +6,7 @@ require 'webdialog_options.rb'
 require 'webdialog_views.rb'
 require 'scene_materials.rb'
 require 'statuspage.rb'
+require 'sketchupviewslist.rb'
 
 require 'modules/logger.rb'
 require 'modules/session.rb'
@@ -38,7 +39,7 @@ class RadianceScene < ExportBase
         
         @exportOptions = ExportOptions.new(state)
         @renderOptions = RenderOptions.new(state)
-        @viewsList     = SketchupViewsList.new(state)
+        @viewsList     = Tbleicher::Su2Rad::SketchupViewsList.new(state)
         @skyOptions    = SkyOptions.new(state)
         @materialLists = MaterialLists.new() 
     end
