@@ -32,7 +32,7 @@ require "exportbase.rb"
 require "numeric.rb"
 require "material.rb"
 require "radiance_entities.rb"
-require "radiancescene.rb"
+require "exportscene.rb"
 require "sessionstate.rb"
 require "webdialog.rb"
 require "config_class.rb"
@@ -51,7 +51,7 @@ module Su2rad
         begin
             state = Tbleicher::Su2Rad::SessionState.new()
             $SU2RAD_COUNTER = Tbleiher::Su2Rad::ProgressCounter.new()
-            scene = RadianceScene.new(state)
+            scene = Tbleicher::Su2Rad::ExportScene.new(state)
             scene.startExport(selected_only)
         rescue => e 
             msg = "%s\n\n%s" % [$!.message,e.backtrace.join("\n")]
@@ -68,7 +68,7 @@ module Su2rad
             else
                 $SU2RAD_COUNTER = Tbleicher::Su2Rad::ProgressCounter.new() 
                 state = Tbleicher::Su2Rad::SessionState.new()
-                scene = RadianceScene.new(state)
+                scene = Tbleicher::Su2Rad::ExportScene.new(state)
                 edw = ExportDialogWeb.new(scene)
                 edw.show()
             end
