@@ -1,7 +1,11 @@
 require "exportbase.rb"
 
 require 'materialcontext.rb'
-require 'webdialog_options.rb'
+
+require 'weboptionsexport.rb'
+require 'weboptionsrender.rb'
+require 'weboptionssky.rb'
+
 require 'sketchupviewslist.rb'
 require 'scene_materials.rb'
 require 'statuspage.rb'
@@ -34,16 +38,16 @@ module Tbleicher
         resetState()
         initLog()
         
-        @sky = RadianceSky.new(@state)
+        @sky = Tbleicher::Su2Rad::RadianceSky.new(@state)
         
         setConfig("Foo", "bar")
         puts "Foo set"
         setExportDirectory()
         
-        @exportOptions = ExportOptions.new(state)
-        @renderOptions = RenderOptions.new(state)
+        @exportOptions = WebOptionsExport.new(state)
+        @renderOptions = WebOptionsRender.new(state)
+        @skyOptions    = WebOptionsSky.new(state)
         @viewsList     = Tbleicher::Su2Rad::SketchupViewsList.new(state)
-        @skyOptions    = SkyOptions.new(state)
         @materialLists = MaterialLists.new() 
       end
     

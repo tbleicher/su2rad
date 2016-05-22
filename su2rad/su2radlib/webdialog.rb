@@ -8,7 +8,6 @@ require 'radiancepolygon.rb'
 require 'radiancesky.rb'
 require 'exportscene.rb'
 
-#require 'webdialog_options.rb'
 #require 'webdialog_views.rb'
 
 require 'modules/filesystemproxy.rb'

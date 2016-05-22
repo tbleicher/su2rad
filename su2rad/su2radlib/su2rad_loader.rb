@@ -157,7 +157,10 @@ module Tbleicher
       load 'radiancesky.rb'
       
       load "webdialog.rb"
-      load "webdialog_options.rb"
+      load 'weboptionsexport.rb'
+      load 'weboptionsrender.rb'
+      load 'weboptionssky.rb'
+      
       load "sketchupview.rb"
       load "sketchupviewslist.rb"
       load "scene_materials.rb"
