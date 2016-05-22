@@ -28,15 +28,18 @@ $:.push(File.dirname(__FILE__))
 
 require "sketchup.rb"
 require "modules/logger.rb"
+
+require "config_class.rb"
 require "exportbase.rb"
-require "numeric.rb"
-require "material.rb"
-require "radiance_entities.rb"
 require "exportscene.rb"
+require "materialcontext.rb"
+require "numeric.rb"
+require "progresscounter.rb"
+require "radiance_entities.rb"
 require "sessionstate.rb"
 require "webdialog.rb"
-require "config_class.rb"
-require "progresscounter.rb"
+
+
 
 
 module Su2rad
@@ -140,17 +143,19 @@ module Su2rad
         load "modules/jsonutils.rb"
         load "modules/radiancepath.rb"
         load "modules/session.rb"
+        load "modules/filesystemproxy.rb"
+        
         load "exportbase.rb"
-        load "filesystemproxy.rb"
-        load "context.rb"
+        load "exportscene.rb"
         load "numeric.rb"
-        load "material.rb"
+        load "materialcontext.rb"
         load "radiance.rb"
         load "radiance_entities.rb"
-        load "radiancescene.rb"
+        
         load "webdialog.rb"
         load "webdialog_options.rb"
-        load "webdialog_views.rb"
+        load "sketchupview.rb"
+        load "sketchupviewslist.rb"
         load "scene_materials.rb"
         load "config_class.rb"
         # set debug flag

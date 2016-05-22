@@ -2,7 +2,7 @@ require 'sketchup.rb'
 require 'exportbase.rb'
 require 'radiance.rb'
 require 'radiance_entities.rb'
-require 'radiancescene.rb'
+require 'exportscene.rb'
 
 #require 'webdialog_options.rb'
 #require 'webdialog_views.rb'
