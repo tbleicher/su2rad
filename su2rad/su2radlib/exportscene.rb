@@ -7,9 +7,10 @@ require 'weboptionsrender.rb'
 require 'weboptionssky.rb'
 
 require 'sketchupviewslist.rb'
+
 require 'scene_materials.rb'
+require 'materiallists.rb'
 require 'statuspage.rb'
-require 'sketchupviewslist.rb'
 
 require 'modules/logger.rb'
 require 'modules/session.rb'
@@ -44,11 +45,11 @@ module Tbleicher
         puts "Foo set"
         setExportDirectory()
         
-        @exportOptions = WebOptionsExport.new(state)
-        @renderOptions = WebOptionsRender.new(state)
-        @skyOptions    = WebOptionsSky.new(state)
+        @exportOptions = Tbleicher::Su2Rad::WebOptionsExport.new(state)
+        @renderOptions = Tbleicher::Su2Rad::WebOptionsRender.new(state)
+        @skyOptions    = Tbleicher::Su2Rad::WebOptionsSky.new(state)
         @viewsList     = Tbleicher::Su2Rad::SketchupViewsList.new(state)
-        @materialLists = MaterialLists.new() 
+        @materialLists = Tbleicher::Su2Rad::MaterialLists.new() 
       end
     
 
