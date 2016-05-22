@@ -91,7 +91,7 @@ class ExportBase
                 lines += exportByCL(e.definition.entities, e.material, gtrans)
                 $inComponent.pop()
             elsif e.class == Sketchup::Face
-                rp = RadiancePolygon.new(e, @state)
+                rp = Tbleicher::Su2Rad::RadiancePolygon.new(e, @state)
                 if rp.material == nil or rp.material.texture == nil
                     face = rp.getText(globaltrans)
                 else
@@ -113,14 +113,14 @@ class ExportBase
                 if not isVisible(e)
                     next
                 end
-                rg = RadianceGroup.new(e, @state)
+                rg = Tbleicher::Su2Rad::RadianceGroup.new(e, @state)
                 ref = rg.export(parenttrans)
                 references.push(ref)
             elsif e.class == Sketchup::ComponentInstance
                 if not isVisible(e)
                     next
                 end
-                rg = RadianceComponent.new(e, @state)
+                rg = Tbleicher::Su2Rad::RadianceComponent.new(e, @state)
                 ref = rg.export(parenttrans)
                 references.push(ref)
             elsif e.class == Sketchup::Face
@@ -142,7 +142,7 @@ class ExportBase
         numpoints = []
         faces.each_index { |i|
             f = faces[i]
-            rp = RadiancePolygon.new(f, @state)
+            rp = Tbleicher::Su2Rad::RadiancePolygon.new(f, @state)
             if rp.isNumeric?
                 numpoints += rp.getNumericPoints()
             elsif makeGlobal?()

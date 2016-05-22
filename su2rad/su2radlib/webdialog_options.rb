@@ -1,5 +1,8 @@
 require 'sketchup.rb'
-require 'radiance_entities.rb'
+require 'radiancecomponent.rb'
+require 'radiancegroup.rb'
+require 'radiancepolygon.rb'
+require 'radiancesky.rb'
 require 'radiance.rb'
 
 require 'modules/jsonutils.rb'
@@ -321,7 +324,7 @@ class SkyOptions
 
     def initialize(state)
         @state = state
-        @rsky = RadianceSky.new(state)
+        @rsky = Tbleicher::Su2Rad::RadianceSky.new(state)
         
         @_settings = {}
         @_settings['SkyCommand'] = getSkyCommand()

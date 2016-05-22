@@ -35,7 +35,10 @@ require "exportscene.rb"
 require "materialcontext.rb"
 require "numeric.rb"
 require "progresscounter.rb"
-require "radiance_entities.rb"
+require 'radiancecomponent.rb'
+require 'radiancegroup.rb'
+require 'radiancepolygon.rb'
+require 'radiancesky.rb'
 require "sessionstate.rb"
 require "webdialog.rb"
 
@@ -150,7 +153,10 @@ module Su2rad
         load "numeric.rb"
         load "materialcontext.rb"
         load "radiance.rb"
-        load "radiance_entities.rb"
+        load "radiancecomponent.rb"
+        load 'radiancegroup.rb'
+        load 'radiancepolygon.rb'
+        load 'radiancesky.rb'
         
         load "webdialog.rb"
         load "webdialog_options.rb"
