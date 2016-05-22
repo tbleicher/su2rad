@@ -62,24 +62,27 @@
 #                       added exception error display to export function
 # v 0.0  - 28/10/07  :  initial release
 
-module Su2rad
-
-    COPYRIGHT = "(c) 2014 by Thomas Bleicher"
-    CREATOR = "Thomas Bleicher"
-    VERSION = "2014.0.0"
-
-end
-
-
 require "sketchup.rb"
 require "extensions.rb"
 
+module Tbleicher
+
+  module Su2Rad
+
+    COPYRIGHT = "(c) 2016 by Thomas Bleicher"
+    CREATOR = "Thomas Bleicher"
+    VERSION = "2014.0.0"
+
+  end
+
+end
+
 su2rad_extension = SketchupExtension.new('su2rad', 'su2radlib/su2rad_loader.rb')
-su2rad_extension.copyright = Su2rad::COPYRIGHT
-su2rad_extension.creator = Su2rad::CREATOR
+su2rad_extension.copyright = Tbleicher::Su2Rad::COPYRIGHT
+su2rad_extension.creator = Tbleicher::Su2Rad::CREATOR
 su2rad_extension.description = "SketchUp to Radiance exporter; " +
     "creates new entry in \"Plugins\" menu when loaded"
-su2rad_extension.version = Su2rad::VERSION
+su2rad_extension.version = Tbleicher::Su2Rad::VERSION
 
 Sketchup.register_extension(su2rad_extension, true)
 
