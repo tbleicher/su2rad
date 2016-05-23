@@ -7,31 +7,34 @@ require 'modules/logger.rb'
 require 'modules/radiancepath.rb'
 require 'modules/session.rb'
 
+module Tbleicher
 
-class ExportBase
+  module Su2Rad
 
-    include Tbleicher::Su2Rad::Session
-    include Tbleicher::Su2Rad::RadiancePath
-    include RadianceUtils
-    
-    @@materialContext = nil
-    
-    @@materialstack = Tbleicher::Su2Rad::MaterialStack.new()
-    @@layerstack = Tbleicher::Su2Rad::LayerStack.new()
-    @@matrixstack = Tbleicher::Su2Rad::Stack.new()
-    @@groupstack = Tbleicher::Su2Rad::Stack.new()
+    class ExportBase
 
-    @@components = []
-    
-    @@uniqueFileNames = Hash.new()
-    @@componentNames = Hash.new()
+      include Tbleicher::Su2Rad::Session
+      include Tbleicher::Su2Rad::RadiancePath
+      include RadianceUtils
         
-    @@byColor = Hash.new()
-    @@byLayer = Hash.new()
-    @@meshStartIndex = Hash.new()
-    @@visibleLayers = Hash.new()
-   
-    def resetState
+      @@materialContext = nil
+      
+      @@materialstack = Tbleicher::Su2Rad::MaterialStack.new()
+      @@layerstack = Tbleicher::Su2Rad::LayerStack.new()
+      @@matrixstack = Tbleicher::Su2Rad::Stack.new()
+      @@groupstack = Tbleicher::Su2Rad::Stack.new()
+
+      @@components = []
+      
+      @@uniqueFileNames = Hash.new()
+      @@componentNames = Hash.new()
+          
+      @@byColor = Hash.new()
+      @@byLayer = Hash.new()
+      @@meshStartIndex = Hash.new()
+      @@visibleLayers = Hash.new()
+     
+      def resetState
         @@materialContext.clear()
         
         @@materialstack.clear()
@@ -52,109 +55,113 @@ class ExportBase
         @@byLayer = Hash.new()
         @@visibleLayers = Hash.new()
         Sketchup.active_model.layers.each { |l|
-            @@byLayer[remove_spaces(l.name)] = []
-            if l.visible?
-                @@visibleLayers[l] = 1
-            end
+          @@byLayer[remove_spaces(l.name)] = []
+          if l.visible?
+            @@visibleLayers[l] = 1
+          end
         }
         $createdFiles = Hash.new()
-    end
-    
-    def getNestingLevel
+      end
+      
+      def getNestingLevel
         return @@groupstack.length
-    end
-    
-    def isVisible(e)
+      end
+      
+      def isVisible(e)
         if $inComponent[-1] == true and e.layer.name == 'Layer0'
-            return true
+          return true
         elsif e.hidden?
-            return false
+          return false
         elsif not @@visibleLayers.has_key?(e.layer)
-            return false
+          return false
         end
         return true
-    end
-    
-    def exportByCL(entity_list, mat, globaltrans)
+      end
+      
+      def exportByCL(entity_list, mat, globaltrans)
         ## unused?
         @@materialContext.push(mat)
         lines = []
         entity_list.each { |e|
-            if not isVisible(e)
-                next
-            elsif e.class == Sketchup::Group
-                gtrans = globaltrans * e.transformation
-                lines += exportByCL(e.entities, e.material, gtrans)
-            elsif e.class == Sketchup::ComponentInstance
-                gtrans = globaltrans * e.transformation
-                $inComponent.push(true)
-                lines += exportByCL(e.definition.entities, e.material, gtrans)
-                $inComponent.pop()
-            elsif e.class == Sketchup::Face
-                rp = Tbleicher::Su2Rad::RadiancePolygon.new(e, @state)
-                if rp.material == nil or rp.material.texture == nil
-                    face = rp.getText(globaltrans)
-                else
-                    face = rp.getPolyMesh(globaltrans)
-                end
-                lines.push([rp.material, rp.layer.name, face])
+          if not isVisible(e)
+            next
+          elsif e.class == Sketchup::Group
+            gtrans = globaltrans * e.transformation
+            lines += exportByCL(e.entities, e.material, gtrans)
+          elsif e.class == Sketchup::ComponentInstance
+            gtrans = globaltrans * e.transformation
+            $inComponent.push(true)
+            lines += exportByCL(e.definition.entities, e.material, gtrans)
+            $inComponent.pop()
+          elsif e.class == Sketchup::Face
+            rp = Tbleicher::Su2Rad::RadiancePolygon.new(e, @state)
+            if rp.material == nil or rp.material.texture == nil
+              face = rp.getText(globaltrans)
+            else
+              face = rp.getPolyMesh(globaltrans)
             end
+            lines.push([rp.material, rp.layer.name, face])
+          end
         }
         @@materialContext.pop()
         return lines
-    end
-        
-    def exportByGroup(entity_list, parenttrans, instance=false)
+      end
+          
+      def exportByGroup(entity_list, parenttrans, instance=false)
         ## split scene in individual files
         references = []
         faces = []
         entity_list.each { |e|
-            if e.class == Sketchup::Group
-                if not isVisible(e)
-                    next
-                end
-                rg = Tbleicher::Su2Rad::RadianceGroup.new(e, @state)
-                ref = rg.export(parenttrans)
-                references.push(ref)
-            elsif e.class == Sketchup::ComponentInstance
-                if not isVisible(e)
-                    next
-                end
-                rg = Tbleicher::Su2Rad::RadianceComponent.new(e, @state)
-                ref = rg.export(parenttrans)
-                references.push(ref)
-            elsif e.class == Sketchup::Face
-                if instance == false
-                    ## skip layer test if instance is exported
-                    if not isVisible(e)
-                        next
-                    end
-                end
-                faces.push(e)
-            elsif e.class == Sketchup::Edge
-                next
-            else
-                uimessage("WARNING: Can't export entity of type '%s'!\n" % e.class)
-                next
+          if e.class == Sketchup::Group
+            if not isVisible(e)
+              next
             end
+            rg = Tbleicher::Su2Rad::RadianceGroup.new(e, @state)
+            ref = rg.export(parenttrans)
+            references.push(ref)
+
+          elsif e.class == Sketchup::ComponentInstance
+            if not isVisible(e)
+              next
+            end
+            rg = Tbleicher::Su2Rad::RadianceComponent.new(e, @state)
+            ref = rg.export(parenttrans)
+            references.push(ref)
+
+          elsif e.class == Sketchup::Face
+            if instance == false
+              ## skip layer test if instance is exported
+              if not isVisible(e)
+                next
+              end
+            end
+            faces.push(e)
+
+          elsif e.class == Sketchup::Edge
+            next
+          else
+            uimessage("WARNING: Can't export entity of type '%s'!\n" % e.class)
+            next
+          end
         }
+
         faces_text = ''
         numpoints = []
         faces.each_index { |i|
-            f = faces[i]
-            rp = Tbleicher::Su2Rad::RadiancePolygon.new(f, @state)
-            if rp.isNumeric?
-                numpoints += rp.getNumericPoints()
-            elsif makeGlobal?()
-                faces_text += rp.getText(parenttrans)
-            else
-                faces_text += rp.getText()
-            end
+          f = faces[i]
+          rp = Tbleicher::Su2Rad::RadiancePolygon.new(f, @state)
+          if rp.isNumeric?
+            numpoints += rp.getNumericPoints()
+          elsif makeGlobal?()
+            faces_text += rp.getText(parenttrans)
+          else
+            faces_text += rp.getText()
+          end
         }
         
         ## if we have numeric points save to *.fld file
         if numpoints != []
-            createNumericFile(numpoints)
+          createNumericFile(numpoints)
         end
         
         ## stats message  
@@ -162,53 +169,53 @@ class ExportBase
 
         ## create 'by group' files or stop here
         if getConfig('MODE') != 'by group'
-            return "## mode = '%s' -> no export" % getConfig('MODE')
+          return "## mode = '%s' -> no export" % getConfig('MODE')
         elsif @@nameContext.length <= 1
-            return createMainScene(references, faces_text, parenttrans)
+          return createMainScene(references, faces_text, parenttrans)
         else
-            ref_text = references.join("\n")
-            text = ref_text + "\n\n" + faces_text
-            filename = getFilename( File.join('objects', getNameContext()+".rad") )
-            if not createFile(filename, text)
-                msg = "\n## ERROR: error creating file '%s'\n" % filename
-                uimessage(msg)
-                return msg
-            else
-                xform = getXform(filename, parenttrans)
-                return xform
-            end
+          ref_text = references.join("\n")
+          text = ref_text + "\n\n" + faces_text
+          filename = getFilename( File.join('objects', getNameContext()+".rad") )
+          if not createFile(filename, text)
+            msg = "\n## ERROR: error creating file '%s'\n" % filename
+            uimessage(msg)
+            return msg
+          else
+            xform = getXform(filename, parenttrans)
+            return xform
+          end
         end
-    end
-    
-    def createMainScene(references, faces_text, parenttrans)
+      end
+      
+      def createMainScene(references, faces_text, parenttrans)
         ## only implemented by RadianceScene
         true
-    end
+      end
 
-    def push
+      def push
         uimessage("begin export #{@entity.class} name='#{@entity.name}' id='#{@entity.object_id}'")
         @@materialstack.push(@entity.material)
         @@matrixstack.push(@entity.transformation)
         @@layerstack.push(@entity.layer)
         @@groupstack.push(@entity)
         $SU2RAD_COUNTER.add("%s" % @entity.class)
-    end
-    
-    def pop
+      end
+      
+      def pop
         @@materialstack.pop()
         @@matrixstack.pop()
         @@layerstack.pop()
         @@groupstack.pop()
         uimessage("end export #{@entity.class} name='#{@entity.name}'")
-    end 
-    
-    def prepareSceneDir(scene_dir)
+      end 
+      
+      def prepareSceneDir(scene_dir)
         ["octrees", "images", "logfiles", "ambfiles"].each { |subdir|
-            createDirectory(File.join(scene_dir,subdir))
+          createDirectory(File.join(scene_dir,subdir))
         }
-    end 
-    
-    def isMirror(trans)
+      end 
+      
+      def isMirror(trans)
         ##TODO: identify mirror axes
         xa = point_to_vector(trans.xaxis)
         ya = point_to_vector(trans.yaxis)
@@ -217,214 +224,224 @@ class ExportBase
         xz = xa.cross(za)
         yz = ya.cross(za)
         if xy.dot(za) < 0
-            return true
+          return true
         end
         if xz.dot(ya) > 0
-            return true
+          return true
         end
         if yz.dot(xa) < 0
-            return true
+          return true
         end
         return false
-    end
-    
-    def checkTransformation
+      end
+      
+      def checkTransformation
         resetglobal = false
         if isMirror(@entity.transformation)
-            if makeGlobal?() == false
-                setConfig('MAKEGLOBAL', true)
-                resetglobal = true
-                if @entity.class == Sketchup::ComponentInstance
-                    name = getUniqueName(@entity.name)
-                    eclass = 'instance'
-                else
-                    name = @entity.name
-                    eclass = 'group'
-                end
-                uimessage("#{eclass} '#{name}' is mirrored; using global coords")
+          if makeGlobal?() == false
+            setConfig('MAKEGLOBAL', true)
+            resetglobal = true
+            if @entity.class == Sketchup::ComponentInstance
+              name = getUniqueName(@entity.name)
+              eclass = 'instance'
+            else
+              name = @entity.name
+              eclass = 'group'
             end
+            uimessage("#{eclass} '#{name}' is mirrored; using global coords")
+          end
         end
         return resetglobal
-    end
-    
-    def setTransformation(parenttrans, resetglobal)
+      end
+      
+      def setTransformation(parenttrans, resetglobal)
         if makeGlobal?() == true and not resetglobal == true
-            parenttrans *= @entity.transformation
+          parenttrans *= @entity.transformation
         else
-            uimessage('parenttrans = entity.transformation')
-            parenttrans = @entity.transformation
+          uimessage('parenttrans = entity.transformation')
+          parenttrans = @entity.transformation
         end
         return parenttrans
-    end
-    
-    def createNumericFile(points)
+      end
+      
+      def createNumericFile(points)
         ## write points to file in a save way; if file exists merge points
         name = @@nameContext[-1]
         filename = getFilename("numeric/#{name}.fld")
         if FileTest.exists?(filename)
-            uimessage("updating field '%s'" % filename)
-            f = File.new(filename)
-            txt = f.read()
-            f.close()
-            oldpoints = txt.split("\n")
-            points += oldpoints
+          uimessage("updating field '%s'" % filename)
+          f = File.new(filename)
+          txt = f.read()
+          f.close()
+          oldpoints = txt.split("\n")
+          points += oldpoints
         end
         points.uniq!
         points.sort!
         text = points.join("\n")
         if not createFile(filename, text)
-            uimessage("Error: Could not create numeric file '#{filename}'")
+          uimessage("Error: Could not create numeric file '#{filename}'")
         else
-            uimessage("Created field '%s' (%d points)" % [filename, points.length])
+          uimessage("Created field '%s' (%d points)" % [filename, points.length])
         end
-    end
+      end
 
-    def doTextures(skm)
+      def doTextures(skm)
         if getConfig('TEXTURES') == false
-            return false
+          return false
         elsif skm == nil
-            return false
+          return false
         elsif skm.texture == nil
-            return false
+          return false
         else
-            return true
+          return true
         end
-    end
-    
-    def getMaterial(entity)
+      end
+      
+      def getMaterial(entity)
         return getEntityMaterial(entity)
-    end
- 
-    def getNameContext
+      end
+   
+      def getNameContext
         return remove_spaces(@@nameContext[-1])
-    end
-    
-    def getEffectiveMaterial(entity)
+      end
+      
+      def getEffectiveMaterial(entity)
         frontface = true
         if entity.class == Sketchup::Face
-            if entity.material == entity.back_material
-                if entity.material == nil
-                    m = @@materialstack.get()
-                else
-                    m = entity.material
-                end
+          
+          if entity.material == entity.back_material
+            if entity.material == nil
+              m = @@materialstack.get()
             else
-                f = entity.material
-                b = entity.back_material
-                if f and b
-                    m = f
-                    uimessage("WARNING: front vs. back material: '%s' - '%s'" % [f,b], 2)
-                elsif f
-                    m = f
-                else
-                    m = b
-                    frontface = false
-                end
+              m = entity.material
             end
+          
+          else
+            f = entity.material
+            b = entity.back_material
+            if f and b
+              m = f
+              uimessage("WARNING: front vs. back material: '%s' - '%s'" % [f,b], 2)
+            elsif f
+              m = f
+            else
+              m = b
+              frontface = false
+            end
+          end
+        
         elsif entity.material != nil
-            m = entity.material
+          m = entity.material
         end 
+        
         if not m
-            m = @@materialstack.get()
+          m = @@materialstack.get()
         end
+        
         if m != nil
-            @@materialContext.addMaterial(m, entity, frontface)
+          @@materialContext.addMaterial(m, entity, frontface)
         end
         return m
-    end
+      end
 
-    def getEntityMaterial(entity)
+      def getEntityMaterial(entity)
         begin
-            material = entity.material
+          material = entity.material
         rescue
-            material = nil
+          material = nil
         end
+
         frontface = true
         if entity.class == Sketchup::Face
-            if material == nil
-                material = entity.back_material
-                frontface = false
-            elsif entity.back_material != nil
-                front = getMaterialName(entity.material)
-                back = getMaterialName(entity.back_material)
-                if front != back
-                    uimessage("WARNING: front vs. back material: '%s' - '%s'" % [front, back], 2)
-                end
+          if material == nil
+            material = entity.back_material
+            frontface = false
+          elsif entity.back_material != nil
+            front = getMaterialName(entity.material)
+            back = getMaterialName(entity.back_material)
+            if front != back
+              uimessage("WARNING: front vs. back material: '%s' - '%s'" % [front, back], 2)
             end
+          end
         end
         if entity != nil and material != nil
-            @@materialContext.addMaterial(material, entity, frontface)
+          @@materialContext.addMaterial(material, entity, frontface)
         end
         return material
-    end
-    
-    def getMaterialName(mat)
+      end
+      
+      def getMaterialName(mat)
         if mat == nil
-            return @@materialContext.getCurrentMaterialName()
+          return @@materialContext.getCurrentMaterialName()
         end
         if mat.class != Sketchup::Material
-            mat = getEntityMaterial(mat)
+          mat = getEntityMaterial(mat)
         end
         return @@materialContext.getSaveMaterialName(mat)
-    end
-   
-    def makeGlobal?
+      end
+     
+      def makeGlobal?
         return getConfig('MAKEGLOBAL')
-    end
-    
-    def point_to_vector(p)
+      end
+      
+      def point_to_vector(p)
         Geom::Vector3d.new(p.x,p.y,p.z)
-    end
-        
-    def getXform(filename, trans)
+      end
+          
+      def getXform(filename, trans)
         if @@nameContext.length <= 2     #XXX ugly hack
-            ## for main scene file
-            path = File.join(getConfig('SCENEPATH'),getConfig('SCENENAME'),"")
+          ## for main scene file
+          path = File.join(getConfig('SCENEPATH'),getConfig('SCENENAME'),"")
         else
-            path = File.join(getConfig('SCENEPATH'),getConfig('SCENENAME'),"objects","")
+          path = File.join(getConfig('SCENEPATH'),getConfig('SCENENAME'),"objects","")
         end 
         filename.sub!(path, '')
         objname = @@nameContext[-1]
         if makeGlobal?()
-            xform = "!xform -n #{objname} #{filename}"
+          xform = "!xform -n #{objname} #{filename}"
         else
-            xform = xformFromReplmarks(trans, filename, objname, getConfig('UNIT')) 
-            if xform =~ /error/i
-                uimessage("%s\n" % xform)
-            end
+          xform = xformFromReplmarks(trans, filename, objname, getConfig('UNIT')) 
+          if xform =~ /error/i
+            uimessage("%s\n" % xform)
+          end
         end
         return xform
-    end 
-    
-    def getUniqueName(pattern="")
+      end 
+      
+      def getUniqueName(pattern="")
         if pattern == "" or pattern == nil
-            pattern = "group"
+          pattern = "group"
         end
         pattern = getRadianceIdentifier(pattern)
         if not @@uniqueFileNames.has_key?(pattern)
-            @@uniqueFileNames[pattern] = nil
-            return pattern
+          @@uniqueFileNames[pattern] = nil
+          return pattern
         else
-            all = @@uniqueFileNames.keys
-            count = 0
-            all.each { |name|
-                if name.index(pattern) == 0
-                    count += 1
-                end
-            }
-            newname = "%s%02d" % [pattern, count]
-            @@uniqueFileNames[newname] = nil
-            return newname
+          all = @@uniqueFileNames.keys
+          count = 0
+          all.each { |name|
+            if name.index(pattern) == 0
+              count += 1
+            end
+          }
+          newname = "%s%02d" % [pattern, count]
+          @@uniqueFileNames[newname] = nil
+          return newname
         end
-    end
-    
-    def showTransformation(trans)
+      end
+      
+      def showTransformation(trans)
         s = getConfig('UNIT')
         a = trans.to_a
         printf "  %5.2f  %5.2f  %5.2f  %5.2f\n" % a[0..3]
         printf "  %5.2f  %5.2f  %5.2f  %5.2f\n" % a[4..7]
         printf "  %5.2f  %5.2f  %5.2f  %5.2f\n" % a[8..11]
         printf "  %5.2f  %5.2f  %5.2f  %5.2f\n" % [a[12]*s, a[13]*s, a[14]*s, a[15]]
-    end
+      end
 
-end 
+    end # ExportBase
+
+  end # Su2Rad
+
+end # Tbleicher

@@ -11,7 +11,7 @@ module Tbleicher
 
   module Su2Rad
 
-    class MaterialLists < ExportBase
+    class MaterialLists < Tbleicher::Su2Rad::ExportBase
       
       ## creates SketchUp, Radiance and 'layer' materials
       

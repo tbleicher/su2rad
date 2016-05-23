@@ -20,7 +20,7 @@ module Tbleicher
 
   module Su2Rad
 
-    class ExportScene < ExportBase
+    class ExportScene < Tbleicher::Su2Rad::ExportBase
     
       include Tbleicher::Su2Rad::Session
 

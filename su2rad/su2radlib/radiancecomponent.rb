@@ -4,7 +4,7 @@ module Tbleicher
 
   module Su2Rad
 
-    class RadianceComponent < ExportBase
+    class RadianceComponent < Tbleicher::Su2Rad::ExportBase
 
       attr_reader :replacement, :iesdata, :lampMF, :lampType
       

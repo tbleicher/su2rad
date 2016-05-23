@@ -4,7 +4,7 @@ module Tbleicher
 
   module Su2Rad
 
-    class RadiancePolygon < ExportBase
+    class RadiancePolygon < Tbleicher::Su2Rad::ExportBase
 
       attr_reader :material, :layer
     

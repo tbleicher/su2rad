@@ -75,7 +75,7 @@ module Tbleicher
           $SU2RAD_COUNTER = Tbleicher::Su2Rad::ProgressCounter.new() 
           state = Tbleicher::Su2Rad::SessionState.new()
           scene = Tbleicher::Su2Rad::ExportScene.new(state)
-          edw = ExportDialogWeb.new(scene)
+          edw = Tbleicher::Su2Rad::ExportDialogWeb.new(scene)
           edw.show()
         end
       rescue => e 
@@ -84,27 +84,22 @@ module Tbleicher
       end 
     end
 
-    $matConflicts = nil
-
     def countConflicts
       state = Tbleicher::Su2Rad::SessionState.new()
-      if $matConflicts == nil
-        $matConflicts = MaterialConflicts.new(state)
-      end
-      $matConflicts.count()
+      matConflicts = Tbleicher::Su2Rad::MaterialConflicts.new(state)
+      matConflicts.count()
     end
 
     def resolveConflicts
       state = Tbleicher::Su2Rad::SessionState.new()
-      if $matConflicts == nil
-        $matConflicts = MaterialConflicts.new(state)
-      end
-      $matConflicts.resolve()
+      matConflicts = Tbleicher::Su2Rad::MaterialConflicts.new(state)
+      matConflicts.resolve()
     end
 
     def startImport()
       state = Tbleicher::Su2Rad::SessionState.new()
-      ni = NumericImport.new(state)
+      ni = Tbleicher::Su2Rad::NumericImport.new(state)
+
       if $DEBUG
         if ni.loadFile('/Users/ble/tmp/numimport/ADF_medium.df') == true
           ni.confirmDialog
@@ -112,6 +107,7 @@ module Tbleicher
           #ni.addContourLines
           #ni.addLabels
         end
+
       else
         if ni.loadFile() == true
           ni.confirmDialog

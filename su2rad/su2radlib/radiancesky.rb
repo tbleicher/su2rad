@@ -4,7 +4,7 @@ module Tbleicher
 
   module Su2Rad
 
-    class RadianceSky < ExportBase
+    class RadianceSky < Tbleicher::Su2Rad::ExportBase
         
       attr_reader :filename
       attr_accessor :skytype

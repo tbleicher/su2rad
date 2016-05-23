@@ -5,7 +5,7 @@ module Tbleicher
 
   module Su2Rad
 
-    class MaterialContext < ExportBase
+    class MaterialContext < Tbleicher::Su2Rad::ExportBase
         
       include Tbleicher::Su2Rad::Session
 

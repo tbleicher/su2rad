@@ -4,7 +4,7 @@ module Tbleicher
 
   module Su2Rad
 
-    class RadianceGroup < ExportBase
+    class RadianceGroup < Tbleicher::Su2Rad::ExportBase
        
       def initialize(entity, state)
         @state = state
