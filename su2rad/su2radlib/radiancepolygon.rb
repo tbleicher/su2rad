@@ -163,7 +163,8 @@ module Tbleicher
         if layer.name == 'Layer0'
             ## use layer of parent group (on stack)
             layer_s = @@layerstack.get()
-            if layer_s != nil
+            ## fix for 'deleted layer' provided by gwgill
+            if layer_s != nil && layer_s.valid?
                 layer = layer_s
             else
                 ## safety catch if no group on stack
